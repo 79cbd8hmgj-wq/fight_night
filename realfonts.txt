@@ -1,0 +1,10 @@
+egypt_10_black
+egypt_10_white
+egypt_10_noDrop
+egypt_9_lightYellow
+egypt_10_lightYellow
+egypt_24_lightYellow
+egypt_32_lightYellow
+egypt_9_darkRed
+egypt_9_orange
+auxgraph

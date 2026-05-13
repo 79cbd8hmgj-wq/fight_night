@@ -1,0 +1,4 @@
+// flash font name, flash point size, realfont name, realfont point size, x offset, y offset, x scale, y scale, button x offset, button y offset, filter method
+FN06_Main_Y,	9, 	egypt_9_lightYellow, 	9,	1.0, 3.0,	1.0, 1.0,	0.0, 0.0,	0
+FN06_Main_Y,	10, 	egypt_10_lightYellow, 	10,	0.0, 3.0,	1.0, 1.0,	0.0, 0.0,	0
+
