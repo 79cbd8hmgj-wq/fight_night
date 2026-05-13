@@ -1,0 +1,234 @@
+# .bin Reverse-Engineering Audit
+## Executive summary
+- Total `.bin` files found: **4**. `_audit_extract_test/` present: **False**. No `tools/audit/` extraction tools were present, so no archives were newly extracted.
+- All discovered `.bin` files are PSP system/executable containers (`BOOT.BIN`, `EBOOT.BIN`, and `UPDATE/*`) rather than loose archive-member gameplay tables.
+- `BOOT.BIN` is an ELF executable and `EBOOT.BIN` is the PSP executable container for FightNight; their game-related strings can be useful for code xrefs, but this audit did not find evidence that editable fighter stat tables live as loose `.bin` files.
+- `UPDATE/DATA.BIN` and `UPDATE/EBOOT.BIN` are PSP update payload/updater files and are least useful for Fight Night gameplay modding.
+- Compression probes (zlib/gzip/raw deflate from offset 0) did not successfully decompress any `.bin` file.
+
+## Inventory
+### `BOOT.BIN`
+- Size: 7270664 bytes
+- Parent: `(repo root)`
+- SHA-1: `499a53337ff57e1cd21959d1f57fe5f0cf4013c6`
+- Entropy estimate (first MiB): 5.7567 bits/byte
+- First 64 bytes: `7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00 a0 ff 08 00 01 00 00 00 cc de 34 00 34 00 00 00 40 29 59 00 01 30 a2 10 34 00 20 00 02 00 28 00 3e 00 3d 00 01 00 00 00 00 01 00 00 00 00 00 00`
+- Classification: structured, ELF executable
+- Notes: MIPS ELF executable image; code/resource strings, not a data table by extension alone.
+- First printable strings (up to 256):
+  - `0x12B`: `'%  `
+  - `0x31A`: `E2$ `
+  - `0x34E`: `s&+ `
+  - `0x8C6`: `)%$0`
+  - `0xA67`: `'%  `
+  - `0xE56`: `E2$ `
+  - `0xE8A`: `s&+ `
+  - `0x10DA`: `E2$ `
+  - `0x110E`: `s&+ `
+  - `0x135E`: `E2$ `
+  - `0x1392`: `s&+ `
+  - `0x15E2`: `E2$ `
+  - `0x1616`: `s&+ `
+  - `0x1866`: `E2$ `
+  - `0x189A`: `s&+ `
+  - `0x1AEA`: `E2$ `
+  - `0x1B1E`: `s&+ `
+  - `0x1D6E`: `E2$ `
+  - `0x1DA2`: `s&+ `
+  - `0x1FF2`: `E2$ `
+  - `0x2026`: `s&+ `
+  - `0x2276`: `E2$ `
+  - `0x22AA`: `s&+ `
+  - `0x24FA`: `E2$ `
+  - `0x252E`: `s&+ `
+  - `0x2786`: `E2$ `
+  - `0x27BA`: `s&+ `
+  - `0x2A12`: `E2$ `
+  - `0x2A46`: `s&+ `
+  - `0x2C3A`: `)%$0`
+  - `0x334A`: `)%$0`
+  - `0x3856`: `)%$0`
+  - `0x3A1E`: `R&+ T`
+  - `0x4288`: `TB$&`
+  - `0x43B1`: `)1&T`
+  - `0x43ED`: `)1&% `
+  - `0x45B7`: `<% @`
+  - `0x488D`: `B2&P`
+  - `0x4893`: `<% \``
+  - `0x48BB`: `<% @`
+  - ... 216 more in JSON.
+
+### `EBOOT.BIN`
+- Size: 7271008 bytes
+- Parent: `(repo root)`
+- SHA-1: `5faef8248b376f16ac1fbf3183cb76d5418783bd`
+- Entropy estimate (first MiB): 7.9998 bits/byte
+- First 64 bytes: `7e 50 53 50 00 00 00 00 01 01 46 69 67 68 74 4e 69 67 68 74 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 02 08 f1 6e 00 60 f2 6e 00 cc de 34 00 74 6f 4f 00 c8 55 03 00 00 01 40 00`
+- Classification: structured, PSP executable container
+- Notes: PSP encrypted/compressed executable container header (~PSP).
+- First printable strings (up to 256):
+  - `0x0`: `~PSP`
+  - `0xA`: `FightNight`
+  - `0x138`: `g\qR`
+  - `0x162`: `QQt,`
+  - `0x189`: `Yqt&`
+  - `0x1F3`: `_''&`
+  - `0x255`: `eN[l5`
+  - `0x268`: `Dapb`
+  - `0x288`: `y[l_,`
+  - `0x296`: ` Y9ZYPX`
+  - `0x398`: `E)%+`
+  - `0x3DD`: `9T?d%`
+  - `0x426`: `E'I&4`
+  - `0x430`: `2iESb`
+  - `0x449`: `shE8`
+  - `0x4A0`: `f9| `
+  - `0x4C6`: `tQUT`
+  - `0x4DC`: `Y3y_$`
+  - `0x4EC`: `3y|E`
+  - `0x4FD`: `1aPC[`
+  - `0x54D`: `6A8t4`
+  - `0x5DB`: `|q&^j`
+  - `0x610`: `Jx!8`
+  - `0x646`: `wz+$=`
+  - `0x6EC`: `I/y^2?`
+  - `0x70A`: `N\`k&p`
+  - `0x761`: `mVP$x`
+  - `0x7D5`: `(.+M`
+  - `0x7EC`: `pAocpf`
+  - `0x807`: `%a 1_`
+  - `0x831`: `&gnS`
+  - `0x910`: `ei<:`
+  - `0xA20`: `AR,$`
+  - `0xAA1`: `\(3$Ch`
+  - `0xABB`: `m>B~`
+  - `0xAE2`: `#~)^`
+  - `0xB2F`: `WcnL(`
+  - `0xB44`: `UV|i`
+  - `0xB5F`: `V5Zh"Aw`
+  - `0xB6E`: `Jg(j`
+  - ... 216 more in JSON.
+
+### `UPDATE/DATA.BIN`
+- Size: 14809632 bytes
+- Parent: `UPDATE`
+- SHA-1: `70fef68d7e4267d9a4e92a46e17ef828ddc9e0b2`
+- Entropy estimate (first MiB): 7.9998 bits/byte
+- First 64 bytes: `50 53 41 52 03 00 00 00 10 fa e1 00 01 00 00 00 6b ff d8 88 3d 76 8b 8f 4b b2 26 e5 03 f6 fa 68 8e bb 4d c7 2f 83 b2 5f 8c 7c 16 67 19 5b f0 17 e0 65 2b 1d d7 52 1b 47 3a 90 aa 39 91 d3 23 66`
+- Classification: structured, PSP update PSAR package, system/update
+- Notes: PSP update payload package (PSAR), unrelated to Fight Night gameplay assets.
+- First printable strings (up to 256):
+  - `0x0`: `PSAR`
+  - `0x8A`: `[4ON`
+  - `0xA0`: `h6a?`
+  - `0xD7`: `@ llF`
+  - `0x11E`: `JvnTh`
+  - `0x140`: `Sd5r`
+  - `0x15A`: `\:X\ `
+  - `0x182`: `G4+ {`
+  - `0x194`: `9u's`
+  - `0x22C`: `y#d>`
+  - `0x251`: `8$G\``
+  - `0x2EA`: `[4ON`
+  - `0x370`: `Zr%t`
+  - `0x378`: `d~Wq`
+  - `0x45F`: `0"_r`
+  - `0x4AB`: `VF2W`
+  - `0x57E`: `M9w"R`
+  - `0x586`: `$\1B`
+  - `0x5A9`: `]LSV`
+  - `0x627`: `ff{K"`
+  - `0x654`: `i}9B`
+  - `0x67F`: `(oxkP`
+  - `0x686`: `W)p>`
+  - `0x6E2`: `}W")r`
+  - `0x701`: `U6,dC`
+  - `0x747`: `J6,'`
+  - `0x74F`: `Q!vO`
+  - `0x7D0`: `zC\uZ`
+  - `0x830`: `vW\`)`
+  - `0x875`: `N,a-`
+  - `0x87D`: `XaKEv`
+  - `0x893`: `-G2fYZe`
+  - `0x8AF`: `fLF*`
+  - `0x8BA`: `9=Fj`
+  - `0x8CA`: `F\`7S`
+  - `0x8E6`: `16ek`
+  - `0x971`: `\`q[m`
+  - `0xA23`: `w|dzT`
+  - `0xA2E`: `i?PWc`
+  - `0xA89`: `\`wK `
+  - ... 216 more in JSON.
+
+### `UPDATE/EBOOT.BIN`
+- Size: 3951712 bytes
+- Parent: `UPDATE`
+- SHA-1: `4bf047a3564edd4d9116ce8d3a512043bdf68616`
+- Entropy estimate (first MiB): 7.9998 bits/byte
+- First 64 bytes: `7e 50 53 50 00 08 00 00 01 01 75 70 64 61 74 65 72 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 02 08 4b 3c 00 60 4c 3c 00 68 07 00 00 cc 76 0f 00 b4 5f 03 00 40 00 40 00`
+- Classification: structured, PSP executable container, system/update
+- Notes: PSP encrypted/compressed executable container header (~PSP).
+- First printable strings (up to 256):
+  - `0x0`: `~PSP`
+  - `0xA`: `updater`
+  - `0x9D`: `ka7k;`
+  - `0x11B`: `h}%:`
+  - `0x120`: `7X>s`
+  - `0x12B`: `sU3T`
+  - `0x195`: `9s<>`
+  - `0x1A8`: `2-D=`
+  - `0x241`: `!UeD`
+  - `0x25A`: `@|&>`
+  - `0x32E`: `Yez1K`
+  - `0x3D9`: `N'eC`
+  - `0x477`: `U=_l`
+  - `0x494`: `L_4;t`
+  - `0x4DC`: `R]S#`
+  - `0x4FA`: `m8Mw`
+  - `0x543`: `3{pX`
+  - `0x55C`: `bVq,/`
+  - `0x56C`: `hzVR)`
+  - `0x6D8`: `Azzg`
+  - `0x72D`: `;3M/`
+  - `0x817`: `E-,?Yo^`
+  - `0x87C`: `,p$\`
+  - `0x895`: `^9E]`
+  - `0x8E7`: `-~kP`
+  - `0x910`: `p@S+`
+  - `0x92B`: `/ngnus`
+  - `0x998`: `{\`J+`
+  - `0x9A0`: `FX!X$tLm*lg`
+  - `0xA07`: `X=%n`
+  - `0xA64`: `Onrh}`
+  - `0xAA9`: `{cYQ`
+  - `0xAB2`: `UR*0`
+  - `0xB04`: `Nb>%G`
+  - `0xB13`: `EwkWx`
+  - `0xB94`: `n*(0`
+  - `0xC6D`: `7.Bi`
+  - `0xCA1`: `J2=f`
+  - `0xCB0`: `!t+<`
+  - `0xCD7`: `M1>Xov`
+  - ... 216 more in JSON.
+
+## Gameplay-data evidence
+- Fighter stats/stamina/damage/AI/money/training/career progression: **no loose `.bin` table evidence found**. Hits in `BOOT.BIN`/`EBOOT.BIN` are executable strings and should be treated as code/UI references unless disassembly proves embedded data.
+- Animation `.bin`: **none identified** among loose or extracted `.bin` files. No extracted animation archive members were present.
+- Script/bytecode `.bin`: **none identified** as loose/extracted script bytecode. PSP executable files do contain code, but are not script archive `.bin` members.
+- Database/table-like `.bin`: **none identified**. The likely database-adjacent archives remain `preload/db.viv` and `preload/tables.viv`, but no extracted `.bin` members were available in this run.
+
+## Most promising `.bin` files
+- `BOOT.BIN`: best for disassembly/xref because it is the main ELF and contains game strings.
+- `EBOOT.BIN`: PSP executable container with FightNight identity and game strings; useful mostly after unpack/decryption workflows outside this read-only audit.
+
+## Least useful `.bin` files
+- `UPDATE/DATA.BIN`: PSP update PSAR payload, not game-specific content.
+- `UPDATE/EBOOT.BIN`: PSP updater executable, not Fight Night gameplay data.
+
+## Recommended next manual tests in PPSSPP
+- Use current known editable assets outside `.bin` first (database/table VIV members after safe extraction) and verify changes in a copied ISO/work folder only.
+- If pursuing executable values, load `BOOT.BIN` in Ghidra with PSP/MIPS settings, search xrefs to high-value strings such as stamina/damage/career, then test RAM-only patches in PPSSPP cheat/debugger before any file edit.
+- Extract `preload/db.viv`, `preload/tables.viv`, `scripts/scripts.viv`, and animation VIVs into `_audit_extract_test/` with a verified read-only extractor, then rerun this audit to classify member `.bin` files.
+
+## Recommended next Codex prompt
+> Safely extract `preload/db.viv`, `preload/tables.viv`, `scripts/scripts.viv`, `scranim.viv`, `feanim.viv`, and `beanim.viv` into `_audit_extract_test/` using read-only archive tools, then rerun the `.bin` audit on extracted members and prioritize database/table-looking records with boxer/rating/career strings.
