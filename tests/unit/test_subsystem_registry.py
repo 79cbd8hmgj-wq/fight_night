@@ -164,3 +164,20 @@ def test_dependency_consumer_links_are_bidirectional() -> None:
             assert system["id"] in consumer["dependencies"], (
                 f"{consumer_id} is not dependent on {system['id']}"
             )
+
+
+def test_every_phase2_feature_includes_foundation_and_release_gates() -> None:
+    registry = load_registry()
+    features = registry["phase2_features"]
+    assert isinstance(features, list)
+    required = {
+        "program-00",
+        "program-01",
+        "program-02",
+        "program-03",
+        "program-29",
+        "program-30",
+    }
+    for feature in features:
+        missing = required - set(feature["requires"])
+        assert not missing, f"{feature['id']} omits global gates: {sorted(missing)}"
