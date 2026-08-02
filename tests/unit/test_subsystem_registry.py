@@ -181,3 +181,19 @@ def test_every_phase2_feature_includes_foundation_and_release_gates() -> None:
     for feature in features:
         missing = required - set(feature["requires"])
         assert not missing, f"{feature['id']} omits global gates: {sorted(missing)}"
+
+
+EXACT_DECOMPILATION_GATE = (
+    "Before overhaul implementation begins, every system modified by the overhaul—and "
+    "every system that owns, stores, calls, displays, saves, or consumes its data—must "
+    "be functionally reverse-engineered to a verified replacement boundary."
+)
+
+
+def test_exact_decompilation_gate_is_locked_in_docs_and_registry() -> None:
+    registry = load_registry()
+    assert registry["decompilation_gate"] == EXACT_DECOMPILATION_GATE
+    gate_doc = (ROOT / "docs" / "architecture" / "decompilation-gate.md").read_text(
+        encoding="utf-8"
+    )
+    assert EXACT_DECOMPILATION_GATE in gate_doc
