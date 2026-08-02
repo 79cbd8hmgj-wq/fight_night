@@ -7,7 +7,6 @@ from dataclasses import asdict, dataclass, fields, is_dataclass
 from enum import StrEnum
 from typing import Any, cast
 
-
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _HEX_BYTES_RE = re.compile(r"^[0-9a-f]*$")
 
