@@ -5,7 +5,6 @@ from pathlib import Path
 
 from fnr3_re.package_gate import validate_package, validate_registry
 
-
 REQUIRED_PACKAGE_FILES = {
     "README.md",
     "status.json",
