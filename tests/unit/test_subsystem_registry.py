@@ -27,7 +27,7 @@ def load_registry() -> dict[str, object]:
 def test_registry_is_deterministically_formatted() -> None:
     raw = REGISTRY_PATH.read_text(encoding="utf-8")
     parsed = json.loads(raw)
-    expected = json.dumps(parsed, indent=2, sort_keys=True) + "\n"
+    expected = json.dumps(parsed, sort_keys=True, separators=(",", ":")) + "\n"
     assert raw == expected
 
 
