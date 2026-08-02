@@ -130,3 +130,37 @@ def test_phase2_is_blocked_and_phase2_programs_are_not_complete() -> None:
     for system in systems:
         if system["phase"] == "II":
             assert system["status"] == "blocked"
+
+
+def test_owners_and_blockers_are_meaningful() -> None:
+    registry = load_registry()
+    systems = registry["systems"]
+    assert isinstance(systems, list)
+    for system in systems:
+        owners = system["owners"]
+        blockers = system["blocking_unknowns"]
+        assert isinstance(owners, list) and owners
+        assert all(isinstance(owner, str) and owner not in {"?", "unknown"} for owner in owners)
+        assert isinstance(blockers, list) and blockers
+        assert all(
+            isinstance(blocker, str) and blocker not in {"unproven", "unknown"}
+            for blocker in blockers
+        )
+
+
+def test_dependency_consumer_links_are_bidirectional() -> None:
+    registry = load_registry()
+    systems = registry["systems"]
+    assert isinstance(systems, list)
+    by_id = {system["id"]: system for system in systems}
+    for system in systems:
+        for dependency_id in system["dependencies"]:
+            dependency = by_id[dependency_id]
+            assert system["id"] in dependency["consumers"], (
+                f"{dependency_id} is missing reverse consumer {system['id']}"
+            )
+        for consumer_id in system["consumers"]:
+            consumer = by_id[consumer_id]
+            assert system["id"] in consumer["dependencies"], (
+                f"{consumer_id} is not dependent on {system['id']}"
+            )
