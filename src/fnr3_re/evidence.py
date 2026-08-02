@@ -122,11 +122,17 @@ class RuntimeCapture:
             state_sha256=_required_string(payload, "state_sha256"),
             breakpoint=Address.from_mapping(_required_mapping(payload, "breakpoint")),
             registers=tuple(
-                (_sequence_string(item, 0, "register name"), _sequence_int(item, 1, "register value"))
+                (
+                    _sequence_string(item, 0, "register name"),
+                    _sequence_int(item, 1, "register value"),
+                )
                 for item in _optional_sequences(payload, "registers")
             ),
             memory=tuple(
-                (_sequence_int(item, 0, "memory address"), _sequence_string(item, 1, "memory bytes"))
+                (
+                    _sequence_int(item, 0, "memory address"),
+                    _sequence_string(item, 1, "memory bytes"),
+                )
                 for item in _optional_sequences(payload, "memory")
             ),
         )
@@ -192,7 +198,9 @@ class EvidenceClaim:
             raise ValueError("at least one typed address is required")
         if self.confidence is Confidence.CONFIRMED:
             if not (_INDEPENDENT_CONFIRMATION & set(self.evidence_types)):
-                raise ValueError("CONFIRMED claims require independent evidence beyond decompiler output")
+                raise ValueError(
+                    "CONFIRMED claims require independent evidence beyond decompiler output"
+                )
             if EvidenceType.EXACT_BINARY not in self.evidence_types:
                 raise ValueError("CONFIRMED claims require exact binary evidence")
 
