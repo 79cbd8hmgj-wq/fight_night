@@ -24,7 +24,7 @@ jobs:
         run: python -m pip install -e ".[dev]"
       - name: Run tests
         run: python -m pytest
-      - name: Show Ruff fixes
-        run: python -m ruff check config src tests --fix --diff
+      - name: Run Ruff
+        run: python -m ruff check config src tests
       - name: Run mypy
         run: python -m mypy src tests/unit
