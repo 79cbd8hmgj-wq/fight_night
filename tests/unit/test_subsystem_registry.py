@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = ROOT / "config" / "subsystem_registry.json"
 REQUIRED_SYSTEM_FIELDS = {
@@ -53,7 +52,7 @@ def test_system_ids_are_unique_and_required_fields_exist() -> None:
     ids: list[str] = []
     for system in systems:
         assert isinstance(system, dict)
-        assert REQUIRED_SYSTEM_FIELDS <= system.keys()
+        assert system.keys() >= REQUIRED_SYSTEM_FIELDS
         system_id = system["id"]
         assert isinstance(system_id, str) and system_id
         ids.append(system_id)
