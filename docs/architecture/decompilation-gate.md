@@ -2,7 +2,7 @@
 
 ## Locked rule
 
-> Before overhaul implementation begins, every system modified by the overhaul—and every system that owns, stores, calls, derives, caches, serializes, validates, displays, or consumes its data—must be functionally reverse-engineered to a verified replacement boundary.
+> Before overhaul implementation begins, every system modified by the overhaul—and every system that owns, stores, calls, displays, saves, or consumes its data—must be functionally reverse-engineered to a verified replacement boundary.
 
 This rule is mandatory. It may only become stricter when new consumers, fixed-size structures, save dependencies, UI bindings, or module-budget constraints are discovered.
 
