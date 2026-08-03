@@ -46,7 +46,10 @@ def test_static_save_map_preserves_typed_addresses_and_exact_region_guards() -> 
 def test_static_save_map_does_not_promote_unverified_serializer_semantics() -> None:
     save_map = load_save_static_map(_ARTIFACT)
 
-    assert all(candidate.confidence is not Confidence.CONFIRMED for candidate in save_map.entry_points)
+    assert all(
+        candidate.confidence is not Confidence.CONFIRMED
+        for candidate in save_map.entry_points
+    )
     assert "checksum algorithm" in save_map.remaining_unknowns
     assert "profile slot count" in save_map.remaining_unknowns
     assert "serializer and deserializer boundaries" in save_map.remaining_unknowns
