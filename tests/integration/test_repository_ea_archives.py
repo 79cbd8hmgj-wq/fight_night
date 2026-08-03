@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from fnr3_re.ea_archive import parse_ea_archive, rebuild_ea_archive
+from fnr3_re.refpack import decompress_refpack
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -65,4 +66,5 @@ def test_tracked_big4_database_archive_matches_observed_contract() -> None:
         (0x4C00, 0x95E),
     ]
     assert all(member.refpack_compressed for member in archive.members)
+    assert len(decompress_refpack(archive.members[0].data)) == 9_704
     assert rebuild_ea_archive(archive) == payload
