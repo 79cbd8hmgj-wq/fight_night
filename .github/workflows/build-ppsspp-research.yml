@@ -14,8 +14,11 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
+    env:
+      SDL3_REVISION: 96292a5b464258a2b926e0a3d72f8b98c2a81aa6
+      SDL3_TTF_REVISION: a1ce3670aec736ecbf0936c43f2f0cc53aa61e5b
     steps:
       - name: Check out bundle scripts
         uses: actions/checkout@v4
@@ -28,18 +31,98 @@ jobs:
             ca-certificates \
             cmake \
             git \
+            libasound2-dev \
             libcurl4-openssl-dev \
+            libdbus-1-dev \
+            libdecor-0-dev \
+            libdrm-dev \
+            libegl1-mesa-dev \
             libfontconfig1-dev \
+            libfreetype6-dev \
+            libgbm-dev \
             libgl1-mesa-dev \
+            libgles2-mesa-dev \
             libglew-dev \
-            libsdl3-dev \
-            libsdl3-ttf-dev \
+            libibus-1.0-dev \
+            libpipewire-0.3-dev \
+            libpulse-dev \
+            libsamplerate0-dev \
             libssl-dev \
+            libudev-dev \
+            libunwind-dev \
+            libusb-1.0-0-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxkbcommon-dev \
+            libxrandr-dev \
+            libxss-dev \
+            libxtst-dev \
             ninja-build \
             patchelf \
-            pkg-config
+            pkg-config \
+            wayland-protocols
           cargo --version
           rustc --version
+          getconf GNU_LIBC_VERSION
+
+      - name: Build pinned SDL3 for Ubuntu 24.04
+        run: |
+          set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+
+          git clone --filter=blob:none https://github.com/libsdl-org/SDL.git sdl3
+          cd sdl3
+          git checkout --detach "$SDL3_REVISION"
+          git submodule update --init --recursive
+          resolved="$(git rev-parse HEAD)"
+          test "$resolved" = "$SDL3_REVISION"
+          printf '%s\n' "$resolved" > ../sdl3-resolved-revision.txt
+          cd ..
+
+          cmake -S sdl3 -B build-sdl3 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$prefix" \
+            -DSDL_SHARED=ON \
+            -DSDL_STATIC=OFF \
+            -DSDL_TEST_LIBRARY=OFF \
+            -DSDL_TESTS=OFF \
+            -DSDL_EXAMPLES=OFF \
+            -DSDL_INSTALL=ON
+          cmake --build build-sdl3 --parallel 4
+          cmake --install build-sdl3
+          find "$prefix" -name 'libSDL3.so*' -print
+
+      - name: Build pinned SDL3_ttf for Ubuntu 24.04
+        run: |
+          set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+
+          git clone --filter=blob:none https://github.com/libsdl-org/SDL_ttf.git sdl3-ttf
+          cd sdl3-ttf
+          git checkout --detach "$SDL3_TTF_REVISION"
+          git submodule update --init --recursive
+          resolved="$(git rev-parse HEAD)"
+          test "$resolved" = "$SDL3_TTF_REVISION"
+          printf '%s\n' "$resolved" > ../sdl3-ttf-resolved-revision.txt
+          cd ..
+
+          cmake -S sdl3-ttf -B build-sdl3-ttf -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$prefix" \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSDLTTF_INSTALL=ON \
+            -DSDLTTF_SAMPLES=OFF \
+            -DSDLTTF_VENDORED=OFF \
+            -DSDLTTF_HARFBUZZ=OFF \
+            -DSDLTTF_PLUTOSVG=OFF
+          cmake --build build-sdl3-ttf --parallel 4
+          cmake --install build-sdl3-ttf
+          find "$prefix" -name 'libSDL3_ttf.so*' -print
 
       - name: Clone exact PPSSPP source
         env:
@@ -63,8 +146,11 @@ jobs:
 
       - name: Configure headless debugger build
         run: |
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
           cmake -S ppsspp -B build-headless -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DCMAKE_BUILD_RPATH="$prefix/lib" \
             -DHEADLESS=ON \
             -DUNITTEST=OFF \
             -DUSE_DISCORD=OFF \
@@ -72,12 +158,15 @@ jobs:
             -DUSE_MINIUPNPC=OFF
 
       - name: Build PPSSPPHeadless
-        run: cmake --build build-headless --target PPSSPPHeadless --parallel 2
+        run: cmake --build build-headless --target PPSSPPHeadless --parallel 4
 
       - name: Configure SDL debugger build
         run: |
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
           cmake -S ppsspp -B build-sdl -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DCMAKE_BUILD_RPATH="$prefix/lib" \
             -DHEADLESS=OFF \
             -DUNITTEST=OFF \
             -DUSE_DISCORD=OFF \
@@ -85,7 +174,7 @@ jobs:
             -DUSE_MINIUPNPC=OFF
 
       - name: Build PPSSPPSDL
-        run: cmake --build build-sdl --target PPSSPPSDL --parallel 2
+        run: cmake --build build-sdl --target PPSSPPSDL --parallel 4
 
       - name: Build official wsdbg client
         run: |
@@ -97,6 +186,10 @@ jobs:
       - name: Package exact debugger bundle
         run: |
           set -euo pipefail
+
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+          prefix_libs="$(find "$prefix" -type f -name 'libSDL3*.so*' -printf '%h\n' | sort -u | paste -sd: -)"
+          export LD_LIBRARY_PATH="$prefix_libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
           headless="$(find build-headless -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
           sdl="$(find build-sdl -type f -name PPSSPPSDL -perm -111 | head -n 1)"
@@ -111,7 +204,11 @@ jobs:
           cp "$wsdbg" bundle/wsdbg
           cp -a ppsspp/assets/. bundle/assets/
           cp ppsspp/LICENSE.TXT bundle/PPSSPP-LICENSE.txt
+          cp sdl3/LICENSE.txt bundle/SDL3-LICENSE.txt
+          cp sdl3-ttf/LICENSE.txt bundle/SDL3-TTF-LICENSE.txt
           cp ppsspp-resolved-revision.txt bundle/ppsspp-resolved-revision.txt
+          cp sdl3-resolved-revision.txt bundle/sdl3-resolved-revision.txt
+          cp sdl3-ttf-resolved-revision.txt bundle/sdl3-ttf-resolved-revision.txt
           cp ppsspp/docs/WebSocketDebugger.md bundle/PPSSPP-WebSocket-Debugger.md
           cp ppsspp/Tools/wsdbg/README.md bundle/wsdbg-README.md
           cp tools/ppsspp-debugger-bundle/*.sh bundle/tools/ppsspp-debugger-bundle/
@@ -120,7 +217,8 @@ jobs:
           chmod +x bundle/tools/ppsspp-debugger-bundle/*.sh
 
           for binary in bundle/PPSSPPHeadless bundle/PPSSPPSDL bundle/wsdbg; do
-            ldd "$binary" > "$binary.ldd.txt" || true
+            ldd "$binary" > "$binary.ldd.txt"
+            test -z "$(grep 'not found' "$binary.ldd.txt" || true)"
             while IFS= read -r library; do
               test -f "$library" || continue
               base="$(basename "$library")"
@@ -139,8 +237,8 @@ jobs:
           done
 
           export LD_LIBRARY_PATH="$PWD/bundle/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-          bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1 || true
-          bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1 || true
+          bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1
+          bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1
           bundle/PPSSPPSDL --version > bundle/PPSSPPSDL.version.txt 2>&1 || true
           bundle/PPSSPPSDL --help > bundle/PPSSPPSDL.help.txt 2>&1 || true
           bundle/wsdbg --help > bundle/wsdbg.help.txt
@@ -150,6 +248,11 @@ jobs:
           grep -q 'debugger.ppsspp.org' bundle/PPSSPP-WebSocket-Debugger.md
           grep -q 'memory.breakpoint.add' bundle/PPSSPP-WebSocket-Debugger.md
           grep -q 'input.buttons.send' bundle/PPSSPP-WebSocket-Debugger.md
+          if readelf --version-info bundle/PPSSPPHeadless bundle/PPSSPPSDL \
+            | grep -Eq 'GLIBC_2\.(4[0-9]|[5-9][0-9])'; then
+            echo 'Bundle requires a GLIBC version newer than Ubuntu 24.04.' >&2
+            exit 1
+          fi
 
           (
             cd bundle

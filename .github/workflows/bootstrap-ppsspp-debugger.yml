@@ -20,7 +20,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           REVISION: 49fb4f9b1a91bd210c2332958106a0bf6dc02c27
-          BUILD_ATTEMPT: ubuntu-2604
+          BUILD_ATTEMPT: portable-sdl3-source
         run: |
           echo "Dispatching debugger bundle build: $BUILD_ATTEMPT"
           gh api \
