@@ -35,6 +35,8 @@ jobs:
             git \
             libasound2-dev \
             libavcodec-dev \
+            libavdevice-dev \
+            libavfilter-dev \
             libavformat-dev \
             libavutil-dev \
             libcurl4-openssl-dev \
@@ -75,7 +77,14 @@ jobs:
           cargo --version
           rustc --version
           getconf GNU_LIBC_VERSION
-          pkg-config --modversion libavcodec libavformat libavutil libswresample libswscale
+          pkg-config --modversion \
+            libavcodec \
+            libavdevice \
+            libavfilter \
+            libavformat \
+            libavutil \
+            libswresample \
+            libswscale
 
       - name: Build pinned SDL3
         run: |
