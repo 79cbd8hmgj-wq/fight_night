@@ -1,0 +1,64 @@
+name: Task 5 style cleanup
+
+on:
+  push:
+    branches:
+      - task-5-resource-codecs
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: task-5-resource-codecs
+      - name: Apply bounded style cleanup
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path('src/fnr3_re/ea_archive.py')
+          text = source.read_text(encoding='utf-8')
+          text = text.replace(
+              'import json\nimport math\n',
+              'import json\nfrom itertools import pairwise\nimport math\n',
+              1,
+          )
+          text = text.replace(
+              '            f"archive header size mismatch: directory ends at {position}, header ends at {header_size}"\n',
+              '            f"archive header size mismatch: directory ends at {position}, "\n'
+              '            f"header ends at {header_size}"\n',
+              1,
+          )
+          text = text.replace(
+              '    for previous, current in zip(ordered, ordered[1:], strict=False):\n',
+              '    for previous, current in pairwise(ordered):\n',
+              1,
+          )
+          source.write_text(text, encoding='utf-8')
+
+          tests = Path('tests/unit/test_ea_archive.py')
+          text = tests.read_text(encoding='utf-8')
+          text = text.replace(
+              '    assert [(member.name, member.offset, member.size, member.data) for member in archive.members] == [\n',
+              '    observed = [\n'
+              '        (member.name, member.offset, member.size, member.data)\n'
+              '        for member in archive.members\n'
+              '    ]\n'
+              '    assert observed == [\n',
+              1,
+          )
+          tests.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit cleanup
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/fnr3_re/ea_archive.py tests/unit/test_ea_archive.py
+          git diff --cached --check
+          git commit -m "style: clean EA archive codec"
+          git push origin HEAD:task-5-resource-codecs
