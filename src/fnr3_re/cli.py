@@ -10,6 +10,7 @@ from .ea_archive import EaArchive, extract_ea_archive, parse_ea_archive
 from .iso import build_workspace, verify_workspace
 from .manifests import WorkspaceValidationResult
 from .package_gate import ValidationResult, validate_package, validate_registry
+from .rebuild import BuildPlan, load_build_plan, rebuild_image
 from .refpack import compress_refpack, decompress_refpack
 from .revision import ImageValidationResult, load_reference_revision, validate_image
 
@@ -37,6 +38,16 @@ def build_parser() -> argparse.ArgumentParser:
     workspace_parser = subparsers.add_parser("verify-workspace")
     workspace_parser.add_argument("path", type=Path)
     workspace_parser.add_argument("--json", action="store_true", dest="as_json")
+
+    rebuild_parser = subparsers.add_parser("rebuild-image")
+    rebuild_parser.add_argument("reference", type=Path)
+    rebuild_parser.add_argument("workspace", type=Path)
+    rebuild_parser.add_argument("output", type=Path)
+    rebuild_parser.add_argument("--revision-config", required=True, type=Path)
+    rebuild_parser.add_argument("--plan", type=Path)
+    rebuild_parser.add_argument("--report", type=Path)
+    rebuild_parser.add_argument("--force", action="store_true")
+    rebuild_parser.add_argument("--json", action="store_true", dest="as_json")
 
     for command in ("refpack-decode", "refpack-encode"):
         codec_parser = subparsers.add_parser(command)
@@ -82,6 +93,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         workspace_result = verify_workspace(args.path)
         _print_workspace_result(workspace_result, args.as_json)
         return 0 if workspace_result.valid else 1
+    if args.command == "rebuild-image":
+        revision = load_reference_revision(args.revision_config)
+        plan = load_build_plan(args.plan) if args.plan is not None else BuildPlan.empty(
+            revision.revision_id
+        )
+        build_report = rebuild_image(
+            args.reference,
+            args.workspace,
+            args.output,
+            revision,
+            plan,
+            force=args.force,
+            report_path=args.report,
+        )
+        if args.as_json:
+            print(build_report.to_json(), end="")
+        else:
+            state = "no-change" if build_report.no_change else "patched"
+            print(
+                f"rebuilt: {args.output} ({state}, "
+                f"sha256 {build_report.output_sha256})"
+            )
+        return 0
     if args.command in {"refpack-decode", "refpack-encode"}:
         source = args.source.read_bytes()
         output = (
