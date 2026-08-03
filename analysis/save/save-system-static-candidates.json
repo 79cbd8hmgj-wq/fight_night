@@ -1,0 +1,240 @@
+{
+  "boot_sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+  "entry_points": [
+    {
+      "confidence": "CANDIDATE",
+      "observations": [
+        "The function is a six-state controller that initializes profile-oriented objects and copies DATA.BIN into an object-owned filename field.",
+        "Two adjacent controller paths reference the same DATA.BIN literal, but load-versus-save direction remains unresolved."
+      ],
+      "region": {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4376084
+        },
+        "module": "BOOT.BIN",
+        "sha256": "6eca7ea0a685200e7c4943eee1c55915f30b3aef3087a156c18c535cbe01fe91",
+        "size": 1608
+      },
+      "related_strings": [
+        "payload_filename"
+      ],
+      "role": "profile_save_controller"
+    },
+    {
+      "confidence": "PROBABLE",
+      "observations": [
+        "The function formats the PSP savedata root path and calls four IoFileMgrForUser import stubs in an open, iterate, close pattern.",
+        "It counts matching directory entries supplied by the caller, establishing directory enumeration without proving profile-slot semantics."
+      ],
+      "region": {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 5006008
+        },
+        "module": "BOOT.BIN",
+        "sha256": "4f722e3746fca91f78d1227f9d6770e0f98b4cdaa69baff6f153e0da64f1298e",
+        "size": 328
+      },
+      "related_strings": [
+        "savedata_root_enumerator"
+      ],
+      "role": "savedata_directory_enumerator"
+    },
+    {
+      "confidence": "CANDIDATE",
+      "observations": [
+        "The state machine formats a PSP savedata root path, opens a path, transfers bytes into object-owned buffers, and advances explicit operation states.",
+        "The exact read, write, delete, and recovery state meanings require runtime traces and serializer correlation."
+      ],
+      "region": {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 5015608
+        },
+        "module": "BOOT.BIN",
+        "sha256": "143a259af16f7e75b32005bdc86c3e812a7db7aab56e5c1a7f6c08a505ce9079",
+        "size": 936
+      },
+      "related_strings": [
+        "savedata_root_state_machine"
+      ],
+      "role": "savedata_operation_state_machine"
+    },
+    {
+      "confidence": "PROBABLE",
+      "observations": [
+        "The function references the literal CB_CorruptFileFunc(...) and immediately invokes a second internal routine.",
+        "Static evidence establishes a corruption callback path but not the error-code contract or recovery behavior."
+      ],
+      "region": {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3412684
+        },
+        "module": "BOOT.BIN",
+        "sha256": "d3110f020af7beda02ac4f82fa562e154b50b3338765176da5a16698e892f1e6",
+        "size": 40
+      },
+      "related_strings": [
+        "corrupt_callback_label"
+      ],
+      "role": "corrupt_file_callback"
+    }
+  ],
+  "owner": {
+    "confidence": "PROBABLE",
+    "import_references": [
+      {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 5204596
+        },
+        "confidence": "CONFIRMED",
+        "section": ".sceStub.text.IoFileMgrForUser",
+        "size": 112,
+        "value": "IoFileMgrForUser"
+      },
+      {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 5204756
+        },
+        "confidence": "CONFIRMED",
+        "section": ".sceStub.text.sceUtility",
+        "size": 160,
+        "value": "sceUtility"
+      }
+    ],
+    "module": "BOOT.BIN",
+    "observations": [
+      "The exact plain BOOT ELF contains profile and career front-end strings, DATA.BIN, multiple PSP/SAVEDATA path formats, corruption callbacks, and the relevant PSP import sections.",
+      "Direct xrefs from BOOT text reach the filename and savedata path literals.",
+      "No PRX ownership claim is made until runtime module and call-path evidence excludes delegated behavior."
+    ]
+  },
+  "remaining_unknowns": [
+    "checksum algorithm",
+    "profile slot count",
+    "serializer and deserializer boundaries",
+    "save block headers and version fields",
+    "compression or obfuscation",
+    "write ordering and interrupted-write recovery",
+    "maximum payload size and unused capacity",
+    "runtime call ownership across BOOT.BIN and PRX modules"
+  ],
+  "schema_version": 1,
+  "source_revision": "ULUS10066-v1.00",
+  "string_references": [
+    {
+      "elf_address": {
+        "address_type": "elf_virtual",
+        "value": 5411852
+      },
+      "file_offset": {
+        "address_type": "elf_file_offset",
+        "value": 5412108
+      },
+      "label": "payload_filename",
+      "value": "DATA.BIN",
+      "xref_region_sha256": [
+        "3261f00681ede63ac17b2a978fa084fe49bdfe5025e821213344dd3856206c79",
+        "3261f00681ede63ac17b2a978fa084fe49bdfe5025e821213344dd3856206c79"
+      ],
+      "xrefs": [
+        4376872,
+        4378760
+      ]
+    },
+    {
+      "elf_address": {
+        "address_type": "elf_virtual",
+        "value": 5429780
+      },
+      "file_offset": {
+        "address_type": "elf_file_offset",
+        "value": 5430036
+      },
+      "label": "savedata_root_enumerator",
+      "value": "%sPSP/SAVEDATA",
+      "xref_region_sha256": [
+        "296fbcfb06d4506edf9705464b8c71bdecb161e24119a5e62a27fd719c29a025"
+      ],
+      "xrefs": [
+        5006152
+      ]
+    },
+    {
+      "elf_address": {
+        "address_type": "elf_virtual",
+        "value": 5430084
+      },
+      "file_offset": {
+        "address_type": "elf_file_offset",
+        "value": 5430340
+      },
+      "label": "savedata_root_operation",
+      "value": "%sPSP/SAVEDATA",
+      "xref_region_sha256": [
+        "23c6de642292a07c0e3cb882a695dbbee6ddc366f1b9ce513bc2c030eed95244"
+      ],
+      "xrefs": [
+        5008704
+      ]
+    },
+    {
+      "elf_address": {
+        "address_type": "elf_virtual",
+        "value": 5430108
+      },
+      "file_offset": {
+        "address_type": "elf_file_offset",
+        "value": 5430364
+      },
+      "label": "savedata_slot_path",
+      "value": "%sPSP/SAVEDATA/%s",
+      "xref_region_sha256": [
+        "a9afb076fddb2fc59b77ddadceb27b9171cd6f7ab825ae96cf52cd5283597f01"
+      ],
+      "xrefs": [
+        5009068
+      ]
+    },
+    {
+      "elf_address": {
+        "address_type": "elf_virtual",
+        "value": 5430428
+      },
+      "file_offset": {
+        "address_type": "elf_file_offset",
+        "value": 5430684
+      },
+      "label": "savedata_root_state_machine",
+      "value": "%sPSP/SAVEDATA",
+      "xref_region_sha256": [
+        "46d2288856d1ec25c3f231d837426f8575ab5689667510c18ce85295cd652662"
+      ],
+      "xrefs": [
+        5015868
+      ]
+    },
+    {
+      "elf_address": {
+        "address_type": "elf_virtual",
+        "value": 5373316
+      },
+      "file_offset": {
+        "address_type": "elf_file_offset",
+        "value": 5373572
+      },
+      "label": "corrupt_callback_label",
+      "value": "CB_CorruptFileFunc(...)",
+      "xref_region_sha256": [
+        "b74f08cd7c61d96372264b6e0f0e9848da4425c4b6d089598d3f8be039d559a3"
+      ],
+      "xrefs": [
+        3412688
+      ]
+    }
+  ]
+}
