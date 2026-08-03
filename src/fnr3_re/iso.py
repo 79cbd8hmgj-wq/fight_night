@@ -324,10 +324,14 @@ def verify_workspace(workspace: Path) -> WorkspaceValidationResult:
         if path.stat().st_mode & writable_bits:
             diagnostics.add(f"original file is writable: {entry.path}")
 
-    for entry in manifest.directories:
-        path = original if entry.path == "." else _workspace_path(original, entry.path)
+    for directory_entry in manifest.directories:
+        path = (
+            original
+            if directory_entry.path == "."
+            else _workspace_path(original, directory_entry.path)
+        )
         if not path.is_dir() or path.is_symlink():
-            diagnostics.add(f"missing original directory: {entry.path}")
+            diagnostics.add(f"missing original directory: {directory_entry.path}")
 
     ordered = tuple(sorted(diagnostics))
     return WorkspaceValidationResult(
