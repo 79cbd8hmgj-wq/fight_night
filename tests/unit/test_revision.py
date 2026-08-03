@@ -178,7 +178,9 @@ def test_hash_mismatch_is_rejected_even_when_metadata_matches(
     assert any(item.startswith("ISO SHA-256 mismatch:") for item in result.diagnostics)
 
 
-def test_metadata_mismatch_is_reported_independently(tmp_path: Path, metadata: dict[str, str]) -> None:
+def test_metadata_mismatch_is_reported_independently(
+    tmp_path: Path, metadata: dict[str, str]
+) -> None:
     modified = dict(metadata)
     modified["DISC_ID"] = "ULUS99999"
     image = build_iso(modified)
