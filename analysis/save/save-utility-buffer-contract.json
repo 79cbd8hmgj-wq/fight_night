@@ -245,14 +245,14 @@
     "import_descriptor_region": {
       "address": {
         "address_type": "elf_virtual",
-        "value": 5209212
+        "value": 5205116
       },
       "module": "BOOT.BIN",
       "sha256": "5f524d02904a98f24718336182b4281b3a1c992e7a2de6930705849c0f8c8405",
       "size": 20
     },
     "library": "sceUtility",
-    "nid": 1355078999,
+    "nid": 1355074903,
     "nid_table_region": {
       "address": {
         "address_type": "elf_virtual",
