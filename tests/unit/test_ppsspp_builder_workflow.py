@@ -4,6 +4,7 @@ _REPOSITORY = Path(__file__).resolve().parents[2]
 _WORKFLOW = _REPOSITORY / ".github/workflows/build-ppsspp-research.yml"
 _BUNDLE_TOOLS = _REPOSITORY / "tools/ppsspp-debugger-bundle"
 _DOC = _REPOSITORY / "docs/architecture/ppsspp-debugger-bundle.md"
+_PINNED_PPSSPP_COMMIT = "49fb4f9b1a91bd210c2332958106a0bf6dc02c27"
 
 
 def test_ppsspp_debugger_builder_is_manual_only_and_pinned() -> None:
@@ -12,7 +13,8 @@ def test_ppsspp_debugger_builder_is_manual_only_and_pinned() -> None:
     assert "workflow_dispatch:" in text
     assert "pull_request:" not in text
     assert "\n  push:" not in text
-    assert "default: v1.20.4" in text
+    assert f"default: {_PINNED_PPSSPP_COMMIT}" in text
+    assert 'test "$resolved" = "$PPSSPP_REVISION"' in text
     assert "git checkout --detach" in text
     assert "git rev-parse HEAD" in text
     assert "permissions:\n  contents: read" in text
@@ -26,6 +28,7 @@ def test_ppsspp_debugger_builder_packages_both_frontends_and_wsdbg() -> None:
     assert "-DHEADLESS=OFF" in text
     assert "--target PPSSPPSDL" in text
     assert "ppsspp/Tools/wsdbg/Cargo.toml" in text
+    assert "test -f Tools/wsdbg/Cargo.lock" in text
     assert "bundle/wsdbg" in text
     assert "PPSSPP-WebSocket-Debugger.md" in text
     assert "memory.breakpoint.add" in text
