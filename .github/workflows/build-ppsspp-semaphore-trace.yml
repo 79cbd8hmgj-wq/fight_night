@@ -1,0 +1,199 @@
+name: Build PPSSPP Semaphore Trace
+
+on:
+  push:
+    branches:
+      - instrument-ppsspp-semaphore-lifecycle
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PPSSPP_REVISION: 49fb4f9b1a91bd210c2332958106a0bf6dc02c27
+      SDL3_REVISION: 96292a5b464258a2b926e0a3d72f8b98c2a81aa6
+      SDL3_TTF_REVISION: a1ce3670aec736ecbf0936c43f2f0cc53aa61e5b
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential ca-certificates cmake git ninja-build patchelf pkg-config \
+            libasound2-dev libcurl4-openssl-dev libdbus-1-dev libdecor-0-dev \
+            libdrm-dev libegl1-mesa-dev libfontconfig1-dev libfreetype6-dev \
+            libgbm-dev libgl1-mesa-dev libgles2-mesa-dev libglew-dev \
+            libibus-1.0-dev libpipewire-0.3-dev libpulse-dev libsamplerate0-dev \
+            libssl-dev libudev-dev libunwind-dev libusb-1.0-0-dev \
+            libwayland-dev libx11-dev libxcursor-dev libxext-dev libxi-dev \
+            libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev \
+            libxtst-dev wayland-protocols
+
+      - name: Build pinned SDL3
+        run: |
+          set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+          git clone --filter=blob:none https://github.com/libsdl-org/SDL.git sdl3
+          git -C sdl3 checkout --detach "$SDL3_REVISION"
+          git -C sdl3 submodule update --init --recursive
+          test "$(git -C sdl3 rev-parse HEAD)" = "$SDL3_REVISION"
+          cmake -S sdl3 -B build-sdl3 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$prefix" \
+            -DSDL_SHARED=ON -DSDL_STATIC=OFF \
+            -DSDL_TEST_LIBRARY=OFF -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF \
+            -DSDL_INSTALL=ON
+          cmake --build build-sdl3 --parallel 4
+          cmake --install build-sdl3
+
+      - name: Build pinned SDL3_ttf
+        run: |
+          set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+          git clone --filter=blob:none https://github.com/libsdl-org/SDL_ttf.git sdl3-ttf
+          git -C sdl3-ttf checkout --detach "$SDL3_TTF_REVISION"
+          git -C sdl3-ttf submodule update --init --recursive
+          test "$(git -C sdl3-ttf rev-parse HEAD)" = "$SDL3_TTF_REVISION"
+          cmake -S sdl3-ttf -B build-sdl3-ttf -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$prefix" \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DBUILD_SHARED_LIBS=ON -DSDLTTF_INSTALL=ON \
+            -DSDLTTF_SAMPLES=OFF -DSDLTTF_VENDORED=OFF \
+            -DSDLTTF_HARFBUZZ=OFF -DSDLTTF_PLUTOSVG=OFF
+          cmake --build build-sdl3-ttf --parallel 4
+          cmake --install build-sdl3-ttf
+
+      - name: Clone exact PPSSPP source
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --recurse-submodules \
+            https://github.com/hrydgard/ppsspp.git ppsspp
+          git -C ppsspp fetch --tags --force
+          git -C ppsspp checkout --detach "$PPSSPP_REVISION"
+          git -C ppsspp submodule update --init --recursive
+          test "$(git -C ppsspp rev-parse HEAD)" = "$PPSSPP_REVISION"
+          printf '%s\n' "$PPSSPP_REVISION" > ppsspp-resolved-revision.txt
+
+      - name: Instrument semaphore lifecycle
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("ppsspp/Core/HLE/sceKernelSemaphore.cpp")
+          source = path.read_text(encoding="utf-8")
+
+          replacements = [
+              (
+                  "\tSceUID id = kernelObjects.Create(s);\n",
+                  "\tSceUID id = kernelObjects.Create(s);\n"
+                  "\tERROR_LOG(Log::sceKernel, \"FNR3_SEMA_CREATE id=%d name=%s pc=%08x ra=%08x sp=%08x\", "
+                  "id, name, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA], currentMIPS->r[MIPS_REG_SP]);\n",
+              ),
+              (
+                  "int sceKernelDeleteSema(SceUID id) {\n\tu32 error;\n",
+                  "int sceKernelDeleteSema(SceUID id) {\n"
+                  "\tERROR_LOG(Log::sceKernel, \"FNR3_SEMA_DELETE id=%d pc=%08x ra=%08x sp=%08x\", "
+                  "id, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA], currentMIPS->r[MIPS_REG_SP]);\n"
+                  "\tu32 error;\n",
+              ),
+              (
+                  "\tif (!s) {\n\t\tif (id == 0 && error == SCE_KERNEL_ERROR_UNKNOWN_SEMID) {\n",
+                  "\tif (!s) {\n"
+                  "\t\tERROR_LOG(Log::sceKernel, \"FNR3_SEMA_BAD_SIGNAL id=%d signal=%d pc=%08x ra=%08x sp=%08x\", "
+                  "id, signal, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA], currentMIPS->r[MIPS_REG_SP]);\n"
+                  "\t\tif (id == 0 && error == SCE_KERNEL_ERROR_UNKNOWN_SEMID) {\n",
+              ),
+              (
+                  "int sceKernelWaitSema(SceUID id, int wantedCount, u32 timeoutPtr) {\n"
+                  "\tint result = __KernelWaitSema(id, wantedCount, timeoutPtr, false);\n\n",
+                  "int sceKernelWaitSema(SceUID id, int wantedCount, u32 timeoutPtr) {\n"
+                  "\tint result = __KernelWaitSema(id, wantedCount, timeoutPtr, false);\n"
+                  "\tif (result == SCE_KERNEL_ERROR_UNKNOWN_SEMID) {\n"
+                  "\t\tERROR_LOG(Log::sceKernel, \"FNR3_SEMA_BAD_WAIT id=%d wanted=%d timeout=%08x pc=%08x ra=%08x sp=%08x\", "
+                  "id, wantedCount, timeoutPtr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA], currentMIPS->r[MIPS_REG_SP]);\n"
+                  "\t}\n\n",
+              ),
+          ]
+
+          for old, new in replacements:
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f"instrumentation anchor count {count}, expected 1: {old[:80]!r}")
+              source = source.replace(old, new, 1)
+
+          path.write_text(source, encoding="utf-8")
+          trace_lines = [line for line in source.splitlines() if "FNR3_SEMA_" in line]
+          if len(trace_lines) != 4:
+              raise SystemExit(f"expected four trace statements, got {len(trace_lines)}")
+          print("\n".join(trace_lines))
+          PY
+          git -C ppsspp diff --check
+          git -C ppsspp diff -- Core/HLE/sceKernelSemaphore.cpp
+
+      - name: Configure and build PPSSPPHeadless
+        run: |
+          set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+          cmake -S ppsspp -B build-headless -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DCMAKE_BUILD_RPATH="$prefix/lib" \
+            -DHEADLESS=ON -DUNITTEST=OFF -DUSE_DISCORD=OFF \
+            -DUSE_FFMPEG=OFF -DUSE_MINIUPNPC=OFF
+          cmake --build build-headless --target PPSSPPHeadless --parallel 4
+
+      - name: Package instrumented binary
+        run: |
+          set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+          prefix_libs="$(find "$prefix" -type f -name 'libSDL3*.so*' -printf '%h\n' | sort -u | paste -sd: -)"
+          export LD_LIBRARY_PATH="$prefix_libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          binary="$(find build-headless -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
+          test -n "$binary"
+          mkdir -p bundle/assets bundle/lib
+          cp "$binary" bundle/PPSSPPHeadless
+          cp -a ppsspp/assets/. bundle/assets/
+          cp ppsspp/LICENSE.TXT bundle/PPSSPP-LICENSE.txt
+          cp ppsspp-resolved-revision.txt bundle/ppsspp-resolved-revision.txt
+          chmod +x bundle/PPSSPPHeadless
+          ldd bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.ldd.txt
+          test -z "$(grep 'not found' bundle/PPSSPPHeadless.ldd.txt || true)"
+          while IFS= read -r library; do
+            test -f "$library" || continue
+            base="$(basename "$library")"
+            case "$base" in
+              ld-linux*|libc.so.*|libm.so.*|libpthread.so.*|libdl.so.*|librt.so.*|libresolv.so.*|libutil.so.*) continue ;;
+            esac
+            cp -L "$library" "bundle/lib/$base"
+          done < <(ldd bundle/PPSSPPHeadless | awk '/=> \/[^ ]+/ {print $3} /^\// {print $1}' | sort -u)
+          patchelf --set-rpath '$ORIGIN/lib' bundle/PPSSPPHeadless
+          export LD_LIBRARY_PATH="$PWD/bundle/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1
+          bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1
+          grep -q -- '--debugger=PORT' bundle/PPSSPPHeadless.help.txt
+          printf '%s\n' \
+            'Instrumented PPSSPP build for Fight Night semaphore lifecycle tracing.' \
+            'Logs FNR3_SEMA_CREATE, FNR3_SEMA_DELETE, FNR3_SEMA_BAD_WAIT, and FNR3_SEMA_BAD_SIGNAL.' \
+            'Contains no game image or save data.' > bundle/README.txt
+          (cd bundle && find . -type f ! -name bundle.sha256 -print0 | sort -z | xargs -0 sha256sum > bundle.sha256 && sha256sum -c bundle.sha256)
+          tar -C bundle -czf ppsspp-semaphore-trace-linux-x86_64.tar.gz .
+          sha256sum ppsspp-semaphore-trace-linux-x86_64.tar.gz > ppsspp-semaphore-trace-linux-x86_64.tar.gz.sha256
+
+      - name: Upload semaphore trace bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppsspp-semaphore-trace-linux-x86_64
+          path: |
+            ppsspp-semaphore-trace-linux-x86_64.tar.gz
+            ppsspp-semaphore-trace-linux-x86_64.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
