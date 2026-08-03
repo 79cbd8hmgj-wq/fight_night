@@ -1,0 +1,39 @@
+name: Task 4 type cleanup
+
+on:
+  push:
+    branches:
+      - task-4-iso-workspace
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: task-4-iso-workspace
+      - name: Separate manifest loop types
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/fnr3_re/iso.py')
+          text = path.read_text(encoding='utf-8')
+          old = '''    for entry in manifest.directories:\n        path = original if entry.path == "." else _workspace_path(original, entry.path)\n        if not path.is_dir() or path.is_symlink():\n            diagnostics.add(f"missing original directory: {entry.path}")\n'''
+          new = '''    for directory_entry in manifest.directories:\n        path = (\n            original\n            if directory_entry.path == "."\n            else _workspace_path(original, directory_entry.path)\n        )\n        if not path.is_dir() or path.is_symlink():\n            diagnostics.add(f"missing original directory: {directory_entry.path}")\n'''
+          if old not in text:
+              raise SystemExit('expected verifier block was not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Commit cleanup
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/fnr3_re/iso.py
+          git diff --cached --check
+          git commit -m "types: separate workspace manifest loop values"
+          git push origin HEAD:task-4-iso-workspace
