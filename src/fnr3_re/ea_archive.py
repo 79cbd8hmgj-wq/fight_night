@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from itertools import pairwise
 import math
 import os
 import shutil
@@ -90,7 +91,8 @@ def parse_ea_archive(payload: bytes | bytearray | memoryview) -> EaArchive:
 
     if position != header_size:
         raise EaArchiveError(
-            f"archive header size mismatch: directory ends at {position}, header ends at {header_size}"
+            f"archive header size mismatch: directory ends at {position}, "
+            f"header ends at {header_size}"
         )
 
     ranges: list[tuple[int, int, str]] = []
@@ -311,7 +313,7 @@ def _align(value: int, alignment: int) -> int:
 
 def _reject_overlaps(ranges: list[tuple[int, int, str]]) -> None:
     ordered = sorted(ranges, key=lambda item: item[0])
-    for previous, current in zip(ordered, ordered[1:], strict=False):
+    for previous, current in pairwise(ordered):
         if current[0] < previous[1]:
             raise EaArchiveError(
                 f"overlapping member payloads: {previous[2]} and {current[2]}"

@@ -47,7 +47,11 @@ def test_parses_bigf_directory_and_infers_alignment() -> None:
     assert archive.total_size == 0x42
     assert archive.header_size == 0x30
     assert archive.alignment == 0x10
-    assert [(member.name, member.offset, member.size, member.data) for member in archive.members] == [
+    observed = [
+        (member.name, member.offset, member.size, member.data)
+        for member in archive.members
+    ]
+    assert observed == [
         ("a.bin", 0x30, 1, b"A"),
         ("dir/b.bin", 0x40, 2, b"BB"),
     ]
