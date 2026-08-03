@@ -60,6 +60,7 @@ print(json.dumps({
         "entries": [
             [56, 0x00340DC8, "save", "save_payload_workspace_provider"],
             [64, 0x00340F00, "load", "load_payload_workspace_provider"],
+            [68, 0x00340F64, "load", "load_payload_commit_handler"],
         ],
     }
 
