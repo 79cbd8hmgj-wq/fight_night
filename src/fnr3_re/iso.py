@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import hashlib
-from itertools import pairwise
 import os
 import shutil
 import stat
 import uuid
 from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO
 
