@@ -8,7 +8,7 @@
       ],
       "observations": [
         "The controller clears and initializes the shared 0x600-byte parameter block before populating DATA.BIN, payload pointer and size fields, SFO metadata, key material, and mode 5.",
-        "Mode 5 corresponds to the PSP savedata LISTSAVE operation in the external utility contract, but the game callback supplying the payload remains unresolved."
+        "Mode 5 corresponds to the PSP savedata LISTSAVE operation, and Checkpoint 9C resolves the payload provider to BOOT.BIN dispatch entry +0x38."
       ],
       "region": {
         "address": {
@@ -24,12 +24,12 @@
     {
       "confidence": "PROBABLE",
       "mode_values": [
-        0,
+        1,
         3
       ],
       "observations": [
-        "The adjacent controller builds the same 0x600-byte parameter block and selects mode 3 or mode 0 from an upstream state byte.",
-        "The external utility contract identifies those values as SAVE and AUTOLOAD, while the game-side branch condition and serializer direction remain unconfirmed without runtime evidence."
+        "The adjacent controller builds the same 0x600-byte parameter block and selects mode 3 or mode 1 from object byte +0x108.",
+        "The exact branch values identify SAVE and AUTOSAVE; the earlier AUTOLOAD interpretation was rejected by the preloaded mode-one instruction."
       ],
       "region": {
         "address": {
@@ -40,7 +40,7 @@
         "sha256": "931c460a1864fd2cf27211b4d404c9abcc1cd92731bc7895cb4389334d259147",
         "size": 764
       },
-      "role": "save_or_autoload_controller"
+      "role": "autosave_or_save_controller"
     }
   ],
   "parameter_block": {
@@ -174,7 +174,7 @@
         "confidence": "CANDIDATE",
         "observations": [
           "An indirect callback receives pointers to parameter-block offsets 0x74 and 0x78 plus one duplicated stack output pointer before DATA.BIN and dataSize are finalized.",
-          "The relocated callback table and its owning object are not assigned a serializer or deserializer name from static evidence alone."
+          "Checkpoint 9C resolves dispatch entry +0x38 to BOOT.BIN target 0x00340DC8 on the save-payload path."
         ],
         "region": {
           "address": {
@@ -198,8 +198,8 @@
         ],
         "confidence": "CANDIDATE",
         "observations": [
-          "The adjacent controller invokes the same relocated callback-table slot with pointers to parameter-block offsets 0x74 and 0x78 and two stack outputs.",
-          "The callback occurs before the mode 3 or mode 0 savedata utility call and therefore marks the game-payload handoff boundary, not a confirmed direction-specific serializer."
+          "The adjacent controller invokes the same dispatch-table entry with pointers to parameter-block offsets 0x74 and 0x78 and two stack outputs.",
+          "The callback occurs before mode 3 or mode 1 and resolves to BOOT.BIN target 0x00340DC8, establishing a save-direction payload boundary."
         ],
         "region": {
           "address": {
@@ -210,7 +210,7 @@
           "sha256": "688e1091c588905a6ea6aef27894ddce0b6487acfe85a89dac6932756dd4c5fc",
           "size": 236
         },
-        "role": "save_or_autoload_payload_provider"
+        "role": "autosave_or_save_payload_provider"
       }
     ],
     "capacity_field_offset": 120,
@@ -218,17 +218,15 @@
     "flow_direction": "unresolved",
     "observations": [
       "The shared 0x600-byte object is an operating-system savedata parameter block rather than the serialized Fight Night payload.",
-      "The game payload is separately allocated or owned and is handed to the utility through the pointer at offset 0x74, capacity at 0x78, and active byte count at 0x7C.",
-      "In both observed controller paths, dataSize is copied from dataBufSize before the utility-init call; post-load size updates and ownership lifetime require runtime observation."
+      "The game payload is separately owned and crosses the utility boundary through the pointer at offset 0x74, capacity at 0x78, and active byte count at 0x7C.",
+      "This generic utility-buffer artifact keeps flow direction unresolved; Checkpoint 9C records save and load directions in the separate payload-direction map."
     ],
     "pointer_field_offset": 116
   },
   "remaining_unknowns": [
-    "payload provider callback target and owner",
     "payload allocation and release lifetime",
     "serializer writer set",
     "deserializer reader set",
-    "runtime direction of each upstream controller branch",
     "post-load dataSize update behavior",
     "checksum and obfuscation",
     "profile and career payload boundaries",
