@@ -11,6 +11,7 @@ from fnr3_re.revision import load_reference_revision
 
 ROOT = Path(__file__).resolve().parents[2]
 REFERENCE_CONFIG = ROOT / "config" / "revisions" / "ulus10066-v1.00.json"
+CHUNK_SIZE = 1024 * 1024
 
 
 @pytest.mark.skipif(
@@ -38,4 +39,17 @@ def test_reference_no_change_rebuild_is_byte_exact(tmp_path: Path) -> None:
     assert report.no_change
     assert report.changed_files == ()
     assert report.output_sha256 == revision.iso_sha256
-    assert output.read_bytes() == reference.read_bytes()
+    assert files_are_equal(output, reference)
+
+
+def files_are_equal(first: Path, second: Path) -> bool:
+    if first.stat().st_size != second.stat().st_size:
+        return False
+    with first.open("rb") as first_stream, second.open("rb") as second_stream:
+        while True:
+            first_chunk = first_stream.read(CHUNK_SIZE)
+            second_chunk = second_stream.read(CHUNK_SIZE)
+            if first_chunk != second_chunk:
+                return False
+            if not first_chunk:
+                return True
