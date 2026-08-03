@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       ppsspp_revision:
-        description: Immutable PPSSPP tag or commit to build
+        description: Immutable PPSSPP commit to build
         required: true
-        default: v1.20.4
+        default: 49fb4f9b1a91bd210c2332958106a0bf6dc02c27
         type: string
 
 permissions:
@@ -51,9 +51,14 @@ jobs:
           git fetch --tags --force
           git checkout --detach "$PPSSPP_REVISION"
           git submodule update --init --recursive
-          git rev-parse HEAD | tee ../ppsspp-resolved-revision.txt
+          resolved="$(git rev-parse HEAD)"
+          test "$resolved" = "$PPSSPP_REVISION"
+          printf '%s\n' "$resolved" | tee ../ppsspp-resolved-revision.txt
           git status --short
           test -z "$(git status --short)"
+          test -f docs/WebSocketDebugger.md
+          test -f Tools/wsdbg/Cargo.toml
+          test -f Tools/wsdbg/Cargo.lock
           grep -R --fixed-strings -- '--debugger' Core docs headless Tools/wsdbg
 
       - name: Configure headless debugger build
