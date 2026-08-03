@@ -40,6 +40,7 @@ def test_tracked_big4_database_archive_matches_observed_contract() -> None:
     assert archive.magic == b"BIG4"
     assert archive.total_size == 21_854
     assert archive.header_size == 0xE7
+    assert archive.header_tail == b"L266\x15\x05\x00\x01"
     assert archive.alignment == 0x40
     assert [member.name for member in archive.members] == [
         "xdbboxr.adf",

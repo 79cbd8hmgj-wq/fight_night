@@ -39,6 +39,7 @@ class EaArchive:
     magic: bytes
     total_size: int
     header_size: int
+    header_tail: bytes
     alignment: int
     members: tuple[EaArchiveMember, ...]
     source: bytes
@@ -89,11 +90,12 @@ def parse_ea_archive(payload: bytes | bytearray | memoryview) -> EaArchive:
         raw_members.append((name, offset, size))
         position = terminator + 1
 
-    if position != header_size:
+    if position > header_size:
         raise EaArchiveError(
             f"archive header size mismatch: directory ends at {position}, "
             f"header ends at {header_size}"
         )
+    header_tail = data[position:header_size]
 
     ranges: list[tuple[int, int, str]] = []
     members: list[EaArchiveMember] = []
@@ -122,6 +124,7 @@ def parse_ea_archive(payload: bytes | bytearray | memoryview) -> EaArchive:
         magic=magic,
         total_size=total_size,
         header_size=header_size,
+        header_tail=header_tail,
         alignment=_infer_alignment(raw_members, magic),
         members=tuple(members),
         source=data,
@@ -133,6 +136,7 @@ def build_ea_archive(
     *,
     magic: bytes = b"BIGF",
     alignment: int | None = None,
+    header_tail: bytes | bytearray | memoryview = b"",
 ) -> bytes:
     if magic not in _SUPPORTED_MAGICS:
         raise EaArchiveError(f"unsupported EA archive magic: {magic!r}")
@@ -143,6 +147,7 @@ def build_ea_archive(
 
     normalized: list[tuple[str, bytes, bytes]] = []
     seen_names: set[str] = set()
+    trailer = bytes(header_tail)
     header_size = 16
     for name, member_payload in members:
         _safe_member_parts(name)
@@ -157,6 +162,7 @@ def build_ea_archive(
         member_data = bytes(member_payload)
         normalized.append((name, encoded_name, member_data))
         header_size += 8 + len(encoded_name) + 1
+    header_size += len(trailer)
 
     cursor = _align(header_size, selected_alignment)
     layout: list[tuple[str, bytes, bytes, int]] = []
@@ -184,6 +190,8 @@ def build_ea_archive(
         output[position] = 0
         position += 1
         output[offset : offset + len(member_data)] = member_data
+    output[position : position + len(trailer)] = trailer
+    position += len(trailer)
     if position != header_size:
         raise AssertionError("EA archive directory size calculation diverged")
     return bytes(output)
@@ -223,6 +231,7 @@ def rebuild_ea_archive(
         rebuilt_members,
         magic=archive.magic,
         alignment=archive.alignment,
+        header_tail=archive.header_tail,
     )
 
 
