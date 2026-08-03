@@ -1,0 +1,47 @@
+name: Task 7 direct offset conversions
+
+on:
+  push:
+    branches:
+      - task-7-module-address-map
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: task-7-module-address-map
+      - name: Add lossless direct offset conversions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/fnr3_re/address_map.py')
+          text = path.read_text(encoding='utf-8')
+          old = '''        if target is AddressType.ARCHIVE_OFFSET:\n            raise AddressTranslationError("unsupported address space: archive_offset")\n\n        relative = self._to_module_relative(source)\n        return Address(target, self._from_module_relative(relative, target))\n'''
+          new = '''        if target is AddressType.ARCHIVE_OFFSET:\n            raise AddressTranslationError("unsupported address space: archive_offset")\n\n        direct = self._translate_direct_offset(source, target)\n        if direct is not None:\n            return Address(target, direct)\n        relative = self._to_module_relative(source)\n        return Address(target, self._from_module_relative(relative, target))\n\n    def _translate_direct_offset(\n        self, source: Address, target: AddressType\n    ) -> int | None:\n        source_type = source.address_type\n        value = source.value\n        if source_type is AddressType.ISO_OFFSET and target is AddressType.ISO_LBA:\n            if value % self.sector_size:\n                raise AddressTranslationError(\n                    f"ISO offset 0x{value:x} is not sector aligned"\n                )\n            return value // self.sector_size\n        if source_type is AddressType.ISO_LBA and target is AddressType.ISO_OFFSET:\n            return value * self.sector_size\n        if source_type is AddressType.STORED_PRX_OFFSET and target is AddressType.ISO_OFFSET:\n            return self._require_iso_file_offset() + value\n        if source_type is AddressType.ISO_OFFSET and target is AddressType.STORED_PRX_OFFSET:\n            iso_file_offset = self._require_iso_file_offset()\n            if value < iso_file_offset:\n                raise AddressTranslationError(\n                    f"ISO offset 0x{value:x} is before module file offset "\n                    f"0x{iso_file_offset:x}"\n                )\n            return value - iso_file_offset\n        if source_type is AddressType.ELF_FILE_OFFSET and target is AddressType.STORED_PRX_OFFSET:\n            self._validate_elf_file_offset(value)\n            return self.stored_elf_offset + value\n        if source_type is AddressType.STORED_PRX_OFFSET and target is AddressType.ELF_FILE_OFFSET:\n            elf_offset = value - self.stored_elf_offset\n            self._validate_elf_file_offset(elf_offset)\n            return elf_offset\n        if source_type is AddressType.ELF_FILE_OFFSET and target is AddressType.ISO_OFFSET:\n            stored = self._translate_direct_offset(\n                source, AddressType.STORED_PRX_OFFSET\n            )\n            if stored is None:\n                raise AssertionError("ELF-to-stored translation unexpectedly failed")\n            return self._require_iso_file_offset() + stored\n        if source_type is AddressType.ISO_OFFSET and target is AddressType.ELF_FILE_OFFSET:\n            stored = self._translate_direct_offset(\n                source, AddressType.STORED_PRX_OFFSET\n            )\n            if stored is None:\n                raise AssertionError("ISO-to-stored translation unexpectedly failed")\n            return self._translate_direct_offset(\n                Address(AddressType.STORED_PRX_OFFSET, stored),\n                AddressType.ELF_FILE_OFFSET,\n            )\n        return None\n\n    def _validate_elf_file_offset(self, value: int) -> None:\n        if value < 0 or value >= self.elf.source_size:\n            raise AddressTranslationError(\n                f"ELF file offset 0x{value:x} is outside source file"\n            )\n'''
+          if old not in text:
+              raise SystemExit('translation block not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          tests = Path('tests/unit/test_address_map.py')
+          text = tests.read_text(encoding='utf-8')
+          marker = '\n\ndef test_reverse_translation_preserves_exact_address() -> None:\n'
+          insertion = '''\n\ndef test_file_header_offsets_translate_without_runtime_mapping() -> None:\n    mapping = translator()\n\n    assert mapping.translate(\n        Address(AddressType.ELF_FILE_OFFSET, 0),\n        AddressType.STORED_PRX_OFFSET,\n    ).value == 0\n    assert mapping.translate(\n        Address(AddressType.ELF_FILE_OFFSET, 0x34),\n        AddressType.ISO_OFFSET,\n    ).value == 0x00100034\n    assert mapping.translate(\n        Address(AddressType.ISO_OFFSET, 0x00100034),\n        AddressType.ELF_FILE_OFFSET,\n    ).value == 0x34\n'''
+          if marker not in text:
+              raise SystemExit('test insertion marker not found')
+          tests.write_text(text.replace(marker, insertion + marker, 1), encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/fnr3_re/address_map.py tests/unit/test_address_map.py
+          git diff --cached --check
+          git commit -m "fix: preserve direct file and ISO offsets"
+          git push origin HEAD:task-7-module-address-map
