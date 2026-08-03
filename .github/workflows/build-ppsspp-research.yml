@@ -1,37 +1,26 @@
-name: Build PPSSPP Debug Bundle
+name: Build PPSSPP Debugger Bundle
 
 on:
   workflow_dispatch:
     inputs:
       ppsspp_revision:
-        description: Immutable PPSSPP tag or commit to build
+        description: Immutable PPSSPP commit to build
         required: true
-        default: v1.20.4
+        default: 49fb4f9b1a91bd210c2332958106a0bf6dc02c27
         type: string
-  # Temporary PR trigger used to produce and validate the first portable artifact.
-  # It is removed after the artifact passes its bundle checks.
-  pull_request:
-    paths:
-      - .github/workflows/build-ppsspp-research.yml
-      - tools/ppsspp_debug_bundle/**
-      - tests/unit/test_ppsspp_debug_bundle.py
 
 permissions:
   contents: read
 
-concurrency:
-  group: ppsspp-debug-bundle-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     steps:
-      - name: Check out bundle tooling
+      - name: Check out bundle scripts
         uses: actions/checkout@v4
 
-      - name: Install build and runtime dependencies
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -39,19 +28,22 @@ jobs:
             ca-certificates \
             cmake \
             git \
+            libcurl4-openssl-dev \
             libfontconfig1-dev \
             libgl1-mesa-dev \
             libglew-dev \
-            libsdl2-dev \
-            libsdl2-ttf-dev \
+            libsdl3-dev \
+            libsdl3-ttf-dev \
             libssl-dev \
             ninja-build \
-            pkg-config \
-            xvfb
+            patchelf \
+            pkg-config
+          cargo --version
+          rustc --version
 
       - name: Clone exact PPSSPP source
         env:
-          PPSSPP_REVISION: ${{ inputs.ppsspp_revision || 'v1.20.4' }}
+          PPSSPP_REVISION: ${{ inputs.ppsspp_revision }}
         run: |
           git clone --filter=blob:none --recurse-submodules \
             https://github.com/hrydgard/ppsspp.git ppsspp
@@ -59,21 +51,17 @@ jobs:
           git fetch --tags --force
           git checkout --detach "$PPSSPP_REVISION"
           git submodule update --init --recursive
-          git rev-parse HEAD | tee ../ppsspp-resolved-revision.txt
+          resolved="$(git rev-parse HEAD)"
+          test "$resolved" = "$PPSSPP_REVISION"
+          printf '%s\n' "$resolved" | tee ../ppsspp-resolved-revision.txt
           git status --short
           test -z "$(git status --short)"
+          test -f docs/WebSocketDebugger.md
+          test -f Tools/wsdbg/Cargo.toml
+          test -f Tools/wsdbg/Cargo.lock
+          grep -R --fixed-strings -- '--debugger' Core docs headless Tools/wsdbg
 
-      - name: Configure SDL research build
-        run: |
-          cmake -S ppsspp -B build-sdl -G Ninja \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DHEADLESS=OFF \
-            -DUNITTEST=OFF \
-            -DUSE_DISCORD=OFF \
-            -DUSE_FFMPEG=OFF \
-            -DUSE_MINIUPNPC=OFF
-
-      - name: Configure headless research build
+      - name: Configure headless debugger build
         run: |
           cmake -S ppsspp -B build-headless -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -83,137 +71,105 @@ jobs:
             -DUSE_FFMPEG=OFF \
             -DUSE_MINIUPNPC=OFF
 
-      - name: Build SDL and headless targets
-        run: |
-          cmake --build build-sdl --target PPSSPPSDL --parallel 2
-          cmake --build build-headless --target PPSSPPHeadless --parallel 2
+      - name: Build PPSSPPHeadless
+        run: cmake --build build-headless --target PPSSPPHeadless --parallel 2
 
-      - name: Package and smoke-test exact debugger bundle
+      - name: Configure SDL debugger build
+        run: |
+          cmake -S ppsspp -B build-sdl -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DHEADLESS=OFF \
+            -DUNITTEST=OFF \
+            -DUSE_DISCORD=OFF \
+            -DUSE_FFMPEG=OFF \
+            -DUSE_MINIUPNPC=OFF
+
+      - name: Build PPSSPPSDL
+        run: cmake --build build-sdl --target PPSSPPSDL --parallel 2
+
+      - name: Build official wsdbg client
+        run: |
+          cargo build \
+            --locked \
+            --release \
+            --manifest-path ppsspp/Tools/wsdbg/Cargo.toml
+
+      - name: Package exact debugger bundle
         run: |
           set -euo pipefail
-          sdl_binary="$(find build-sdl -type f -name PPSSPPSDL -perm -111 | head -n 1)"
-          headless_binary="$(find build-headless -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
-          test -n "$sdl_binary"
-          test -n "$headless_binary"
 
-          mkdir -p bundle/assets bundle/bin bundle/lib bundle/memstick/PSP/SYSTEM bundle/runtime
-          cp "$sdl_binary" bundle/PPSSPPSDL
-          cp "$headless_binary" bundle/PPSSPPHeadless
-          cp /usr/bin/Xvfb bundle/bin/Xvfb
+          headless="$(find build-headless -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
+          sdl="$(find build-sdl -type f -name PPSSPPSDL -perm -111 | head -n 1)"
+          wsdbg="ppsspp/Tools/wsdbg/target/release/wsdbg"
+          test -n "$headless"
+          test -n "$sdl"
+          test -x "$wsdbg"
+
+          mkdir -p bundle/assets bundle/lib bundle/tools/ppsspp-debugger-bundle
+          cp "$headless" bundle/PPSSPPHeadless
+          cp "$sdl" bundle/PPSSPPSDL
+          cp "$wsdbg" bundle/wsdbg
           cp -a ppsspp/assets/. bundle/assets/
           cp ppsspp/LICENSE.TXT bundle/PPSSPP-LICENSE.txt
-          cp ppsspp/scripts/websocket-test.py bundle/official-websocket-test.py
           cp ppsspp-resolved-revision.txt bundle/ppsspp-resolved-revision.txt
-          cp tools/ppsspp_debug_bundle/* bundle/
+          cp ppsspp/docs/WebSocketDebugger.md bundle/PPSSPP-WebSocket-Debugger.md
+          cp ppsspp/Tools/wsdbg/README.md bundle/wsdbg-README.md
+          cp tools/ppsspp-debugger-bundle/*.sh bundle/tools/ppsspp-debugger-bundle/
+          cp tools/ppsspp-debugger-bundle/README.txt bundle/README.txt
+          chmod +x bundle/PPSSPPHeadless bundle/PPSSPPSDL bundle/wsdbg
+          chmod +x bundle/tools/ppsspp-debugger-bundle/*.sh
 
-          copy_deps() {
-            ldd "$1" \
-              | awk '/=> \// {print $3} /^[[:space:]]*\// {print $1}' \
-              | sort -u \
-              | while read -r dependency; do
-                  test -f "$dependency" || continue
-                  name="$(basename "$dependency")"
-                  case "$name" in
-                    libc.so.6|libm.so.6|ld-linux-*|ld-musl-*) continue ;;
-                  esac
-                  cp -L "$dependency" "bundle/lib/$name"
-                done
-          }
-          copy_deps bundle/PPSSPPSDL
-          copy_deps bundle/PPSSPPHeadless
-          copy_deps bundle/bin/Xvfb
+          for binary in bundle/PPSSPPHeadless bundle/PPSSPPSDL bundle/wsdbg; do
+            ldd "$binary" > "$binary.ldd.txt" || true
+            while IFS= read -r library; do
+              test -f "$library" || continue
+              base="$(basename "$library")"
+              case "$base" in
+                ld-linux*|libc.so.*|libm.so.*|libpthread.so.*|libdl.so.*|librt.so.*|libresolv.so.*|libutil.so.*)
+                  continue
+                  ;;
+              esac
+              cp -L "$library" "bundle/lib/$base"
+            done < <(
+              ldd "$binary" \
+                | awk '/=> \/[^ ]+/ {print $3} /^\// {print $1}' \
+                | sort -u
+            )
+            patchelf --set-rpath '$ORIGIN/lib' "$binary"
+          done
 
-          chmod +x \
-            bundle/PPSSPPSDL \
-            bundle/PPSSPPHeadless \
-            bundle/bin/Xvfb \
-            bundle/launch-debug.sh \
-            bundle/stop-debug.sh \
-            bundle/install-state.sh \
-            bundle/ppsspp_ws.py
+          export LD_LIBRARY_PATH="$PWD/bundle/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1 || true
+          bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1 || true
+          bundle/PPSSPPSDL --version > bundle/PPSSPPSDL.version.txt 2>&1 || true
+          bundle/PPSSPPSDL --help > bundle/PPSSPPSDL.help.txt 2>&1 || true
+          bundle/wsdbg --help > bundle/wsdbg.help.txt
+
+          bash -n bundle/tools/ppsspp-debugger-bundle/*.sh
+          grep -q -- '--debugger' bundle/PPSSPP-WebSocket-Debugger.md
+          grep -q 'debugger.ppsspp.org' bundle/PPSSPP-WebSocket-Debugger.md
+          grep -q 'memory.breakpoint.add' bundle/PPSSPP-WebSocket-Debugger.md
+          grep -q 'input.buttons.send' bundle/PPSSPP-WebSocket-Debugger.md
 
           (
             cd bundle
-            sha256sum PPSSPPSDL > PPSSPPSDL.sha256
-            sha256sum PPSSPPHeadless > PPSSPPHeadless.sha256
-            sha256sum bin/Xvfb > Xvfb.sha256
+            find . -type f ! -name bundle.sha256 -print0 \
+              | sort -z \
+              | xargs -0 sha256sum \
+              > bundle.sha256
+            sha256sum -c bundle.sha256
           )
-          ldd bundle/PPSSPPSDL > bundle/PPSSPPSDL.ldd.txt
-          ldd bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.ldd.txt
-          ldd bundle/bin/Xvfb > bundle/Xvfb.ldd.txt
-          grep -R "not found" bundle/*.ldd.txt && exit 1 || true
 
-          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
-            bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1 || true
-          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
-            bundle/PPSSPPSDL --version > bundle/PPSSPPSDL.version.txt 2>&1
-          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
-            bundle/PPSSPPSDL --help > bundle/PPSSPPSDL.help.txt 2>&1
-
-          bash -n bundle/launch-debug.sh bundle/stop-debug.sh bundle/install-state.sh
-          python3 -m py_compile bundle/ppsspp_ws.py
-          python3 bundle/ppsspp_ws.py --help > bundle/ppsspp_ws.help.txt
-          rm -rf bundle/__pycache__
-          grep -q '^RemoteDebuggerOnStartup = True$' bundle/ppsspp-debug.ini
-          grep -q '^RemoteDebuggerLocal = True$' bundle/ppsspp-debug.ini
-          grep -q '^RemoteISOPort = 56244$' bundle/ppsspp-debug.ini
-          grep -q -- '--state=FILE' bundle/PPSSPPSDL.help.txt
-          grep -q -- '--appendconfig=FILE' bundle/PPSSPPSDL.help.txt
-
-          export HOME="$PWD/bundle/memstick"
-          export XDG_CONFIG_HOME="$HOME/.config"
-          export DISPLAY=:99
-          mkdir -p "$XDG_CONFIG_HOME"
-          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
-            bundle/bin/Xvfb "$DISPLAY" -screen 0 1280x720x24 -nolisten tcp \
-            > bundle/runtime/xvfb-smoke.stdout.log \
-            2> bundle/runtime/xvfb-smoke.stderr.log &
-          xvfb_pid=$!
-          ppsspp_pid=
-          cleanup() {
-            if test -n "${ppsspp_pid:-}"; then kill "$ppsspp_pid" 2>/dev/null || true; fi
-            kill "$xvfb_pid" 2>/dev/null || true
-          }
-          trap cleanup EXIT
-          sleep 1
-          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
-            bundle/PPSSPPSDL \
-              --appendconfig="$PWD/bundle/ppsspp-debug.ini" \
-              --windowed \
-            > bundle/runtime/ppsspp-smoke.stdout.log \
-            2> bundle/runtime/ppsspp-smoke.stderr.log &
-          ppsspp_pid=$!
-          healthy=0
-          for _attempt in $(seq 1 40); do
-            kill -0 "$ppsspp_pid"
-            if bundle/ppsspp_ws.py --port 56244 --timeout 1 --wait 1 health \
-              > bundle/runtime/debugger-smoke.jsonl \
-              2> bundle/runtime/debugger-smoke.stderr.log; then
-              healthy=1
-              break
-            fi
-            sleep 0.25
-          done
-          test "$healthy" -eq 1
-          grep -q '"event": "game.status"' bundle/runtime/debugger-smoke.jsonl
-          cleanup
-          trap - EXIT
-
-          printf '%s\n' \
-            'This artifact contains only an official PPSSPP research build, runtime libraries, Xvfb, and debugger tooling.' \
-            'It contains no game image, PSP state, savedata, extracted game data, or copyrighted game asset.' \
-            > bundle/BUNDLE-CONTENTS.txt
-
-          tar -C bundle -czf ppsspp-debug-linux-x86_64.tar.gz .
-          sha256sum ppsspp-debug-linux-x86_64.tar.gz \
-            > ppsspp-debug-linux-x86_64.tar.gz.sha256
+          tar -C bundle -czf ppsspp-debugger-linux-x86_64.tar.gz .
+          sha256sum ppsspp-debugger-linux-x86_64.tar.gz \
+            > ppsspp-debugger-linux-x86_64.tar.gz.sha256
 
       - name: Upload debugger bundle
         uses: actions/upload-artifact@v4
         with:
-          name: ppsspp-debug-linux-x86_64
+          name: ppsspp-debugger-linux-x86_64
           path: |
-            ppsspp-debug-linux-x86_64.tar.gz
-            ppsspp-debug-linux-x86_64.tar.gz.sha256
+            ppsspp-debugger-linux-x86_64.tar.gz
+            ppsspp-debugger-linux-x86_64.tar.gz.sha256
           if-no-files-found: error
           retention-days: 7
