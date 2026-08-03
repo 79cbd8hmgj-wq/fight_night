@@ -39,8 +39,66 @@ class AddressTranslator:
         if target is AddressType.ARCHIVE_OFFSET:
             raise AddressTranslationError("unsupported address space: archive_offset")
 
+        direct = self._translate_direct_offset(source, target)
+        if direct is not None:
+            return Address(target, direct)
         relative = self._to_module_relative(source)
         return Address(target, self._from_module_relative(relative, target))
+
+    def _translate_direct_offset(
+        self, source: Address, target: AddressType
+    ) -> int | None:
+        source_type = source.address_type
+        value = source.value
+        if source_type is AddressType.ISO_OFFSET and target is AddressType.ISO_LBA:
+            if value % self.sector_size:
+                raise AddressTranslationError(
+                    f"ISO offset 0x{value:x} is not sector aligned"
+                )
+            return value // self.sector_size
+        if source_type is AddressType.ISO_LBA and target is AddressType.ISO_OFFSET:
+            return value * self.sector_size
+        if source_type is AddressType.STORED_PRX_OFFSET and target is AddressType.ISO_OFFSET:
+            return self._require_iso_file_offset() + value
+        if source_type is AddressType.ISO_OFFSET and target is AddressType.STORED_PRX_OFFSET:
+            iso_file_offset = self._require_iso_file_offset()
+            if value < iso_file_offset:
+                raise AddressTranslationError(
+                    f"ISO offset 0x{value:x} is before module file offset "
+                    f"0x{iso_file_offset:x}"
+                )
+            return value - iso_file_offset
+        if source_type is AddressType.ELF_FILE_OFFSET and target is AddressType.STORED_PRX_OFFSET:
+            self._validate_elf_file_offset(value)
+            return self.stored_elf_offset + value
+        if source_type is AddressType.STORED_PRX_OFFSET and target is AddressType.ELF_FILE_OFFSET:
+            elf_offset = value - self.stored_elf_offset
+            self._validate_elf_file_offset(elf_offset)
+            return elf_offset
+        if source_type is AddressType.ELF_FILE_OFFSET and target is AddressType.ISO_OFFSET:
+            stored = self._translate_direct_offset(
+                source, AddressType.STORED_PRX_OFFSET
+            )
+            if stored is None:
+                raise AssertionError("ELF-to-stored translation unexpectedly failed")
+            return self._require_iso_file_offset() + stored
+        if source_type is AddressType.ISO_OFFSET and target is AddressType.ELF_FILE_OFFSET:
+            stored = self._translate_direct_offset(
+                source, AddressType.STORED_PRX_OFFSET
+            )
+            if stored is None:
+                raise AssertionError("ISO-to-stored translation unexpectedly failed")
+            return self._translate_direct_offset(
+                Address(AddressType.STORED_PRX_OFFSET, stored),
+                AddressType.ELF_FILE_OFFSET,
+            )
+        return None
+
+    def _validate_elf_file_offset(self, value: int) -> None:
+        if value < 0 or value >= self.elf.source_size:
+            raise AddressTranslationError(
+                f"ELF file offset 0x{value:x} is outside source file"
+            )
 
     def _to_module_relative(self, source: Address) -> int:
         source_type = source.address_type

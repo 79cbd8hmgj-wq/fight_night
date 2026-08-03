@@ -30,6 +30,23 @@ def test_translates_across_typed_address_spaces() -> None:
     assert mapping.translate(source, AddressType.ISO_OFFSET).value == 0x00100104
 
 
+def test_file_header_offsets_translate_without_runtime_mapping() -> None:
+    mapping = translator()
+
+    assert mapping.translate(
+        Address(AddressType.ELF_FILE_OFFSET, 0),
+        AddressType.STORED_PRX_OFFSET,
+    ).value == 0
+    assert mapping.translate(
+        Address(AddressType.ELF_FILE_OFFSET, 0x34),
+        AddressType.ISO_OFFSET,
+    ).value == 0x00100034
+    assert mapping.translate(
+        Address(AddressType.ISO_OFFSET, 0x00100034),
+        AddressType.ELF_FILE_OFFSET,
+    ).value == 0x34
+
+
 def test_reverse_translation_preserves_exact_address() -> None:
     mapping = translator()
     runtime = Address(AddressType.RUNTIME, 0x08805004)
