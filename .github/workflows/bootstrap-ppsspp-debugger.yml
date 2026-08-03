@@ -1,0 +1,28 @@
+name: Bootstrap PPSSPP Debugger Artifact
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/bootstrap-ppsspp-debugger.yml
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Dispatch the manual debugger-bundle workflow once
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          REVISION: 49fb4f9b1a91bd210c2332958106a0bf6dc02c27
+        run: |
+          gh api \
+            --method POST \
+            "repos/$REPOSITORY/actions/workflows/build-ppsspp-research.yml/dispatches" \
+            -f ref=main \
+            -f "inputs[ppsspp_revision]=$REVISION"
