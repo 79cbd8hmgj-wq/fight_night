@@ -32,7 +32,7 @@ def test_savedata_parameter_block_is_separate_from_game_payload() -> None:
     assert contract.payload_buffer.pointer_field_offset == 0x74
     assert contract.payload_buffer.capacity_field_offset == 0x78
     assert contract.payload_buffer.active_size_field_offset == 0x7C
-    assert contract.payload_buffer.flow_direction == "save"
+    assert contract.payload_buffer.flow_direction == "unresolved"
     assert contract.payload_buffer.confidence is Confidence.PROBABLE
 
 
@@ -59,9 +59,10 @@ def test_two_save_controllers_build_the_same_savedata_parameter_contract() -> No
     assert contract.utility_init.confidence is Confidence.PROBABLE
 
 
-def test_checkpoint_9c_resolves_provider_owner_and_save_direction_only() -> None:
+def test_checkpoint_9c_resolves_provider_owner_and_controller_directions() -> None:
     contract = load_save_utility_buffer_contract(_ARTIFACT)
 
+    assert contract.payload_buffer.flow_direction == "unresolved"
     assert "payload provider callback target and owner" not in contract.remaining_unknowns
     assert "runtime direction of each upstream controller branch" not in (
         contract.remaining_unknowns
