@@ -1,0 +1,60 @@
+name: Task 8 mypy fix
+
+on:
+  push:
+    branches:
+      - task-8-ppsspp-capture-harness
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: task-8-ppsspp-capture-harness
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Apply bounded typing fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/fnr3_re/ppsspp.py")
+          text = path.read_text(encoding="utf-8")
+          replacements = {
+              '        resolved = shutil.which(name, path=search_path)\n        if resolved:\n            candidates.append(Path(resolved))\n\n    for candidate in candidates:\n        resolved = candidate.expanduser().resolve()\n        if resolved.is_file() and os.access(resolved, os.X_OK):\n            return resolved\n':
+              '        which_result = shutil.which(name, path=search_path)\n        if which_result:\n            candidates.append(Path(which_result))\n\n    for candidate in candidates:\n        candidate_path = candidate.expanduser().resolve()\n        if candidate_path.is_file() and os.access(candidate_path, os.X_OK):\n            return candidate_path\n',
+              '        return struct.unpack("<f", payload)[0]\n':
+              '        return float(struct.unpack("<f", payload)[0])\n',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f"expected source block not found: {old!r}")
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding="utf-8")
+          PY
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+      - name: Verify exact branch state
+        run: |
+          python -m pytest -q
+          python -m ruff check src tests
+          python -m mypy src tests/unit
+          python -m compileall -q src tests
+          git diff --check
+      - name: Remove temporary diagnostics and commit
+        run: |
+          rm -f .github/workflows/task8-mypy-debug.yml
+          rm -f analysis/debug/task8-mypy.txt
+          rm -f .github/workflows/task8-mypy-fix.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --check
+          git commit -m "fix: satisfy strict Task 8 typing checks"
+          git push origin HEAD:task-8-ppsspp-capture-harness
