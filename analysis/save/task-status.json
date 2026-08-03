@@ -1,6 +1,7 @@
 {
   "active_checkpoint": "9E",
   "branch": "task-9-save-architecture",
+  "blocked_reason": "Checkpoint 9E requires controlled live PPSSPP evidence from a compatible PSP save state. Static interpretation alone is not sufficient to promote the load-commit callback, validation, checksum, slot, corruption, or recovery semantics.",
   "completed_checkpoints": [
     {
       "artifact": "analysis/save/save-system-static-candidates.json",
@@ -50,8 +51,15 @@
       }
     }
   ],
-  "next_question": "Resolve the load-commit follow-up callback and post-load validation and error propagation without assigning persistent field meanings.",
+  "next_question": "Using a matching PPSSPP state positioned at a load boundary, resolve the load-commit follow-up callback and post-load validation and error propagation without assigning persistent field meanings.",
+  "runtime_prerequisites": [
+    "exact ULUS10066-v1.00 game image",
+    "PPSSPP .ppst state created by the distributed pinned debugger bundle",
+    "state visibly confirmed immediately before or during a save/load operation",
+    "associated memstick PSP/SAVEDATA directory when available",
+    "controlled successful-load and corrupted-copy comparison captures"
+  ],
   "schema_version": 1,
   "task": 9,
-  "task_status": "runtime_in_progress"
+  "task_status": "blocked"
 }
