@@ -88,7 +88,7 @@ jobs:
           cmake --build build-sdl --target PPSSPPSDL --parallel 2
           cmake --build build-headless --target PPSSPPHeadless --parallel 2
 
-      - name: Package exact debugger bundle
+      - name: Package and smoke-test exact debugger bundle
         run: |
           set -euo pipefail
           sdl_binary="$(find build-sdl -type f -name PPSSPPSDL -perm -111 | head -n 1)"
@@ -108,11 +108,15 @@ jobs:
 
           copy_deps() {
             ldd "$1" \
-              | awk '/=> \// {print $3} /^\// {print $1}' \
+              | awk '/=> \// {print $3} /^[[:space:]]*\// {print $1}' \
               | sort -u \
               | while read -r dependency; do
                   test -f "$dependency" || continue
-                  cp -L "$dependency" "bundle/lib/$(basename "$dependency")"
+                  name="$(basename "$dependency")"
+                  case "$name" in
+                    libc.so.6|libm.so.6|ld-linux-*|ld-musl-*) continue ;;
+                  esac
+                  cp -L "$dependency" "bundle/lib/$name"
                 done
           }
           copy_deps bundle/PPSSPPSDL
@@ -128,23 +132,72 @@ jobs:
             bundle/install-state.sh \
             bundle/ppsspp_ws.py
 
-          sha256sum bundle/PPSSPPSDL > bundle/PPSSPPSDL.sha256
-          sha256sum bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.sha256
-          sha256sum bundle/bin/Xvfb > bundle/Xvfb.sha256
+          (
+            cd bundle
+            sha256sum PPSSPPSDL > PPSSPPSDL.sha256
+            sha256sum PPSSPPHeadless > PPSSPPHeadless.sha256
+            sha256sum bin/Xvfb > Xvfb.sha256
+          )
           ldd bundle/PPSSPPSDL > bundle/PPSSPPSDL.ldd.txt
           ldd bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.ldd.txt
           ldd bundle/bin/Xvfb > bundle/Xvfb.ldd.txt
-          bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1 || true
-          bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1 || true
-          bundle/PPSSPPSDL --version > bundle/PPSSPPSDL.version.txt 2>&1 || true
-          bundle/PPSSPPSDL --help > bundle/PPSSPPSDL.help.txt 2>&1 || true
+          grep -R "not found" bundle/*.ldd.txt && exit 1 || true
+
+          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
+            bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1 || true
+          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
+            bundle/PPSSPPSDL --version > bundle/PPSSPPSDL.version.txt 2>&1
+          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
+            bundle/PPSSPPSDL --help > bundle/PPSSPPSDL.help.txt 2>&1
 
           bash -n bundle/launch-debug.sh bundle/stop-debug.sh bundle/install-state.sh
           python3 -m py_compile bundle/ppsspp_ws.py
           python3 bundle/ppsspp_ws.py --help > bundle/ppsspp_ws.help.txt
+          rm -rf bundle/__pycache__
           grep -q '^RemoteDebuggerOnStartup = True$' bundle/ppsspp-debug.ini
           grep -q '^RemoteDebuggerLocal = True$' bundle/ppsspp-debug.ini
           grep -q '^RemoteISOPort = 56244$' bundle/ppsspp-debug.ini
+          grep -q -- '--state=FILE' bundle/PPSSPPSDL.help.txt
+          grep -q -- '--appendconfig=FILE' bundle/PPSSPPSDL.help.txt
+
+          export HOME="$PWD/bundle/memstick"
+          export XDG_CONFIG_HOME="$HOME/.config"
+          export DISPLAY=:99
+          mkdir -p "$XDG_CONFIG_HOME"
+          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
+            bundle/bin/Xvfb "$DISPLAY" -screen 0 1280x720x24 -nolisten tcp \
+            > bundle/runtime/xvfb-smoke.stdout.log \
+            2> bundle/runtime/xvfb-smoke.stderr.log &
+          xvfb_pid=$!
+          ppsspp_pid=
+          cleanup() {
+            if test -n "${ppsspp_pid:-}"; then kill "$ppsspp_pid" 2>/dev/null || true; fi
+            kill "$xvfb_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          sleep 1
+          env LD_LIBRARY_PATH="$PWD/bundle/lib" \
+            bundle/PPSSPPSDL \
+              --appendconfig="$PWD/bundle/ppsspp-debug.ini" \
+              --windowed \
+            > bundle/runtime/ppsspp-smoke.stdout.log \
+            2> bundle/runtime/ppsspp-smoke.stderr.log &
+          ppsspp_pid=$!
+          healthy=0
+          for _attempt in $(seq 1 40); do
+            kill -0 "$ppsspp_pid"
+            if bundle/ppsspp_ws.py --port 56244 --timeout 1 --wait 1 health \
+              > bundle/runtime/debugger-smoke.jsonl \
+              2> bundle/runtime/debugger-smoke.stderr.log; then
+              healthy=1
+              break
+            fi
+            sleep 0.25
+          done
+          test "$healthy" -eq 1
+          grep -q '"event": "game.status"' bundle/runtime/debugger-smoke.jsonl
+          cleanup
+          trap - EXIT
 
           printf '%s\n' \
             'This artifact contains only an official PPSSPP research build, runtime libraries, Xvfb, and debugger tooling.' \
