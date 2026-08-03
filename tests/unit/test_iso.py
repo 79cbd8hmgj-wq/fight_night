@@ -43,6 +43,41 @@ def write_directory(image: bytearray, sector: int, records: list[bytes]) -> None
         cursor += len(record)
 
 
+def build_sfo(values: dict[str, str]) -> bytes:
+    keys = bytearray()
+    data = bytearray()
+    entries: list[tuple[int, int, int, int, int]] = []
+    for key, value in values.items():
+        key_offset = len(keys)
+        keys.extend(key.encode("utf-8") + b"\x00")
+        while len(data) % 4:
+            data.append(0)
+        encoded = value.encode("utf-8") + b"\x00"
+        data_offset = len(data)
+        data.extend(encoded)
+        entries.append((key_offset, 0x0204, len(encoded), len(encoded), data_offset))
+
+    entry_table_size = 16 * len(entries)
+    key_table_offset = 20 + entry_table_size
+    data_table_offset = (key_table_offset + len(keys) + 3) & ~3
+    output = bytearray(data_table_offset + len(data))
+    output[0:4] = b"\x00PSF"
+    output[4:8] = (0x00000101).to_bytes(4, "little")
+    output[8:12] = key_table_offset.to_bytes(4, "little")
+    output[12:16] = data_table_offset.to_bytes(4, "little")
+    output[16:20] = len(entries).to_bytes(4, "little")
+    for index, (key_offset, value_type, value_len, max_len, data_offset) in enumerate(entries):
+        offset = 20 + index * 16
+        output[offset : offset + 2] = key_offset.to_bytes(2, "little")
+        output[offset + 2 : offset + 4] = value_type.to_bytes(2, "little")
+        output[offset + 4 : offset + 8] = value_len.to_bytes(4, "little")
+        output[offset + 8 : offset + 12] = max_len.to_bytes(4, "little")
+        output[offset + 12 : offset + 16] = data_offset.to_bytes(4, "little")
+    output[key_table_offset : key_table_offset + len(keys)] = keys
+    output[data_table_offset : data_table_offset + len(data)] = data
+    return bytes(output)
+
+
 def build_test_iso(
     *,
     duplicate_boot: bool = False,
@@ -61,7 +96,14 @@ def build_test_iso(
     boot_sector = 25
     data_sector = boot_sector if overlapping_files else 26
 
-    param_payload = b"PARAM"
+    param_payload = build_sfo(
+        {
+            "DISC_ID": "ULUS10066",
+            "DISC_VERSION": "1.00",
+            "TITLE": "Fixture",
+            "PSP_SYSTEM_VER": "2.60",
+        }
+    )
     boot_payload = b"BOOT-CONTENT"
     data_payload = b"RESOURCE-CONTENT"
 
@@ -69,7 +111,7 @@ def build_test_iso(
     pvd[0] = 1
     pvd[1:6] = b"CD001"
     pvd[6] = 1
-    pvd[40:48] = b"FNR3TEST"
+    pvd[40:72] = b"FNR3TEST".ljust(32, b" ")
     volume_sectors = declared_sectors if declared_sectors is not None else sectors
     pvd[80:84] = volume_sectors.to_bytes(4, "little")
     pvd[84:88] = volume_sectors.to_bytes(4, "big")
