@@ -12,7 +12,8 @@ def test_builder_packages_runtime_debugger_bundle() -> None:
     text = _WORKFLOW.read_text(encoding="utf-8")
 
     assert "actions/checkout@v4" in text
-    assert "--target PPSSPPSDL PPSSPPHeadless" in text
+    assert "--target PPSSPPSDL" in text
+    assert "--target PPSSPPHeadless" in text
     assert "scripts/websocket-test.py" in text
     assert "tools/ppsspp_debug_bundle" in text
     assert "PPSSPPSDL.sha256" in text
@@ -63,4 +64,4 @@ def test_websocket_client_is_stdlib_only_and_exposes_health_command() -> None:
     encoded = module.encode_client_text_frame("{}", mask_key=b"\x01\x02\x03\x04")
     assert encoded[:2] == b"\x81\x82"
     assert encoded[2:6] == b"\x01\x02\x03\x04"
-    assert encoded[6:] == b"z~"
+    assert encoded[6:] == b"z\x7f"
