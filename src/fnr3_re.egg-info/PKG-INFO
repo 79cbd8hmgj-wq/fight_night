@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: fnr3-re
+Version: 0.1.0
+Summary: Evidence-first Fight Night Round 3 PSP reverse-engineering tools
+Requires-Python: >=3.11
+Provides-Extra: dev
+Requires-Dist: mypy>=1.10; extra == "dev"
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: ruff>=0.5; extra == "dev"

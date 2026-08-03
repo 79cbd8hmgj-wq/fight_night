@@ -1,7 +1,0 @@
-src/fnr3_re/ppsspp.py:459: error: Incompatible types in assignment (expression has type "Path", variable has type "str | None")  [assignment]
-src/fnr3_re/ppsspp.py:460: error: Item "str" of "str | None" has no attribute "is_file"  [union-attr]
-src/fnr3_re/ppsspp.py:460: error: Item "None" of "str | None" has no attribute "is_file"  [union-attr]
-src/fnr3_re/ppsspp.py:460: error: Argument 1 to "access" has incompatible type "str | None"; expected "int | str | bytes | PathLike[str] | PathLike[bytes]"  [arg-type]
-src/fnr3_re/ppsspp.py:461: error: Incompatible return value type (got "str | None", expected "Path")  [return-value]
-src/fnr3_re/ppsspp.py:773: error: Returning Any from function declared to return "int | float"  [no-any-return]
-Found 6 errors in 1 file (checked 36 source files)

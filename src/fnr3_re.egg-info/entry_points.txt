@@ -1,0 +1,2 @@
+[console_scripts]
+fnr3-re = fnr3_re.cli:main

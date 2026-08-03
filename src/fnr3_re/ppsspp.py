@@ -451,14 +451,14 @@ def discover_ppsspp(
     if configured:
         candidates.append(Path(configured))
     for name in ("PPSSPPHeadless", "PPSSPPSDL", "ppsspp-headless", "ppsspp-sdl"):
-        resolved = shutil.which(name, path=search_path)
-        if resolved:
-            candidates.append(Path(resolved))
+        which_result = shutil.which(name, path=search_path)
+        if which_result:
+            candidates.append(Path(which_result))
 
     for candidate in candidates:
-        resolved = candidate.expanduser().resolve()
-        if resolved.is_file() and os.access(resolved, os.X_OK):
-            return resolved
+        candidate_path = candidate.expanduser().resolve()
+        if candidate_path.is_file() and os.access(candidate_path, os.X_OK):
+            return candidate_path
     raise PpssppHarnessError(
         "PPSSPP executable was not found; set PPSSPP_EXECUTABLE or pass an explicit path"
     )
@@ -770,7 +770,7 @@ def _normalize_text_output(stdout: str, stderr: str) -> str:
 
 def _decode_memory_value(payload: bytes, value_type: MemoryValueType) -> int | float:
     if value_type is MemoryValueType.F32:
-        return struct.unpack("<f", payload)[0]
+        return float(struct.unpack("<f", payload)[0])
     return int.from_bytes(payload, "little")
 
 
