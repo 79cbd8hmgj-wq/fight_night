@@ -19,6 +19,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ppsspp-debug-bundle-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -140,6 +144,7 @@ jobs:
           python3 bundle/ppsspp_ws.py --help > bundle/ppsspp_ws.help.txt
           grep -q '^RemoteDebuggerOnStartup = True$' bundle/ppsspp-debug.ini
           grep -q '^RemoteDebuggerLocal = True$' bundle/ppsspp-debug.ini
+          grep -q '^RemoteISOPort = 56244$' bundle/ppsspp-debug.ini
 
           printf '%s\n' \
             'This artifact contains only an official PPSSPP research build, runtime libraries, Xvfb, and debugger tooling.' \
