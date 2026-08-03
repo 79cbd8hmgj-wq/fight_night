@@ -1,0 +1,165 @@
+name: Build PPSSPP Historical Headless Debuggers
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/build-ppsspp-historical-headless.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: PPSSPP headless ${{ matrix.version }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - v1.18.1
+          - v1.17.1
+          - v1.16.6
+          - v1.14.4
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            cmake \
+            git \
+            libasound2-dev \
+            libavcodec-dev \
+            libavformat-dev \
+            libavutil-dev \
+            libcurl4-openssl-dev \
+            libfontconfig1-dev \
+            libgl1-mesa-dev \
+            libglew-dev \
+            libpulse-dev \
+            libsdl2-dev \
+            libsdl2-ttf-dev \
+            libssl-dev \
+            libswresample-dev \
+            libswscale-dev \
+            libudev-dev \
+            libusb-1.0-0-dev \
+            ninja-build \
+            patchelf \
+            pkg-config
+
+      - name: Clone exact historical tag
+        env:
+          PPSSPP_VERSION: ${{ matrix.version }}
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout \
+            https://github.com/hrydgard/ppsspp.git ppsspp
+          cd ppsspp
+          git fetch --depth=1 origin \
+            "refs/tags/${PPSSPP_VERSION}:refs/tags/${PPSSPP_VERSION}"
+          git checkout --detach "$PPSSPP_VERSION"
+          git submodule update --init --recursive --depth=1
+          git rev-parse HEAD | tee ../ppsspp-resolved-revision.txt
+          git describe --tags --always | tee ../ppsspp-resolved-version.txt
+
+          # GCC 11 exposes a missing legacy libzip include in v1.14.4.
+          # This restores the declaration without changing emulator behavior.
+          if [ "$PPSSPP_VERSION" = "v1.14.4" ]; then
+            grep -q '#include <string.h>' ext/libzip/zip_name_locate.c
+            sed -i '/#include <string.h>/a #include <strings.h>' \
+              ext/libzip/zip_name_locate.c
+            grep -q '#include <strings.h>' ext/libzip/zip_name_locate.c
+          fi
+
+          grep -q -- '--debugger=PORT' headless/Headless.cpp
+          grep -q -- '--graphics=BACKEND' headless/Headless.cpp
+
+      - name: Configure software-headless debugger build
+        run: |
+          set -euo pipefail
+          cmake -S ppsspp -B build-headless -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DHEADLESS=ON \
+            -DUNITTEST=OFF \
+            -DUSE_DISCORD=OFF \
+            -DUSE_MINIUPNPC=OFF
+
+      - name: Build PPSSPPHeadless
+        run: |
+          set -euo pipefail
+          cmake --build build-headless --target PPSSPPHeadless --parallel 4
+
+      - name: Package portable headless debugger
+        env:
+          PPSSPP_VERSION: ${{ matrix.version }}
+        run: |
+          set -euo pipefail
+          binary="$(find build-headless -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
+          test -n "$binary"
+
+          bundle="bundle-headless-${PPSSPP_VERSION}"
+          mkdir -p "$bundle/assets" "$bundle/lib"
+          cp "$binary" "$bundle/PPSSPPHeadless"
+          cp -a ppsspp/assets/. "$bundle/assets/"
+          cp ppsspp/LICENSE.TXT "$bundle/PPSSPP-LICENSE.txt"
+          cp ppsspp-resolved-revision.txt "$bundle/ppsspp-resolved-revision.txt"
+          cp ppsspp-resolved-version.txt "$bundle/ppsspp-resolved-version.txt"
+          chmod +x "$bundle/PPSSPPHeadless"
+
+          ldd "$bundle/PPSSPPHeadless" > "$bundle/PPSSPPHeadless.ldd.txt"
+          test -z "$(grep 'not found' "$bundle/PPSSPPHeadless.ldd.txt" || true)"
+          while IFS= read -r library; do
+            test -f "$library" || continue
+            base="$(basename "$library")"
+            case "$base" in
+              ld-linux*|libc.so.*|libm.so.*|libpthread.so.*|libdl.so.*|librt.so.*|libresolv.so.*|libutil.so.*)
+                continue
+                ;;
+            esac
+            cp -L "$library" "$bundle/lib/$base"
+          done < <(
+            ldd "$bundle/PPSSPPHeadless" \
+              | awk '/=> \/[^ ]+/ {print $3} /^\// {print $1}' \
+              | sort -u
+          )
+          patchelf --set-rpath '$ORIGIN/lib' "$bundle/PPSSPPHeadless"
+
+          export LD_LIBRARY_PATH="$PWD/$bundle/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          "$bundle/PPSSPPHeadless" --help > "$bundle/PPSSPPHeadless.help.txt" 2>&1 || true
+          grep -q -- '--debugger=PORT' "$bundle/PPSSPPHeadless.help.txt"
+          grep -q -- '--graphics=BACKEND' "$bundle/PPSSPPHeadless.help.txt"
+          printf '%s\n' \
+            "Historical PPSSPP headless debugger: ${PPSSPP_VERSION}" \
+            'Use --graphics=software to avoid host OpenGL dependencies.' \
+            'Contains no game image, save data, or copyrighted game assets.' \
+            > "$bundle/README.txt"
+
+          (
+            cd "$bundle"
+            find . -type f ! -name bundle.sha256 -print0 \
+              | sort -z \
+              | xargs -0 sha256sum \
+              > bundle.sha256
+            sha256sum -c bundle.sha256
+          )
+
+          tar -C "$bundle" -czf \
+            "ppsspp-headless-${PPSSPP_VERSION}-linux-x86_64.tar.gz" .
+          sha256sum "ppsspp-headless-${PPSSPP_VERSION}-linux-x86_64.tar.gz" \
+            > "ppsspp-headless-${PPSSPP_VERSION}-linux-x86_64.tar.gz.sha256"
+
+      - name: Upload historical headless debugger
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppsspp-headless-${{ matrix.version }}-linux-x86_64
+          path: |
+            ppsspp-headless-${{ matrix.version }}-linux-x86_64.tar.gz
+            ppsspp-headless-${{ matrix.version }}-linux-x86_64.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
