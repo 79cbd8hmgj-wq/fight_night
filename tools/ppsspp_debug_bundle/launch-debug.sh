@@ -59,15 +59,22 @@ runtime="$root/runtime"
 memstick="$root/memstick"
 mkdir -p "$runtime" "$memstick/PSP/SYSTEM" "$memstick/PSP/PPSSPP_STATE"
 
-# The template enables RemoteDebuggerOnStartup and RemoteDebuggerLocal.
+# PPSSPP uses RemoteISOPort for both remote ISO and debugger WebSocket traffic.
 cp -- "$root/ppsspp-debug.ini" "$memstick/PSP/SYSTEM/ppsspp.ini"
+sed -i "s/^RemoteISOPort = .*/RemoteISOPort = $port/" \
+  "$memstick/PSP/SYSTEM/ppsspp.ini"
 grep -q '^RemoteDebuggerOnStartup = True$' "$memstick/PSP/SYSTEM/ppsspp.ini"
 grep -q '^RemoteDebuggerLocal = True$' "$memstick/PSP/SYSTEM/ppsspp.ini"
+grep -q "^RemoteISOPort = $port$" "$memstick/PSP/SYSTEM/ppsspp.ini"
 
 for checksum in PPSSPPSDL.sha256 PPSSPPHeadless.sha256; do
   [[ -f "$root/$checksum" ]] || { echo "Missing checksum: $checksum" >&2; exit 1; }
   (cd "$root" && sha256sum -c "$checksum")
 done
+if [[ -x "$root/bin/Xvfb" ]]; then
+  [[ -f "$root/Xvfb.sha256" ]] || { echo "Missing checksum: Xvfb.sha256" >&2; exit 1; }
+  (cd "$root" && sha256sum -c Xvfb.sha256)
+fi
 
 sha256sum "$iso_path" > "$runtime/iso.sha256"
 if [[ -n "$state_path" ]]; then
@@ -82,7 +89,6 @@ export XDG_CONFIG_HOME="$root/home/.config"
 mkdir -p "$HOME" "$XDG_CONFIG_HOME"
 
 ppsspp_binary="$root/PPSSPPSDL"
-xvfb_pid=
 if [[ $force_headless -eq 1 ]]; then
   ppsspp_binary="$root/PPSSPPHeadless"
 elif [[ -z "${DISPLAY:-}" ]]; then
