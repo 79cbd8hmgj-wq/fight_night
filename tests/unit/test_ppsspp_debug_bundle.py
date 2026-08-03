@@ -38,9 +38,15 @@ def test_bundle_has_launcher_client_and_state_contract() -> None:
     launcher = (_TOOLS / "launch-debug.sh").read_text(encoding="utf-8")
     assert "RemoteDebuggerOnStartup" in launcher
     assert "RemoteDebuggerLocal" in launcher
+    assert "RemoteISOPort" in launcher
     assert "56244" in launcher
     assert "PPSSPP_STATE" in launcher
     assert "sha256sum" in launcher
+
+    configuration = (_TOOLS / "ppsspp-debug.ini").read_text(encoding="utf-8")
+    assert "RemoteDebuggerOnStartup = True" in configuration
+    assert "RemoteDebuggerLocal = True" in configuration
+    assert "RemoteISOPort = 56244" in configuration
 
     state_installer = (_TOOLS / "install-state.sh").read_text(encoding="utf-8")
     assert "PPSSPP_STATE" in state_installer
