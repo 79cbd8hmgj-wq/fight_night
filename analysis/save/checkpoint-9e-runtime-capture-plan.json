@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "task": 9,
+  "checkpoint": "9E",
+  "status": "capture_plan_prepared_runtime_evidence_pending",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "module": "BOOT.BIN",
+    "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+  },
+  "address_mapping": {
+    "ppsspp_reported_module_allocation_base": "0x08800000",
+    "confirmed_live_elf_virtual_zero": "0x08804000",
+    "mapping_rule": "ppsspp_absolute = 0x08804000 + elf_virtual",
+    "evidence": {
+      "elf_entry": "0x0034DECC",
+      "observed_entry_pc": "0x08B51ECC",
+      "difference": "0x08804000",
+      "note": "The debugger module base includes a 0x4000 allocation prefix. Using 0x08800000 directly for ELF translation produces addresses 0x4000 too low."
+    }
+  },
+  "static_regions": [
+    {
+      "id": "load_commit_handler",
+      "elf_start": "0x00340F64",
+      "elf_end_exclusive": "0x00340FE0",
+      "size": 124,
+      "sha256": "e74a19392a3ede34feda43ec9fb698c7278c7709bdd7cfbbd4e1ec78fbc4eaa4",
+      "ppsspp_start": "0x08B44F64",
+      "relocated_runtime_sha256": "0107205c4f3e2126b528f67c8cfffa0b593157d6cd30c18def039cff5a1d24bf"
+    },
+    {
+      "id": "followup_callback_setter",
+      "elf_start": "0x003403EC",
+      "elf_end_exclusive": "0x00340420",
+      "size": 52,
+      "sha256": "909c44dbfe7d4da4c4ae24156272ef14df9ecf5c75e80e268d84509bf0747a3b",
+      "ppsspp_start": "0x08B443EC",
+      "relocated_runtime_sha256": "696b01366abd3b8de7e615706d1ff469dd4e25d2e62d60e96006de60ff1a591d"
+    },
+    {
+      "id": "default_load_followup_candidate",
+      "elf_start": "0x003448DC",
+      "elf_end_exclusive": "0x003449BC",
+      "size": 224,
+      "sha256": "9cdf2ff7f3d9eb764380395f877101e675f8912c6b0016db0c88b6b6b1179dec",
+      "ppsspp_start": "0x08B488DC",
+      "confidence": "candidate"
+    },
+    {
+      "id": "alternate_load_followup_candidate",
+      "elf_start": "0x003449BC",
+      "elf_end_exclusive": "0x00344A58",
+      "size": 156,
+      "sha256": "24693a488d8e7e7a9c5058db111e34072088cb16048b9244e14fa299d29963af",
+      "ppsspp_start": "0x08B489BC",
+      "confidence": "candidate"
+    },
+    {
+      "id": "post_operation_callback_candidate",
+      "elf_start": "0x00344A58",
+      "elf_end_exclusive": "0x00344AB8",
+      "size": 96,
+      "sha256": "f0bc9cf818b300aabe5d629dedb9d53c8035a74e0b641817744b4bbff66a0769",
+      "ppsspp_start": "0x08B48A58",
+      "confidence": "candidate"
+    }
+  ],
+  "live_globals": {
+    "followup_callback_pointer": {
+      "relocated_module_address": "0x0056A9C4",
+      "ppsspp_address": "0x08D6E9C4",
+      "initial_boot_only_value": "0x00000000"
+    },
+    "savedata_workspace": {
+      "relocated_module_address": "0x005BAF10",
+      "ppsspp_address": "0x08DBEF10",
+      "size": "0x755C",
+      "initial_boot_only_prefix_sha256": "17b0761f87b081d5cf10757ccc89f12be355c70e2e29df288b65b30710dcbcd1",
+      "initial_boot_only_prefix_size": 48
+    },
+    "registered_destination_pointer": {
+      "relocated_module_address": "0x005C250C",
+      "ppsspp_address": "0x08DC650C"
+    },
+    "registered_destination_size": {
+      "relocated_module_address": "0x005C2510",
+      "ppsspp_address": "0x08DC6510"
+    },
+    "active_body_size_global": {
+      "relocated_module_address": "0x005C7C68",
+      "ppsspp_address": "0x08DCBC68"
+    }
+  },
+  "breakpoints": [
+    {
+      "id": "load_commit_entry",
+      "address": "0x08B44F64",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "v0",
+        "callback_pointer",
+        "registered_destination_pointer",
+        "registered_destination_size",
+        "workspace_header"
+      ]
+    },
+    {
+      "id": "before_body_copy",
+      "address": "0x08B44FAC",
+      "capture": [
+        "a0",
+        "a1",
+        "workspace_active_body_size",
+        "registered_destination_pointer",
+        "registered_destination_size"
+      ]
+    },
+    {
+      "id": "before_followup_pointer_load",
+      "address": "0x08B44FB4",
+      "capture": [
+        "callback_pointer",
+        "a0",
+        "a1",
+        "active_body_size_global",
+        "destination_body_hash"
+      ]
+    },
+    {
+      "id": "before_followup_call",
+      "address": "0x08B44FC0",
+      "capture": [
+        "t9_or_call_register",
+        "a0",
+        "a1",
+        "ra",
+        "sp"
+      ],
+      "action": "Resolve the loaded callback value and install a temporary execute breakpoint at that exact target before stepping the jalr."
+    },
+    {
+      "id": "after_followup_return",
+      "address": "0x08B44FC8",
+      "capture": [
+        "v0",
+        "v1",
+        "a0",
+        "a1",
+        "caller_pc",
+        "destination_body_hash",
+        "error_state_candidates"
+      ]
+    }
+  ],
+  "required_captures": [
+    {
+      "id": "successful_load",
+      "precondition": "Exact unmodified save loads successfully.",
+      "required_outputs": [
+        "full registers at every fixed breakpoint",
+        "dynamic followup callback target",
+        "callback entry and return registers",
+        "workspace header and active body hash",
+        "destination buffer before/after hashes",
+        "caller route after load commit",
+        "matching SAVEDATA directory hash inventory"
+      ]
+    },
+    {
+      "id": "corrupted_copy_control",
+      "precondition": "Duplicate the successful save, flip one recorded nonzero byte inside DATA.BIN active body without changing file size, and record original/new byte and offset.",
+      "required_outputs": [
+        "same breakpoint/register set as successful load",
+        "whether load commit is reached",
+        "dynamic followup callback target",
+        "first diverging branch or return value",
+        "visible game result",
+        "corrupt-copy file hashes"
+      ]
+    }
+  ],
+  "evidence_boundary": {
+    "confirmed_by_preparation": [
+      "Correct PPSSPP absolute address translation uses ELF virtual zero 0x08804000.",
+      "The exact relocated load-commit and callback-setter regions are readable at the corrected addresses.",
+      "The followup callback pointer and save workspace addresses are readable and zero before game initialization when BOOT.BIN is launched alone."
+    ],
+    "not_confirmed": [
+      "Which callback is installed during a real load.",
+      "Whether the default candidate validates, deserializes, or only forwards data.",
+      "Successful-load return and error behavior.",
+      "Corruption detection, checksum, obfuscation, slot, recovery, or field meanings."
+    ]
+  },
+  "runtime_prerequisites_remaining": [
+    "Mounted exact ULUS10066-v1.00 ISO or its mounted 7-Zip source archive.",
+    "A real save/load path, generated in the pinned PPSSPP build.",
+    "Successful-load and deliberately corrupted-copy controls."
+  ]
+}
