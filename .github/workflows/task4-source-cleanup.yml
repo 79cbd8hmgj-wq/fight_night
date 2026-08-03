@@ -1,0 +1,51 @@
+name: Task 4 source cleanup
+
+on:
+  push:
+    branches:
+      - task-4-iso-workspace
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: task-4-iso-workspace
+      - name: Apply deterministic source cleanup
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/fnr3_re/iso.py')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              'import hashlib\nimport os\n',
+              'import hashlib\nfrom itertools import pairwise\nimport os\n',
+              1,
+          )
+          text = text.replace(
+              '                f"ISO image is truncated: volume declares {volume_size} bytes, file has {actual_size}"\n',
+              '                f"ISO image is truncated: volume declares {volume_size} bytes, "\n'
+              '                f"file has {actual_size}"\n',
+              1,
+          )
+          text = text.replace(
+              '    for previous, current in zip(ordered, ordered[1:], strict=False):\n',
+              '    for previous, current in pairwise(ordered):\n',
+              1,
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit cleanup
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/fnr3_re/iso.py
+          git diff --cached --check
+          git commit -m "style: clean ISO workspace implementation"
+          git push origin HEAD:task-4-iso-workspace
