@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = ROOT / "config" / "subsystem_registry.json"
@@ -19,8 +20,8 @@ REQUIRED_SYSTEM_FIELDS = {
 }
 
 
-def load_registry() -> dict[str, object]:
-    return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+def load_registry() -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(REGISTRY_PATH.read_text(encoding="utf-8")))
 
 
 def test_registry_is_deterministically_formatted() -> None:
