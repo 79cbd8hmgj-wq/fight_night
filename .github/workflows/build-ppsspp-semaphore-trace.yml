@@ -20,21 +20,67 @@ jobs:
     timeout-minutes: 90
     env:
       PPSSPP_REVISION: 49fb4f9b1a91bd210c2332958106a0bf6dc02c27
+      SDL3_REVISION: 96292a5b464258a2b926e0a3d72f8b98c2a81aa6
+      SDL3_TTF_REVISION: a1ce3670aec736ecbf0936c43f2f0cc53aa61e5b
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install headless build dependencies
+      - name: Install build dependencies
         run: |
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential ca-certificates cmake git ninja-build patchelf pkg-config \
-            libasound2-dev libavcodec-dev libavformat-dev libavutil-dev \
-            libcurl4-openssl-dev libfontconfig1-dev libfreetype6-dev \
-            libgl1-mesa-dev libglew-dev libpulse-dev libssl-dev \
-            libswresample-dev libswscale-dev libudev-dev libunwind-dev \
-            libusb-1.0-0-dev
+            libasound2-dev libcurl4-openssl-dev libdbus-1-dev libdecor-0-dev \
+            libdrm-dev libegl1-mesa-dev libfontconfig1-dev libfreetype6-dev \
+            libgbm-dev libgl1-mesa-dev libgles2-mesa-dev libglew-dev \
+            libibus-1.0-dev libpipewire-0.3-dev libpulse-dev libsamplerate0-dev \
+            libssl-dev libudev-dev libunwind-dev libusb-1.0-0-dev \
+            libwayland-dev libx11-dev libxcursor-dev libxext-dev libxi-dev \
+            libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev \
+            libxtst-dev wayland-protocols
+
+      - name: Build pinned SDL3
+        run: |
+          set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+          git clone --filter=blob:none https://github.com/libsdl-org/SDL.git sdl3
+          git -C sdl3 checkout --detach "$SDL3_REVISION"
+          git -C sdl3 submodule update --init --recursive
+          test "$(git -C sdl3 rev-parse HEAD)" = "$SDL3_REVISION"
+          cmake -S sdl3 -B build-sdl3 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$prefix" \
+            -DSDL_SHARED=ON \
+            -DSDL_STATIC=OFF \
+            -DSDL_TEST_LIBRARY=OFF \
+            -DSDL_TESTS=OFF \
+            -DSDL_EXAMPLES=OFF \
+            -DSDL_INSTALL=ON
+          cmake --build build-sdl3 --parallel 4
+          cmake --install build-sdl3
+
+      - name: Build pinned SDL3_ttf
+        run: |
+          set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+          git clone --filter=blob:none https://github.com/libsdl-org/SDL_ttf.git sdl3-ttf
+          git -C sdl3-ttf checkout --detach "$SDL3_TTF_REVISION"
+          git -C sdl3-ttf submodule update --init --recursive
+          test "$(git -C sdl3-ttf rev-parse HEAD)" = "$SDL3_TTF_REVISION"
+          cmake -S sdl3-ttf -B build-sdl3-ttf -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$prefix" \
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSDLTTF_INSTALL=ON \
+            -DSDLTTF_SAMPLES=OFF \
+            -DSDLTTF_VENDORED=OFF \
+            -DSDLTTF_HARFBUZZ=OFF \
+            -DSDLTTF_PLUTOSVG=OFF
+          cmake --build build-sdl3-ttf --parallel 4
+          cmake --install build-sdl3-ttf
 
       - name: Clone exact PPSSPP source
         run: |
@@ -104,15 +150,24 @@ jobs:
       - name: Configure and build PPSSPPHeadless
         run: |
           set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
           cmake -S ppsspp -B build-headless -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DHEADLESS=ON -DUNITTEST=OFF -DUSE_DISCORD=OFF \
-            -DUSE_FFMPEG=OFF -DUSE_MINIUPNPC=OFF
+            -DCMAKE_PREFIX_PATH="$prefix" \
+            -DCMAKE_BUILD_RPATH="$prefix/lib" \
+            -DHEADLESS=ON \
+            -DUNITTEST=OFF \
+            -DUSE_DISCORD=OFF \
+            -DUSE_FFMPEG=OFF \
+            -DUSE_MINIUPNPC=OFF
           cmake --build build-headless --target PPSSPPHeadless --parallel 4
 
       - name: Package instrumented binary
         run: |
           set -euo pipefail
+          prefix="$GITHUB_WORKSPACE/sdl-prefix"
+          prefix_libs="$(find "$prefix" -type f -name 'libSDL3*.so*' -printf '%h\n' | sort -u | paste -sd: -)"
+          export LD_LIBRARY_PATH="$prefix_libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
           binary="$(find build-headless -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
           test -n "$binary"
           mkdir -p bundle/assets bundle/lib
@@ -140,9 +195,17 @@ jobs:
             'Instrumented PPSSPP build for Fight Night semaphore lifecycle tracing.' \
             'Logs FNR3_SEMA_CREATE, FNR3_SEMA_DELETE, FNR3_SEMA_BAD_WAIT, and FNR3_SEMA_BAD_SIGNAL.' \
             'Contains no game image or save data.' > bundle/README.txt
-          (cd bundle && find . -type f ! -name bundle.sha256 -print0 | sort -z | xargs -0 sha256sum > bundle.sha256 && sha256sum -c bundle.sha256)
+          (
+            cd bundle
+            find . -type f ! -name bundle.sha256 -print0 \
+              | sort -z \
+              | xargs -0 sha256sum \
+              > bundle.sha256
+            sha256sum -c bundle.sha256
+          )
           tar -C bundle -czf ppsspp-semaphore-trace-linux-x86_64.tar.gz .
-          sha256sum ppsspp-semaphore-trace-linux-x86_64.tar.gz > ppsspp-semaphore-trace-linux-x86_64.tar.gz.sha256
+          sha256sum ppsspp-semaphore-trace-linux-x86_64.tar.gz \
+            > ppsspp-semaphore-trace-linux-x86_64.tar.gz.sha256
 
       - name: Upload semaphore trace bundle
         uses: actions/upload-artifact@v4
