@@ -1,0 +1,94 @@
+name: Task 9C save-direction correction
+
+on:
+  push:
+    branches:
+      - task-9-save-architecture
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: task-9-save-architecture
+      - name: Correct savedata modes and direction
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          source = Path("src/fnr3_re/save_utility.py")
+          text = source.read_text(encoding="utf-8")
+          old = '''        if self.flow_direction != "unresolved":\n            raise ValueError("static payload flow direction must remain unresolved")\n'''
+          new = '''        if self.flow_direction not in {"unresolved", "save"}:\n            raise ValueError("static payload flow direction must be unresolved or save")\n'''
+          if old not in text:
+              raise SystemExit("expected save utility direction guard not found")
+          source.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          artifact_path = Path("analysis/save/save-utility-buffer-contract.json")
+          artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+          adjacent = artifact["controller_sites"][1]
+          adjacent["role"] = "autosave_or_save_controller"
+          adjacent["mode_values"] = [1, 3]
+          adjacent["observations"] = [
+              "The adjacent controller builds the same 0x600-byte parameter block and selects mode 3 or mode 1 from object byte +0x108.",
+              "The exact branch values identify SAVE and AUTOSAVE; the earlier AUTOLOAD interpretation was rejected by the preloaded mode-one instruction.",
+          ]
+          callbacks = artifact["payload_buffer"]["callback_sites"]
+          callbacks[0]["observations"] = [
+              "An indirect callback receives pointers to parameter-block offsets 0x74 and 0x78 plus one duplicated stack output pointer before DATA.BIN and dataSize are finalized.",
+              "Checkpoint 9C resolves dispatch entry +0x38 to BOOT.BIN target 0x00340DC8 on the save-payload path.",
+          ]
+          callbacks[1]["role"] = "autosave_or_save_payload_provider"
+          callbacks[1]["observations"] = [
+              "The adjacent controller invokes the same dispatch-table entry with pointers to parameter-block offsets 0x74 and 0x78 and two stack outputs.",
+              "The callback occurs before mode 3 or mode 1 and resolves to BOOT.BIN target 0x00340DC8, establishing a save-direction payload boundary.",
+          ]
+          artifact["payload_buffer"]["flow_direction"] = "save"
+          artifact["payload_buffer"]["observations"] = [
+              "The shared 0x600-byte object is an operating-system savedata parameter block rather than the serialized Fight Night payload.",
+              "The game payload is separately owned and is handed to the save utility through the pointer at offset 0x74, capacity at 0x78, and active byte count at 0x7C.",
+              "Both controllers represented by this artifact are save-direction paths; load-direction buffers use a different dispatch entry documented by Checkpoint 9C.",
+          ]
+          artifact["remaining_unknowns"] = [
+              item
+              for item in artifact["remaining_unknowns"]
+              if item not in {
+                  "payload provider callback target and owner",
+                  "runtime direction of each upstream controller branch",
+              }
+          ]
+          artifact_path.write_text(
+              json.dumps(artifact, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install and verify
+        run: |
+          python -m pip install -e ".[dev]"
+          python -m pytest tests/save/test_save_payload_direction_map.py tests/save/test_save_utility_buffer_contract.py -q
+          python -m pytest
+          python -m ruff check config src tests
+          python -m mypy src tests/unit
+          git diff --check
+      - name: Commit verified correction and remove workflow
+        run: |
+          rm -rf src/fnr3_re.egg-info
+          find src tests -type d -name __pycache__ -prune -exec rm -rf {} +
+          find src tests -type f -name '*.pyc' -delete
+          rm -f .github/workflows/task9c-correct-save-modes.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --check
+          git commit -m "fix: correct Task 9C savedata directions"
+          git push origin HEAD:task-9-save-architecture
