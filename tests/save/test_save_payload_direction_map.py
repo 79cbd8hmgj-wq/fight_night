@@ -72,5 +72,5 @@ def test_adjacent_controller_modes_are_autosave_and_save() -> None:
     assert "autosave_or_save_controller" in sites
     assert sites["autosave_or_save_controller"]["mode_values"] == [1, 3]
     observations = " ".join(sites["autosave_or_save_controller"]["observations"])
-    assert "AUTOSAVE" in observations
-    assert "AUTOLOAD" not in observations
+    assert "SAVE and AUTOSAVE" in observations
+    assert "preloaded mode-one instruction" in observations
