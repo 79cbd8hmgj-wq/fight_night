@@ -14,13 +14,16 @@ from fnr3_re.rebuild import (
     load_build_plan,
     rebuild_image,
 )
+from fnr3_re.revision import ReferenceRevision
 from tests.support.psp_iso import SECTOR_SIZE, write_reference
 
 BOOT_PATH = "PSP_GAME/SYSDIR/BOOT.BIN"
 BOOT_LBA = 25
 
 
-def prepare_workspace(tmp_path: Path) -> tuple[Path, Path, object, bytes]:
+def prepare_workspace(
+    tmp_path: Path,
+) -> tuple[Path, Path, ReferenceRevision, bytes]:
     reference, revision, image = write_reference(tmp_path)
     workspace = tmp_path / "workspace"
     build_workspace(reference, workspace, revision)
@@ -32,7 +35,13 @@ def test_no_change_rebuild_is_byte_exact_and_deterministic(tmp_path: Path) -> No
     first_output = tmp_path / "first.iso"
     second_output = tmp_path / "second.iso"
 
-    first = rebuild_image(reference, workspace, first_output, revision, BuildPlan.empty("fixture-v1"))
+    first = rebuild_image(
+        reference,
+        workspace,
+        first_output,
+        revision,
+        BuildPlan.empty("fixture-v1"),
+    )
     second = rebuild_image(
         reference,
         workspace,
