@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-from itertools import pairwise
 import math
 import os
 import shutil
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path, PurePosixPath
 
 from .refpack import is_refpack
