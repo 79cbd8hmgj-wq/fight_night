@@ -17,6 +17,7 @@ from fnr3_re.ea_archive import (
 def make_archive(
     *,
     magic: bytes = b"BIGF",
+    first_offset: int = 0x30,
     second_offset: int = 0x40,
     total_size: int = 0x42,
 ) -> bytes:
@@ -25,7 +26,7 @@ def make_archive(
     header.extend(total_size.to_bytes(4, "little"))
     header.extend((2).to_bytes(4, "big"))
     header.extend((0x30).to_bytes(4, "big"))
-    header.extend((0x30).to_bytes(4, "big"))
+    header.extend(first_offset.to_bytes(4, "big"))
     header.extend((1).to_bytes(4, "big"))
     header.extend(b"a.bin\x00")
     header.extend(second_offset.to_bytes(4, "big"))
@@ -34,7 +35,7 @@ def make_archive(
     assert len(header) == 0x30
     output = bytearray(total_size)
     output[: len(header)] = header
-    output[0x30:0x31] = b"A"
+    output[first_offset : first_offset + 1] = b"A"
     output[second_offset : second_offset + 2] = b"BB"
     return bytes(output)
 
@@ -54,11 +55,17 @@ def test_parses_bigf_directory_and_infers_alignment() -> None:
 
 
 def test_parses_big4_with_observed_sixty_four_byte_alignment() -> None:
-    payload = make_archive(magic=b"BIG4", second_offset=0x80, total_size=0x82)
+    payload = make_archive(
+        magic=b"BIG4",
+        first_offset=0x40,
+        second_offset=0x80,
+        total_size=0x82,
+    )
     archive = parse_ea_archive(payload)
 
     assert archive.magic == b"BIG4"
     assert archive.alignment == 0x40
+    assert archive.members[0].offset == 0x40
     assert archive.members[1].offset == 0x80
 
 
@@ -145,7 +152,7 @@ def test_extraction_is_transactional_and_path_safe(tmp_path: Path) -> None:
         ),
         (
             make_archive()[:12] + (0x20).to_bytes(4, "big") + make_archive()[16:],
-            "member name is not NUL-terminated",
+            "directory record is truncated",
         ),
     ],
 )
@@ -154,15 +161,17 @@ def test_parser_rejects_malformed_headers(payload: bytes, message: str) -> None:
         parse_ea_archive(payload)
 
 
-def test_parser_rejects_duplicate_unsafe_and_overlapping_members() -> None:
-    duplicate = build_ea_archive((('a.bin', b'A'), ('A.BIN', b'B')))
+def test_builder_rejects_duplicate_member_names() -> None:
+    with pytest.raises(EaArchiveError, match="duplicate archive member"):
+        build_ea_archive((("a.bin", b"A"), ("A.BIN", b"B")))
+
+
+def test_parser_rejects_unsafe_and_overlapping_members() -> None:
     unsafe = bytearray(make_archive())
     unsafe[24:30] = b"../x\x00\x00"
     overlapping = bytearray(make_archive())
-    overlapping[34:38] = (0x30).to_bytes(4, "big")
+    overlapping[30:34] = (0x30).to_bytes(4, "big")
 
-    with pytest.raises(EaArchiveError, match="duplicate archive member"):
-        parse_ea_archive(duplicate)
     with pytest.raises(EaArchiveError, match="unsafe archive member path"):
         parse_ea_archive(bytes(unsafe))
     with pytest.raises(EaArchiveError, match="overlapping member payloads"):
