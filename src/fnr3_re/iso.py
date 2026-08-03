@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from itertools import pairwise
 import os
 import shutil
 import stat
@@ -80,7 +81,8 @@ def scan_iso(image: Path) -> IsoInventory:
         volume_size = volume_sectors * logical_block_size
         if volume_size > actual_size:
             raise IsoFormatError(
-                f"ISO image is truncated: volume declares {volume_size} bytes, file has {actual_size}"
+                f"ISO image is truncated: volume declares {volume_size} bytes, "
+                f"file has {actual_size}"
             )
         try:
             volume_id = pvd[40:72].decode("ascii").rstrip(" ")
@@ -435,7 +437,7 @@ def _allocated_range(entry: IsoEntry, logical_block_size: int) -> tuple[int, int
 
 def _reject_overlapping_ranges(ranges: list[tuple[int, int, str]]) -> None:
     ordered = sorted((item for item in ranges if item[0] != item[1]), key=lambda item: item[0])
-    for previous, current in zip(ordered, ordered[1:], strict=False):
+    for previous, current in pairwise(ordered):
         if current[0] < previous[1]:
             raise IsoFormatError(
                 f"overlapping extents: {previous[2]} and {current[2]}"
