@@ -32,8 +32,8 @@ jobs:
             libfontconfig1-dev \
             libgl1-mesa-dev \
             libglew-dev \
-            libsdl2-dev \
-            libsdl2-ttf-dev \
+            libsdl3-dev \
+            libsdl3-ttf-dev \
             libssl-dev \
             ninja-build \
             patchelf \
