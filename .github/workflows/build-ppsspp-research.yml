@@ -14,8 +14,12 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-26.04
-    timeout-minutes: 90
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    env:
+      SDL3_REVISION: 8e37db5e797b6167f3a00d697d816a684bd259c7
+      SDL3_TTF_REVISION: a1ce3670aec736ecbf0936c43f2f0cc53aa61e5b
+      DEPS_PREFIX: ${{ github.workspace }}/portable-deps
     steps:
       - name: Check out bundle scripts
         uses: actions/checkout@v4
@@ -28,18 +32,83 @@ jobs:
             ca-certificates \
             cmake \
             git \
+            libasound2-dev \
             libcurl4-openssl-dev \
+            libdbus-1-dev \
+            libdrm-dev \
             libfontconfig1-dev \
+            libfreetype6-dev \
+            libgbm-dev \
             libgl1-mesa-dev \
+            libgles2-mesa-dev \
             libglew-dev \
-            libsdl3-dev \
-            libsdl3-ttf-dev \
+            libibus-1.0-dev \
+            libpulse-dev \
             libssl-dev \
+            libudev-dev \
+            libunwind-dev \
+            libusb-1.0-0-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxfixes-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxkbcommon-dev \
+            libxrandr-dev \
+            libxss-dev \
+            libxtst-dev \
             ninja-build \
             patchelf \
             pkg-config
           cargo --version
           rustc --version
+          ldd --version | head -n 1
+
+      - name: Build pinned SDL3 for the portable baseline
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/libsdl-org/SDL.git sdl3
+          git -C sdl3 checkout --detach "$SDL3_REVISION"
+          test "$(git -C sdl3 rev-parse HEAD)" = "$SDL3_REVISION"
+          printf '%s\n' "$SDL3_REVISION" > sdl3-resolved-revision.txt
+
+          cmake -S sdl3 -B build-sdl3 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$DEPS_PREFIX" \
+            -DCMAKE_INSTALL_LIBDIR=lib \
+            -DSDL_SHARED=ON \
+            -DSDL_STATIC=OFF \
+            -DSDL_TEST_LIBRARY=OFF \
+            -DSDL_TESTS=OFF \
+            -DSDL_EXAMPLES=OFF
+          cmake --build build-sdl3 --parallel 2
+          cmake --install build-sdl3
+          test -f "$DEPS_PREFIX/lib/libSDL3.so"
+
+      - name: Build pinned SDL3_ttf for the portable baseline
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/libsdl-org/SDL_ttf.git sdl3_ttf
+          git -C sdl3_ttf checkout --detach "$SDL3_TTF_REVISION"
+          test "$(git -C sdl3_ttf rev-parse HEAD)" = "$SDL3_TTF_REVISION"
+          printf '%s\n' "$SDL3_TTF_REVISION" > sdl3-ttf-resolved-revision.txt
+
+          cmake -S sdl3_ttf -B build-sdl3-ttf -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$DEPS_PREFIX" \
+            -DCMAKE_INSTALL_LIBDIR=lib \
+            -DCMAKE_PREFIX_PATH="$DEPS_PREFIX" \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSDLTTF_INSTALL=ON \
+            -DSDLTTF_SAMPLES=OFF \
+            -DSDLTTF_VENDORED=OFF \
+            -DSDLTTF_HARFBUZZ=OFF \
+            -DSDLTTF_PLUTOSVG=OFF
+          cmake --build build-sdl3-ttf --parallel 2
+          cmake --install build-sdl3-ttf
+          test -f "$DEPS_PREFIX/lib/libSDL3_ttf.so"
 
       - name: Clone exact PPSSPP source
         env:
@@ -62,9 +131,14 @@ jobs:
           grep -R --fixed-strings -- '--debugger' Core docs headless Tools/wsdbg
 
       - name: Configure headless debugger build
+        env:
+          LD_LIBRARY_PATH: ${{ env.DEPS_PREFIX }}/lib
+          PKG_CONFIG_PATH: ${{ env.DEPS_PREFIX }}/lib/pkgconfig
         run: |
           cmake -S ppsspp -B build-headless -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_PREFIX_PATH="$DEPS_PREFIX" \
+            -DCMAKE_BUILD_RPATH="$DEPS_PREFIX/lib" \
             -DHEADLESS=ON \
             -DUNITTEST=OFF \
             -DUSE_DISCORD=OFF \
@@ -72,12 +146,19 @@ jobs:
             -DUSE_MINIUPNPC=OFF
 
       - name: Build PPSSPPHeadless
+        env:
+          LD_LIBRARY_PATH: ${{ env.DEPS_PREFIX }}/lib
         run: cmake --build build-headless --target PPSSPPHeadless --parallel 2
 
       - name: Configure SDL debugger build
+        env:
+          LD_LIBRARY_PATH: ${{ env.DEPS_PREFIX }}/lib
+          PKG_CONFIG_PATH: ${{ env.DEPS_PREFIX }}/lib/pkgconfig
         run: |
           cmake -S ppsspp -B build-sdl -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_PREFIX_PATH="$DEPS_PREFIX" \
+            -DCMAKE_BUILD_RPATH="$DEPS_PREFIX/lib" \
             -DHEADLESS=OFF \
             -DUNITTEST=OFF \
             -DUSE_DISCORD=OFF \
@@ -85,6 +166,8 @@ jobs:
             -DUSE_MINIUPNPC=OFF
 
       - name: Build PPSSPPSDL
+        env:
+          LD_LIBRARY_PATH: ${{ env.DEPS_PREFIX }}/lib
         run: cmake --build build-sdl --target PPSSPPSDL --parallel 2
 
       - name: Build official wsdbg client
@@ -111,7 +194,11 @@ jobs:
           cp "$wsdbg" bundle/wsdbg
           cp -a ppsspp/assets/. bundle/assets/
           cp ppsspp/LICENSE.TXT bundle/PPSSPP-LICENSE.txt
+          cp sdl3/LICENSE.txt bundle/SDL3-LICENSE.txt
+          cp sdl3_ttf/LICENSE.txt bundle/SDL3-TTF-LICENSE.txt
           cp ppsspp-resolved-revision.txt bundle/ppsspp-resolved-revision.txt
+          cp sdl3-resolved-revision.txt bundle/sdl3-resolved-revision.txt
+          cp sdl3-ttf-resolved-revision.txt bundle/sdl3-ttf-resolved-revision.txt
           cp ppsspp/docs/WebSocketDebugger.md bundle/PPSSPP-WebSocket-Debugger.md
           cp ppsspp/Tools/wsdbg/README.md bundle/wsdbg-README.md
           cp tools/ppsspp-debugger-bundle/*.sh bundle/tools/ppsspp-debugger-bundle/
@@ -119,8 +206,11 @@ jobs:
           chmod +x bundle/PPSSPPHeadless bundle/PPSSPPSDL bundle/wsdbg
           chmod +x bundle/tools/ppsspp-debugger-bundle/*.sh
 
+          cp -a "$DEPS_PREFIX/lib/libSDL3.so"* bundle/lib/
+          cp -a "$DEPS_PREFIX/lib/libSDL3_ttf.so"* bundle/lib/
+
           for binary in bundle/PPSSPPHeadless bundle/PPSSPPSDL bundle/wsdbg; do
-            ldd "$binary" > "$binary.ldd.txt" || true
+            ldd "$binary" > "$binary.ldd.txt"
             while IFS= read -r library; do
               test -f "$library" || continue
               base="$(basename "$library")"
@@ -131,18 +221,30 @@ jobs:
               esac
               cp -L "$library" "bundle/lib/$base"
             done < <(
-              ldd "$binary" \
+              LD_LIBRARY_PATH="$DEPS_PREFIX/lib" ldd "$binary" \
                 | awk '/=> \/[^ ]+/ {print $3} /^\// {print $1}' \
                 | sort -u
             )
             patchelf --set-rpath '$ORIGIN/lib' "$binary"
           done
 
-          export LD_LIBRARY_PATH="$PWD/bundle/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-          bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1 || true
-          bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1 || true
-          bundle/PPSSPPSDL --version > bundle/PPSSPPSDL.version.txt 2>&1 || true
-          bundle/PPSSPPSDL --help > bundle/PPSSPPSDL.help.txt 2>&1 || true
+          find bundle/lib -type f -name '*.so*' -print0 \
+            | while IFS= read -r -d '' library; do
+                if file "$library" | grep -q 'ELF'; then
+                  patchelf --set-rpath '$ORIGIN' "$library" || true
+                fi
+              done
+
+          export LD_LIBRARY_PATH="$PWD/bundle/lib"
+          for binary in bundle/PPSSPPHeadless bundle/PPSSPPSDL bundle/wsdbg; do
+            ldd "$binary" | tee "$binary.bundle-ldd.txt"
+            ! ldd "$binary" | grep -q 'not found'
+          done
+
+          bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1
+          bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1
+          SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
+            bundle/PPSSPPSDL --version > bundle/PPSSPPSDL.version.txt 2>&1
           bundle/wsdbg --help > bundle/wsdbg.help.txt
 
           bash -n bundle/tools/ppsspp-debugger-bundle/*.sh
@@ -150,6 +252,15 @@ jobs:
           grep -q 'debugger.ppsspp.org' bundle/PPSSPP-WebSocket-Debugger.md
           grep -q 'memory.breakpoint.add' bundle/PPSSPP-WebSocket-Debugger.md
           grep -q 'input.buttons.send' bundle/PPSSPP-WebSocket-Debugger.md
+
+          max_glibc="$({
+            objdump -T bundle/PPSSPPHeadless
+            objdump -T bundle/PPSSPPSDL
+            objdump -T bundle/wsdbg
+            find bundle/lib -type f -name '*.so*' -exec objdump -T {} \; 2>/dev/null || true
+          } | grep -o 'GLIBC_[0-9][0-9.]*' | sort -V | tail -n 1)"
+          printf '%s\n' "$max_glibc" | tee bundle/maximum-glibc-requirement.txt
+          test "$(printf '%s\n' "$max_glibc" GLIBC_2.35 | sort -V | tail -n 1)" = GLIBC_2.35
 
           (
             cd bundle
