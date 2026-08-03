@@ -63,18 +63,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         _print_image_result(image_result, args.as_json)
         return 0 if image_result.valid else 1
     if args.command == "extract-image":
-        manifest = build_workspace(
+        workspace_manifest = build_workspace(
             args.image,
             args.workspace,
             load_reference_revision(args.revision_config),
             force=args.force,
         )
         if args.as_json:
-            print(manifest.to_json(), end="")
+            print(workspace_manifest.to_json(), end="")
         else:
             print(
                 f"extracted: {args.workspace} "
-                f"({len(manifest.files)} files, {len(manifest.directories)} directories)"
+                f"({len(workspace_manifest.files)} files, "
+                f"{len(workspace_manifest.directories)} directories)"
             )
         return 0
     if args.command == "verify-workspace":
@@ -109,11 +110,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if args.command == "archive-extract":
         archive = parse_ea_archive(args.path.read_bytes())
-        manifest = extract_ea_archive(archive, args.destination, force=args.force)
+        archive_manifest = extract_ea_archive(
+            archive, args.destination, force=args.force
+        )
         if args.as_json:
-            print(json.dumps(manifest, indent=2, sort_keys=True), end="\n")
+            print(json.dumps(archive_manifest, indent=2, sort_keys=True), end="\n")
         else:
-            print(f"extracted: {args.destination} ({len(manifest)} members)")
+            print(
+                f"extracted: {args.destination} ({len(archive_manifest)} members)"
+            )
         return 0
 
     validation_result: ValidationResult
