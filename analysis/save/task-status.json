@@ -1,5 +1,5 @@
 {
-  "active_checkpoint": "9B",
+  "active_checkpoint": "9C",
   "branch": "task-9-save-architecture",
   "completed_checkpoints": [
     {
@@ -12,9 +12,20 @@
         "ruff": "passed",
         "tests_passed": 163
       }
+    },
+    {
+      "artifact": "analysis/save/save-utility-buffer-contract.json",
+      "checkpoint": "9B",
+      "conclusion": "Two BOOT.BIN controllers construct the same 0x600-byte PSP savedata parameter block. The serialized Fight Night payload is separate and crosses the operating-system utility boundary through pointer, capacity, and active-size fields at offsets 0x74, 0x78, and 0x7C. The callback owner, data-flow direction, serializer and deserializer sets, checksum, and payload field meanings remain unresolved.",
+      "verification": {
+        "expected_skips": 4,
+        "mypy": "passed",
+        "ruff": "passed",
+        "tests_passed": 168
+      }
     }
   ],
-  "next_question": "Identify serializer and deserializer call-path boundaries and their data-buffer contract without assigning profile, career, checksum, or slot-field semantics.",
+  "next_question": "Resolve the indirect payload-provider callback target and owner, then distinguish serializer and deserializer directions without assigning persistent field meanings prematurely.",
   "schema_version": 1,
   "task": 9,
   "task_status": "runtime_in_progress"
