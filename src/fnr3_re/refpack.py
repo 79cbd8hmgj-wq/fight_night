@@ -334,7 +334,7 @@ def _emit_literal_prefix(output: bytearray, pending: Sequence[int]) -> bytes:
     while remaining > 3:
         literal_length = min(
             _MAX_LITERAL_RUN,
-            ((remaining - 3) // 4) * 4,
+            (remaining // 4) * 4,
         )
         if literal_length < 4:
             break
