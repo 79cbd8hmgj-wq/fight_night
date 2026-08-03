@@ -207,6 +207,27 @@ def test_existing_output_requires_force_and_is_replaced_atomically(tmp_path: Pat
     assert output.read_bytes() == image
 
 
+def test_output_and_report_must_remain_outside_workspace(tmp_path: Path) -> None:
+    reference, workspace, revision, _image = prepare_workspace(tmp_path)
+    plan = BuildPlan.empty("fixture-v1")
+    output_inside = workspace / "modified" / "rebuilt.iso"
+    report_inside = workspace / "modified" / "report.json"
+
+    with pytest.raises(BuildError, match="output path must be outside workspace"):
+        rebuild_image(reference, workspace, output_inside, revision, plan)
+    with pytest.raises(BuildError, match="report path must be outside workspace"):
+        rebuild_image(
+            reference,
+            workspace,
+            tmp_path / "outside.iso",
+            revision,
+            plan,
+            report_path=report_inside,
+        )
+    assert not output_inside.exists()
+    assert not report_inside.exists()
+
+
 def test_plan_json_is_strict_and_deterministic(tmp_path: Path) -> None:
     path = tmp_path / "plan.json"
     path.write_text(

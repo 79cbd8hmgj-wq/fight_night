@@ -212,7 +212,9 @@ def rebuild_image(
         if report_path is not None
         else output.with_name(f"{output.name}.build.json")
     )
-    _validate_output_paths(reference_image, output, selected_report_path)
+    _validate_output_paths(
+        reference_image, workspace, output, selected_report_path
+    )
     _require_available_output(output, selected_report_path, force=force)
 
     validation = validate_image(reference_image, revision)
@@ -414,14 +416,27 @@ def _validate_rebuilt_layout(image: Path, manifest: WorkspaceManifest) -> None:
         raise BuildError("rebuilt ISO directory layout differs from workspace manifest")
 
 
-def _validate_output_paths(reference: Path, output: Path, report: Path) -> None:
+def _validate_output_paths(
+    reference: Path,
+    workspace: Path,
+    output: Path,
+    report: Path,
+) -> None:
     reference_resolved = reference.resolve()
-    if output.resolve(strict=False) == reference_resolved:
+    output_resolved = output.resolve(strict=False)
+    report_resolved = report.resolve(strict=False)
+    workspace_resolved = workspace.resolve()
+    if output_resolved == reference_resolved:
         raise BuildError("output path must not replace the reference image")
-    if report.resolve(strict=False) == reference_resolved:
+    if report_resolved == reference_resolved:
         raise BuildError("report path must not replace the reference image")
-    if output.resolve(strict=False) == report.resolve(strict=False):
+    if output_resolved == report_resolved:
         raise BuildError("output and report paths must differ")
+    for label, candidate in (("output", output_resolved), ("report", report_resolved)):
+        if os.path.commonpath((str(workspace_resolved), str(candidate))) == str(
+            workspace_resolved
+        ):
+            raise BuildError(f"{label} path must be outside workspace")
 
 
 def _require_available_output(output: Path, report: Path, *, force: bool) -> None:
