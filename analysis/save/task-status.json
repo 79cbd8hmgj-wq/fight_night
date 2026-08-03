@@ -1,5 +1,5 @@
 {
-  "active_checkpoint": "9D",
+  "active_checkpoint": "9E",
   "branch": "task-9-save-architecture",
   "completed_checkpoints": [
     {
@@ -35,9 +35,22 @@
         "ruff": "passed",
         "tests_passed": 170
       }
+    },
+    {
+      "artifact": "analysis/save/save-payload-lifetime.json",
+      "checkpoint": "9D",
+      "conclusion": "DATA.BIN is a fixed 0x755C-byte envelope in BOOT.BIN static BSS at runtime 0x005BAF10. It contains a 0x2C-byte envelope followed by a 0x7530-byte body area; envelope offset 0x28 records the dynamic active body length. Save clears unused body capacity to zero, while load copies only the recorded active body length. The envelope has module lifetime and no heap allocation or release; separately registered source and destination buffers are borrowed until reset or replacement.",
+      "verification": {
+        "exact_boot_regions": 10,
+        "exact_boot_workspace_inside_bss": true,
+        "expected_skips": 6,
+        "mypy": "passed",
+        "ruff": "passed",
+        "tests_passed": 172
+      }
     }
   ],
-  "next_question": "Identify payload allocation and release lifetime and determine the exact serialized payload size and capacity boundaries without assigning profile or career field semantics.",
+  "next_question": "Resolve the load-commit follow-up callback and post-load validation and error propagation without assigning persistent field meanings.",
   "schema_version": 1,
   "task": 9,
   "task_status": "runtime_in_progress"
