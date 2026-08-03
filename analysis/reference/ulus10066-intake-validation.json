@@ -1,0 +1,33 @@
+{
+  "archive_members": [
+    {
+      "name": "Fight Night Round 3 (USA).iso",
+      "size": 1137737728
+    },
+    {
+      "name": "Vimm's Lair.txt"
+    }
+  ],
+  "filesystem_inventory": {
+    "directories": 71,
+    "files": 653,
+    "prx_modules": 6
+  },
+  "observed_identity": {
+    "disc_id": "ULUS10066",
+    "disc_version": "1.00",
+    "iso_sha256": "b11da5afe208d9791eecd9f6a44d0f57946f7d9de165b7d8dd22f5ee740f4ee2",
+    "iso_size": 1137737728,
+    "psp_system_version": "2.60",
+    "title": "EA SPORTS™ FIGHT NIGHT Round 3"
+  },
+  "source_archive": "FightNightRound3(USA).7z",
+  "status": "confirmed",
+  "validation_basis": [
+    "archive extraction",
+    "streaming SHA-256",
+    "ISO9660 inventory",
+    "PSP_GAME/PARAM.SFO parsing"
+  ],
+  "validation_date": "2026-08-02"
+}
