@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
@@ -10,6 +11,8 @@ from typing import Any, cast
 from .evidence import Address, AddressType, BinaryRegion, Confidence
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_BOOT_ELF_FILE_BIAS = 0x100
+_XREF_GUARD_SIZE = 16
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,6 +93,8 @@ class SaveStringReference:
             raise ValueError("save string address must be ELF virtual")
         if self.file_offset.address_type is not AddressType.ELF_FILE_OFFSET:
             raise ValueError("save string file offset must be an ELF file offset")
+        if self.file_offset.value != self.elf_address.value + _BOOT_ELF_FILE_BIAS:
+            raise ValueError("save string ELF and file offsets do not match BOOT mapping")
         if not self.xrefs:
             raise ValueError("save string requires at least one xref")
         if len(self.xrefs) != len(self.xref_region_sha256):
@@ -206,11 +211,72 @@ class SaveStaticMap:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class SaveStaticVerification:
+    valid: bool
+    diagnostics: tuple[str, ...]
+    checked_string_references: int
+    checked_xrefs: int
+    checked_entry_points: int
+
+
 def load_save_static_map(path: Path) -> SaveStaticMap:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, Mapping):
         raise ValueError("save static map must be a JSON object")
     return SaveStaticMap.from_mapping(cast(Mapping[str, Any], payload))
+
+
+def verify_save_static_map(binary: Path, save_map: SaveStaticMap) -> SaveStaticVerification:
+    payload = binary.read_bytes()
+    if hashlib.sha256(payload).hexdigest() != save_map.boot_sha256:
+        return SaveStaticVerification(
+            valid=False,
+            diagnostics=("BOOT.BIN sha256 mismatch",),
+            checked_string_references=0,
+            checked_xrefs=0,
+            checked_entry_points=0,
+        )
+
+    diagnostics: list[str] = []
+    checked_strings = 0
+    checked_xrefs = 0
+    checked_entry_points = 0
+
+    for reference in save_map.string_references:
+        encoded = reference.value.encode("utf-8") + b"\0"
+        offset = reference.file_offset.value
+        if payload[offset : offset + len(encoded)] != encoded:
+            diagnostics.append(f"string bytes mismatch: {reference.label}")
+        checked_strings += 1
+
+        for xref, expected_sha256 in zip(
+            reference.xrefs,
+            reference.xref_region_sha256,
+            strict=True,
+        ):
+            file_offset = xref + _BOOT_ELF_FILE_BIAS
+            region = payload[file_offset : file_offset + _XREF_GUARD_SIZE]
+            if hashlib.sha256(region).hexdigest() != expected_sha256:
+                diagnostics.append(
+                    f"xref bytes mismatch: {reference.label} at 0x{xref:08x}"
+                )
+            checked_xrefs += 1
+
+    for candidate in save_map.entry_points:
+        file_offset = candidate.address.value + _BOOT_ELF_FILE_BIAS
+        region = payload[file_offset : file_offset + candidate.region.size]
+        if hashlib.sha256(region).hexdigest() != candidate.region.sha256:
+            diagnostics.append(f"entry-point bytes mismatch: {candidate.role}")
+        checked_entry_points += 1
+
+    return SaveStaticVerification(
+        valid=not diagnostics,
+        diagnostics=tuple(diagnostics),
+        checked_string_references=checked_strings,
+        checked_xrefs=checked_xrefs,
+        checked_entry_points=checked_entry_points,
+    )
 
 
 def _validate_sha256(value: str, label: str) -> None:
@@ -226,8 +292,8 @@ def _validate_nonempty_strings(values: tuple[str, ...], label: str) -> None:
             raise ValueError(f"{label} values must be non-empty")
 
 
-def _validate_unique(values: object, label: str) -> None:
-    collected = tuple(cast(Any, values))
+def _validate_unique(values: Iterable[str], label: str) -> None:
+    collected = tuple(values)
     if len(set(collected)) != len(collected):
         raise ValueError(f"duplicate {label}")
 
