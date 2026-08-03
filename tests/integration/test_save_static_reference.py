@@ -1,25 +1,16 @@
-from __future__ import annotations
-
-import os
 from pathlib import Path
-
-import pytest
 
 from fnr3_re.save import load_save_static_map, verify_save_static_map
 
 ROOT = Path(__file__).resolve().parents[2]
+BOOT = ROOT / "BOOT.BIN"
 ARTIFACT = ROOT / "analysis/save/save-system-static-candidates.json"
 
 
-@pytest.mark.skipif(
-    "FNR3_BOOT_BIN" not in os.environ,
-    reason="FNR3_BOOT_BIN is not configured",
-)
 def test_exact_boot_matches_all_static_save_evidence_guards() -> None:
-    boot = Path(os.environ["FNR3_BOOT_BIN"])
     save_map = load_save_static_map(ARTIFACT)
 
-    verification = verify_save_static_map(boot, save_map)
+    verification = verify_save_static_map(BOOT, save_map)
 
     assert verification.valid
     assert verification.diagnostics == ()
