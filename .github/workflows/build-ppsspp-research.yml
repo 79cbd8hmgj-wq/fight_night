@@ -1,4 +1,4 @@
-name: Build PPSSPP Research Bundle
+name: Build PPSSPP Debug Bundle
 
 on:
   workflow_dispatch:
@@ -8,6 +8,14 @@ on:
         required: true
         default: v1.20.4
         type: string
+  # Temporary branch trigger used to produce and validate the first portable artifact.
+  # It is removed after the artifact passes its bundle checks.
+  push:
+    branches:
+      - task-9-save-architecture
+    paths:
+      - .github/workflows/build-ppsspp-research.yml
+      - tools/ppsspp_debug_bundle/**
 
 permissions:
   contents: read
@@ -15,9 +23,12 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
-      - name: Install build dependencies
+      - name: Check out bundle tooling
+        uses: actions/checkout@v4
+
+      - name: Install build and runtime dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -32,11 +43,12 @@ jobs:
             libsdl2-ttf-dev \
             libssl-dev \
             ninja-build \
-            pkg-config
+            pkg-config \
+            xvfb
 
       - name: Clone exact PPSSPP source
         env:
-          PPSSPP_REVISION: ${{ inputs.ppsspp_revision }}
+          PPSSPP_REVISION: ${{ inputs.ppsspp_revision || 'v1.20.4' }}
         run: |
           git clone --filter=blob:none --recurse-submodules \
             https://github.com/hrydgard/ppsspp.git ppsspp
@@ -48,9 +60,19 @@ jobs:
           git status --short
           test -z "$(git status --short)"
 
+      - name: Configure SDL research build
+        run: |
+          cmake -S ppsspp -B build-sdl -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DHEADLESS=OFF \
+            -DUNITTEST=OFF \
+            -DUSE_DISCORD=OFF \
+            -DUSE_FFMPEG=OFF \
+            -DUSE_MINIUPNPC=OFF
+
       - name: Configure headless research build
         run: |
-          cmake -S ppsspp -B build -G Ninja \
+          cmake -S ppsspp -B build-headless -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DHEADLESS=ON \
             -DUNITTEST=OFF \
@@ -58,37 +80,83 @@ jobs:
             -DUSE_FFMPEG=OFF \
             -DUSE_MINIUPNPC=OFF
 
-      - name: Build PPSSPPHeadless
-        run: cmake --build build --target PPSSPPHeadless --parallel 2
-
-      - name: Package exact research bundle
+      - name: Build SDL and headless targets
         run: |
-          set -eu
-          binary="$(find build -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
-          test -n "$binary"
-          mkdir -p bundle/assets
-          cp "$binary" bundle/PPSSPPHeadless
+          cmake --build build-sdl --target PPSSPPSDL --parallel 2
+          cmake --build build-headless --target PPSSPPHeadless --parallel 2
+
+      - name: Package exact debugger bundle
+        run: |
+          set -euo pipefail
+          sdl_binary="$(find build-sdl -type f -name PPSSPPSDL -perm -111 | head -n 1)"
+          headless_binary="$(find build-headless -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
+          test -n "$sdl_binary"
+          test -n "$headless_binary"
+
+          mkdir -p bundle/assets bundle/bin bundle/lib bundle/memstick/PSP/SYSTEM bundle/runtime
+          cp "$sdl_binary" bundle/PPSSPPSDL
+          cp "$headless_binary" bundle/PPSSPPHeadless
+          cp /usr/bin/Xvfb bundle/bin/Xvfb
           cp -a ppsspp/assets/. bundle/assets/
           cp ppsspp/LICENSE.TXT bundle/PPSSPP-LICENSE.txt
+          cp ppsspp/scripts/websocket-test.py bundle/official-websocket-test.py
           cp ppsspp-resolved-revision.txt bundle/ppsspp-resolved-revision.txt
+          cp tools/ppsspp_debug_bundle/* bundle/
+
+          copy_deps() {
+            ldd "$1" \
+              | awk '/=> \// {print $3} /^\// {print $1}' \
+              | sort -u \
+              | while read -r dependency; do
+                  test -f "$dependency" || continue
+                  cp -L "$dependency" "bundle/lib/$(basename "$dependency")"
+                done
+          }
+          copy_deps bundle/PPSSPPSDL
+          copy_deps bundle/PPSSPPHeadless
+          copy_deps bundle/bin/Xvfb
+
+          chmod +x \
+            bundle/PPSSPPSDL \
+            bundle/PPSSPPHeadless \
+            bundle/bin/Xvfb \
+            bundle/launch-debug.sh \
+            bundle/stop-debug.sh \
+            bundle/install-state.sh \
+            bundle/ppsspp_ws.py
+
+          sha256sum bundle/PPSSPPSDL > bundle/PPSSPPSDL.sha256
           sha256sum bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.sha256
-          ldd bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.ldd.txt || true
+          sha256sum bundle/bin/Xvfb > bundle/Xvfb.sha256
+          ldd bundle/PPSSPPSDL > bundle/PPSSPPSDL.ldd.txt
+          ldd bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.ldd.txt
+          ldd bundle/bin/Xvfb > bundle/Xvfb.ldd.txt
           bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1 || true
           bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1 || true
-          printf '%s\n' \
-            'This artifact contains only an official PPSSPP research build and its assets.' \
-            'It contains no Fight Night Round 3 image, save, extracted game data, or copyrighted game asset.' \
-            > bundle/README.txt
-          tar -C bundle -czf ppsspp-research-linux-x86_64.tar.gz .
-          sha256sum ppsspp-research-linux-x86_64.tar.gz \
-            > ppsspp-research-linux-x86_64.tar.gz.sha256
+          bundle/PPSSPPSDL --version > bundle/PPSSPPSDL.version.txt 2>&1 || true
+          bundle/PPSSPPSDL --help > bundle/PPSSPPSDL.help.txt 2>&1 || true
 
-      - name: Upload research bundle
+          bash -n bundle/launch-debug.sh bundle/stop-debug.sh bundle/install-state.sh
+          python3 -m py_compile bundle/ppsspp_ws.py
+          python3 bundle/ppsspp_ws.py --help > bundle/ppsspp_ws.help.txt
+          grep -q '^RemoteDebuggerOnStartup = True$' bundle/ppsspp-debug.ini
+          grep -q '^RemoteDebuggerLocal = True$' bundle/ppsspp-debug.ini
+
+          printf '%s\n' \
+            'This artifact contains only an official PPSSPP research build, runtime libraries, Xvfb, and debugger tooling.' \
+            'It contains no Fight Night Round 3 image, PSP state, savedata, extracted game data, or copyrighted game asset.' \
+            > bundle/BUNDLE-CONTENTS.txt
+
+          tar -C bundle -czf ppsspp-debug-linux-x86_64.tar.gz .
+          sha256sum ppsspp-debug-linux-x86_64.tar.gz \
+            > ppsspp-debug-linux-x86_64.tar.gz.sha256
+
+      - name: Upload debugger bundle
         uses: actions/upload-artifact@v4
         with:
-          name: ppsspp-research-linux-x86_64
+          name: ppsspp-debug-linux-x86_64
           path: |
-            ppsspp-research-linux-x86_64.tar.gz
-            ppsspp-research-linux-x86_64.tar.gz.sha256
+            ppsspp-debug-linux-x86_64.tar.gz
+            ppsspp-debug-linux-x86_64.tar.gz.sha256
           if-no-files-found: error
           retention-days: 7
