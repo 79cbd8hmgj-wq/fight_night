@@ -1,0 +1,35 @@
+name: Task 8 focused debug
+
+on:
+  push:
+    branches:
+      - task-8-ppsspp-capture-harness
+
+permissions:
+  contents: write
+
+jobs:
+  debug:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: task-8-ppsspp-capture-harness
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+      - name: Capture focused pytest output
+        run: |
+          mkdir -p analysis/debug
+          python -m pytest tests/unit/test_ppsspp_harness.py -vv > analysis/debug/task8-pytest.txt 2>&1 || true
+      - name: Commit focused output
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add analysis/debug/task8-pytest.txt
+          git diff --cached --check
+          git commit -m "debug: capture Task 8 focused failures"
+          git push origin HEAD:task-8-ppsspp-capture-harness
