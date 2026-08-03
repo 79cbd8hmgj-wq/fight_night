@@ -4,8 +4,9 @@ import argparse
 import json
 from collections.abc import Sequence
 from pathlib import Path
+from uuid import uuid4
 
-from .ea_archive import extract_ea_archive, parse_ea_archive
+from .ea_archive import EaArchive, extract_ea_archive, parse_ea_archive
 from .iso import build_workspace, verify_workspace
 from .manifests import WorkspaceValidationResult
 from .package_gate import ValidationResult, validate_package, validate_registry
@@ -128,7 +129,7 @@ def _write_binary_output(destination: Path, payload: bytes, *, force: bool) -> N
     if destination.exists() and not force:
         raise FileExistsError(f"output already exists: {destination}")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.with_name(f".{destination.name}.tmp")
+    temporary = destination.with_name(f".{destination.name}.tmp-{uuid4().hex}")
     try:
         temporary.write_bytes(payload)
         temporary.replace(destination)
@@ -136,14 +137,13 @@ def _write_binary_output(destination: Path, payload: bytes, *, force: bool) -> N
         temporary.unlink(missing_ok=True)
 
 
-def _archive_listing_json(archive: object) -> str:
-    parsed = parse_ea_archive(archive.source) if not hasattr(archive, "members") else archive
+def _archive_listing_json(archive: EaArchive) -> str:
     return (
         json.dumps(
             {
-                "alignment": parsed.alignment,
-                "header_size": parsed.header_size,
-                "magic": parsed.magic.decode("ascii"),
+                "alignment": archive.alignment,
+                "header_size": archive.header_size,
+                "magic": archive.magic.decode("ascii"),
                 "members": [
                     {
                         "name": member.name,
@@ -153,9 +153,9 @@ def _archive_listing_json(archive: object) -> str:
                         "sha256": member.sha256,
                         "size": member.size,
                     }
-                    for member in parsed.members
+                    for member in archive.members
                 ],
-                "total_size": parsed.total_size,
+                "total_size": archive.total_size,
             },
             indent=2,
             sort_keys=True,
