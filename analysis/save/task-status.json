@@ -1,5 +1,5 @@
 {
-  "active_checkpoint": "9C",
+  "active_checkpoint": "9D",
   "branch": "task-9-save-architecture",
   "completed_checkpoints": [
     {
@@ -16,16 +16,28 @@
     {
       "artifact": "analysis/save/save-utility-buffer-contract.json",
       "checkpoint": "9B",
-      "conclusion": "Two BOOT.BIN controllers construct the same 0x600-byte PSP savedata parameter block. The serialized Fight Night payload is separate and crosses the operating-system utility boundary through pointer, capacity, and active-size fields at offsets 0x74, 0x78, and 0x7C. The callback owner, data-flow direction, serializer and deserializer sets, checksum, and payload field meanings remain unresolved.",
+      "conclusion": "Two BOOT.BIN save controllers construct the same 0x600-byte PSP savedata parameter block. The serialized Fight Night payload is separate and crosses the operating-system utility boundary through pointer, capacity, and active-size fields at offsets 0x74, 0x78, and 0x7C. Payload direction and callback ownership were deferred to Checkpoint 9C.",
       "verification": {
         "expected_skips": 4,
         "mypy": "passed",
         "ruff": "passed",
         "tests_passed": 168
       }
+    },
+    {
+      "artifact": "analysis/save/save-payload-direction-map.json",
+      "checkpoint": "9C",
+      "conclusion": "BOOT.BIN probably owns the copied payload dispatch table at runtime 0x005C3A18. Entry +0x38 resolves to save-payload workspace provider 0x00340DC8, entry +0x40 resolves to load-buffer provider 0x00340F00, and entry +0x44 resolves to load-commit handler 0x00340F64. Utility modes 1, 3, and 5 are save-direction; modes 0, 2, and 4 are load-direction; modes 6 and 7 are non-payload delete operations. Per-field serializer and deserializer logic remains unresolved.",
+      "verification": {
+        "exact_boot_regions": 10,
+        "expected_skips": 5,
+        "mypy": "passed",
+        "ruff": "passed",
+        "tests_passed": 170
+      }
     }
   ],
-  "next_question": "Resolve the indirect payload-provider callback target and owner, then distinguish serializer and deserializer directions without assigning persistent field meanings prematurely.",
+  "next_question": "Identify payload allocation and release lifetime and determine the exact serialized payload size and capacity boundaries without assigning profile or career field semantics.",
   "schema_version": 1,
   "task": 9,
   "task_status": "runtime_in_progress"
