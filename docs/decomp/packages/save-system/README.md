@@ -2,9 +2,9 @@
 
 ## Status
 
-**Task 9 — Checkpoints 9A through 9D complete; Checkpoint 9E runtime-blocked**
+**Task 9 — Checkpoints 9A through 9D complete; Checkpoint 9E runtime capture plan prepared and live evidence pending**
 
-The package records exact-binary ownership candidates, the PSP savedata utility boundary, save/load dispatch directions, and the payload envelope's lifetime and size contract. It does not satisfy the Class A functional-reconstruction gate because the remaining load validation, integrity, slot, corruption, recovery, and migration semantics require controlled live PPSSPP evidence.
+The package records exact-binary ownership candidates, the PSP savedata utility boundary, save/load dispatch directions, the payload envelope's lifetime and size contract, and the exact runtime breakpoint plan for the next controlled load investigation. It does not satisfy the Class A functional-reconstruction gate because the remaining load validation, integrity, slot, corruption, recovery, and migration semantics require controlled live PPSSPP evidence.
 
 No further save-system semantic claim may be promoted from static interpretation alone.
 
@@ -23,6 +23,7 @@ analysis/save/save-system-static-candidates.json
 analysis/save/save-utility-buffer-contract.json
 analysis/save/save-payload-direction-map.json
 analysis/save/save-payload-lifetime.json
+analysis/save/checkpoint-9e-runtime-capture-plan.json
 analysis/save/task-status.json
 ```
 
@@ -74,7 +75,7 @@ The guarded `sceUtility` import descriptor declares twenty stubs. The observed c
 
 ## Checkpoint 9C — payload dispatch and direction
 
-The copied dispatch table resolves to runtime address `0x005C3A18`. The initializer at `0x0033F5E0` and copier at `0x004282BC` are both in `BOOT.BIN`.
+The copied dispatch table resolves to relocated module address `0x005C3A18`. The initializer at `0x0033F5E0` and copier at `0x004282BC` are both in `BOOT.BIN`.
 
 | Entry | Target | Direction | Bounded role |
 |---:|---:|---|---|
@@ -94,7 +95,7 @@ The load-commit handler invokes a follow-up callback whose exact target, ownersh
 
 ## Checkpoint 9D — payload envelope and lifetime
 
-PSP relocations place the fixed workspace at runtime `0x005BAF10` inside the exact `BOOT.BIN` `.bss` range `0x005923C0–0x005C7964`.
+PSP relocations place the fixed workspace at relocated module address `0x005BAF10` inside the exact `BOOT.BIN` `.bss` range `0x005923C0–0x005C7964`.
 
 ```text
 Envelope total:         0x755C bytes (30044)
@@ -114,7 +115,48 @@ The provider at `0x00340F00` clears the full `0x755C` envelope. The commit handl
 
 ### Lifetime
 
-The envelope is static module BSS with module-load-to-module-unload lifetime. It has no heap allocation or release. Registered external source/destination buffers use globals at `0x005C250C` and `0x005C2510`; the clear function at `0x003401D0` zeros them, while the setter at `0x0034025C` borrows caller-provided pointer and size values until reset or replacement.
+The envelope is static module BSS with module-load-to-module-unload lifetime. It has no heap allocation or release. Registered external source/destination buffers use globals at relocated module addresses `0x005C250C` and `0x005C2510`; the clear function at `0x003401D0` zeros them, while the setter at `0x0034025C` borrows caller-provided pointer and size values until reset or replacement.
+
+## Checkpoint 9E — prepared runtime map
+
+A live launch of the exact `BOOT.BIN` with the pinned PPSSPP debugger confirmed an important address distinction:
+
+```text
+PPSSPP module allocation base: 0x08800000
+ELF virtual address zero:      0x08804000
+Absolute translation:          0x08804000 + ELF virtual
+```
+
+The module allocation therefore contains a `0x4000` prefix. Breakpoints derived directly from `0x08800000` would be `0x4000` too low.
+
+Corrected fixed breakpoint addresses:
+
+| Purpose | PPSSPP absolute address |
+|---|---:|
+| Load-commit entry | `0x08B44F64` |
+| Before body copy | `0x08B44FAC` |
+| Before callback-pointer load | `0x08B44FB4` |
+| Before indirect callback call | `0x08B44FC0` |
+| After callback return | `0x08B44FC8` |
+
+Corrected data addresses:
+
+| Purpose | PPSSPP absolute address |
+|---|---:|
+| Follow-up callback pointer | `0x08D6E9C4` |
+| Savedata workspace | `0x08DBEF10` |
+| Registered destination pointer | `0x08DC650C` |
+| Registered destination size | `0x08DC6510` |
+| Active body-size global | `0x08DCBC68` |
+
+The relocated load-commit and callback-setter regions were read back successfully at the corrected locations. The callback pointer and savedata workspace were readable and zero before game initialization when `BOOT.BIN` was launched alone. This proves the map, not any load-validation semantics.
+
+The normalized capture plan requires two controls:
+
+1. Successful load of an unmodified exact save.
+2. Load of a copied save with one recorded nonzero active-body byte changed without altering file size.
+
+For both captures, the debugger must record all fixed breakpoint registers, the dynamically installed callback target, workspace and destination hashes, the first divergent branch or return value, visible game behavior, and complete `SAVEDATA` file hashes.
 
 ## Verification through 9D
 
@@ -127,17 +169,11 @@ Strict mypy passed
 Workspace confirmed inside exact .bss bounds
 ```
 
-## Checkpoint 9E runtime prerequisite
+The 9E capture-plan JSON parsed successfully. Its exact static regions and corrected relocated code addresses were independently read from the uploaded `BOOT.BIN` and live PPSSPP process. This preparation does not mark Checkpoint 9E complete.
 
-Checkpoint 9E will not begin until all of the following are available:
+## Remaining runtime prerequisite
 
-1. Exact `ULUS10066-v1.00` game image.
-2. A `.ppst` state created by the distributed pinned PPSSPP debugger bundle.
-3. Visible confirmation that the state is immediately before or during a save/load operation.
-4. Associated `memstick/PSP/SAVEDATA` directory when available.
-5. Controlled successful-load and corrupted-copy captures.
-
-The repository already contains a separate Task 8 PPSSPP debugger-bundle builder on `main`; Task 9 does not duplicate that infrastructure.
+Checkpoint 9E still requires a mounted exact game image or mounted source archive so the pinned PPSSPP build can reach a real save/load path and produce the successful-load and corrupted-copy controls.
 
 Useful state positions include:
 
@@ -165,4 +201,4 @@ Useful state positions include:
 
 ## Next checkpoint
 
-**9E — using a matching PPSSPP state, resolve the load-commit follow-up callback and post-load validation/error propagation without assigning persistent field meanings.**
+**9E — using the prepared corrected breakpoints in a real load, resolve the load-commit follow-up callback and post-load validation/error propagation without assigning persistent field meanings.**
