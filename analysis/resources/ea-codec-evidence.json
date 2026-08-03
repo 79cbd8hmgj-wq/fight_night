@@ -23,7 +23,7 @@
         "endianness": "big",
         "offset": 12,
         "size": 4,
-        "meaning": "directory end and payload-header size"
+        "meaning": "end of member directory plus any opaque header trailer"
       }
     ],
     "member_record": [
@@ -36,6 +36,7 @@
     {
       "alignment": 16,
       "header_size": 88,
+      "header_tail_hex": "",
       "magic": "BIGF",
       "member_count": 4,
       "members": [
@@ -50,6 +51,7 @@
     {
       "alignment": 64,
       "header_size": 231,
+      "header_tail_hex": "4c32363615050001",
       "magic": "BIG4",
       "member_count": 10,
       "members": [
