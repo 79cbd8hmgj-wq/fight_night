@@ -4,7 +4,7 @@
 
 The debugger bundle supplies the live PSP runtime dependency that the existing capture harness intentionally leaves environment-gated. It is separate from any Fight Night Round 3 ISO, battery save, PPSSPP save state, RAM dump, screenshot, or extracted game asset.
 
-The bundle is built from an immutable PPSSPP revision and contains:
+The bundle is built from immutable PPSSPP, SDL3, and SDL3_ttf revisions and contains:
 
 ```text
 PPSSPPHeadless
@@ -15,9 +15,22 @@ lib/
 tools/ppsspp-debugger-bundle/
 PPSSPP-WebSocket-Debugger.md
 PPSSPP-LICENSE.txt
+SDL3-LICENSE.txt
+SDL3-TTF-LICENSE.txt
 ppsspp-resolved-revision.txt
+sdl3-resolved-revision.txt
+sdl3-ttf-resolved-revision.txt
+maximum-glibc-requirement.txt
 bundle.sha256
 ```
+
+## Portable Linux baseline
+
+The workflow builds on Ubuntu 22.04 rather than using a newer distribution's prebuilt SDL packages. SDL 3.4.10 and SDL_ttf 3.2.2 are compiled from exact upstream commits and packaged with the emulator.
+
+This keeps the maximum accepted GNU C Library requirement at `GLIBC_2.35`. The packaging step fails if any emulator, debugger, or bundled library requires a newer GLIBC symbol. It also rejects unresolved shared-library dependencies before uploading the artifact.
+
+The resulting x86_64 bundle is intended for Linux systems with GLIBC 2.35 or newer. It is not a native macOS application.
 
 ## Why both emulator front ends are included
 
@@ -25,7 +38,7 @@ bundle.sha256
 
 `PPSSPPSDL` is the visual fallback. It boots the same ISO normally while exposing the same remote debugger. It is used to navigate menus, create a profile or battery save, identify a reproducible scenario, and inspect presentation when a headless input trace has not yet been authored.
 
-Both binaries are built from the same exact source revision.
+Both binaries are built from the same exact PPSSPP source revision and linked against the same bundled SDL revisions.
 
 ## Debugger transport
 
@@ -97,4 +110,4 @@ A PPSSPP save state is optional acceleration only. It must be produced by the ex
 
 ## Copyright boundary
 
-The workflow never accepts, downloads, reads, or uploads a game image or save. The published artifact contains PPSSPP binaries, upstream assets, debugger documentation, wrapper scripts, dependency diagnostics, and hashes only.
+The workflow never accepts, downloads, reads, or uploads a game image or save. The published artifact contains PPSSPP binaries, upstream assets, debugger documentation, wrapper scripts, dependency diagnostics, licenses, and hashes only.
