@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 
 from .elf32 import Elf32Image, parse_elf32
 from .iso import verify_workspace
-from .manifests import ManifestFile, load_workspace_manifest
+from .manifests import load_workspace_manifest
 from .psp_container import PspContainer, parse_psp_container
 
 

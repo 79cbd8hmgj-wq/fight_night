@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import Final
 
 ELF_HEADER_SIZE: Final = 52
@@ -326,7 +327,7 @@ def _validate_program_headers(
                 )
             )
     load_ranges.sort()
-    for previous, current in zip(load_ranges, load_ranges[1:], strict=False):
+    for previous, current in pairwise(load_ranges):
         if current[0] < previous[1]:
             raise Elf32Error(
                 f"overlapping load segments: {previous[2]} and {current[2]}"
@@ -355,12 +356,11 @@ def _validate_raw_sections(
     sections: tuple[_RawSectionHeader, ...], file_size: int
 ) -> None:
     for section in sections:
-        if section.section_type != SHT_NOBITS:
-            if (
-                section.file_offset > file_size
-                or section.size > file_size - section.file_offset
-            ):
-                raise Elf32Error(f"section {section.index} file range is outside ELF")
+        if section.section_type != SHT_NOBITS and (
+            section.file_offset > file_size
+            or section.size > file_size - section.file_offset
+        ):
+            raise Elf32Error(f"section {section.index} file range is outside ELF")
         if section.alignment not in {0, 1} and section.alignment & (section.alignment - 1):
             raise Elf32Error(
                 f"section {section.index} alignment is not a power of two"

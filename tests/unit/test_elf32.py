@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from collections.abc import Callable
 
 from fnr3_re.elf32 import Elf32Error, parse_elf32
 from tests.support.elf32 import build_test_elf
@@ -62,7 +63,9 @@ def test_rejects_bss_or_unmapped_address_translation() -> None:
         (lambda data: data.__setitem__(slice(32, 36), b"\xff\xff\xff\x7f"), "section table"),
     ],
 )
-def test_rejects_malformed_or_unsupported_elfs(mutator: object, message: str) -> None:
+def test_rejects_malformed_or_unsupported_elfs(
+    mutator: Callable[[bytearray], None], message: str
+) -> None:
     payload = bytearray(build_test_elf())
     mutator(payload)
 
