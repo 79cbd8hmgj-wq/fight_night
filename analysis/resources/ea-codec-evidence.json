@@ -1,0 +1,79 @@
+{
+  "archive_format": {
+    "header_fields": [
+      {
+        "endianness": "ascii",
+        "offset": 0,
+        "size": 4,
+        "meaning": "BIGF or BIG4 magic"
+      },
+      {
+        "endianness": "little",
+        "offset": 4,
+        "size": 4,
+        "meaning": "total archive size"
+      },
+      {
+        "endianness": "big",
+        "offset": 8,
+        "size": 4,
+        "meaning": "member count"
+      },
+      {
+        "endianness": "big",
+        "offset": 12,
+        "size": 4,
+        "meaning": "directory end and payload-header size"
+      }
+    ],
+    "member_record": [
+      "big-endian 32-bit payload offset",
+      "big-endian 32-bit payload size",
+      "ASCII NUL-terminated member name"
+    ]
+  },
+  "observed_archives": [
+    {
+      "alignment": 16,
+      "header_size": 88,
+      "magic": "BIGF",
+      "member_count": 4,
+      "members": [
+        "alpha.apt",
+        "alpha.const",
+        "alpha.o",
+        "alpha.msh"
+      ],
+      "path": "components/alpha.big",
+      "total_size": 4784
+    },
+    {
+      "alignment": 64,
+      "header_size": 231,
+      "magic": "BIG4",
+      "member_count": 10,
+      "members": [
+        "xdbboxr.adf",
+        "xdbvenue.adf",
+        "xdbalias.adf",
+        "xdbevent.adf",
+        "xdbhmtwn.adf",
+        "xdbstore.adf",
+        "xdbpref.adf",
+        "xdbrivl.adf",
+        "xdbtrain.adf",
+        "xdbcutpn.adf"
+      ],
+      "path": "preload/db.viv",
+      "total_size": 21854
+    }
+  ],
+  "refpack": {
+    "confirmed_header": "10fb",
+    "declared_size_width": 3,
+    "observed_member": "preload/db.viv!xdbboxr.adf",
+    "observed_uncompressed_size": 9704,
+    "status": "confirmed by prior direct reference-image intake and repository samples"
+  },
+  "schema_version": 1
+}
