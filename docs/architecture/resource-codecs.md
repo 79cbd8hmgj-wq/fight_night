@@ -35,7 +35,7 @@ Observed repository samples confirm a shared mixed-endian directory format:
 | `0x00` | 4 | ASCII | `BIGF` or `BIG4` |
 | `0x04` | 4 | little | Total archive size |
 | `0x08` | 4 | big | Member count |
-| `0x0C` | 4 | big | End of directory/header size |
+| `0x0C` | 4 | big | End of member directory plus any opaque header trailer |
 
 Each member record contains:
 
@@ -45,11 +45,18 @@ big-endian uint32 payload size
 NUL-terminated ASCII path
 ```
 
-The tracked `components/alpha.big` sample is a four-member `BIGF` archive with 16-byte payload alignment. The tracked `preload/db.viv` sample is a ten-member `BIG4` archive with 64-byte payload alignment. Both parse and no-change rebuild byte-exactly in integration tests.
+The tracked `components/alpha.big` sample is a four-member `BIGF` archive with 16-byte payload alignment and no header trailer. The tracked `preload/db.viv` sample is a ten-member `BIG4` archive with 64-byte payload alignment and the opaque eight-byte trailer:
+
+```text
+4c 32 36 36 15 05 00 01
+L  2  6  6
+```
+
+The trailer is preserved byte-for-byte but is not assigned an unsupported semantic meaning. Both samples parse and no-change rebuild byte-exactly in integration tests.
 
 The parser rejects unsupported magic, inconsistent sizes, malformed names, traversal, duplicate case-insensitive paths, payloads inside the header, out-of-bounds payloads, and overlapping member ranges.
 
-The builder preserves caller-provided order, magic, and alignment. Replacements are guarded by optional expected member SHA-256 values. A no-change rebuild returns the exact original bytes, including original padding.
+The builder preserves caller-provided order, magic, alignment, and opaque header trailer. Replacements are guarded by optional expected member SHA-256 values. A no-change rebuild returns the exact original bytes, including original padding.
 
 ### Commands
 
