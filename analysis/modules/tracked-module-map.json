@@ -1,0 +1,720 @@
+{
+  "modules": [
+    {
+      "address_mapping_status": "static_elf_mapped_iso_offset_pending",
+      "bss_size": 218532,
+      "container_elf_size": null,
+      "container_psp_size": null,
+      "elf_flags": 279064577,
+      "entry_point": 3464908,
+      "file_size": 7270664,
+      "image_base": 0,
+      "iso_file_offset": null,
+      "iso_lba": null,
+      "kind": "plain_elf",
+      "module_info_offset": null,
+      "module_name": null,
+      "object_type": 65440,
+      "path": "BOOT.BIN",
+      "runtime_base": null,
+      "sections": [
+        {
+          "address": 0,
+          "file_offset": 0,
+          "flags": 0,
+          "index": 0,
+          "name": "",
+          "nobits": false,
+          "section_type": 0,
+          "size": 0
+        },
+        {
+          "address": 0,
+          "file_offset": 256,
+          "flags": 6,
+          "index": 1,
+          "name": ".text",
+          "nobits": false,
+          "section_type": 1,
+          "size": 5203108
+        },
+        {
+          "address": 0,
+          "file_offset": 5845744,
+          "flags": 0,
+          "index": 2,
+          "name": ".rel.text",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 1219624
+        },
+        {
+          "address": 5203108,
+          "file_offset": 5203364,
+          "flags": 6,
+          "index": 3,
+          "name": ".sceStub.text.Kernel_Library",
+          "nobits": false,
+          "section_type": 1,
+          "size": 16
+        },
+        {
+          "address": 5203124,
+          "file_offset": 5203380,
+          "flags": 6,
+          "index": 4,
+          "name": ".sceStub.text.InterruptManager",
+          "nobits": false,
+          "section_type": 1,
+          "size": 24
+        },
+        {
+          "address": 5203148,
+          "file_offset": 5203404,
+          "flags": 6,
+          "index": 5,
+          "name": ".sceStub.text.sceNetResolver",
+          "nobits": false,
+          "section_type": 1,
+          "size": 48
+        },
+        {
+          "address": 5203196,
+          "file_offset": 5203452,
+          "flags": 6,
+          "index": 6,
+          "name": ".sceStub.text.sceNetApctl",
+          "nobits": false,
+          "section_type": 1,
+          "size": 48
+        },
+        {
+          "address": 5203244,
+          "file_offset": 5203500,
+          "flags": 6,
+          "index": 7,
+          "name": ".sceStub.text.sceNetInet",
+          "nobits": false,
+          "section_type": 1,
+          "size": 152
+        },
+        {
+          "address": 5203396,
+          "file_offset": 5203652,
+          "flags": 6,
+          "index": 8,
+          "name": ".sceStub.text.scePower",
+          "nobits": false,
+          "section_type": 1,
+          "size": 8
+        },
+        {
+          "address": 5203404,
+          "file_offset": 5203660,
+          "flags": 6,
+          "index": 9,
+          "name": ".sceStub.text.sceNetAdhocctl",
+          "nobits": false,
+          "section_type": 1,
+          "size": 96
+        },
+        {
+          "address": 5203500,
+          "file_offset": 5203756,
+          "flags": 6,
+          "index": 10,
+          "name": ".sceStub.text.sceNetAdhoc",
+          "nobits": false,
+          "section_type": 1,
+          "size": 48
+        },
+        {
+          "address": 5203548,
+          "file_offset": 5203804,
+          "flags": 6,
+          "index": 11,
+          "name": ".sceStub.text.sceMpeg",
+          "nobits": false,
+          "section_type": 1,
+          "size": 184
+        },
+        {
+          "address": 5203732,
+          "file_offset": 5203988,
+          "flags": 6,
+          "index": 12,
+          "name": ".sceStub.text.sceAtrac3plus",
+          "nobits": false,
+          "section_type": 1,
+          "size": 64
+        },
+        {
+          "address": 5203796,
+          "file_offset": 5204052,
+          "flags": 6,
+          "index": 13,
+          "name": ".sceStub.text.sceAudio",
+          "nobits": false,
+          "section_type": 1,
+          "size": 72
+        },
+        {
+          "address": 5203868,
+          "file_offset": 5204124,
+          "flags": 6,
+          "index": 14,
+          "name": ".sceStub.text.sceSasCore",
+          "nobits": false,
+          "section_type": 1,
+          "size": 168
+        },
+        {
+          "address": 5204036,
+          "file_offset": 5204292,
+          "flags": 6,
+          "index": 15,
+          "name": ".sceStub.text.sceGe_user",
+          "nobits": false,
+          "section_type": 1,
+          "size": 40
+        },
+        {
+          "address": 5204076,
+          "file_offset": 5204332,
+          "flags": 6,
+          "index": 16,
+          "name": ".sceStub.text.sceCtrl",
+          "nobits": false,
+          "section_type": 1,
+          "size": 24
+        },
+        {
+          "address": 5204100,
+          "file_offset": 5204356,
+          "flags": 6,
+          "index": 17,
+          "name": ".sceStub.text.sceSuspendForUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 40
+        },
+        {
+          "address": 5204140,
+          "file_offset": 5204396,
+          "flags": 6,
+          "index": 18,
+          "name": ".sceStub.text.UtilsForUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 56
+        },
+        {
+          "address": 5204196,
+          "file_offset": 5204452,
+          "flags": 6,
+          "index": 19,
+          "name": ".sceStub.text.ThreadManForUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 248
+        },
+        {
+          "address": 5204444,
+          "file_offset": 5204700,
+          "flags": 6,
+          "index": 20,
+          "name": ".sceStub.text.SysMemUserForUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 48
+        },
+        {
+          "address": 5204492,
+          "file_offset": 5204748,
+          "flags": 6,
+          "index": 21,
+          "name": ".sceStub.text.StdioForUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 24
+        },
+        {
+          "address": 5204516,
+          "file_offset": 5204772,
+          "flags": 6,
+          "index": 22,
+          "name": ".sceStub.text.ModuleMgrForUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 64
+        },
+        {
+          "address": 5204580,
+          "file_offset": 5204836,
+          "flags": 6,
+          "index": 23,
+          "name": ".sceStub.text.LoadExecForUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 16
+        },
+        {
+          "address": 5204596,
+          "file_offset": 5204852,
+          "flags": 6,
+          "index": 24,
+          "name": ".sceStub.text.IoFileMgrForUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 112
+        },
+        {
+          "address": 5204708,
+          "file_offset": 5204964,
+          "flags": 6,
+          "index": 25,
+          "name": ".sceStub.text.sceNet",
+          "nobits": false,
+          "section_type": 1,
+          "size": 32
+        },
+        {
+          "address": 5204740,
+          "file_offset": 5204996,
+          "flags": 6,
+          "index": 26,
+          "name": ".sceStub.text.sceWlanDrv",
+          "nobits": false,
+          "section_type": 1,
+          "size": 16
+        },
+        {
+          "address": 5204756,
+          "file_offset": 5205012,
+          "flags": 6,
+          "index": 27,
+          "name": ".sceStub.text.sceUtility",
+          "nobits": false,
+          "section_type": 1,
+          "size": 160
+        },
+        {
+          "address": 5204916,
+          "file_offset": 5205172,
+          "flags": 6,
+          "index": 28,
+          "name": ".sceStub.text.sceRtc",
+          "nobits": false,
+          "section_type": 1,
+          "size": 32
+        },
+        {
+          "address": 5204948,
+          "file_offset": 5205204,
+          "flags": 6,
+          "index": 29,
+          "name": ".sceStub.text.sceUmdUser",
+          "nobits": false,
+          "section_type": 1,
+          "size": 48
+        },
+        {
+          "address": 5204996,
+          "file_offset": 5205252,
+          "flags": 6,
+          "index": 30,
+          "name": ".sceStub.text.sceDisplay",
+          "nobits": false,
+          "section_type": 1,
+          "size": 32
+        },
+        {
+          "address": 5205028,
+          "file_offset": 5205284,
+          "flags": 3,
+          "index": 31,
+          "name": ".lib.ent.top",
+          "nobits": false,
+          "section_type": 1,
+          "size": 4
+        },
+        {
+          "address": 5205032,
+          "file_offset": 5205288,
+          "flags": 2,
+          "index": 32,
+          "name": ".lib.ent",
+          "nobits": false,
+          "section_type": 1,
+          "size": 16
+        },
+        {
+          "address": 0,
+          "file_offset": 7065368,
+          "flags": 0,
+          "index": 33,
+          "name": ".rel.lib.ent",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 8
+        },
+        {
+          "address": 5205048,
+          "file_offset": 5205304,
+          "flags": 3,
+          "index": 34,
+          "name": ".lib.ent.btm",
+          "nobits": false,
+          "section_type": 1,
+          "size": 4
+        },
+        {
+          "address": 5205052,
+          "file_offset": 5205308,
+          "flags": 3,
+          "index": 35,
+          "name": ".lib.stub.top",
+          "nobits": false,
+          "section_type": 1,
+          "size": 4
+        },
+        {
+          "address": 5205056,
+          "file_offset": 5205312,
+          "flags": 2,
+          "index": 36,
+          "name": ".lib.stub",
+          "nobits": false,
+          "section_type": 1,
+          "size": 560
+        },
+        {
+          "address": 0,
+          "file_offset": 7065376,
+          "flags": 0,
+          "index": 37,
+          "name": ".rel.lib.stub",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 672
+        },
+        {
+          "address": 5205616,
+          "file_offset": 5205872,
+          "flags": 3,
+          "index": 38,
+          "name": ".lib.stub.btm",
+          "nobits": false,
+          "section_type": 1,
+          "size": 4
+        },
+        {
+          "address": 5205620,
+          "file_offset": 5205876,
+          "flags": 3,
+          "index": 39,
+          "name": ".rodata.sceModuleInfo",
+          "nobits": false,
+          "section_type": 1,
+          "size": 52
+        },
+        {
+          "address": 0,
+          "file_offset": 7066048,
+          "flags": 0,
+          "index": 40,
+          "name": ".rel.rodata.sceModuleInfo",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 32
+        },
+        {
+          "address": 5205672,
+          "file_offset": 5205928,
+          "flags": 2,
+          "index": 41,
+          "name": ".rodata.sceResident",
+          "nobits": false,
+          "section_type": 1,
+          "size": 548
+        },
+        {
+          "address": 0,
+          "file_offset": 7066080,
+          "flags": 0,
+          "index": 42,
+          "name": ".rel.rodata.sceResident",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 40
+        },
+        {
+          "address": 5206220,
+          "file_offset": 5206476,
+          "flags": 2,
+          "index": 43,
+          "name": ".rodata.sceNid",
+          "nobits": false,
+          "section_type": 1,
+          "size": 960
+        },
+        {
+          "address": 5207232,
+          "file_offset": 5207488,
+          "flags": 2,
+          "index": 44,
+          "name": ".rodata",
+          "nobits": false,
+          "section_type": 1,
+          "size": 223344
+        },
+        {
+          "address": 0,
+          "file_offset": 7066128,
+          "flags": 0,
+          "index": 45,
+          "name": ".rel.rodata",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 65856
+        },
+        {
+          "address": 5430592,
+          "file_offset": 5430848,
+          "flags": 3,
+          "index": 46,
+          "name": ".data",
+          "nobits": false,
+          "section_type": 1,
+          "size": 378720
+        },
+        {
+          "address": 0,
+          "file_offset": 7131984,
+          "flags": 0,
+          "index": 47,
+          "name": ".rel.data",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 110328
+        },
+        {
+          "address": 5809312,
+          "file_offset": 5809568,
+          "flags": 3,
+          "index": 48,
+          "name": ".eh_frame",
+          "nobits": false,
+          "section_type": 1,
+          "size": 52
+        },
+        {
+          "address": 0,
+          "file_offset": 7066120,
+          "flags": 0,
+          "index": 49,
+          "name": ".rel.eh_frame",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 8
+        },
+        {
+          "address": 5809364,
+          "file_offset": 5809620,
+          "flags": 2,
+          "index": 50,
+          "name": ".rodata.sceNid",
+          "nobits": false,
+          "section_type": 1,
+          "size": 960
+        },
+        {
+          "address": 5810324,
+          "file_offset": 5810580,
+          "flags": 2,
+          "index": 51,
+          "name": ".ctors",
+          "nobits": false,
+          "section_type": 1,
+          "size": 8
+        },
+        {
+          "address": 5810332,
+          "file_offset": 5810588,
+          "flags": 2,
+          "index": 52,
+          "name": ".dtors",
+          "nobits": false,
+          "section_type": 1,
+          "size": 8
+        },
+        {
+          "address": 5810344,
+          "file_offset": 5810600,
+          "flags": 3,
+          "index": 53,
+          "name": ".cplinit",
+          "nobits": false,
+          "section_type": 1,
+          "size": 4296
+        },
+        {
+          "address": 0,
+          "file_offset": 7242312,
+          "flags": 0,
+          "index": 54,
+          "name": ".rel.cplinit",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 4288
+        },
+        {
+          "address": 5814640,
+          "file_offset": 5814896,
+          "flags": 3,
+          "index": 55,
+          "name": ".psp_lib_mark_",
+          "nobits": false,
+          "section_type": 1,
+          "size": 80
+        },
+        {
+          "address": 5814720,
+          "file_offset": 5814976,
+          "flags": 3,
+          "index": 56,
+          "name": ".psp_lib_markimport_",
+          "nobits": false,
+          "section_type": 1,
+          "size": 20
+        },
+        {
+          "address": 0,
+          "file_offset": 7246600,
+          "flags": 0,
+          "index": 57,
+          "name": ".rel.psp_lib_markimport_",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 40
+        },
+        {
+          "address": 5814740,
+          "file_offset": 5814996,
+          "flags": 3,
+          "index": 58,
+          "name": ".linkonce.d",
+          "nobits": false,
+          "section_type": 1,
+          "size": 27080
+        },
+        {
+          "address": 0,
+          "file_offset": 7246640,
+          "flags": 0,
+          "index": 59,
+          "name": ".rel.linkonce.d",
+          "nobits": false,
+          "section_type": 1879048352,
+          "size": 24024
+        },
+        {
+          "address": 5841856,
+          "file_offset": 5842076,
+          "flags": 3,
+          "index": 60,
+          "name": ".bss",
+          "nobits": true,
+          "section_type": 8,
+          "size": 218532
+        },
+        {
+          "address": 0,
+          "file_offset": 5842076,
+          "flags": 0,
+          "index": 61,
+          "name": ".shstrtab",
+          "nobits": false,
+          "section_type": 3,
+          "size": 1185
+        }
+      ],
+      "segments": [
+        {
+          "alignment": 256,
+          "file_offset": 256,
+          "file_size": 5810340,
+          "flags": 5,
+          "index": 0,
+          "memory_size": 5810340,
+          "virtual_address": 0
+        },
+        {
+          "alignment": 64,
+          "file_offset": 5810600,
+          "file_size": 31476,
+          "flags": 6,
+          "index": 1,
+          "memory_size": 250044,
+          "virtual_address": 5810344
+        }
+      ],
+      "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+      "stored_elf_offset": 0,
+      "unresolved": [
+        "runtime load base",
+        "module lifetime and owner",
+        "import and export ownership"
+      ]
+    },
+    {
+      "address_mapping_status": "packed_container_requires_decrypted_elf",
+      "bss_size": 218568,
+      "container_elf_size": 7270664,
+      "container_psp_size": 7271008,
+      "elf_flags": null,
+      "entry_point": 3464908,
+      "file_size": 7271008,
+      "image_base": null,
+      "iso_file_offset": null,
+      "iso_lba": null,
+      "kind": "psp_container",
+      "module_info_offset": 5205876,
+      "module_name": "FightNight",
+      "object_type": null,
+      "path": "EBOOT.BIN",
+      "runtime_base": null,
+      "sections": [],
+      "segments": [
+        {
+          "alignment": 256,
+          "file_offset": null,
+          "file_size": null,
+          "flags": null,
+          "index": 0,
+          "memory_size": 5810340,
+          "virtual_address": 0
+        },
+        {
+          "alignment": 64,
+          "file_offset": null,
+          "file_size": null,
+          "flags": null,
+          "index": 1,
+          "memory_size": 250044,
+          "virtual_address": 5810344
+        }
+      ],
+      "sha256": "9298863eb475597c9c7ffe9fcc1e68fd55d3b173dc88b6e88cf8834bd7ce9b04",
+      "stored_elf_offset": null,
+      "unresolved": [
+        "decrypted ELF correspondence",
+        "runtime load base",
+        "module lifetime and owner",
+        "import and export ownership"
+      ]
+    }
+  ],
+  "revision_id": "tracked-repository-samples",
+  "schema_version": 1
+}

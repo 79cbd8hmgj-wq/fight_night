@@ -9,6 +9,7 @@ from uuid import uuid4
 from .ea_archive import EaArchive, extract_ea_archive, parse_ea_archive
 from .iso import build_workspace, verify_workspace
 from .manifests import WorkspaceValidationResult
+from .module_map import build_workspace_module_map
 from .package_gate import ValidationResult, validate_package, validate_registry
 from .rebuild import BuildPlan, load_build_plan, rebuild_image
 from .refpack import compress_refpack, decompress_refpack
@@ -48,6 +49,12 @@ def build_parser() -> argparse.ArgumentParser:
     rebuild_parser.add_argument("--report", type=Path)
     rebuild_parser.add_argument("--force", action="store_true")
     rebuild_parser.add_argument("--json", action="store_true", dest="as_json")
+
+    module_parser = subparsers.add_parser("module-map")
+    module_parser.add_argument("workspace", type=Path)
+    module_parser.add_argument("--output", type=Path)
+    module_parser.add_argument("--force", action="store_true")
+    module_parser.add_argument("--json", action="store_true", dest="as_json")
 
     for command in ("refpack-decode", "refpack-encode"):
         codec_parser = subparsers.add_parser(command)
@@ -115,6 +122,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 f"rebuilt: {args.output} ({state}, "
                 f"sha256 {build_report.output_sha256})"
             )
+        return 0
+    if args.command == "module-map":
+        module_map = build_workspace_module_map(args.workspace)
+        encoded = module_map.to_json()
+        if args.output is not None:
+            _write_binary_output(args.output, encoded.encode("utf-8"), force=args.force)
+        if args.as_json or args.output is None:
+            print(encoded, end="")
+        else:
+            print(f"wrote: {args.output} ({len(module_map.modules)} modules)")
         return 0
     if args.command in {"refpack-decode", "refpack-encode"}:
         source = args.source.read_bytes()
