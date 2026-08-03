@@ -8,14 +8,13 @@ on:
         required: true
         default: v1.20.4
         type: string
-  # Temporary branch trigger used to produce and validate the first portable artifact.
+  # Temporary PR trigger used to produce and validate the first portable artifact.
   # It is removed after the artifact passes its bundle checks.
-  push:
-    branches:
-      - task-9-save-architecture
+  pull_request:
     paths:
       - .github/workflows/build-ppsspp-research.yml
       - tools/ppsspp_debug_bundle/**
+      - tests/unit/test_ppsspp_debug_bundle.py
 
 permissions:
   contents: read
@@ -144,7 +143,7 @@ jobs:
 
           printf '%s\n' \
             'This artifact contains only an official PPSSPP research build, runtime libraries, Xvfb, and debugger tooling.' \
-            'It contains no Fight Night Round 3 image, PSP state, savedata, extracted game data, or copyrighted game asset.' \
+            'It contains no game image, PSP state, savedata, extracted game data, or copyrighted game asset.' \
             > bundle/BUNDLE-CONTENTS.txt
 
           tar -C bundle -czf ppsspp-debug-linux-x86_64.tar.gz .
