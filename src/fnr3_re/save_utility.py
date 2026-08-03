@@ -268,11 +268,11 @@ class SaveUtilityBufferContract:
         if not self.controller_sites:
             raise ValueError("save utility controller sites are required")
         _validate_unique((site.role for site in self.controller_sites), "controller role")
-        for site in self.controller_sites:
-            if site.region.module != self.parameter_block.module:
+        for controller_site in self.controller_sites:
+            if controller_site.region.module != self.parameter_block.module:
                 raise ValueError("controller module must match parameter-block module")
-        for site in self.payload_buffer.callback_sites:
-            if site.region.module != self.parameter_block.module:
+        for callback_site in self.payload_buffer.callback_sites:
+            if callback_site.region.module != self.parameter_block.module:
                 raise ValueError("callback module must match parameter-block module")
         for region in (
             self.utility_init.stub_region,
