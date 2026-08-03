@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import pytest
 from collections.abc import Callable
+
+import pytest
 
 from fnr3_re.elf32 import Elf32Error, parse_elf32
 from tests.support.elf32 import build_test_elf
