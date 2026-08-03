@@ -32,11 +32,11 @@ def test_savedata_parameter_block_is_separate_from_game_payload() -> None:
     assert contract.payload_buffer.pointer_field_offset == 0x74
     assert contract.payload_buffer.capacity_field_offset == 0x78
     assert contract.payload_buffer.active_size_field_offset == 0x7C
-    assert contract.payload_buffer.flow_direction == "unresolved"
+    assert contract.payload_buffer.flow_direction == "save"
     assert contract.payload_buffer.confidence is Confidence.PROBABLE
 
 
-def test_two_controllers_build_the_same_savedata_parameter_contract() -> None:
+def test_two_save_controllers_build_the_same_savedata_parameter_contract() -> None:
     contract = load_save_utility_buffer_contract(_ARTIFACT)
 
     controllers = {site.role: site for site in contract.controller_sites}
@@ -46,15 +46,12 @@ def test_two_controllers_build_the_same_savedata_parameter_contract() -> None:
     )
     assert controllers["list_save_controller"].address.value == 0x0042C834
     assert controllers["list_save_controller"].mode_values == (5,)
-    assert controllers["save_or_autoload_controller"].address.value == 0x0042CF8C
-    assert controllers["save_or_autoload_controller"].mode_values == (0, 3)
+    assert controllers["autosave_or_save_controller"].address.value == 0x0042CF8C
+    assert controllers["autosave_or_save_controller"].mode_values == (1, 3)
 
     callbacks = {site.role: site for site in contract.payload_buffer.callback_sites}
     assert callbacks["list_save_payload_provider"].address.value == 0x0042C888
-    assert (
-        callbacks["save_or_autoload_payload_provider"].address.value
-        == 0x0042CFDC
-    )
+    assert callbacks["autosave_or_save_payload_provider"].address.value == 0x0042CFDC
     assert all(site.argument_offsets == (0x74, 0x78) for site in callbacks.values())
 
     assert contract.utility_init.address.value == 0x004F6B4C
@@ -62,10 +59,13 @@ def test_two_controllers_build_the_same_savedata_parameter_contract() -> None:
     assert contract.utility_init.confidence is Confidence.PROBABLE
 
 
-def test_static_contract_keeps_serializer_direction_and_ownership_unresolved() -> None:
+def test_checkpoint_9c_resolves_provider_owner_and_save_direction_only() -> None:
     contract = load_save_utility_buffer_contract(_ARTIFACT)
 
-    assert "payload provider callback target and owner" in contract.remaining_unknowns
+    assert "payload provider callback target and owner" not in contract.remaining_unknowns
+    assert "runtime direction of each upstream controller branch" not in (
+        contract.remaining_unknowns
+    )
     assert "serializer writer set" in contract.remaining_unknowns
     assert "deserializer reader set" in contract.remaining_unknowns
     assert "checksum and obfuscation" in contract.remaining_unknowns
