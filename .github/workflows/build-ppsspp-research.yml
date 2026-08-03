@@ -1,0 +1,94 @@
+name: Build PPSSPP Research Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      ppsspp_revision:
+        description: Immutable PPSSPP tag or commit to build
+        required: true
+        default: v1.20.4
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ca-certificates \
+            cmake \
+            git \
+            libfontconfig1-dev \
+            libgl1-mesa-dev \
+            libglew-dev \
+            libsdl2-dev \
+            libsdl2-ttf-dev \
+            libssl-dev \
+            ninja-build \
+            pkg-config
+
+      - name: Clone exact PPSSPP source
+        env:
+          PPSSPP_REVISION: ${{ inputs.ppsspp_revision }}
+        run: |
+          git clone --filter=blob:none --recurse-submodules \
+            https://github.com/hrydgard/ppsspp.git ppsspp
+          cd ppsspp
+          git fetch --tags --force
+          git checkout --detach "$PPSSPP_REVISION"
+          git submodule update --init --recursive
+          git rev-parse HEAD | tee ../ppsspp-resolved-revision.txt
+          git status --short
+          test -z "$(git status --short)"
+
+      - name: Configure headless research build
+        run: |
+          cmake -S ppsspp -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DHEADLESS=ON \
+            -DUNITTEST=OFF \
+            -DUSE_DISCORD=OFF \
+            -DUSE_FFMPEG=OFF \
+            -DUSE_MINIUPNPC=OFF
+
+      - name: Build PPSSPPHeadless
+        run: cmake --build build --target PPSSPPHeadless --parallel 2
+
+      - name: Package exact research bundle
+        run: |
+          set -eu
+          binary="$(find build -type f -name PPSSPPHeadless -perm -111 | head -n 1)"
+          test -n "$binary"
+          mkdir -p bundle/assets
+          cp "$binary" bundle/PPSSPPHeadless
+          cp -a ppsspp/assets/. bundle/assets/
+          cp ppsspp/LICENSE.TXT bundle/PPSSPP-LICENSE.txt
+          cp ppsspp-resolved-revision.txt bundle/ppsspp-resolved-revision.txt
+          sha256sum bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.sha256
+          ldd bundle/PPSSPPHeadless > bundle/PPSSPPHeadless.ldd.txt || true
+          bundle/PPSSPPHeadless --version > bundle/PPSSPPHeadless.version.txt 2>&1 || true
+          bundle/PPSSPPHeadless --help > bundle/PPSSPPHeadless.help.txt 2>&1 || true
+          printf '%s\n' \
+            'This artifact contains only an official PPSSPP research build and its assets.' \
+            'It contains no Fight Night Round 3 image, save, extracted game data, or copyrighted game asset.' \
+            > bundle/README.txt
+          tar -C bundle -czf ppsspp-research-linux-x86_64.tar.gz .
+          sha256sum ppsspp-research-linux-x86_64.tar.gz \
+            > ppsspp-research-linux-x86_64.tar.gz.sha256
+
+      - name: Upload research bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppsspp-research-linux-x86_64
+          path: |
+            ppsspp-research-linux-x86_64.tar.gz
+            ppsspp-research-linux-x86_64.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
