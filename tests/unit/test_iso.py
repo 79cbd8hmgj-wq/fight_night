@@ -262,10 +262,12 @@ def test_verify_workspace_detects_missing_modified_and_extra_original_files(tmp_
     workspace = tmp_path / "workspace"
     build_workspace(image_path, workspace, reference_for(image))
 
-    boot_path = workspace / "original" / "PSP_GAME" / "SYSDIR" / "BOOT.BIN"
+    original_root = workspace / "original"
+    boot_path = original_root / "PSP_GAME" / "SYSDIR" / "BOOT.BIN"
     boot_path.chmod(0o644)
     boot_path.write_bytes(b"changed")
-    extra_path = workspace / "original" / "EXTRA.BIN"
+    original_root.chmod(0o755)
+    extra_path = original_root / "EXTRA.BIN"
     extra_path.write_bytes(b"extra")
 
     result = verify_workspace(workspace)
