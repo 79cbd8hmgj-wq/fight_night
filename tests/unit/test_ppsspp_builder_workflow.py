@@ -1,7 +1,4 @@
-from __future__ import annotations
-
 from pathlib import Path
-
 
 _WORKFLOW = Path(__file__).resolve().parents[2] / ".github/workflows/build-ppsspp-research.yml"
 
