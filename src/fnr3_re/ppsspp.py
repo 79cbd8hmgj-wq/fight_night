@@ -8,11 +8,10 @@ import shutil
 import struct
 import subprocess
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
-from typing import Any
 
 from .evidence import Address
 
