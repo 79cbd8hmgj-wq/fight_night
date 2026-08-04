@@ -1,0 +1,71 @@
+{
+  "active_checkpoint": "9E",
+  "branch": "task-9-save-architecture",
+  "blocked_reason": "Checkpoint 9E requires controlled live PPSSPP evidence from a real save/load path. Static interpretation alone is not sufficient to promote the load-commit callback, validation, checksum, slot, corruption, or recovery semantics.",
+  "completed_checkpoints": [
+    {
+      "artifact": "analysis/save/save-system-static-candidates.json",
+      "checkpoint": "9A",
+      "conclusion": "BOOT.BIN is the probable high-level save-interface owner, with four exact-binary guarded static entry-point candidates. Serializer, checksum, slot, recovery, and exclusive module-ownership semantics remain unresolved.",
+      "verification": {
+        "expected_skips": 4,
+        "mypy": "passed",
+        "ruff": "passed",
+        "tests_passed": 163
+      }
+    },
+    {
+      "artifact": "analysis/save/save-utility-buffer-contract.json",
+      "checkpoint": "9B",
+      "conclusion": "Two BOOT.BIN save controllers construct the same 0x600-byte PSP savedata parameter block. The serialized Fight Night payload is separate and crosses the operating-system utility boundary through pointer, capacity, and active-size fields at offsets 0x74, 0x78, and 0x7C. Payload direction and callback ownership were deferred to Checkpoint 9C.",
+      "verification": {
+        "expected_skips": 4,
+        "mypy": "passed",
+        "ruff": "passed",
+        "tests_passed": 168
+      }
+    },
+    {
+      "artifact": "analysis/save/save-payload-direction-map.json",
+      "checkpoint": "9C",
+      "conclusion": "BOOT.BIN probably owns the copied payload dispatch table at relocated module address 0x005C3A18. Entry +0x38 resolves to save-payload workspace provider 0x00340DC8, entry +0x40 resolves to load-buffer provider 0x00340F00, and entry +0x44 resolves to load-commit handler 0x00340F64. Utility modes 1, 3, and 5 are save-direction; modes 0, 2, and 4 are load-direction; modes 6 and 7 are non-payload delete operations. Per-field serializer and deserializer logic remains unresolved.",
+      "verification": {
+        "exact_boot_regions": 10,
+        "expected_skips": 5,
+        "mypy": "passed",
+        "ruff": "passed",
+        "tests_passed": 170
+      }
+    },
+    {
+      "artifact": "analysis/save/save-payload-lifetime.json",
+      "checkpoint": "9D",
+      "conclusion": "DATA.BIN is a fixed 0x755C-byte envelope in BOOT.BIN static BSS at relocated module address 0x005BAF10. It contains a 0x2C-byte envelope followed by a 0x7530-byte body area; envelope offset 0x28 records the dynamic active body length. Save clears unused body capacity to zero, while load copies only the recorded active body length. The envelope has module lifetime and no heap allocation or release; separately registered source and destination buffers are borrowed until reset or replacement.",
+      "verification": {
+        "exact_boot_regions": 10,
+        "exact_boot_workspace_inside_bss": true,
+        "expected_skips": 6,
+        "mypy": "passed",
+        "ruff": "passed",
+        "tests_passed": 172
+      }
+    }
+  ],
+  "prepared_artifacts": [
+    {
+      "artifact": "analysis/save/checkpoint-9e-runtime-capture-plan.json",
+      "conclusion": "The exact successful-load and corrupted-copy capture plan is prepared. Live BOOT.BIN validation confirmed that PPSSPP reports a module allocation base of 0x08800000 while ELF virtual address zero maps to 0x08804000; every Checkpoint 9E breakpoint was corrected for this 0x4000 prefix.",
+      "status": "runtime_evidence_pending"
+    }
+  ],
+  "next_question": "Using a real save/load path in the pinned PPSSPP build, resolve the load-commit follow-up callback and post-load validation and error propagation without assigning persistent field meanings.",
+  "runtime_prerequisites": [
+    "mounted exact ULUS10066-v1.00 game image or its mounted source archive",
+    "real successful save/load path in the distributed pinned PPSSPP debugger bundle",
+    "associated memstick PSP/SAVEDATA directory",
+    "controlled successful-load and corrupted-copy comparison captures"
+  ],
+  "schema_version": 1,
+  "task": 9,
+  "task_status": "blocked"
+}

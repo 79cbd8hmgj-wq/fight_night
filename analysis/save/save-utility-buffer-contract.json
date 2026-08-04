@@ -1,0 +1,278 @@
+{
+  "boot_sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+  "controller_sites": [
+    {
+      "confidence": "PROBABLE",
+      "mode_values": [
+        5
+      ],
+      "observations": [
+        "The controller clears and initializes the shared 0x600-byte parameter block before populating DATA.BIN, payload pointer and size fields, SFO metadata, key material, and mode 5.",
+        "Mode 5 corresponds to the PSP savedata LISTSAVE operation, and Checkpoint 9C resolves the payload provider to BOOT.BIN dispatch entry +0x38."
+      ],
+      "region": {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4376628
+        },
+        "module": "BOOT.BIN",
+        "sha256": "37bd681a9c0e1ed9a0ee4d7ab9993203f7f4b62240bf0d88d0cc9d2b12656eec",
+        "size": 988
+      },
+      "role": "list_save_controller"
+    },
+    {
+      "confidence": "PROBABLE",
+      "mode_values": [
+        1,
+        3
+      ],
+      "observations": [
+        "The adjacent controller builds the same 0x600-byte parameter block and selects mode 3 or mode 1 from object byte +0x108.",
+        "The exact branch values identify SAVE and AUTOSAVE; the earlier AUTOLOAD interpretation was rejected by the preloaded mode-one instruction."
+      ],
+      "region": {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4378508
+        },
+        "module": "BOOT.BIN",
+        "sha256": "931c460a1864fd2cf27211b4d404c9abcc1cd92731bc7895cb4389334d259147",
+        "size": 764
+      },
+      "role": "autosave_or_save_controller"
+    }
+  ],
+  "parameter_block": {
+    "confidence": "PROBABLE",
+    "fields": [
+      {
+        "confidence": "PROBABLE",
+        "name": "common_dialog_size",
+        "offset": 0,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "mode",
+        "offset": 48,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "bind",
+        "offset": 52,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "overwrite",
+        "offset": 56,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "game_name",
+        "offset": 60,
+        "size": 13
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "save_name",
+        "offset": 76,
+        "size": 20
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "save_name_list",
+        "offset": 96,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "file_name",
+        "offset": 100,
+        "size": 13
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "data_buffer",
+        "offset": 116,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "data_buffer_capacity",
+        "offset": 120,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "data_size",
+        "offset": 124,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "sfo_title",
+        "offset": 128,
+        "size": 128
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "sfo_savedata_title",
+        "offset": 256,
+        "size": 128
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "sfo_detail",
+        "offset": 384,
+        "size": 1024
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "parental_level",
+        "offset": 1408,
+        "size": 1
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "key",
+        "offset": 1500,
+        "size": 16
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "secure_version",
+        "offset": 1516,
+        "size": 4
+      },
+      {
+        "confidence": "PROBABLE",
+        "name": "multi_status",
+        "offset": 1520,
+        "size": 4
+      }
+    ],
+    "module": "BOOT.BIN",
+    "size": 1536,
+    "storage_expression": "global profile/save workspace + 0x12A54"
+  },
+  "payload_buffer": {
+    "active_size_field_offset": 124,
+    "callback_sites": [
+      {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4376712
+        },
+        "argument_offsets": [
+          116,
+          120
+        ],
+        "confidence": "CANDIDATE",
+        "observations": [
+          "An indirect callback receives pointers to parameter-block offsets 0x74 and 0x78 plus one duplicated stack output pointer before DATA.BIN and dataSize are finalized.",
+          "Checkpoint 9C resolves dispatch entry +0x38 to BOOT.BIN target 0x00340DC8 on the save-payload path."
+        ],
+        "region": {
+          "address": {
+            "address_type": "elf_virtual",
+            "value": 4376656
+          },
+          "module": "BOOT.BIN",
+          "sha256": "d50d18238e05ddff3590df0bd890ae2d5ea788345641e65ae83dbe1db682a0bf",
+          "size": 228
+        },
+        "role": "list_save_payload_provider"
+      },
+      {
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4378588
+        },
+        "argument_offsets": [
+          116,
+          120
+        ],
+        "confidence": "CANDIDATE",
+        "observations": [
+          "The adjacent controller invokes the same dispatch-table entry with pointers to parameter-block offsets 0x74 and 0x78 and two stack outputs.",
+          "The callback occurs before mode 3 or mode 1 and resolves to BOOT.BIN target 0x00340DC8, establishing a save-direction payload boundary."
+        ],
+        "region": {
+          "address": {
+            "address_type": "elf_virtual",
+            "value": 4378536
+          },
+          "module": "BOOT.BIN",
+          "sha256": "688e1091c588905a6ea6aef27894ddce0b6487acfe85a89dac6932756dd4c5fc",
+          "size": 236
+        },
+        "role": "autosave_or_save_payload_provider"
+      }
+    ],
+    "capacity_field_offset": 120,
+    "confidence": "PROBABLE",
+    "flow_direction": "unresolved",
+    "observations": [
+      "The shared 0x600-byte object is an operating-system savedata parameter block rather than the serialized Fight Night payload.",
+      "The game payload is separately owned and crosses the utility boundary through the pointer at offset 0x74, capacity at 0x78, and active byte count at 0x7C.",
+      "This generic utility-buffer artifact keeps flow direction unresolved; Checkpoint 9C records save and load directions in the separate payload-direction map."
+    ],
+    "pointer_field_offset": 116
+  },
+  "remaining_unknowns": [
+    "payload allocation and release lifetime",
+    "serializer writer set",
+    "deserializer reader set",
+    "post-load dataSize update behavior",
+    "checksum and obfuscation",
+    "profile and career payload boundaries",
+    "PRX delegation below the utility boundary"
+  ],
+  "schema_version": 1,
+  "source_revision": "ULUS10066-v1.00",
+  "utility_init": {
+    "address": {
+      "address_type": "elf_virtual",
+      "value": 5204812
+    },
+    "confidence": "PROBABLE",
+    "import_descriptor_region": {
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 5205116
+      },
+      "module": "BOOT.BIN",
+      "sha256": "5f524d02904a98f24718336182b4281b3a1c992e7a2de6930705849c0f8c8405",
+      "size": 20
+    },
+    "library": "sceUtility",
+    "nid": 1355074903,
+    "nid_table_region": {
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 5207044
+      },
+      "module": "BOOT.BIN",
+      "sha256": "a1d0106b6b0643d9b092883c8c592c1d06f41527c39272bc85ac6ff42b4f7052",
+      "size": 80
+    },
+    "observations": [
+      "The guarded sceUtility import descriptor names the library, declares 20 function stubs, points to the NID table at 0x004F7404, and points to the stub table at 0x004F6B14.",
+      "The controller calls stub 7 at 0x004F6B4C; its NID is 0x50C4CD57 and the 0x600-byte argument layout matches the PSP savedata-init parameter contract.",
+      "The exact function name remains probable until runtime or independently authoritative import-symbol evidence is attached to this package."
+    ],
+    "stub_region": {
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 5204812
+      },
+      "module": "BOOT.BIN",
+      "sha256": "6d64edf91449c1b17746c1ef18afa2eb25c70bdf1322ab3df5a2630993b7e2f1",
+      "size": 8
+    }
+  }
+}

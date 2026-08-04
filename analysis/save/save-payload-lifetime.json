@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "source_revision": "ULUS10066-v1.00",
+  "boot_sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+  "workspace": {
+    "module": "BOOT.BIN",
+    "storage_class": "module_bss",
+    "relocation_segment_base": {
+      "address_type": "elf_virtual",
+      "value": 5810344
+    },
+    "relocation_addend": {
+      "address_type": "module_relative",
+      "value": 198248
+    },
+    "runtime_base": {
+      "address_type": "runtime",
+      "value": 6008592
+    },
+    "bss_start": {
+      "address_type": "elf_virtual",
+      "value": 5841856
+    },
+    "bss_size": 218532,
+    "total_size": 30044,
+    "envelope_header_size": 44,
+    "active_body_size_offset": 40,
+    "body_offset": 44,
+    "body_capacity": 30000,
+    "utility_capacity": 30044,
+    "utility_active_size": 30044,
+    "body_active_size": "dynamic",
+    "unused_body_tail": "zero_filled_on_save",
+    "confidence": "CONFIRMED",
+    "observations": [
+      "PSP HI16 and LO16 relocations resolve the static addend 0x00030668 against the second load segment at 0x0058A8A8, placing the workspace at 0x005BAF10 inside the exact BOOT.BIN .bss section.",
+      "The workspace is a fixed 0x755C-byte envelope consisting of a 0x2C-byte header and a 0x7530-byte serialized body area.",
+      "Envelope offset 0x28 stores the dynamic active body length; body bytes begin at offset 0x2C.",
+      "Both save controllers set the PSP utility data capacity and active data size to the fixed 0x755C-byte envelope size, so DATA.BIN is written as a fixed-size envelope even when the internal body length is smaller.",
+      "The save provider clears all 0x7530 body bytes before copying the active body, making the unused body tail deterministic zero padding."
+    ]
+  },
+  "registration": {
+    "pointer_global": {
+      "address_type": "runtime",
+      "value": 6038796
+    },
+    "size_global": {
+      "address_type": "runtime",
+      "value": 6038800
+    },
+    "clear_function": {
+      "address_type": "elf_virtual",
+      "value": 3408336
+    },
+    "set_function": {
+      "address_type": "elf_virtual",
+      "value": 3408476
+    },
+    "ownership": "borrowed_external_buffer",
+    "lifetime": "until_next_clear_or_replacement",
+    "confidence": "CONFIRMED",
+    "observations": [
+      "The registration clear function writes zero to both the registered body pointer and body-size globals.",
+      "The registration setter stores caller-provided pointer and size values without allocating, retaining, or freeing the referenced buffer.",
+      "Operation setup calls the profile/save reset path before installing the selected source or destination registration.",
+      "The registered external buffer remains outside the ownership of this savedata envelope layer; its allocator and ultimate owner remain unresolved."
+    ]
+  },
+  "operations": [
+    {
+      "role": "body_serializer_capacity_boundary",
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 3428972
+      },
+      "maximum_size": 30000,
+      "clear_size": 30000,
+      "size_behavior": "returns_dynamic_active_body_size",
+      "copy_size_source_offset": null,
+      "confidence": "PROBABLE",
+      "observations": [
+        "Observed save setup supplies a 0x7530-byte destination capacity to this boundary and registers its return value as the active body size.",
+        "The function clears the caller-provided capacity, emits two bounded chunks, and returns their summed encoded length.",
+        "This checkpoint does not assign persistent field meanings to either emitted chunk."
+      ]
+    },
+    {
+      "role": "save_envelope_provider",
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 3411400
+      },
+      "maximum_size": 30000,
+      "clear_size": 30000,
+      "size_behavior": "stores_dynamic_body_size_and_returns_fixed_envelope_size",
+      "copy_size_source_offset": null,
+      "confidence": "CONFIRMED",
+      "observations": [
+        "The provider stores the registered dynamic body length at envelope offset 0x28, clears the 0x7530-byte body area, and copies exactly the registered body length to offset 0x2C.",
+        "It returns the envelope base as the utility data buffer and returns 0x755C as the utility capacity."
+      ]
+    },
+    {
+      "role": "load_envelope_provider",
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 3411712
+      },
+      "maximum_size": 30044,
+      "clear_size": 30044,
+      "size_behavior": "returns_fixed_envelope_capacity",
+      "copy_size_source_offset": null,
+      "confidence": "CONFIRMED",
+      "observations": [
+        "The provider clears the full 0x755C-byte workspace before the PSP utility fills it and returns the same fixed capacity."
+      ]
+    },
+    {
+      "role": "load_body_commit",
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 3411812
+      },
+      "maximum_size": 30000,
+      "clear_size": null,
+      "size_behavior": "copies_dynamic_active_body_size",
+      "copy_size_source_offset": 40,
+      "confidence": "CONFIRMED",
+      "observations": [
+        "The commit handler reads envelope offset 0x28 into the registered size global and copies that many bytes from envelope offset 0x2C into the registered destination.",
+        "The subsequent callback remains the unresolved per-field deserializer handoff."
+      ]
+    }
+  ],
+  "guards": [
+    {
+      "role": "registration_clear",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3408336
+        },
+        "size": 48,
+        "sha256": "4390ca657b80d781ebaae0b3da3e92c4738089e7812f5ea994b30cf3d503974e"
+      }
+    },
+    {
+      "role": "registration_set",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3408476
+        },
+        "size": 80,
+        "sha256": "057cdd2229c46418994ed12419007b4e6f7693c4a86cc7cab24f5d74bc696970"
+      }
+    },
+    {
+      "role": "registration_table_set",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3424764
+        },
+        "size": 112,
+        "sha256": "92b18c2427a8acdeb582bed1ce394d2dbb6ed318c03f370aa38424145773ea45"
+      }
+    },
+    {
+      "role": "registration_activation",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3425288
+        },
+        "size": 48,
+        "sha256": "99dcf3a7675e5d52fc6f2902236ed125c107d13ff218581c3fec430b5d8745e0"
+      }
+    },
+    {
+      "role": "body_serializer_capacity_boundary",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3428972
+        },
+        "size": 352,
+        "sha256": "68b533366672bf9513f240e02a478fb621ca7ec5b553234b169295102b9bd333"
+      }
+    },
+    {
+      "role": "save_envelope_provider",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3411400
+        },
+        "size": 228,
+        "sha256": "ea0fd0164be810b316d13418ec4e3e629152269a6ed0dd72f0a84c071204cf81"
+      }
+    },
+    {
+      "role": "load_envelope_provider",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3411712
+        },
+        "size": 100,
+        "sha256": "33166bdb72e8918f7f2bd78487dd22c68ad78fafa64b167215c5a23284cee1f4"
+      }
+    },
+    {
+      "role": "load_body_commit",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 3411812
+        },
+        "size": 124,
+        "sha256": "e74a19392a3ede34feda43ec9fb698c7278c7709bdd7cfbbd4e1ec78fbc4eaa4"
+      }
+    },
+    {
+      "role": "list_save_utility_size_assignment",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4376860
+        },
+        "size": 16,
+        "sha256": "27b8aef1ca742052ffb53c4a2fae4f2529d90137be571ddb2a07fc1e8627bf45"
+      }
+    },
+    {
+      "role": "save_utility_size_assignment",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4378748
+        },
+        "size": 16,
+        "sha256": "1e19deb579358d6086eb44e845c669829dfbe5c26a1b58faacc5c4d20adc3645"
+      }
+    }
+  ],
+  "workspace_lifetime": "module_load_to_module_unload",
+  "workspace_allocation": "none_static_bss",
+  "workspace_release": "none_static_bss",
+  "remaining_unknowns": [
+    "exact active body length for each real save-state configuration",
+    "allocator and ultimate owner of each registered external source or destination buffer",
+    "per-field serializer writer set",
+    "per-field deserializer reader set",
+    "load-commit follow-up callback target and owner",
+    "post-load validation and error propagation",
+    "checksum and obfuscation",
+    "profile and career payload boundaries",
+    "block headers and version fields",
+    "write ordering and interrupted-write recovery",
+    "PRX delegation below the BOOT.BIN handoff boundary"
+  ]
+}

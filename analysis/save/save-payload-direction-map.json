@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "source_revision": "ULUS10066-v1.00",
+  "boot_sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+  "owner_module": "BOOT.BIN",
+  "owner_confidence": "PROBABLE",
+  "owner_observations": [
+    "BOOT.BIN initializes the profile/save callback table and copies it into module-owned runtime storage before any observed savedata controller uses it.",
+    "The save, load-buffer, and load-commit callback targets all resolve to functions in the same BOOT.BIN profile/save cluster; delegation below their follow-up callbacks remains unresolved."
+  ],
+  "dispatch_table": {
+    "module": "BOOT.BIN",
+    "runtime_base": {
+      "address_type": "runtime",
+      "value": 6044184
+    },
+    "installer_region": {
+      "module": "BOOT.BIN",
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 3405280
+      },
+      "size": 616,
+      "sha256": "30d191efcf749991ffe7ccdc3cedd59417812cd4fcfe2f8ecbf727c64d628afb"
+    },
+    "copier_region": {
+      "module": "BOOT.BIN",
+      "address": {
+        "address_type": "elf_virtual",
+        "value": 4358844
+      },
+      "size": 140,
+      "sha256": "ebc454373f8de7e8ab820bfaa995778a7f82a14e0b83ee1373da4478518dfa0c"
+    },
+    "entries": [
+      {
+        "role": "save_payload_workspace_provider",
+        "entry_offset": 56,
+        "target": {
+          "address_type": "elf_virtual",
+          "value": 3411400
+        },
+        "direction": "save",
+        "confidence": "PROBABLE",
+        "target_region": {
+          "module": "BOOT.BIN",
+          "address": {
+            "address_type": "elf_virtual",
+            "value": 3411400
+          },
+          "size": 228,
+          "sha256": "ea0fd0164be810b316d13418ec4e3e629152269a6ed0dd72f0a84c071204cf81"
+        },
+        "observations": [
+          "The installer assigns target 0x00340DC8 to dispatch-table offset 0x38, and both save-direction controllers call that entry before savedata utility initialization.",
+          "The target clears a 0x7530-byte workspace, copies the current persistent payload source into it, and returns payload pointers and sizes to the savedata parameter block.",
+          "This is the save-payload assembly boundary; individual profile or career field writers remain unresolved."
+        ]
+      },
+      {
+        "role": "load_payload_workspace_provider",
+        "entry_offset": 64,
+        "target": {
+          "address_type": "elf_virtual",
+          "value": 3411712
+        },
+        "direction": "load",
+        "confidence": "PROBABLE",
+        "target_region": {
+          "module": "BOOT.BIN",
+          "address": {
+            "address_type": "elf_virtual",
+            "value": 3411712
+          },
+          "size": 100,
+          "sha256": "33166bdb72e8918f7f2bd78487dd22c68ad78fafa64b167215c5a23284cee1f4"
+        },
+        "observations": [
+          "The installer assigns target 0x00340F00 to dispatch-table offset 0x40, and the autoload/load and list-load controllers call that entry before utility initialization.",
+          "The target clears a 0x755C-byte input workspace and returns its pointer and capacity, establishing the load-buffer preparation boundary."
+        ]
+      },
+      {
+        "role": "load_payload_commit_handler",
+        "entry_offset": 68,
+        "target": {
+          "address_type": "elf_virtual",
+          "value": 3411812
+        },
+        "direction": "load",
+        "confidence": "PROBABLE",
+        "target_region": {
+          "module": "BOOT.BIN",
+          "address": {
+            "address_type": "elf_virtual",
+            "value": 3411812
+          },
+          "size": 124,
+          "sha256": "e74a19392a3ede34feda43ec9fb698c7278c7709bdd7cfbbd4e1ec78fbc4eaa4"
+        },
+        "observations": [
+          "The installer assigns target 0x00340F64 to dispatch-table offset 0x44, which is consumed by post-utility load-state paths.",
+          "The target copies loaded workspace data back into the persistent destination and invokes a follow-up callback, establishing the load-commit or deserializer handoff boundary.",
+          "The follow-up callback target and per-field deserialization logic remain unresolved."
+        ]
+      }
+    ],
+    "observations": [
+      "PSP relocations place the copied callback table at runtime address 0x005C3A18 in the second loadable segment rather than at the unrelocated low addend.",
+      "The copier at 0x004282BC transfers nineteen eight-byte entries from the initializer-owned source table into the runtime dispatch table."
+    ]
+  },
+  "controller_sites": [
+    {
+      "role": "list_save_controller",
+      "direction": "save",
+      "mode_values": [5],
+      "callback_entry_offset": 56,
+      "callback_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4376724
+      },
+      "utility_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4377592
+      },
+      "confidence": "PROBABLE",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4376704
+        },
+        "size": 896,
+        "sha256": "6053530fe5c3aafad62012ee912c1200354582eda695d1518861cc16907f1d40"
+      },
+      "observations": [
+        "The controller calls dispatch entry 0x38, sets utility mode 5, and then invokes the savedata utility."
+      ]
+    },
+    {
+      "role": "autosave_or_save_controller",
+      "direction": "save",
+      "mode_values": [1, 3],
+      "callback_entry_offset": 56,
+      "callback_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4378608
+      },
+      "utility_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4379248
+      },
+      "confidence": "PROBABLE",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4378584
+        },
+        "size": 672,
+        "sha256": "912eb0a19eee85c33e1b920af98b23ea2cb3c9393d82dca8597b6a0a05967591"
+      },
+      "observations": [
+        "The controller calls dispatch entry 0x38 and selects mode 3 when object byte +0x108 equals one; otherwise it stores the preloaded value one.",
+        "The branch therefore selects SAVE or AUTOSAVE, not SAVE or AUTOLOAD."
+      ]
+    },
+    {
+      "role": "autoload_or_load_controller",
+      "direction": "load",
+      "mode_values": [0, 2],
+      "callback_entry_offset": 64,
+      "callback_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4393448
+      },
+      "utility_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4393784
+      },
+      "confidence": "PROBABLE",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4393432
+        },
+        "size": 360,
+        "sha256": "5587ced04d4f9e6c225620c1f2fe3fa696889c6011b6a089a0d925bb6345ac4d"
+      },
+      "observations": [
+        "The controller calls dispatch entry 0x40 and stores mode 0 when object byte +0x0C is zero or mode 2 when it is nonzero.",
+        "This independently identifies the AUTOLOAD and LOAD direction."
+      ]
+    },
+    {
+      "role": "list_load_controller",
+      "direction": "load",
+      "mode_values": [4],
+      "callback_entry_offset": 64,
+      "callback_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4394004
+      },
+      "utility_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4394584
+      },
+      "confidence": "PROBABLE",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4393988
+        },
+        "size": 604,
+        "sha256": "2b004aa477aeeba58b896852a48ef0c9515e357246f0013367e7d7ca55f6c53c"
+      },
+      "observations": [
+        "The controller calls dispatch entry 0x40, sets utility mode 4, and invokes the savedata utility as the list-load path."
+      ]
+    },
+    {
+      "role": "delete_controller",
+      "direction": "non_payload",
+      "mode_values": [6, 7],
+      "callback_entry_offset": null,
+      "callback_callsite": null,
+      "utility_callsite": {
+        "address_type": "elf_virtual",
+        "value": 4395396
+      },
+      "confidence": "PROBABLE",
+      "region": {
+        "module": "BOOT.BIN",
+        "address": {
+          "address_type": "elf_virtual",
+          "value": 4395304
+        },
+        "size": 100,
+        "sha256": "29939e909183e10f39c47ced754127bd6b74f972655cbca3deaae54565215c80"
+      },
+      "observations": [
+        "The controller selects utility mode 6 or 7 and invokes the savedata utility without using either payload-buffer provider entry.",
+        "Delete operations are inventoried separately from serializer and deserializer directions."
+      ]
+    }
+  ],
+  "remaining_unknowns": [
+    "payload allocation and release lifetime",
+    "per-field serializer writer set",
+    "per-field deserializer reader set",
+    "load-commit follow-up callback target and owner",
+    "post-load validation and error propagation",
+    "checksum and obfuscation",
+    "profile and career payload boundaries",
+    "block headers and version fields",
+    "write ordering and interrupted-write recovery",
+    "maximum payload capacity and unused space",
+    "PRX delegation below the BOOT.BIN handoff boundary"
+  ]
+}
