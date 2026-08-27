@@ -330,7 +330,11 @@ def test_malformed_secondary_does_not_abort_boot_module(
     run = analyze_psp_modules(tmp_path)
 
     boot = next(item for item in run.modules if item.candidate.is_boot)
-    broken = next(item for item in run.modules if item.candidate.workspace_path.endswith("BROKEN.PRX"))
+    broken = next(
+        item
+        for item in run.modules
+        if item.candidate.workspace_path.endswith("BROKEN.PRX")
+    )
     assert boot.status == "analyzed"
     assert broken.status == "failed"
     assert broken.error == "synthetic parse failure"
