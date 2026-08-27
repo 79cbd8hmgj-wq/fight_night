@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+import shutil
+import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,6 +31,7 @@ _REQUIRED_LIVE_GLOBAL_IDS = (
 )
 _REQUIRED_CONTROL_IDS = ("successful_load", "corrupted_copy_control")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_HASH_CHUNK_SIZE = 1024 * 1024
 
 
 class Task9EPlanError(ValueError):
@@ -68,6 +72,25 @@ class PayloadLifetimeContract:
     active_body_size_offset: int
     body_offset: int
     body_capacity: int
+
+
+@dataclass(frozen=True, slots=True)
+class SavedataInventoryEntry:
+    relative_path: str
+    size: int
+    sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class SaveMutation:
+    relative_path: str
+    offset: int
+    original_byte: int
+    replacement_byte: int
+    source_sha256: str
+    mutated_sha256: str
+    source_inventory: tuple[SavedataInventoryEntry, ...]
+    mutated_inventory: tuple[SavedataInventoryEntry, ...]
 
 
 def _load_object(path: Path) -> Mapping[str, Any]:
@@ -279,4 +302,163 @@ def load_payload_lifetime_contract(path: Path) -> PayloadLifetimeContract:
         active_body_size_offset=active_body_size_offset,
         body_offset=body_offset,
         body_capacity=body_capacity,
+    )
+
+
+def _hash_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        while chunk := stream.read(_HASH_CHUNK_SIZE):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _validated_slot_files(slot: Path) -> tuple[Path, tuple[Path, ...]]:
+    if slot.is_symlink():
+        raise Task9EPlanError(f"savedata slot must not be a symlink: {slot}")
+    if not slot.exists() or not slot.is_dir():
+        raise Task9EPlanError(f"savedata slot is not a directory: {slot}")
+
+    root = slot.resolve(strict=True)
+    files: list[Path] = []
+    for path in slot.rglob("*"):
+        if path.is_symlink():
+            raise Task9EPlanError(f"savedata slot contains a symlink: {path}")
+        if path.is_dir():
+            continue
+        if not path.is_file():
+            raise Task9EPlanError(f"savedata slot contains a non-regular file: {path}")
+        resolved = path.resolve(strict=True)
+        if not resolved.is_relative_to(root):
+            raise Task9EPlanError(f"savedata file escapes the slot: {path}")
+        files.append(path)
+    files.sort(key=lambda path: (path.relative_to(slot).as_posix().casefold(), path.as_posix()))
+    return root, tuple(files)
+
+
+def hash_savedata_slot(slot: Path) -> tuple[SavedataInventoryEntry, ...]:
+    _root, files = _validated_slot_files(slot)
+    return tuple(
+        SavedataInventoryEntry(
+            relative_path=path.relative_to(slot).as_posix(),
+            size=path.stat().st_size,
+            sha256=_hash_file(path),
+        )
+        for path in files
+    )
+
+
+def _validate_destination(source_slot: Path, destination_slot: Path) -> None:
+    if destination_slot.is_symlink():
+        raise Task9EPlanError("destination savedata slot must not be a symlink")
+    if destination_slot.exists():
+        raise Task9EPlanError("destination savedata slot already exists")
+
+    source_root = source_slot.resolve(strict=True)
+    destination_root = destination_slot.resolve(strict=False)
+    if destination_root.is_relative_to(source_root):
+        raise Task9EPlanError("destination savedata slot must not be inside the source slot")
+
+    for ancestor in destination_slot.parents:
+        if ancestor.is_symlink():
+            raise Task9EPlanError(f"destination path contains a symlink: {ancestor}")
+
+
+def _mutation_offset(data: bytes, contract: PayloadLifetimeContract) -> int:
+    if len(data) != contract.total_size:
+        raise Task9EPlanError(
+            f"DATA.BIN size {len(data)} does not match expected {contract.total_size}"
+        )
+    size_offset = contract.active_body_size_offset
+    if size_offset < 0 or size_offset + 4 > contract.envelope_header_size:
+        raise Task9EPlanError("active body size field is outside the envelope header")
+    if contract.body_offset < contract.envelope_header_size:
+        raise Task9EPlanError("active body begins inside the envelope header")
+    if contract.body_offset + contract.body_capacity > len(data):
+        raise Task9EPlanError("active body capacity exceeds DATA.BIN bounds")
+
+    active_size = int.from_bytes(data[size_offset : size_offset + 4], "little")
+    if active_size <= 0 or active_size > contract.body_capacity:
+        raise Task9EPlanError(
+            f"active body size {active_size} is outside 1..{contract.body_capacity}"
+        )
+
+    body_start = contract.body_offset
+    body_end = body_start + active_size
+    for offset in range(body_start, body_end):
+        if data[offset] != 0:
+            return offset
+    raise Task9EPlanError("active body contains no nonzero byte to mutate")
+
+
+def prepare_corrupted_savedata(
+    source_slot: Path,
+    destination_slot: Path,
+    contract: PayloadLifetimeContract,
+) -> SaveMutation:
+    source_inventory = hash_savedata_slot(source_slot)
+    data_path = source_slot / "DATA.BIN"
+    if data_path.is_symlink():
+        raise Task9EPlanError("DATA.BIN must not be a symlink")
+    if not data_path.exists() or not data_path.is_file():
+        raise Task9EPlanError("savedata slot is missing regular DATA.BIN")
+
+    source_data = data_path.read_bytes()
+    offset = _mutation_offset(source_data, contract)
+    original_byte = source_data[offset]
+    replacement_byte = original_byte ^ 0x01
+    source_sha256 = hashlib.sha256(source_data).hexdigest()
+    _validate_destination(source_slot, destination_slot)
+
+    destination_slot.parent.mkdir(parents=True, exist_ok=True)
+    _validate_destination(source_slot, destination_slot)
+    scratch = Path(
+        tempfile.mkdtemp(
+            prefix=f".{destination_slot.name}.task9e-",
+            dir=destination_slot.parent,
+        )
+    )
+    try:
+        shutil.copytree(source_slot, scratch, dirs_exist_ok=True, copy_function=shutil.copy2)
+        copied_data_path = scratch / "DATA.BIN"
+        copied_data = bytearray(copied_data_path.read_bytes())
+        copied_data[offset] = replacement_byte
+        copied_data_path.write_bytes(copied_data)
+
+        mutated_data = bytes(copied_data)
+        if len(mutated_data) != len(source_data):
+            raise Task9EPlanError("corrupted control changed DATA.BIN size")
+        changed_offsets = tuple(
+            index
+            for index, (before, after) in enumerate(
+                zip(source_data, mutated_data, strict=True)
+            )
+            if before != after
+        )
+        if changed_offsets != (offset,):
+            raise Task9EPlanError("corrupted control did not produce an exact one-byte delta")
+
+        source_inventory_after = hash_savedata_slot(source_slot)
+        if source_inventory_after != source_inventory:
+            raise Task9EPlanError("source savedata slot changed during control preparation")
+        mutated_inventory = hash_savedata_slot(scratch)
+        mutated_sha256 = hashlib.sha256(mutated_data).hexdigest()
+
+        if destination_slot.exists() or destination_slot.is_symlink():
+            raise Task9EPlanError("destination savedata slot appeared during preparation")
+        scratch.rename(destination_slot)
+    except Exception:
+        if scratch.exists():
+            shutil.rmtree(scratch)
+        raise
+
+    return SaveMutation(
+        relative_path="DATA.BIN",
+        offset=offset,
+        original_byte=original_byte,
+        replacement_byte=replacement_byte,
+        source_sha256=source_sha256,
+        mutated_sha256=mutated_sha256,
+        source_inventory=source_inventory,
+        mutated_inventory=mutated_inventory,
     )
