@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from importlib import import_module
 from pathlib import Path
 from typing import Any, cast
 
@@ -128,14 +129,70 @@ def _module_failure(
     run.error = str(exc)
 
 
+def _parse_toolkit_elf(toolkit: Any, data: bytes) -> Any:
+    parser = getattr(toolkit, "parse_elf32", None)
+    if parser is None:
+        parser_module = import_module(f"{toolkit.__name__}.elf32")
+        parser = parser_module.parse_elf32
+    return parser(data)
+
+
+def _relocated_link_model(toolkit: Any, run: PspModuleRun) -> Any:
+    if run.model is None or run.placement is None:
+        raise PspModuleAnalysisError("link preparation requires model and placement")
+    if not run.placement.requires_relocation:
+        return run.model
+    data = run.candidate.local_path.read_bytes()
+    elf = _parse_toolkit_elf(toolkit, data)
+    return toolkit.build_relocated_load_view(
+        data,
+        elf,
+        run.model,
+        load_address=run.placement.load_address,
+    ).model
+
+
+def _link_analyzed_modules(
+    toolkit: Any,
+    runs: list[PspModuleRun],
+    nid_db_paths: tuple[Path, ...],
+) -> Any | None:
+    link_inputs: list[Any] = []
+    for run in runs:
+        if (
+            run.status != "analyzed"
+            or run.model is None
+            or run.disassembly is None
+            or run.placement is None
+        ):
+            continue
+        try:
+            linked_model = _relocated_link_model(toolkit, run)
+        except Exception as exc:
+            _module_failure(run, exc, phase="link preparation")
+            continue
+        link_inputs.append(
+            toolkit.ModuleAnalysisInput(
+                model=linked_model,
+                disassembly=run.disassembly,
+            )
+        )
+
+    if not link_inputs:
+        return None
+    database = toolkit.load_nid_databases(nid_db_paths) if nid_db_paths else None
+    try:
+        return toolkit.link_modules(link_inputs, database=database)
+    except Exception as exc:
+        raise PspModuleAnalysisError(f"cross-module linking failed: {exc}") from exc
+
+
 def analyze_psp_modules(
     workspace: Path,
     *,
     nid_db_paths: tuple[Path, ...] = (),
     allow_unpinned_toolkit: bool = False,
 ) -> PspAnalysisRun:
-    del nid_db_paths  # Cross-module NID/link analysis is added in the next task.
-
     toolchain = load_psp_toolchain(allow_unpinned=allow_unpinned_toolkit)
     toolkit = cast(Any, toolchain.module)
     candidates = discover_psp_module_candidates(workspace)
@@ -197,8 +254,10 @@ def analyze_psp_modules(
             continue
         run.status = "analyzed"
 
+    links = _link_analyzed_modules(toolkit, runs, nid_db_paths)
     return PspAnalysisRun(
         workspace=workspace,
         toolchain=toolchain,
         modules=tuple(runs),
+        links=links,
     )
