@@ -109,7 +109,7 @@ def test_wrong_reference_revision_is_rejected(tmp_path: Path) -> None:
     payload["source_iso_sha256"] = "0" * 64
     manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
-    with pytest.raises(PspModuleAnalysisError, match="ULUS10066-v1.00"):
+    with pytest.raises(PspModuleAnalysisError, match=r"ULUS10066-v1\.00"):
         discover_psp_module_candidates(workspace)
 
 
