@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
+import tempfile
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
@@ -11,11 +14,50 @@ from .iso import build_workspace, verify_workspace
 from .manifests import WorkspaceValidationResult
 from .module_map import build_workspace_module_map
 from .package_gate import ValidationResult, validate_package, validate_registry
-from .ppsspp_bundle import verify_ppsspp_bundle
+from .ppsspp_bundle import FNR3_DEBUGGER_BUNDLE_PROFILE, verify_ppsspp_bundle
 from .psp_modules import analyze_psp_modules, write_psp_analysis_run
 from .rebuild import BuildPlan, load_build_plan, rebuild_image
 from .refpack import compress_refpack, decompress_refpack
 from .revision import ImageValidationResult, load_reference_revision, validate_image
+from .save_runtime_9e import (
+    Task9ECaptureInputs,
+    Task9EFirstDivergence,
+    Task9EPlanError,
+    load_payload_lifetime_contract,
+    load_task9e_plan,
+    prepare_corrupted_savedata,
+    run_task9e_capture,
+    write_task9e_runtime_evidence,
+)
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+_DEFAULT_TASK9E_PLAN = (
+    _REPOSITORY_ROOT / "analysis" / "save" / "checkpoint-9e-runtime-capture-plan.json"
+)
+_DEFAULT_TASK9E_PAYLOAD = (
+    _REPOSITORY_ROOT / "analysis" / "save" / "save-payload-lifetime.json"
+)
+_DEFAULT_REVISION_CONFIG = (
+    _REPOSITORY_ROOT / "config" / "revisions" / "ulus10066-v1.00.json"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class Task9ECliSummary:
+    valid: bool
+    capture_id: str
+    callback_target: int | None
+    first_divergence: str | None
+    evidence_path: Path
+
+    def to_mapping(self) -> dict[str, object]:
+        return {
+            "callback_target": self.callback_target,
+            "capture_id": self.capture_id,
+            "evidence_path": str(self.evidence_path),
+            "first_divergence": self.first_divergence,
+            "valid": self.valid,
+        }
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -71,6 +113,21 @@ def build_parser() -> argparse.ArgumentParser:
     bundle_verify_parser = bundle_subparsers.add_parser("verify")
     bundle_verify_parser.add_argument("path", type=Path)
     bundle_verify_parser.add_argument("--json", action="store_true", dest="as_json")
+
+    capture_parser = subparsers.add_parser("capture-save-9e")
+    capture_parser.add_argument("workspace", type=Path)
+    capture_parser.add_argument("--bundle", required=True, type=Path)
+    capture_parser.add_argument("--iso", required=True, type=Path)
+    capture_parser.add_argument("--state", required=True, type=Path)
+    capture_parser.add_argument("--savedata-slot", required=True, type=Path)
+    capture_parser.add_argument("--plan", type=Path, default=_DEFAULT_TASK9E_PLAN)
+    capture_parser.add_argument(
+        "--payload-lifetime",
+        type=Path,
+        default=_DEFAULT_TASK9E_PAYLOAD,
+    )
+    capture_parser.add_argument("--capture-id")
+    capture_parser.add_argument("--json", action="store_true", dest="as_json")
 
     for command in ("refpack-decode", "refpack-encode"):
         codec_parser = subparsers.add_parser(command)
@@ -210,6 +267,40 @@ def main(argv: Sequence[str] | None = None) -> int:
                 f"({identity.host}:{identity.port})"
             )
         return 0
+    if args.command == "capture-save-9e":
+        try:
+            summary = _execute_capture_save_9e(
+                workspace=args.workspace,
+                bundle=args.bundle,
+                iso=args.iso,
+                state=args.state,
+                savedata_slot=args.savedata_slot,
+                plan_path=args.plan,
+                payload_lifetime_path=args.payload_lifetime,
+                capture_id=args.capture_id,
+            )
+        except (OSError, RuntimeError, ValueError) as exc:
+            message = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
+            print(f"capture-save-9e: {message}", file=sys.stderr)
+            return 1
+        if args.as_json:
+            print(json.dumps(summary.to_mapping(), indent=2, sort_keys=True) + "\n", end="")
+        else:
+            callback = (
+                "none"
+                if summary.callback_target is None
+                else f"0x{summary.callback_target:08X}"
+            )
+            divergence = summary.first_divergence or "none"
+            print(
+                "task9e: "
+                f"valid={str(summary.valid).lower()} "
+                f"capture={summary.capture_id} "
+                f"callback={callback} "
+                f"divergence={divergence} "
+                f"evidence={summary.evidence_path}"
+            )
+        return 0 if summary.valid else 1
     if args.command in {"refpack-decode", "refpack-encode"}:
         source = args.source.read_bytes()
         output = (
@@ -256,6 +347,102 @@ def main(argv: Sequence[str] | None = None) -> int:
         validation_result = validate_registry(args.path)
     _print_validation_result(validation_result, args.as_json)
     return 0 if validation_result.valid else 1
+
+
+def _validate_capture_id(capture_id: str | None) -> str:
+    resolved = capture_id or f"capture-{uuid4().hex}"
+    if not resolved.strip() or resolved != resolved.strip():
+        raise Task9EPlanError("capture id must be non-empty without surrounding whitespace")
+    if Path(resolved).name != resolved or resolved in {".", ".."}:
+        raise Task9EPlanError("capture id must be one normal path component")
+    return resolved
+
+
+def _format_first_divergence(divergence: Task9EFirstDivergence | None) -> str | None:
+    if divergence is None:
+        return None
+    observation = divergence.observation_id or "none"
+    field = divergence.field or "none"
+    return f"{divergence.fact}:{observation}:{field}"
+
+
+def _execute_capture_save_9e(
+    *,
+    workspace: Path,
+    bundle: Path,
+    iso: Path,
+    state: Path,
+    savedata_slot: Path,
+    plan_path: Path,
+    payload_lifetime_path: Path,
+    capture_id: str | None,
+) -> Task9ECliSummary:
+    resolved_capture_id = _validate_capture_id(capture_id)
+    plan = load_task9e_plan(plan_path)
+    contract = load_payload_lifetime_contract(payload_lifetime_path)
+    revision = load_reference_revision(_DEFAULT_REVISION_CONFIG)
+    if revision.revision_id != plan.revision_id:
+        raise Task9EPlanError("revision configuration does not match the Task 9E plan")
+    if contract.source_revision != plan.revision_id:
+        raise Task9EPlanError("payload lifetime revision does not match the Task 9E plan")
+
+    capture_root = (
+        workspace / "working" / "runtime" / "task-9e" / resolved_capture_id
+    )
+    with tempfile.TemporaryDirectory(prefix=f"fnr3-task9e-{resolved_capture_id}-") as temp:
+        corrupted_slot = Path(temp) / savedata_slot.name
+        mutation = prepare_corrupted_savedata(
+            savedata_slot,
+            corrupted_slot,
+            contract,
+        )
+        success_inputs = Task9ECaptureInputs(
+            workspace=workspace,
+            bundle_root=bundle,
+            iso=iso,
+            state=state,
+            savedata_slot=savedata_slot,
+            plan=plan,
+            payload_contract=contract,
+            revision=revision,
+            control_id="successful_load",
+            bundle_profile=FNR3_DEBUGGER_BUNDLE_PROFILE,
+        )
+        corrupted_inputs = Task9ECaptureInputs(
+            workspace=workspace,
+            bundle_root=bundle,
+            iso=iso,
+            state=state,
+            savedata_slot=corrupted_slot,
+            plan=plan,
+            payload_contract=contract,
+            revision=revision,
+            control_id="corrupted_copy_control",
+            bundle_profile=FNR3_DEBUGGER_BUNDLE_PROFILE,
+        )
+        evidence = run_task9e_capture(
+            success_inputs,
+            corrupted_inputs,
+            mutation=mutation,
+        )
+        evidence_path = write_task9e_runtime_evidence(
+            workspace,
+            evidence,
+            capture_root,
+        )
+
+    callback_target = (
+        None
+        if evidence.successful.callback is None
+        else evidence.successful.callback.target.value
+    )
+    return Task9ECliSummary(
+        valid=evidence.successful.valid and evidence.corrupted.valid,
+        capture_id=resolved_capture_id,
+        callback_target=callback_target,
+        first_divergence=_format_first_divergence(evidence.first_divergence),
+        evidence_path=evidence_path,
+    )
 
 
 def _write_binary_output(destination: Path, payload: bytes, *, force: bool) -> None:
