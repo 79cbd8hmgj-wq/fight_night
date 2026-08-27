@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 
 from fnr3_re.psp_evidence import build_psp_evidence_manifest
 from fnr3_re.psp_modules import PspAnalysisRun, PspModuleCandidate, PspModuleRun
@@ -96,7 +96,7 @@ def _sample_run(tmp_path: Path) -> PspAnalysisRun:
         warnings=["link warning"],
     )
     toolchain = PspToolchainInfo(
-        module=SimpleNamespace(),
+        module=ModuleType("fake_pspdisasm"),
         repository="https://github.com/79cbd8hmgj-wq/PSP-disassembly-tool.git",
         expected_revision=TOOLKIT_REVISION,
         observed_revision=TOOLKIT_REVISION,
