@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, cast
 
 from .iso import _workspace_path, verify_workspace
 from .manifests import load_workspace_manifest
+from .psp_toolchain import PspToolchainInfo, load_psp_toolchain
 
 FNR3_REVISION_ID = "ULUS10066-v1.00"
 FNR3_ISO_SHA256 = "b11da5afe208d9791eecd9f6a44d0f57946f7d9de165b7d8dd22f5ee740f4ee2"
@@ -25,6 +27,27 @@ class PspModuleCandidate:
     iso_byte_offset: int
     classification: str
     is_boot: bool
+
+
+@dataclass(slots=True)
+class PspModuleRun:
+    candidate: PspModuleCandidate
+    status: str
+    needs_decryption: bool
+    model: Any | None = None
+    placement: Any | None = None
+    disassembly: Any | None = None
+    advanced: Any | None = None
+    typing: Any | None = None
+    error: str | None = None
+
+
+@dataclass(slots=True)
+class PspAnalysisRun:
+    workspace: Path
+    toolchain: PspToolchainInfo
+    modules: tuple[PspModuleRun, ...]
+    links: Any | None = None
 
 
 def discover_psp_module_candidates(workspace: Path) -> tuple[PspModuleCandidate, ...]:
@@ -88,4 +111,94 @@ def discover_psp_module_candidates(workspace: Path) -> tuple[PspModuleCandidate,
                 candidate.workspace_path.casefold(),
             ),
         )
+    )
+
+
+def _module_failure(
+    run: PspModuleRun,
+    exc: Exception,
+    *,
+    phase: str,
+) -> None:
+    if run.candidate.is_boot:
+        raise PspModuleAnalysisError(
+            f"boot module {phase} failed: {exc}"
+        ) from exc
+    run.status = "failed"
+    run.error = str(exc)
+
+
+def analyze_psp_modules(
+    workspace: Path,
+    *,
+    nid_db_paths: tuple[Path, ...] = (),
+    allow_unpinned_toolkit: bool = False,
+) -> PspAnalysisRun:
+    del nid_db_paths  # Cross-module NID/link analysis is added in the next task.
+
+    toolchain = load_psp_toolchain(allow_unpinned=allow_unpinned_toolkit)
+    toolkit = cast(Any, toolchain.module)
+    candidates = discover_psp_module_candidates(workspace)
+    runs: list[PspModuleRun] = []
+    placement_inputs: list[Any] = []
+
+    for candidate in candidates:
+        run = PspModuleRun(
+            candidate=candidate,
+            status="pending",
+            needs_decryption=False,
+        )
+        try:
+            model = toolkit.analyze_file(candidate.local_path)
+        except Exception as exc:
+            _module_failure(run, exc, phase="analysis")
+            runs.append(run)
+            continue
+
+        run.model = model
+        run.needs_decryption = bool(model.needs_decryption)
+        if run.needs_decryption:
+            run.status = "needs_decryption"
+            runs.append(run)
+            continue
+
+        placement_inputs.append(
+            toolkit.ModulePlacementInput(
+                path=candidate.workspace_path,
+                is_boot=candidate.is_boot,
+                model=model,
+            )
+        )
+        runs.append(run)
+
+    placements = (
+        {
+            placement.path: placement
+            for placement in toolkit.plan_module_placements(placement_inputs)
+        }
+        if placement_inputs
+        else {}
+    )
+
+    for run in runs:
+        if run.status != "pending" or run.model is None:
+            continue
+        placement = placements[run.candidate.workspace_path]
+        run.placement = placement
+        load_address = placement.load_address if placement.requires_relocation else None
+        try:
+            run.disassembly = toolkit.disassemble_file(
+                run.candidate.local_path,
+                load_address=load_address,
+            )
+            run.advanced = toolkit.analyze_advanced(run.model, run.disassembly)
+        except Exception as exc:
+            _module_failure(run, exc, phase="disassembly")
+            continue
+        run.status = "analyzed"
+
+    return PspAnalysisRun(
+        workspace=workspace,
+        toolchain=toolchain,
+        modules=tuple(runs),
     )
