@@ -462,3 +462,16 @@ def prepare_corrupted_savedata(
         source_inventory=source_inventory,
         mutated_inventory=mutated_inventory,
     )
+
+
+# Re-export the Task 9E capture API from the approved public module. This import
+# intentionally occurs after the plan/mutation types are defined because the capture
+# implementation consumes those types.
+from .save_runtime_9e_capture import (  # noqa: E402
+    RuntimeBreakpointObservation as RuntimeBreakpointObservation,
+    RuntimeCallbackObservation as RuntimeCallbackObservation,
+    RuntimeControlCapture as RuntimeControlCapture,
+    RuntimeMemoryObservation as RuntimeMemoryObservation,
+    Task9ECaptureInputs as Task9ECaptureInputs,
+    capture_task9e_control as capture_task9e_control,
+)
