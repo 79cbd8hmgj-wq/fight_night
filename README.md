@@ -14,6 +14,8 @@ Phase I permits discovery, instrumentation, neutral replacement tests, codecs, r
 
 The machine-readable scope and dependency graph is stored in [`config/subsystem_registry.json`](config/subsystem_registry.json). Evidence requirements are defined in [`docs/architecture/evidence-standard.md`](docs/architecture/evidence-standard.md).
 
+Phase I PSP executable research can use the optional, revision-pinned standalone PSP Disassembly Toolkit through `fnr3-re analyze-psp-modules`. The authoritative workspace, local-output, address-domain, placement-confidence, and evidence-promotion boundaries are documented in [`docs/architecture/psp-static-analysis.md`](docs/architecture/psp-static-analysis.md).
+
 ## Supported reference build
 
 - Disc ID: `ULUS10066`

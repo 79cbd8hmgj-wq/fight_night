@@ -11,6 +11,7 @@ from .iso import build_workspace, verify_workspace
 from .manifests import WorkspaceValidationResult
 from .module_map import build_workspace_module_map
 from .package_gate import ValidationResult, validate_package, validate_registry
+from .psp_modules import analyze_psp_modules, write_psp_analysis_run
 from .rebuild import BuildPlan, load_build_plan, rebuild_image
 from .refpack import compress_refpack, decompress_refpack
 from .revision import ImageValidationResult, load_reference_revision, validate_image
@@ -55,6 +56,12 @@ def build_parser() -> argparse.ArgumentParser:
     module_parser.add_argument("--output", type=Path)
     module_parser.add_argument("--force", action="store_true")
     module_parser.add_argument("--json", action="store_true", dest="as_json")
+
+    psp_parser = subparsers.add_parser("analyze-psp-modules")
+    psp_parser.add_argument("workspace", type=Path)
+    psp_parser.add_argument("--nid-db", action="append", type=Path, default=[])
+    psp_parser.add_argument("--allow-unpinned-toolkit", action="store_true")
+    psp_parser.add_argument("--json", action="store_true", dest="as_json")
 
     for command in ("refpack-decode", "refpack-encode"):
         codec_parser = subparsers.add_parser(command)
@@ -132,6 +139,42 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(encoded, end="")
         else:
             print(f"wrote: {args.output} ({len(module_map.modules)} modules)")
+        return 0
+    if args.command == "analyze-psp-modules":
+        run = analyze_psp_modules(
+            args.workspace,
+            nid_db_paths=tuple(args.nid_db),
+            allow_unpinned_toolkit=args.allow_unpinned_toolkit,
+        )
+        evidence_path = write_psp_analysis_run(run)
+        analyzed = sum(module.status == "analyzed" for module in run.modules)
+        needs_decryption = sum(
+            module.status == "needs_decryption" for module in run.modules
+        )
+        failed = sum(module.status == "failed" for module in run.modules)
+        if args.as_json:
+            print(
+                json.dumps(
+                    {
+                        "analyzed": analyzed,
+                        "evidence_path": str(evidence_path),
+                        "failed": failed,
+                        "needs_decryption": needs_decryption,
+                        "revision_locked": run.toolchain.revision_locked,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                end="",
+            )
+        else:
+            print(
+                "psp-analysis: "
+                f"analyzed={analyzed} "
+                f"needs-decryption={needs_decryption} "
+                f"failed={failed} evidence={evidence_path}"
+            )
         return 0
     if args.command in {"refpack-decode", "refpack-encode"}:
         source = args.source.read_bytes()

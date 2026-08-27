@@ -28,3 +28,34 @@ jobs:
         run: python -m ruff check config src tests
       - name: Run mypy
         run: python -m mypy src tests/unit
+
+  psp-analysis:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install PSP analysis extra
+        run: python -m pip install -e ".[psp-analysis,dev]"
+      - name: Verify locked PSP toolkit provenance
+        run: |
+          python - <<'PY'
+          from fnr3_re.psp_toolchain import load_psp_toolchain
+
+          info = load_psp_toolchain(allow_unpinned=False)
+          assert info.revision_locked
+          print(info.package_version, info.observed_revision)
+          PY
+      - name: Run PSP integration unit tests
+        run: |
+          python -m pytest \
+            tests/unit/test_psp_toolchain.py \
+            tests/unit/test_psp_modules.py \
+            tests/unit/test_psp_module_linking.py \
+            tests/unit/test_psp_evidence.py \
+            tests/unit/test_psp_output.py \
+            tests/unit/test_psp_modules_cli.py
