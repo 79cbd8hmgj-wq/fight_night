@@ -173,7 +173,7 @@ def _load_breakpoints(payload: Mapping[str, Any]) -> tuple[Task9EBreakpoint, ...
             not isinstance(raw_action, str) or not raw_action.strip()
         ):
             raise Task9EPlanError(f"breakpoint {breakpoint_id} action must be text")
-        action = cast(str | None, raw_action)
+        action = raw_action
         breakpoints.append(Task9EBreakpoint(breakpoint_id, address, capture, action))
 
     observed_ids = tuple(item.id for item in breakpoints)
