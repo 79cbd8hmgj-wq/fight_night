@@ -15,6 +15,9 @@ dev = [
   "pytest>=8.0",
   "ruff>=0.5",
 ]
+psp-analysis = [
+  "pspdisasm @ git+https://github.com/79cbd8hmgj-wq/PSP-disassembly-tool.git@b3a07f4d0880b7933f87a9557b5e0aa3f364fa5a",
+]
 
 [project.scripts]
 fnr3-re = "fnr3_re.cli:main"
