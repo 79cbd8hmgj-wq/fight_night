@@ -5,10 +5,8 @@ import hashlib
 import json
 import struct
 
-import pytest
-
 import fnr3_re.ppsspp_debugger as ppsspp_debugger
-
+import pytest
 
 _GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
