@@ -17,6 +17,9 @@ from fnr3_re.save_runtime_9e import (
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _PLAN_PATH = _REPO_ROOT / "analysis/save/checkpoint-9e-runtime-capture-plan.json"
 _LIFETIME_PATH = _REPO_ROOT / "analysis/save/save-payload-lifetime.json"
+_EXPECTED_BOOT_SHA256 = (
+    "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -34,7 +37,7 @@ def test_loads_committed_task9e_capture_plan() -> None:
     plan = load_task9e_plan(_PLAN_PATH)
 
     assert plan.revision_id == "ULUS10066-v1.00"
-    assert plan.boot_sha256 == "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+    assert plan.boot_sha256 == _EXPECTED_BOOT_SHA256
     assert plan.mapping_rule == "ppsspp_absolute = 0x08804000 + elf_virtual"
     assert [breakpoint.id for breakpoint in plan.breakpoints] == [
         "load_commit_entry",
@@ -106,7 +109,7 @@ def test_loads_committed_payload_lifetime_contract() -> None:
     contract = load_payload_lifetime_contract(_LIFETIME_PATH)
 
     assert contract.source_revision == "ULUS10066-v1.00"
-    assert contract.boot_sha256 == "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+    assert contract.boot_sha256 == _EXPECTED_BOOT_SHA256
     assert contract.total_size == 30044
     assert contract.envelope_header_size == 44
     assert contract.active_body_size_offset == 40
