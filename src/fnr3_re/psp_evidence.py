@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -47,6 +48,151 @@ def _library_entry_count(libraries: object) -> int:
         count += len(_sequence(getattr(library, "functions", [])))
         count += len(_sequence(getattr(library, "variables", [])))
     return count
+
+
+def _library_summaries(libraries: object) -> list[dict[str, object]]:
+    summaries = [
+        {
+            "function_count": len(_sequence(getattr(library, "functions", []))),
+            "name": str(getattr(library, "name", "")),
+            "variable_count": len(_sequence(getattr(library, "variables", []))),
+        }
+        for library in _sequence(libraries)
+    ]
+    return sorted(
+        summaries,
+        key=lambda item: (
+            str(item["name"]).casefold(),
+            int(item["function_count"]),
+            int(item["variable_count"]),
+        ),
+    )
+
+
+def _program_header_summaries(model: object | None) -> list[dict[str, object]]:
+    if model is None:
+        return []
+    records = []
+    for header in _sequence(getattr(model, "program_headers", [])):
+        records.append(
+            {
+                "align": int(getattr(header, "align", 0)),
+                "file_offset": AddressValue(
+                    "elf_file_offset",
+                    int(getattr(header, "offset", 0)),
+                ),
+                "filesz": int(getattr(header, "filesz", 0)),
+                "flags": int(getattr(header, "flags", 0)),
+                "index": int(getattr(header, "index", 0)),
+                "memsz": int(getattr(header, "memsz", 0)),
+                "type": int(getattr(header, "type", 0)),
+                "vaddr": AddressValue("elf_vaddr", int(getattr(header, "vaddr", 0))),
+            }
+        )
+    return sorted(records, key=lambda item: int(item["index"]))
+
+
+def _section_summaries(model: object | None) -> list[dict[str, object]]:
+    if model is None:
+        return []
+    records = []
+    for section in _sequence(getattr(model, "sections", [])):
+        records.append(
+            {
+                "address": AddressValue(
+                    "elf_vaddr",
+                    int(getattr(section, "addr", 0)),
+                ),
+                "addralign": int(getattr(section, "addralign", 0)),
+                "file_offset": AddressValue(
+                    "elf_file_offset",
+                    int(getattr(section, "offset", 0)),
+                ),
+                "flags": int(getattr(section, "flags", 0)),
+                "index": int(getattr(section, "index", 0)),
+                "kind": str(getattr(section, "kind", "")),
+                "name": str(getattr(section, "name", "")),
+                "size": int(getattr(section, "size", 0)),
+                "type": int(getattr(section, "type", 0)),
+            }
+        )
+    return sorted(records, key=lambda item: int(item["index"]))
+
+
+def _function_summaries(disassembly: object | None) -> list[dict[str, object]]:
+    if disassembly is None:
+        return []
+    records = []
+    for function in _sequence(getattr(disassembly, "functions", [])):
+        records.append(
+            {
+                "address": AddressValue(
+                    "runtime_address",
+                    int(getattr(function, "address", 0)),
+                ),
+                "instruction_count": int(getattr(function, "instruction_count", 0)),
+                "name": str(getattr(function, "name", "")),
+                "section": str(getattr(function, "section", "")),
+                "size": int(getattr(function, "size", 0)),
+            }
+        )
+    return sorted(
+        records,
+        key=lambda item: (
+            int(item["address"].value),
+            str(item["name"]),
+        ),
+    )
+
+
+def _symbol_summaries(disassembly: object | None) -> list[dict[str, object]]:
+    if disassembly is None:
+        return []
+    records = []
+    for symbol in _sequence(getattr(disassembly, "symbols", [])):
+        section = getattr(symbol, "section", None)
+        records.append(
+            {
+                "address": AddressValue(
+                    "runtime_address",
+                    int(getattr(symbol, "address", 0)),
+                ),
+                "kind": str(getattr(symbol, "kind", "")),
+                "name": str(getattr(symbol, "name", "")),
+                "section": str(section) if section is not None else None,
+                "source": str(getattr(symbol, "source", "")),
+            }
+        )
+    return sorted(
+        records,
+        key=lambda item: (
+            int(item["address"].value),
+            str(item["name"]),
+            str(item["kind"]),
+        ),
+    )
+
+
+def _relocation_summary(model: object | None) -> list[dict[str, object]]:
+    if model is None:
+        return []
+    counts: Counter[tuple[str, int, str]] = Counter()
+    for relocation in _sequence(getattr(model, "relocations", [])):
+        key = (
+            str(getattr(relocation, "source", "section")),
+            int(getattr(relocation, "type", 0)),
+            str(getattr(relocation, "type_name", "")),
+        )
+        counts[key] += 1
+    return [
+        {
+            "count": count,
+            "source": source,
+            "type": relocation_type,
+            "type_name": type_name,
+        }
+        for (source, relocation_type, type_name), count in sorted(counts.items())
+    ]
 
 
 def _module_warnings(run: PspModuleRun) -> tuple[str, ...]:
@@ -148,6 +294,8 @@ def _module_payload(run: PspModuleRun) -> dict[str, object]:
         ),
     }
 
+    imports = getattr(model, "imports", []) if model is not None else []
+    exports = getattr(model, "exports", []) if model is not None else []
     return {
         "classification": candidate.classification,
         "counts": counts,
@@ -156,18 +304,27 @@ def _module_payload(run: PspModuleRun) -> dict[str, object]:
         "executable_kind": (
             str(getattr(model, "executable_kind", "")) if model is not None else None
         ),
+        "functions": _function_summaries(disassembly),
         "input_kind": str(getattr(model, "input_kind", "")) if model is not None else None,
         "is_boot": candidate.is_boot,
         "iso_byte_offset": AddressValue("iso_byte_offset", candidate.iso_byte_offset),
         "iso_lba": AddressValue("iso_lba", candidate.iso_lba),
+        "libraries": {
+            "exports": _library_summaries(exports),
+            "imports": _library_summaries(imports),
+        },
         "module_name": (
             str(getattr(module_info, "name", "")) if module_info is not None else None
         ),
         "needs_decryption": run.needs_decryption,
         "placement": _placement_payload(run),
+        "program_headers": _program_header_summaries(model),
+        "relocation_summary": _relocation_summary(model),
+        "sections": _section_summaries(model),
         "sha256": candidate.sha256,
         "size": candidate.size,
         "status": run.status,
+        "symbols": _symbol_summaries(disassembly),
         "warnings": _module_warnings(run),
         "workspace_path": candidate.workspace_path,
     }
