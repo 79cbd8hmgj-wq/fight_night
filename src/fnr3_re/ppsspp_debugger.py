@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
 import json
 import os
@@ -33,7 +34,7 @@ def _recv_exact(connection: Any, size: int) -> bytes:
     while remaining:
         try:
             chunk = connection.recv(remaining)
-        except (TimeoutError, socket.timeout) as exc:
+        except TimeoutError as exc:
             raise PpssppDebuggerError("PPSSPP debugger receive timed out") from exc
         if not chunk:
             raise PpssppDebuggerError("PPSSPP debugger connection closed unexpectedly")
@@ -47,7 +48,7 @@ def _recv_http_headers(connection: Any) -> bytes:
     while not data.endswith(b"\r\n\r\n"):
         try:
             chunk = connection.recv(1)
-        except (TimeoutError, socket.timeout) as exc:
+        except TimeoutError as exc:
             raise PpssppDebuggerError("PPSSPP debugger handshake timed out") from exc
         if not chunk:
             raise PpssppDebuggerError("PPSSPP debugger closed during WebSocket handshake")
@@ -163,10 +164,8 @@ class PpssppDebuggerClient:
 
     def close(self) -> None:
         connection = self._connection
-        try:
+        with contextlib.suppress(OSError):
             connection.sendall(_encode_client_frame(b"", opcode=0x8))
-        except OSError:
-            pass
         connection.close()
 
     def __enter__(self) -> PpssppDebuggerClient:
