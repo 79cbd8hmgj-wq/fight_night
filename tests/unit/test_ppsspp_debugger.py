@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import base64
+import collections
 import hashlib
 import json
 import struct
-from collections import deque
-from typing import Any
+import typing
 
 import pytest
 
@@ -47,7 +47,7 @@ def _decode_client_frame(frame: bytes) -> tuple[int, bytes]:
 
 class FakeSocket:
     def __init__(self, responses: list[bytes]) -> None:
-        self.responses = deque(responses)
+        self.responses = collections.deque(responses)
         self.sent: list[bytes] = []
         self.timeout: float | None = None
         self.closed = False
@@ -199,7 +199,7 @@ def test_malformed_json_and_disconnect_fail_closed(
 def test_convenience_operations_decode_confirmed_response_shapes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    register_response: dict[str, Any] = {
+    register_response: dict[str, typing.Any] = {
         "event": "cpu.getAllRegs",
         "ticket": 3,
         "categories": [
