@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-import fnr3_re.save_runtime_9e_evidence as evidence_module
 from fnr3_re.evidence import Address, AddressType
 from fnr3_re.ppsspp_bundle import DebuggerBundleIdentity
 from fnr3_re.save_runtime_9e import (
@@ -168,7 +167,7 @@ def test_pair_install_failure_restores_previous_capture_and_manifest(
     manifest.write_text("old manifest\n", encoding="utf-8")
     evidence = _evidence(tmp_path)
 
-    real_replace = evidence_module.os.replace
+    real_replace = os.replace
     failed = False
 
     def flaky_replace(
@@ -181,7 +180,10 @@ def test_pair_install_failure_restores_previous_capture_and_manifest(
             raise OSError("injected manifest install failure")
         real_replace(source, destination)
 
-    monkeypatch.setattr(evidence_module.os, "replace", flaky_replace)
+    monkeypatch.setattr(
+        "fnr3_re.save_runtime_9e_evidence.os.replace",
+        flaky_replace,
+    )
 
     with pytest.raises(OSError, match="injected manifest install failure"):
         write_task9e_runtime_evidence(workspace, evidence, capture_root)
