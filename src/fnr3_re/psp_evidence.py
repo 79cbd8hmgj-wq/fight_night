@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import json
+from dataclasses import asdict, dataclass
 from typing import Any
 
 from .psp_modules import FNR3_ISO_SHA256, FNR3_REVISION_ID, PspAnalysisRun, PspModuleRun
