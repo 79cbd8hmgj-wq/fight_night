@@ -31,7 +31,12 @@ class _FakeDistribution:
         )
 
 
-def _install_fake_toolchain(monkeypatch: pytest.MonkeyPatch, *, version: str, commit_id: str | None) -> object:
+def _install_fake_toolchain(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    version: str,
+    commit_id: str | None,
+) -> object:
     module = SimpleNamespace(__version__=version)
     monkeypatch.setattr("fnr3_re.psp_toolchain.import_module", lambda name: module)
     monkeypatch.setattr(
