@@ -13,12 +13,13 @@ from fnr3_re.save_runtime_9e import (
     RuntimeBreakpointObservation,
     RuntimeCallbackObservation,
     RuntimeControlCapture,
-    SaveMutation,
     SavedataInventoryEntry,
+    SaveMutation,
     Task9EBreakpoint,
     Task9ELiveGlobal,
     Task9EPlan,
     Task9EPlanError,
+    Task9ERuntimeEvidence,
     compare_task9e_controls,
     write_task9e_runtime_evidence,
 )
@@ -108,7 +109,7 @@ def _capture(tmp_path: Path, control_id: str, data_hash: str) -> RuntimeControlC
     )
 
 
-def _evidence(tmp_path: Path):
+def _evidence(tmp_path: Path) -> Task9ERuntimeEvidence:
     source_hash = "c" * 64
     mutated_hash = "d" * 64
     success = _capture(tmp_path, "successful_load", source_hash)
@@ -170,7 +171,10 @@ def test_pair_install_failure_restores_previous_capture_and_manifest(
     real_replace = evidence_module.os.replace
     failed = False
 
-    def flaky_replace(source: str | os.PathLike[str], destination: str | os.PathLike[str]) -> None:
+    def flaky_replace(
+        source: str | os.PathLike[str],
+        destination: str | os.PathLike[str],
+    ) -> None:
         nonlocal failed
         if Path(destination) == manifest and not failed:
             failed = True
@@ -184,7 +188,10 @@ def test_pair_install_failure_restores_previous_capture_and_manifest(
 
     assert (capture_root / "old-marker.txt").read_text(encoding="utf-8") == "old capture\n"
     assert manifest.read_text(encoding="utf-8") == "old manifest\n"
-    assert not any(path.name.startswith(".capture-001.task9e-") for path in capture_root.parent.iterdir())
+    assert not any(
+        path.name.startswith(".capture-001.task9e-")
+        for path in capture_root.parent.iterdir()
+    )
 
 
 @pytest.mark.parametrize("symlink_target", ["runtime", "manifests", "capture_parent"])
