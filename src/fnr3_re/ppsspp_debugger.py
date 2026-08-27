@@ -44,8 +44,13 @@ def _recv_exact(connection: Any, size: int) -> bytes:
 
 def _recv_http_headers(connection: Any) -> bytes:
     data = bytearray()
-    while b"\r\n\r\n" not in data:
-        chunk = _recv_exact(connection, 4096)
+    while not data.endswith(b"\r\n\r\n"):
+        try:
+            chunk = connection.recv(1)
+        except (TimeoutError, socket.timeout) as exc:
+            raise PpssppDebuggerError("PPSSPP debugger handshake timed out") from exc
+        if not chunk:
+            raise PpssppDebuggerError("PPSSPP debugger closed during WebSocket handshake")
         data.extend(chunk)
         if len(data) > 65536:
             raise PpssppDebuggerError("PPSSPP debugger handshake headers are too large")
