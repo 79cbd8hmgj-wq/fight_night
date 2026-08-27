@@ -3,6 +3,8 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
+import socket
 import struct
 
 import pytest
@@ -87,16 +89,16 @@ def _client(
     monkeypatch: pytest.MonkeyPatch,
     responses: list[bytes],
 ) -> tuple[ppsspp_debugger.PpssppDebuggerClient, FakeSocket]:
-    socket = FakeSocket([_handshake_response(), *responses])
-    monkeypatch.setattr(ppsspp_debugger.os, "urandom", lambda size: b"0123456789abcdef"[:size])
+    fake_socket = FakeSocket([_handshake_response(), *responses])
+    monkeypatch.setattr(os, "urandom", lambda size: b"0123456789abcdef"[:size])
     monkeypatch.setattr(
-        ppsspp_debugger.socket,
+        socket,
         "create_connection",
-        lambda address, timeout: socket,
+        lambda address, timeout: fake_socket,
     )
     return ppsspp_debugger.PpssppDebuggerClient(
         "127.0.0.1", 56244, timeout_seconds=1.5
-    ), socket
+    ), fake_socket
 
 
 def test_rejects_nonloopback_host_before_connection() -> None:
@@ -107,7 +109,7 @@ def test_rejects_nonloopback_host_before_connection() -> None:
 def test_connects_to_debugger_path_and_sends_masked_json(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client, socket = _client(
+    client, fake_socket = _client(
         monkeypatch,
         [
             _server_text({"event": "version", "ticket": 1, "name": "PPSSPP"}),
@@ -118,12 +120,12 @@ def test_connects_to_debugger_path_and_sends_masked_json(
 
     response = client.request("game.status")
 
-    handshake = socket.sent[0].decode("ascii")
+    handshake = fake_socket.sent[0].decode("ascii")
     assert handshake.startswith("GET /debugger HTTP/1.1\r\n")
     assert "Host: 127.0.0.1:56244\r\n" in handshake
     assert "Sec-WebSocket-Protocol" not in handshake
 
-    opcode, payload = _decode_client_frame(socket.sent[-1])
+    opcode, payload = _decode_client_frame(fake_socket.sent[-1])
     assert opcode == 0x1
     assert json.loads(payload) == {"event": "game.status", "ticket": 3}
     assert response["game"] == "running"
@@ -132,7 +134,7 @@ def test_connects_to_debugger_path_and_sends_masked_json(
 def test_ping_is_answered_and_ticket_correlation_waits_for_match(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client, socket = _client(
+    client, fake_socket = _client(
         monkeypatch,
         [
             _server_text({"event": "version", "ticket": 1}),
@@ -147,7 +149,7 @@ def test_ping_is_answered_and_ticket_correlation_waits_for_match(
     result = client.request("cpu.status")
 
     assert result["paused"] is True
-    pong_opcode, pong_payload = _decode_client_frame(socket.sent[-1])
+    pong_opcode, pong_payload = _decode_client_frame(fake_socket.sent[-1])
     assert pong_opcode == 0xA
     assert pong_payload == b"probe"
     stepping = client.wait_for_event("cpu.stepping")
@@ -155,7 +157,7 @@ def test_ping_is_answered_and_ticket_correlation_waits_for_match(
 
 
 def test_matching_debugger_error_raises(monkeypatch: pytest.MonkeyPatch) -> None:
-    client, _socket = _client(
+    client, _fake_socket = _client(
         monkeypatch,
         [
             _server_text({"event": "version", "ticket": 1}),
@@ -172,7 +174,7 @@ def test_malformed_json_and_disconnect_fail_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     malformed = _server_frame(0x1, b"not-json")
-    client, _socket = _client(
+    client, _fake_socket = _client(
         monkeypatch,
         [
             _server_text({"event": "version", "ticket": 1}),
@@ -183,7 +185,7 @@ def test_malformed_json_and_disconnect_fail_closed(
     with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="JSON"):
         client.request("cpu.status")
 
-    disconnected, _socket = _client(
+    disconnected, _fake_socket = _client(
         monkeypatch,
         [
             _server_text({"event": "version", "ticket": 1}),
@@ -208,7 +210,7 @@ def test_convenience_operations_decode_confirmed_response_shapes(
         ],
     }
     memory = b"\x10\x20\x30\x40"
-    client, _socket = _client(
+    client, _fake_socket = _client(
         monkeypatch,
         [
             _server_text({"event": "version", "ticket": 1}),
