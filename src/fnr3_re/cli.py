@@ -11,6 +11,7 @@ from .iso import build_workspace, verify_workspace
 from .manifests import WorkspaceValidationResult
 from .module_map import build_workspace_module_map
 from .package_gate import ValidationResult, validate_package, validate_registry
+from .ppsspp_bundle import verify_ppsspp_bundle
 from .psp_modules import analyze_psp_modules, write_psp_analysis_run
 from .rebuild import BuildPlan, load_build_plan, rebuild_image
 from .refpack import compress_refpack, decompress_refpack
@@ -62,6 +63,14 @@ def build_parser() -> argparse.ArgumentParser:
     psp_parser.add_argument("--nid-db", action="append", type=Path, default=[])
     psp_parser.add_argument("--allow-unpinned-toolkit", action="store_true")
     psp_parser.add_argument("--json", action="store_true", dest="as_json")
+
+    bundle_parser = subparsers.add_parser("ppsspp-bundle")
+    bundle_subparsers = bundle_parser.add_subparsers(
+        dest="ppsspp_bundle_command", required=True
+    )
+    bundle_verify_parser = bundle_subparsers.add_parser("verify")
+    bundle_verify_parser.add_argument("path", type=Path)
+    bundle_verify_parser.add_argument("--json", action="store_true", dest="as_json")
 
     for command in ("refpack-decode", "refpack-encode"):
         codec_parser = subparsers.add_parser(command)
@@ -174,6 +183,31 @@ def main(argv: Sequence[str] | None = None) -> int:
                 f"analyzed={analyzed} "
                 f"needs-decryption={needs_decryption} "
                 f"failed={failed} evidence={evidence_path}"
+            )
+        return 0
+    if args.command == "ppsspp-bundle":
+        identity = verify_ppsspp_bundle(args.path)
+        if args.as_json:
+            print(
+                json.dumps(
+                    {
+                        "headless_sha256": identity.headless_sha256,
+                        "host": identity.host,
+                        "port": identity.port,
+                        "revision": identity.revision,
+                        "sdl_sha256": identity.sdl_sha256,
+                        "xvfb_sha256": identity.xvfb_sha256,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                end="",
+            )
+        else:
+            print(
+                f"valid PPSSPP debugger bundle: {identity.revision} "
+                f"({identity.host}:{identity.port})"
             )
         return 0
     if args.command in {"refpack-decode", "refpack-encode"}:
