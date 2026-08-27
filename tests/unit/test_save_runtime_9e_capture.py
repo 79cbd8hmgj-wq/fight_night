@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import subprocess
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -308,7 +307,9 @@ def test_capture_runs_locked_breakpoint_and_dynamic_callback_sequence(
     inputs, _profile = _inputs(tmp_path)
     process, launches = _install_fake_process(monkeypatch)
     debugger = ScriptedDebugger([0x1000, 0x1010, 0x1020, 0x1030, 0x3000, 0x1040])
-    factory: Callable[..., ScriptedDebugger] = lambda *args, **kwargs: debugger
+
+    def factory(*_args: object, **_kwargs: object) -> ScriptedDebugger:
+        return debugger
 
     capture = capture_task9e_control(inputs, client_factory=factory)
 
@@ -346,7 +347,10 @@ def test_capture_runs_locked_breakpoint_and_dynamic_callback_sequence(
     assert process.terminated
     assert process.waited
 
-    assert all(size <= inputs.payload_contract.body_capacity for _address, size in debugger.memory_reads)
+    assert all(
+        size <= inputs.payload_contract.body_capacity
+        for _address, size in debugger.memory_reads
+    )
     assert (0x4000, 4) in debugger.memory_reads
     assert (0x2100, inputs.payload_contract.envelope_header_size) in debugger.memory_reads
 
