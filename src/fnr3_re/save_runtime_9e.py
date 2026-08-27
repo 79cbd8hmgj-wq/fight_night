@@ -475,3 +475,10 @@ from .save_runtime_9e_capture import (  # noqa: E402, I001
     Task9ECaptureInputs as Task9ECaptureInputs,
     capture_task9e_control as capture_task9e_control,
 )
+from .save_runtime_9e_evidence import (  # noqa: E402, I001
+    Task9EFirstDivergence as Task9EFirstDivergence,
+    Task9ERuntimeEvidence as Task9ERuntimeEvidence,
+    compare_task9e_controls as compare_task9e_controls,
+    run_task9e_capture as run_task9e_capture,
+    write_task9e_runtime_evidence as write_task9e_runtime_evidence,
+)
