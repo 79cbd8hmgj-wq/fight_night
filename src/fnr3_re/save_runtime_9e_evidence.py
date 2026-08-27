@@ -12,8 +12,8 @@ from typing import Any
 from .evidence import Address
 from .ppsspp_debugger import PpssppDebuggerClient
 from .save_runtime_9e import (
-    SaveMutation,
     SavedataInventoryEntry,
+    SaveMutation,
     Task9EPlan,
     Task9EPlanError,
 )
@@ -267,8 +267,16 @@ def _sequence_divergence(
             fact="breakpoint_sequence",
             observation_id=observation_id,
             field=None,
-            control_a=None if left_item is None else f"{left_item[0]}@0x{left_item[1]:08X}",
-            control_b=None if right_item is None else f"{right_item[0]}@0x{right_item[1]:08X}",
+            control_a=(
+                None
+                if left_item is None
+                else f"{left_item[0]}@0x{left_item[1]:08X}"
+            ),
+            control_b=(
+                None
+                if right_item is None
+                else f"{right_item[0]}@0x{right_item[1]:08X}"
+            ),
         )
     return None
 
@@ -467,7 +475,10 @@ def compare_task9e_controls(
         ),
         not_confirmed=(
             "Runtime observation alone does not establish the semantic purpose of the callback.",
-            "Checksum, obfuscation, recovery, slot, and field meanings remain unconfirmed unless separately evidenced.",
+            (
+                "Checksum, obfuscation, recovery, slot, and field meanings remain unconfirmed "
+                "unless separately evidenced."
+            ),
         ),
         warnings=warnings,
     )
