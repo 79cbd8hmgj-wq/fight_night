@@ -51,126 +51,106 @@ def _library_entry_count(libraries: object) -> int:
 
 
 def _library_summaries(libraries: object) -> list[dict[str, object]]:
-    summaries = [
-        {
-            "function_count": len(_sequence(getattr(library, "functions", []))),
-            "name": str(getattr(library, "name", "")),
-            "variable_count": len(_sequence(getattr(library, "variables", []))),
+    ranked: list[tuple[tuple[str, int, int], dict[str, object]]] = []
+    for library in _sequence(libraries):
+        name = str(getattr(library, "name", ""))
+        function_count = len(_sequence(getattr(library, "functions", [])))
+        variable_count = len(_sequence(getattr(library, "variables", [])))
+        payload: dict[str, object] = {
+            "function_count": function_count,
+            "name": name,
+            "variable_count": variable_count,
         }
-        for library in _sequence(libraries)
-    ]
-    return sorted(
-        summaries,
-        key=lambda item: (
-            str(item["name"]).casefold(),
-            int(item["function_count"]),
-            int(item["variable_count"]),
-        ),
-    )
+        ranked.append(((name.casefold(), function_count, variable_count), payload))
+    return [payload for _, payload in sorted(ranked, key=lambda item: item[0])]
 
 
 def _program_header_summaries(model: object | None) -> list[dict[str, object]]:
     if model is None:
         return []
-    records = []
+    ranked: list[tuple[int, dict[str, object]]] = []
     for header in _sequence(getattr(model, "program_headers", [])):
-        records.append(
-            {
-                "align": int(getattr(header, "align", 0)),
-                "file_offset": AddressValue(
-                    "elf_file_offset",
-                    int(getattr(header, "offset", 0)),
-                ),
-                "filesz": int(getattr(header, "filesz", 0)),
-                "flags": int(getattr(header, "flags", 0)),
-                "index": int(getattr(header, "index", 0)),
-                "memsz": int(getattr(header, "memsz", 0)),
-                "type": int(getattr(header, "type", 0)),
-                "vaddr": AddressValue("elf_vaddr", int(getattr(header, "vaddr", 0))),
-            }
-        )
-    return sorted(records, key=lambda item: int(item["index"]))
+        index = int(getattr(header, "index", 0))
+        payload: dict[str, object] = {
+            "align": int(getattr(header, "align", 0)),
+            "file_offset": AddressValue(
+                "elf_file_offset",
+                int(getattr(header, "offset", 0)),
+            ),
+            "filesz": int(getattr(header, "filesz", 0)),
+            "flags": int(getattr(header, "flags", 0)),
+            "index": index,
+            "memsz": int(getattr(header, "memsz", 0)),
+            "type": int(getattr(header, "type", 0)),
+            "vaddr": AddressValue("elf_vaddr", int(getattr(header, "vaddr", 0))),
+        }
+        ranked.append((index, payload))
+    return [payload for _, payload in sorted(ranked, key=lambda item: item[0])]
 
 
 def _section_summaries(model: object | None) -> list[dict[str, object]]:
     if model is None:
         return []
-    records = []
+    ranked: list[tuple[int, dict[str, object]]] = []
     for section in _sequence(getattr(model, "sections", [])):
-        records.append(
-            {
-                "address": AddressValue(
-                    "elf_vaddr",
-                    int(getattr(section, "addr", 0)),
-                ),
-                "addralign": int(getattr(section, "addralign", 0)),
-                "file_offset": AddressValue(
-                    "elf_file_offset",
-                    int(getattr(section, "offset", 0)),
-                ),
-                "flags": int(getattr(section, "flags", 0)),
-                "index": int(getattr(section, "index", 0)),
-                "kind": str(getattr(section, "kind", "")),
-                "name": str(getattr(section, "name", "")),
-                "size": int(getattr(section, "size", 0)),
-                "type": int(getattr(section, "type", 0)),
-            }
-        )
-    return sorted(records, key=lambda item: int(item["index"]))
+        index = int(getattr(section, "index", 0))
+        payload: dict[str, object] = {
+            "address": AddressValue(
+                "elf_vaddr",
+                int(getattr(section, "addr", 0)),
+            ),
+            "addralign": int(getattr(section, "addralign", 0)),
+            "file_offset": AddressValue(
+                "elf_file_offset",
+                int(getattr(section, "offset", 0)),
+            ),
+            "flags": int(getattr(section, "flags", 0)),
+            "index": index,
+            "kind": str(getattr(section, "kind", "")),
+            "name": str(getattr(section, "name", "")),
+            "size": int(getattr(section, "size", 0)),
+            "type": int(getattr(section, "type", 0)),
+        }
+        ranked.append((index, payload))
+    return [payload for _, payload in sorted(ranked, key=lambda item: item[0])]
 
 
 def _function_summaries(disassembly: object | None) -> list[dict[str, object]]:
     if disassembly is None:
         return []
-    records = []
+    ranked: list[tuple[tuple[int, str], dict[str, object]]] = []
     for function in _sequence(getattr(disassembly, "functions", [])):
-        records.append(
-            {
-                "address": AddressValue(
-                    "runtime_address",
-                    int(getattr(function, "address", 0)),
-                ),
-                "instruction_count": int(getattr(function, "instruction_count", 0)),
-                "name": str(getattr(function, "name", "")),
-                "section": str(getattr(function, "section", "")),
-                "size": int(getattr(function, "size", 0)),
-            }
-        )
-    return sorted(
-        records,
-        key=lambda item: (
-            int(item["address"].value),
-            str(item["name"]),
-        ),
-    )
+        address = int(getattr(function, "address", 0))
+        name = str(getattr(function, "name", ""))
+        payload: dict[str, object] = {
+            "address": AddressValue("runtime_address", address),
+            "instruction_count": int(getattr(function, "instruction_count", 0)),
+            "name": name,
+            "section": str(getattr(function, "section", "")),
+            "size": int(getattr(function, "size", 0)),
+        }
+        ranked.append(((address, name), payload))
+    return [payload for _, payload in sorted(ranked, key=lambda item: item[0])]
 
 
 def _symbol_summaries(disassembly: object | None) -> list[dict[str, object]]:
     if disassembly is None:
         return []
-    records = []
+    ranked: list[tuple[tuple[int, str, str], dict[str, object]]] = []
     for symbol in _sequence(getattr(disassembly, "symbols", [])):
+        address = int(getattr(symbol, "address", 0))
+        name = str(getattr(symbol, "name", ""))
+        kind = str(getattr(symbol, "kind", ""))
         section = getattr(symbol, "section", None)
-        records.append(
-            {
-                "address": AddressValue(
-                    "runtime_address",
-                    int(getattr(symbol, "address", 0)),
-                ),
-                "kind": str(getattr(symbol, "kind", "")),
-                "name": str(getattr(symbol, "name", "")),
-                "section": str(section) if section is not None else None,
-                "source": str(getattr(symbol, "source", "")),
-            }
-        )
-    return sorted(
-        records,
-        key=lambda item: (
-            int(item["address"].value),
-            str(item["name"]),
-            str(item["kind"]),
-        ),
-    )
+        payload: dict[str, object] = {
+            "address": AddressValue("runtime_address", address),
+            "kind": kind,
+            "name": name,
+            "section": str(section) if section is not None else None,
+            "source": str(getattr(symbol, "source", "")),
+        }
+        ranked.append(((address, name, kind), payload))
+    return [payload for _, payload in sorted(ranked, key=lambda item: item[0])]
 
 
 def _relocation_summary(model: object | None) -> list[dict[str, object]]:
