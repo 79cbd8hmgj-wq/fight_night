@@ -157,6 +157,18 @@ def _link_analyzed_modules(
     runs: list[PspModuleRun],
     nid_db_paths: tuple[Path, ...],
 ) -> Any | None:
+    required_api = (
+        "ModuleAnalysisInput",
+        "build_relocated_load_view",
+        "link_modules",
+    )
+    if not all(hasattr(toolkit, name) for name in required_api):
+        return None
+    if nid_db_paths and not hasattr(toolkit, "load_nid_databases"):
+        raise PspModuleAnalysisError(
+            "toolkit does not support external NID databases"
+        )
+
     link_inputs: list[Any] = []
     for run in runs:
         if (
