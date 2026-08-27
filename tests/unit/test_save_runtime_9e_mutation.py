@@ -115,7 +115,7 @@ def test_savedata_slot_rejects_missing_data_and_symlinks(tmp_path: Path) -> None
     missing = tmp_path / "missing"
     missing.mkdir()
     (missing / "PARAM.SFO").write_bytes(b"x")
-    with pytest.raises(Task9EPlanError, match="DATA.BIN"):
+    with pytest.raises(Task9EPlanError, match=r"DATA\.BIN"):
         prepare_corrupted_savedata(missing, tmp_path / "missing-copy", _contract())
 
     source = _write_slot(tmp_path / "source")
