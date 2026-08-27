@@ -1,16 +1,13 @@
 from __future__ import annotations
 
 import base64
-import collections
 import hashlib
 import json
 import struct
-import typing
 
 import pytest
 
-from fnr3_re import ppsspp_debugger
-from fnr3_re.ppsspp_debugger import PpssppDebuggerClient, PpssppDebuggerError
+import fnr3_re.ppsspp_debugger as ppsspp_debugger
 
 
 _GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -47,7 +44,7 @@ def _decode_client_frame(frame: bytes) -> tuple[int, bytes]:
 
 class FakeSocket:
     def __init__(self, responses: list[bytes]) -> None:
-        self.responses = collections.deque(responses)
+        self.responses = list(responses)
         self.sent: list[bytes] = []
         self.timeout: float | None = None
         self.closed = False
@@ -67,7 +64,7 @@ class FakeSocket:
         if rest:
             self.responses[0] = rest
         else:
-            self.responses.popleft()
+            self.responses.pop(0)
         return chunk
 
     def close(self) -> None:
@@ -90,7 +87,7 @@ def _handshake_response(nonce: bytes = b"0123456789abcdef") -> bytes:
 def _client(
     monkeypatch: pytest.MonkeyPatch,
     responses: list[bytes],
-) -> tuple[PpssppDebuggerClient, FakeSocket]:
+) -> tuple[ppsspp_debugger.PpssppDebuggerClient, FakeSocket]:
     socket = FakeSocket([_handshake_response(), *responses])
     monkeypatch.setattr(ppsspp_debugger.os, "urandom", lambda size: b"0123456789abcdef"[:size])
     monkeypatch.setattr(
@@ -98,12 +95,14 @@ def _client(
         "create_connection",
         lambda address, timeout: socket,
     )
-    return PpssppDebuggerClient("127.0.0.1", 56244, timeout_seconds=1.5), socket
+    return ppsspp_debugger.PpssppDebuggerClient(
+        "127.0.0.1", 56244, timeout_seconds=1.5
+    ), socket
 
 
 def test_rejects_nonloopback_host_before_connection() -> None:
-    with pytest.raises(PpssppDebuggerError, match="loopback"):
-        PpssppDebuggerClient("192.0.2.8", 56244)
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="loopback"):
+        ppsspp_debugger.PpssppDebuggerClient("192.0.2.8", 56244)
 
 
 def test_connects_to_debugger_path_and_sends_masked_json(
@@ -166,7 +165,7 @@ def test_matching_debugger_error_raises(monkeypatch: pytest.MonkeyPatch) -> None
         ],
     )
 
-    with pytest.raises(PpssppDebuggerError, match="bad request"):
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="bad request"):
         client.request("cpu.status")
 
 
@@ -182,7 +181,7 @@ def test_malformed_json_and_disconnect_fail_closed(
             malformed,
         ],
     )
-    with pytest.raises(PpssppDebuggerError, match="JSON"):
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="JSON"):
         client.request("cpu.status")
 
     disconnected, _socket = _client(
@@ -192,14 +191,14 @@ def test_malformed_json_and_disconnect_fail_closed(
             _server_text({"event": "client.config.set", "ticket": 2}),
         ],
     )
-    with pytest.raises(PpssppDebuggerError, match="closed"):
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="closed"):
         disconnected.request("cpu.status")
 
 
 def test_convenience_operations_decode_confirmed_response_shapes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    register_response: dict[str, typing.Any] = {
+    register_response: dict[str, object] = {
         "event": "cpu.getAllRegs",
         "ticket": 3,
         "categories": [
