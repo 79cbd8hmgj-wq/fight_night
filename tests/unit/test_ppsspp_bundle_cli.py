@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from fnr3_re import cli
 from fnr3_re.ppsspp_bundle import DebuggerBundleIdentity
 
@@ -26,7 +28,9 @@ def _identity(root: Path) -> DebuggerBundleIdentity:
 
 
 def test_ppsspp_bundle_verify_cli_human_output(
-    tmp_path: Path, monkeypatch, capsys
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     bundle = tmp_path / "bundle"
     expected = _identity(bundle.resolve())
@@ -40,7 +44,9 @@ def test_ppsspp_bundle_verify_cli_human_output(
 
 
 def test_ppsspp_bundle_verify_cli_json_output(
-    tmp_path: Path, monkeypatch, capsys
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     bundle = tmp_path / "bundle"
     expected = _identity(bundle.resolve())
