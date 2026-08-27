@@ -28,22 +28,71 @@ def _sample_run(tmp_path: Path) -> PspAnalysisRun:
         executable_kind="prx",
         needs_decryption=False,
         elf_header=SimpleNamespace(file_type=0xFFA0, entry=0x100),
-        program_headers=[SimpleNamespace(type=1), SimpleNamespace(type=1)],
-        sections=[SimpleNamespace(name=".text"), SimpleNamespace(name=".data")],
+        program_headers=[
+            SimpleNamespace(
+                index=0,
+                type=1,
+                offset=0x100,
+                vaddr=0,
+                filesz=0x400,
+                memsz=0x500,
+                flags=5,
+                align=0x1000,
+            ),
+            SimpleNamespace(
+                index=1,
+                type=1,
+                offset=0x500,
+                vaddr=0x1000,
+                filesz=0x80,
+                memsz=0x100,
+                flags=6,
+                align=0x1000,
+            ),
+        ],
+        sections=[
+            SimpleNamespace(
+                index=1,
+                name=".text",
+                type=1,
+                flags=6,
+                addr=0x100,
+                offset=0x100,
+                size=0x300,
+                addralign=16,
+                kind="executable",
+            ),
+            SimpleNamespace(
+                index=2,
+                name=".data",
+                type=1,
+                flags=3,
+                addr=0x1000,
+                offset=0x500,
+                size=0x80,
+                addralign=16,
+                kind="writable",
+            ),
+        ],
         module_info=SimpleNamespace(name="FNR3", address=0x20),
         imports=[
             SimpleNamespace(
+                name="sceKernelLibrary",
                 functions=[SimpleNamespace(nid=1)],
                 variables=[SimpleNamespace(nid=2)],
             )
         ],
         exports=[
             SimpleNamespace(
+                name="FNR3",
                 functions=[SimpleNamespace(nid=3)],
                 variables=[],
             )
         ],
-        relocations=[SimpleNamespace(type=2), SimpleNamespace(type=2)],
+        relocations=[
+            SimpleNamespace(type=2, type_name="R_MIPS_32", source="section"),
+            SimpleNamespace(type=2, type_name="R_MIPS_32", source="prxreloc2"),
+        ],
         warnings=["model warning"],
     )
     placement = SimpleNamespace(
@@ -63,12 +112,25 @@ def _sample_run(tmp_path: Path) -> PspAnalysisRun:
             SimpleNamespace(
                 name="func_08804040",
                 address=0x08804040,
+                size=0x24,
+                section=".text",
+                instruction_count=9,
                 assembly="sensitive assembly body",
                 instructions=[SimpleNamespace(word=0xDEADBEEF)],
             )
         ],
-        symbols=[SimpleNamespace(name="sym", address=0x08804100)],
-        references=[SimpleNamespace(source_address=0x08804040, target_address=0x08804100)],
+        symbols=[
+            SimpleNamespace(
+                name="sym",
+                address=0x08804100,
+                section=".text",
+                kind="function",
+                source="spimdisasm",
+            )
+        ],
+        references=[
+            SimpleNamespace(source_address=0x08804040, target_address=0x08804100)
+        ],
         warnings=["disassembly warning"],
         raw_data=b"forbidden raw bytes",
     )
@@ -76,7 +138,9 @@ def _sample_run(tmp_path: Path) -> PspAnalysisRun:
         function_confidence=[
             SimpleNamespace(name="func_08804040", address=0x08804040, score=0.85)
         ],
-        call_edges=[SimpleNamespace(source_address=0x08804040, target_address=0x08804080)],
+        call_edges=[
+            SimpleNamespace(source_address=0x08804040, target_address=0x08804080)
+        ],
         jump_tables=[],
     )
     module = PspModuleRun(
@@ -160,6 +224,70 @@ def test_manifest_preserves_address_domains_and_compact_counts(tmp_path: Path) -
     assert module["counts"]["relocations"] == 2
     assert module["counts"]["functions"] == 1
     assert payload["links"]["resolved_links"] == 1
+
+
+def test_manifest_contains_required_compact_structural_summaries(tmp_path: Path) -> None:
+    payload = json.loads(
+        build_psp_evidence_manifest(
+            _sample_run(tmp_path),
+            workspace_manifest_sha256="b" * 64,
+        ).to_json()
+    )
+    module = payload["modules"][0]
+
+    assert module["program_headers"][0] == {
+        "align": 0x1000,
+        "file_offset": {"type": "elf_file_offset", "value": 0x100},
+        "filesz": 0x400,
+        "flags": 5,
+        "index": 0,
+        "memsz": 0x500,
+        "type": 1,
+        "vaddr": {"type": "elf_vaddr", "value": 0},
+    }
+    assert module["sections"][0] == {
+        "address": {"type": "elf_vaddr", "value": 0x100},
+        "addralign": 16,
+        "file_offset": {"type": "elf_file_offset", "value": 0x100},
+        "flags": 6,
+        "index": 1,
+        "kind": "executable",
+        "name": ".text",
+        "size": 0x300,
+        "type": 1,
+    }
+    assert module["functions"] == [
+        {
+            "address": {"type": "runtime_address", "value": 0x08804040},
+            "instruction_count": 9,
+            "name": "func_08804040",
+            "section": ".text",
+            "size": 0x24,
+        }
+    ]
+    assert module["symbols"] == [
+        {
+            "address": {"type": "runtime_address", "value": 0x08804100},
+            "kind": "function",
+            "name": "sym",
+            "section": ".text",
+            "source": "spimdisasm",
+        }
+    ]
+    assert module["libraries"] == {
+        "exports": [{"function_count": 1, "name": "FNR3", "variable_count": 0}],
+        "imports": [
+            {
+                "function_count": 1,
+                "name": "sceKernelLibrary",
+                "variable_count": 1,
+            }
+        ],
+    }
+    assert module["relocation_summary"] == [
+        {"count": 1, "source": "prxreloc2", "type": 2, "type_name": "R_MIPS_32"},
+        {"count": 1, "source": "section", "type": 2, "type_name": "R_MIPS_32"},
+    ]
 
 
 def test_manifest_contains_no_assembly_raw_bytes_or_instruction_words(tmp_path: Path) -> None:
