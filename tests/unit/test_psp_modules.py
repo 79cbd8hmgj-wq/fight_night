@@ -291,9 +291,15 @@ def test_analysis_plans_all_usable_modules_once(
     assert toolkit.plan_calls == 1
     analyzed = [item for item in run.modules if item.status == "analyzed"]
     assert len(analyzed) == 3
-    assert analyzed[0].placement.placement_kind == "boot_inferred"
-    assert analyzed[1].placement.placement_kind == "fixed"
-    assert analyzed[2].placement.alignment == 0x8000
+    boot_placement = analyzed[0].placement
+    fixed_placement = analyzed[1].placement
+    strict_placement = analyzed[2].placement
+    assert boot_placement is not None
+    assert fixed_placement is not None
+    assert strict_placement is not None
+    assert boot_placement.placement_kind == "boot_inferred"
+    assert fixed_placement.placement_kind == "fixed"
+    assert strict_placement.alignment == 0x8000
     assert toolkit.disassembly_loads["BOOT.BIN"] == 0x08804000
     assert toolkit.disassembly_loads["FIXED.PRX"] is None
     assert toolkit.disassembly_loads["STRICT.PRX"] is not None
