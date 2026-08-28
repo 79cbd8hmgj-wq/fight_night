@@ -25,7 +25,7 @@ jobs:
       - name: Run tests
         run: python -m pytest
       - name: Run Ruff
-        run: python -m ruff check config src tests
+        run: python -m ruff check config src tests tools
       - name: Run mypy
         run: python -m mypy src tests/unit
 
@@ -59,60 +59,3 @@ jobs:
             tests/unit/test_psp_evidence.py \
             tests/unit/test_psp_output.py \
             tests/unit/test_psp_modules_cli.py
-
-  payload-manifest-preview:
-    if: github.event_name == 'pull_request'
-    permissions:
-      contents: write
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Check out PR head branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Generate reviewed runtime allowlist preview
-        run: |
-          python tools/generate_runtime_payload_manifest.py \
-            . \
-            "$RUNNER_TEMP/ulus10066-repository-payload.json"
-      - name: Summarize preview
-        run: |
-          python - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          path = Path(os.environ["RUNNER_TEMP"]) / "ulus10066-repository-payload.json"
-          payload = json.loads(path.read_text(encoding="utf-8"))
-          entries = payload["entries"]
-          print(f"files={len(entries)} bytes={sum(entry['size'] for entry in entries)}")
-          print(f"first={entries[0]['source']} -> {entries[0]['destination']}")
-          print(f"last={entries[-1]['source']} -> {entries[-1]['destination']}")
-          PY
-      - name: Upload allowlist preview
-        uses: actions/upload-artifact@v4
-        with:
-          name: runtime-payload-manifest-preview
-          path: ${{ runner.temp }}/ulus10066-repository-payload.json
-          if-no-files-found: error
-          retention-days: 1
-      - name: Commit generated allowlist to PR branch
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          mkdir -p config/runtime
-          cp "$RUNNER_TEMP/ulus10066-repository-payload.json" \
-            config/runtime/ulus10066-repository-payload.json
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add config/runtime/ulus10066-repository-payload.json
-          if git diff --cached --quiet; then
-            echo "Runtime payload manifest already matches generated allowlist."
-          else
-            git commit -m "config: lock Fight Night runtime payload manifest"
-            git push origin "HEAD:$HEAD_REF"
-          fi
