@@ -19,15 +19,25 @@ from fnr3_re.save_runtime_9e import (
     Task9EPlan,
     Task9EPlanError,
     Task9ERuntimeEvidence,
+    Task9ERuntimeSource,
     compare_task9e_controls,
     write_task9e_runtime_evidence,
 )
 
 _BOOT_SHA256 = "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+_ISO_SHA256 = "a" * 64
 
 
 def _runtime(value: int) -> Address:
     return Address(AddressType.RUNTIME, value)
+
+
+def _runtime_source() -> Task9ERuntimeSource:
+    return Task9ERuntimeSource.retail_iso(
+        revision_id="ULUS10066-v1.00",
+        retail_iso_sha256=_ISO_SHA256,
+        boot_sha256=_BOOT_SHA256,
+    )
 
 
 def _bundle(tmp_path: Path) -> DebuggerBundleIdentity:
@@ -85,7 +95,7 @@ def _capture(tmp_path: Path, control_id: str, data_hash: str) -> RuntimeControlC
     return RuntimeControlCapture(
         control_id=control_id,
         valid=True,
-        iso_sha256="a" * 64,
+        iso_sha256=_ISO_SHA256,
         state_sha256="b" * 64,
         savedata_inventory=_inventory(data_hash),
         bundle=_bundle(tmp_path),
@@ -105,6 +115,7 @@ def _capture(tmp_path: Path, control_id: str, data_hash: str) -> RuntimeControlC
             registers=(("pc", 0x3000),),
             backtrace=(_runtime(0x3000),),
         ),
+        runtime_source=_runtime_source(),
     )
 
 
