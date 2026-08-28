@@ -8,11 +8,13 @@ import re
 import shutil
 import subprocess
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from importlib.metadata import PackageNotFoundError, version as package_version
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
 from pathlib import Path, PurePosixPath
-from typing import Iterator, cast
+from typing import cast
 from unittest import mock
 
 import pycdlib  # type: ignore[import-untyped]
@@ -265,8 +267,13 @@ def prepare_runtime_image(
     *,
     force: bool = False,
 ) -> RuntimeImageReport:
-    if manifest.revision_id != revision.revision_id or revision.revision_id != _LOCKED_REVISION_ID:
-        raise RuntimeImageError("runtime image revision does not match the locked Fight Night revision")
+    if (
+        manifest.revision_id != revision.revision_id
+        or revision.revision_id != _LOCKED_REVISION_ID
+    ):
+        raise RuntimeImageError(
+            "runtime image revision does not match the locked Fight Night revision"
+        )
 
     verified = verify_runtime_payload(repository_root, manifest)
     boot = _required_verified_destination(verified, "PSP_GAME/SYSDIR/BOOT.BIN")
@@ -408,7 +415,10 @@ def _required_verified_destination(
     destination: str,
 ) -> VerifiedRuntimePayloadEntry:
     target = destination.casefold()
-    match = next((entry for entry in entries if entry.destination.as_posix().casefold() == target), None)
+    match = next(
+        (entry for entry in entries if entry.destination.as_posix().casefold() == target),
+        None,
+    )
     if match is None:
         raise RuntimeImageError(f"runtime payload is missing required destination: {destination}")
     return match
