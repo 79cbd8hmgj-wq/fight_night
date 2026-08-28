@@ -16,8 +16,8 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Protocol, cast
 
 from .ppsspp_bundle import (
-    DebuggerBundleProfile,
     FNR3_DEBUGGER_BUNDLE_PROFILE,
+    DebuggerBundleProfile,
     verify_ppsspp_bundle,
 )
 from .ppsspp_debugger import PpssppDebuggerClient, PpssppDebuggerError
