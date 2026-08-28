@@ -91,12 +91,18 @@ def test_force_replace_rolls_back_if_atomic_swap_fails(
     marker.write_text("preserve me", encoding="utf-8")
 
     real_replace = runtime_image.os.replace
-    calls = 0
+    failed_final_swap = False
 
     def fail_final_replace(source: str | Path, destination: str | Path) -> None:
-        nonlocal calls
-        calls += 1
-        if Path(destination) == output:
+        nonlocal failed_final_swap
+        source_path = Path(source)
+        destination_path = Path(destination)
+        if (
+            not failed_final_swap
+            and destination_path == output
+            and source_path.name.startswith(".runtime.tmp-")
+        ):
+            failed_final_swap = True
             raise OSError("simulated atomic replacement failure")
         real_replace(source, destination)
 
