@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from fnr3_re.psp_sfo import build_param_sfo_strings, build_runtime_param_sfo
@@ -35,15 +37,18 @@ def test_runtime_param_sfo_is_byte_deterministic() -> None:
 
 
 def test_param_sfo_writer_rejects_embedded_nul() -> None:
-    with pytest.raises(ValueError, match="PARAM.SFO values must not contain NUL"):
+    message = "PARAM.SFO values must not contain NUL"
+    with pytest.raises(ValueError, match=re.escape(message)):
         build_param_sfo_strings({"TITLE": "bad\x00title"})
 
 
 def test_param_sfo_writer_rejects_empty_key() -> None:
-    with pytest.raises(ValueError, match="PARAM.SFO keys must be non-empty"):
+    message = "PARAM.SFO keys must be non-empty"
+    with pytest.raises(ValueError, match=re.escape(message)):
         build_param_sfo_strings({"": "value"})
 
 
 def test_param_sfo_writer_rejects_nul_in_key() -> None:
-    with pytest.raises(ValueError, match="PARAM.SFO keys must not contain NUL"):
+    message = "PARAM.SFO keys must not contain NUL"
+    with pytest.raises(ValueError, match=re.escape(message)):
         build_param_sfo_strings({"BAD\x00KEY": "value"})
