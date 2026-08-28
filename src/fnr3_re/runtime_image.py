@@ -27,6 +27,7 @@ _ALLOWED_ROLES = frozenset({"executable", "game_data", "metadata", "padding"})
 _RUNTIME_ISO_NAME = "fight-night-runtime.iso"
 _RUNTIME_REPORT_NAME = "runtime-image.json"
 _RUNTIME_SOURCE_MODE = "repository_runtime_image"
+_RUNTIME_VOLUME_ID = "FNR3_ULUS10066"
 _PYCDLIB_VERSION = "1.21.0"
 _FIXED_MASTERING_TIME = 946684800.0
 
@@ -338,15 +339,17 @@ def _master_runtime_iso(
     _require_pycdlib_version()
     iso = pycdlib.PyCdlib()
     param_stream = io.BytesIO(param_sfo)
+    initialized = False
     try:
         with _fixed_pycdlib_time():
             iso.new(
                 interchange_level=3,
                 joliet=3,
                 sys_ident="PSP GAME",
-                vol_ident="FNR3_ULUS10066_RUNTIME",
+                vol_ident=_RUNTIME_VOLUME_ID,
                 app_ident_str="fnr3-re runtime recovery",
             )
+            initialized = True
             destinations = [entry.destination for entry in entries]
             destinations.append(PurePosixPath("PSP_GAME/PARAM.SFO"))
             for directory in _runtime_directories(destinations):
@@ -369,7 +372,8 @@ def _master_runtime_iso(
                 )
             iso.write(str(output))
     finally:
-        iso.close()
+        if initialized:
+            iso.close()
 
 
 def _runtime_directories(paths: list[PurePosixPath]) -> tuple[PurePosixPath, ...]:
