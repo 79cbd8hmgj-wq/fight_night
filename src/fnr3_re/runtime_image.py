@@ -17,7 +17,7 @@ from pathlib import Path, PurePosixPath
 from typing import cast
 from unittest import mock
 
-import pycdlib  # type: ignore[import-untyped]
+import pycdlib
 
 from .psp_sfo import build_runtime_param_sfo
 from .revision import ReferenceRevision, hash_file
