@@ -101,7 +101,7 @@ class RuntimeControlCapture:
     bundle: DebuggerBundleIdentity
     observations: tuple[RuntimeBreakpointObservation, ...]
     callback: RuntimeCallbackObservation | None
-    runtime_source: Task9ERuntimeSource | None = None
+    runtime_source: Task9ERuntimeSource
     diagnostics: tuple[str, ...] = ()
 
 
