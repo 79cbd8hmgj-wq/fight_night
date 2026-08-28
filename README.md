@@ -16,6 +16,47 @@ The machine-readable scope and dependency graph is stored in [`config/subsystem_
 
 Phase I PSP executable research can use the optional, revision-pinned standalone PSP Disassembly Toolkit through `fnr3-re analyze-psp-modules`. The authoritative workspace, local-output, address-domain, placement-confidence, and evidence-promotion boundaries are documented in [`docs/architecture/psp-static-analysis.md`](docs/architecture/psp-static-analysis.md).
 
+## Task 9E PPSSPP runtime capture
+
+Checkpoint 9E adds an identity-locked PPSSPP runtime adapter for one bounded save-system experiment. It verifies the workspace, exact reference ISO, PPSSPP bundle revision/binary hashes/debugger configuration, `.ppst` state hash, savedata inventory, and committed Task 9E plan before launching PPSSPP.
+
+The supported entry point is:
+
+```bash
+fnr3-re capture-save-9e WORKSPACE \
+  --bundle BUNDLE \
+  --iso ISO \
+  --state STATE.ppst \
+  --savedata-slot SLOT \
+  [--plan analysis/save/checkpoint-9e-runtime-capture-plan.json] \
+  [--payload-lifetime analysis/save/save-payload-lifetime.json] \
+  [--capture-id ID] \
+  [--json]
+```
+
+`--savedata-slot` must name one explicit save slot, not the broad `PSP/SAVEDATA` parent. `--state` is required for Task 9E evidence.
+
+The verified external bundle is launched through its own interface:
+
+```bash
+launch-debug.sh ISO --state STATE.ppst --port PORT
+```
+
+Debugger startup is configuration-driven through `RemoteDebuggerOnStartup`, `RemoteDebuggerLocal`, and `RemoteISOPort`. The bundle-local `ppsspp_ws.py` remains diagnostic/reference tooling; the repository adapter uses its own independently tested `PpssppDebuggerClient`.
+
+Task 9E runs an untouched successful-save control and a deterministic one-byte corrupted-copy control, compares their ordered runtime observations, and transactionally writes normalized evidence under:
+
+```text
+workspace/working/runtime/task-9e/<capture-id>/
+workspace/manifests/task-9e-runtime-evidence.json
+```
+
+Raw ISO/save/state bytes, broad memory dumps, screenshots, audio/video, and raw debugger transcripts are not committed. Ordinary CI also does not require those materials: the real live integration test is skipped unless `FNR3_REFERENCE_ISO`, `FNR3_PPSSPP_BUNDLE`, `FNR3_TASK9E_STATE`, and `FNR3_TASK9E_SAVEDATA_SLOT` are explicitly provisioned.
+
+An implemented and passing adapter is **not** itself evidence that a live Fight Night Task 9E capture has occurred. Runtime claims are promoted only from an explicitly provisioned capture and its reviewed normalized evidence.
+
+See [`docs/architecture/ppsspp-debugger-bundle.md`](docs/architecture/ppsspp-debugger-bundle.md) and [`docs/architecture/ppsspp-capture-harness.md`](docs/architecture/ppsspp-capture-harness.md).
+
 ## Supported reference build
 
 - Disc ID: `ULUS10066`
@@ -23,7 +64,7 @@ Phase I PSP executable research can use the optional, revision-pinned standalone
 - Disc version: `1.00`
 - Reference ISO SHA-256: `b11da5afe208d9791eecd9f6a44d0f57946f7d9de165b7d8dd22f5ee740f4ee2`
 
-Exact image validation is implemented in Task 3. Until then, these values are locked project metadata rather than an executable verification claim.
+Exact image validation is implemented and revision-locked to the supported reference metadata.
 
 ## Repository state
 
