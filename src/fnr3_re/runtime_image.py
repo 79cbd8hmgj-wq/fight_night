@@ -281,10 +281,13 @@ def prepare_runtime_image(
     param_sfo = build_runtime_param_sfo(revision)
     param_sha256 = hashlib.sha256(param_sfo).hexdigest()
 
-    destination = output_root.absolute()
+    destination = _guard_runtime_output_path(output_root)
     destination.parent.mkdir(parents=True, exist_ok=True)
+    _guard_runtime_output_path(destination)
     if destination.exists() and not force:
         raise FileExistsError(f"runtime output already exists: {destination}")
+    if destination.exists() and not destination.is_dir():
+        raise RuntimeImageError("existing runtime output must be a directory")
 
     temporary = destination.parent / f".{destination.name}.tmp-{uuid.uuid4().hex}"
     try:
@@ -328,14 +331,44 @@ def prepare_runtime_image(
             files=tuple(sorted(file_reports, key=lambda item: item.destination.casefold())),
         )
         (temporary / _RUNTIME_REPORT_NAME).write_text(report.to_json(), encoding="utf-8")
-
-        if destination.exists():
-            shutil.rmtree(destination)
-        os.replace(temporary, destination)
+        _commit_runtime_output(temporary, destination, force=force)
         return report
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
+
+
+def _guard_runtime_output_path(output_root: Path) -> Path:
+    destination = output_root.absolute()
+    current = Path(destination.anchor)
+    for part in destination.parts[1:]:
+        current = current / part
+        if current.is_symlink():
+            raise RuntimeImageError(f"runtime output path contains a symlink: {current}")
+    return destination
+
+
+def _commit_runtime_output(temporary: Path, destination: Path, *, force: bool) -> None:
+    if not destination.exists():
+        os.replace(temporary, destination)
+        return
+    if not force:
+        raise FileExistsError(f"runtime output already exists: {destination}")
+
+    backup = destination.parent / f".{destination.name}.bak-{uuid.uuid4().hex}"
+    os.replace(destination, backup)
+    try:
+        os.replace(temporary, destination)
+    except Exception:
+        try:
+            os.replace(backup, destination)
+        except Exception as rollback_error:
+            raise RuntimeImageError(
+                "runtime output replacement failed and the previous output could not be restored"
+            ) from rollback_error
+        raise
+    else:
+        shutil.rmtree(backup)
 
 
 def _master_runtime_iso(
