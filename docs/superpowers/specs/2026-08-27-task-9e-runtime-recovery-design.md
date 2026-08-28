@@ -4,7 +4,7 @@
 
 Restore a reproducible live Fight Night Round 3 runtime path for Checkpoint 9E without requiring the monolithic retail ISO to be re-uploaded or re-provisioned for every capture.
 
-The repository already contains the extracted game payload that was used during earlier reverse-engineering work. The PPSSPP debugger bundle is treated as the known-good runtime implementation for this experiment. The recovery work therefore focuses on rebuilding a bootable temporary PSP runtime image from the repository payload, generating the save/state artifacts needed by Task 9E, and feeding those artifacts into the already-merged dual-control runtime adapter.
+The repository already contains extracted game payload used during earlier reverse-engineering work. The PPSSPP debugger bundle is treated as the known-good runtime implementation for this experiment. Recovery therefore focuses on validating the repository-held payload, rebuilding a bootable temporary PSP runtime image from it, generating the save/state artifacts needed by Task 9E, and feeding those artifacts into the already-merged dual-control runtime adapter.
 
 ## Scope
 
@@ -42,26 +42,38 @@ Repository runtime-image mode never promotes the reconstructed ISO hash to the r
 
 A new committed manifest defines exactly which repository files are retail game payload and where they belong in the PSP disc filesystem.
 
-Proposed path:
+Path:
 
 ```text
 config/runtime/ulus10066-repository-payload.json
 ```
 
-The manifest contains:
+Each payload entry contains:
 
-- schema version;
-- revision ID;
-- locked `BOOT.BIN` SHA-256;
-- required repository source path;
+- repository source path;
 - destination PSP disc path;
 - expected byte size;
-- expected SHA-256;
+- expected Git blob SHA-1;
+- expected SHA-256 when an independently locked SHA-256 already exists;
 - file role such as executable, game data, metadata, padding, or generated metadata.
 
-The manifest is an explicit allowlist. Runtime image creation must not infer payload membership by scanning arbitrary repository files or by excluding known source-code directories. This prevents docs, tests, analysis outputs, tooling, or later mod files from silently entering the disc image.
+The manifest also contains its schema version and revision ID.
 
-The initial manifest is derived from the currently committed extracted Fight Night payload and the already-confirmed retail inventory. Runtime preparation fails if a listed source file is missing, symlinked, wrong-sized, or hash-mismatched.
+Git blob identity is computed from file bytes using the standard Git blob object rule, so verification does not require network access or a `.git` directory. Every included source also receives a normal SHA-256 in the generated runtime-image report. Critical executable identities, especially `BOOT.BIN`, continue to require their independently locked SHA-256 values in addition to Git blob identity.
+
+The manifest is an explicit per-file allowlist. Runtime image creation must not infer payload membership by scanning arbitrary repository files or by excluding known source-code directories. This prevents docs, tests, analysis outputs, tooling, or later mod files from silently entering the disc image.
+
+The initial manifest is derived from the currently committed extracted Fight Night payload and the confirmed retail inventory evidence. Runtime preparation fails if a listed source file is missing, symlinked, wrong-sized, or identity-mismatched.
+
+## Extracted-payload coverage gate
+
+Repository runtime-image mode must prove that the manifest contains every extracted file required for the game to boot and reach the Task 9E save/load path.
+
+Coverage is established through the committed payload manifest, known PSP boot requirements, the confirmed retail inventory evidence, and a real PPSSPP boot/save/load test.
+
+If repository-held extracted coverage is incomplete, preparation fails with a normalized list of missing or unresolved disc paths. It does **not** silently fall back to requiring the monolithic retail ISO. The recovery action is to restore only the missing extracted pieces or metadata needed by the runtime image.
+
+No semantic Task 9E evidence may be promoted from a runtime image that fails this coverage gate.
 
 ## Disc filesystem materialization
 
@@ -101,7 +113,7 @@ Properties:
 - transactional output replacement;
 - symlink and traversal rejection.
 
-The builder does not attempt to reproduce original LBAs, original directory-record byte layout, UMD padding, or the retail ISO SHA-256. Exact-sector reconstruction remains a separate concern from Task 9E runtime execution.
+The builder does not attempt to reproduce original LBAs, original directory-record byte layout, UMD padding, or the retail ISO SHA-256. Exact-sector reconstruction remains separate from Task 9E runtime execution.
 
 ## Runtime-image identity report
 
@@ -114,6 +126,8 @@ Each reconstructed image has a normalized report containing:
 - `EBOOT.BIN` SHA-256;
 - generated metadata hashes;
 - every included source path and destination path;
+- verified source Git blob identity;
+- source SHA-256 calculated during preparation;
 - actual runtime ISO byte size;
 - actual runtime ISO SHA-256;
 - builder version/schema;
@@ -187,7 +201,7 @@ A state created for one runtime-image hash must not be silently reused with a di
 
 ## Task 9E preflight changes
 
-`Task9ECaptureInputs` is extended to describe the runtime image provenance rather than assuming `iso_sha256 == retail_iso_sha256`.
+`Task9ECaptureInputs` is extended to describe runtime-image provenance rather than assuming `iso_sha256 == retail_iso_sha256`.
 
 For retail ISO mode, existing exact retail validation remains unchanged.
 
@@ -250,10 +264,11 @@ Raw runtime files, local paths, save bytes, state bytes, ISO bytes, screenshots,
 Runtime preparation fails closed on:
 
 - missing manifest source file;
-- unexpected source hash or size;
+- unexpected source hash, Git blob identity, or size;
 - symlinked payload input;
 - invalid PSP destination path;
 - duplicate destination path;
+- incomplete required payload coverage;
 - metadata generation from unlocked fields;
 - nondeterministic rebuild result from identical inputs;
 - wrong `BOOT.BIN` identity;
@@ -273,6 +288,7 @@ A failed preparation or capture must not replace a previously valid runtime repo
 Cover:
 
 - strict payload-manifest parsing;
+- Git blob identity calculation and verification;
 - safe source/destination path validation;
 - duplicate destination rejection;
 - source size/hash validation;
@@ -280,6 +296,7 @@ Cover:
 - deterministic ISO construction from synthetic fixtures;
 - runtime-image report validation;
 - retail provenance versus runtime-image hash separation;
+- incomplete coverage reporting;
 - per-control memstick root generation;
 - successful/corrupted save routing;
 - state/runtime-image identity checks;
@@ -288,7 +305,7 @@ Cover:
 
 ### Repository integration tests
 
-Use the committed Fight Night payload manifest to verify every listed repository source exists and matches its expected size/hash.
+Use the committed Fight Night payload manifest to verify every listed repository source exists and matches its expected byte size and Git blob identity, plus any independently locked SHA-256 value.
 
 These tests do not create or publish a complete copyrighted runtime ISO in CI artifacts.
 
@@ -328,5 +345,5 @@ Runtime recovery is complete when:
 4. a real Fight Night savedata slot and compatible `.ppst` can be prepared locally;
 5. successful and corrupted controls are routed through separate verified memstick roots;
 6. the existing Task 9E breakpoint/callback capture executes against those controls;
-7. normalized evidence records the reconstructed runtime-image provenance without confusing it with the retail ISO identity;
+7. normalized evidence records reconstructed runtime-image provenance without confusing it with retail ISO identity;
 8. no ISO, save, state, or raw runtime payload is committed to the repository.
