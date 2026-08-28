@@ -498,7 +498,10 @@ def compare_task9e_controls(
         static_correlated=(),
         semantic_interpretation=(),
         confirmed=(
-            "The compared controls share the same verified runtime source, state, and debugger bundle identities.",
+            (
+                "The compared controls share the same verified runtime source, state, "
+                "and debugger bundle identities."
+            ),
             "The corrupted control uses the recorded deterministic one-byte DATA.BIN mutation.",
         ),
         not_confirmed=(
