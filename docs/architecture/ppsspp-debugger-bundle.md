@@ -2,99 +2,111 @@
 
 ## Purpose
 
-The debugger bundle supplies the live PSP runtime dependency that the existing capture harness intentionally leaves environment-gated. It is separate from any Fight Night Round 3 ISO, battery save, PPSSPP save state, RAM dump, screenshot, or extracted game asset.
+The debugger bundle supplies the live PSP runtime dependency for environment-gated reverse engineering. It is separate from every Fight Night Round 3 ISO, battery save, PPSSPP save state, RAM dump, screenshot, debugger transcript, and extracted game asset.
 
-The bundle is built from an immutable PPSSPP revision and contains:
+Two related bundle workflows exist in this repository:
+
+1. the older manual PPSSPP research-bundle builder, which packages upstream PPSSPP tooling such as `wsdbg` and its wrapper scripts; and
+2. the externally supplied, identity-locked bundle consumed by the Task 9E runtime adapter.
+
+They must not be treated as interchangeable interfaces. Task 9E uses only the second contract described below.
+
+## Task 9E verified bundle contract
+
+`fnr3-re ppsspp-bundle verify BUNDLE` validates the external bundle before any Task 9E launch. The verifier requires these regular, non-symlinked files under the bundle root:
 
 ```text
 PPSSPPHeadless
 PPSSPPSDL
-wsdbg
-assets/
-lib/
-tools/ppsspp-debugger-bundle/
-PPSSPP-WebSocket-Debugger.md
-PPSSPP-LICENSE.txt
+bin/Xvfb
+launch-debug.sh
+ppsspp_ws.py
+ppsspp-debug.ini
 ppsspp-resolved-revision.txt
-bundle.sha256
 ```
 
-## Why both emulator front ends are included
-
-`PPSSPPHeadless` is the deterministic automation target. With `--debugger=PORT`, PPSSPP starts the remote WebSocket debugger and the headless frontend halts the emulated CPU before execution. This permits breakpoints to be installed before the game runs.
-
-`PPSSPPSDL` is the visual fallback. It boots the same ISO normally while exposing the same remote debugger. It is used to navigate menus, create a profile or battery save, identify a reproducible scenario, and inspect presentation when a headless input trace has not yet been authored.
-
-Both binaries are built from the same exact source revision.
-
-## Debugger transport
-
-PPSSPP exposes a JSON WebSocket debugger at:
+For the Fight Night Round 3 runtime adapter, the locked PPSSPP revision is:
 
 ```text
-ws://127.0.0.1:PORT/debugger
+fa50bb1976065c4f8b1b47af227d367fe9771555
 ```
 
-The required WebSocket subprotocol is:
+The verifier also locks the SHA-256 identities of `PPSSPPSDL`, `PPSSPPHeadless`, and `bin/Xvfb`. A bundle with a different revision, binary hash, debugger configuration, missing required file, or symlinked required file is rejected before launch.
+
+The default debugger endpoint is local-only on port `56244`.
+
+## Debugger startup is configuration-driven
+
+The verified Task 9E artifact does **not** depend on the older repository wrapper convention of launching PPSSPP with `--debugger=PORT`.
+
+Instead, `ppsspp-debug.ini` must contain a `[General]` section with a debugger configuration equivalent to:
+
+```ini
+RemoteDebuggerOnStartup = true
+RemoteDebuggerLocal = true
+RemoteISOPort = 56244
+```
+
+The verifier reads these values and rejects a bundle if the debugger does not start automatically, is not local-only, or uses a different port from the locked profile.
+
+PPSSPP exposes the JSON WebSocket debugger locally at the configured endpoint. The debugger protocol uses the subprotocol:
 
 ```text
 debugger.ppsspp.org
 ```
 
-The official `wsdbg` client is bundled. The interface supports the operations needed by the reverse-engineering plan, including:
+## Task 9E launcher interface
 
-- CPU pause, resume, status, registers, and stepping;
-- execution breakpoints;
-- read, write, and read/write memory breakpoints;
-- memory reads, writes, searches, and disassembly;
-- loaded HLE module enumeration and backtraces;
-- deterministic button and analog input injection;
-- screenshots, GPU buffers, and replay controls where supported.
+Task 9E invokes only the verified bundle-local launcher. The supported form is:
 
-## Launching
+```bash
+./launch-debug.sh /path/to/game.iso --state /path/to/state.ppst --port 56244
+```
 
-Headless, paused before game execution:
+The repository adapter constructs the same argument shape programmatically:
+
+```text
+[launch-debug.sh, ISO, --state, STATE.ppst, --port, PORT]
+```
+
+It does not fall back to a globally installed PPSSPP executable and does not substitute one of the older `run-headless-debugger.sh` or `run-sdl-debugger.sh` wrappers.
+
+The launcher path is accepted only after the bundle revision, binary hashes, and debugger configuration have been verified.
+
+## Repository debugger client
+
+The bundle-local `ppsspp_ws.py` is retained as a diagnostic/reference tool. Task 9E does **not** import or execute it as the runtime adapter library.
+
+The repository uses its own independently unit-tested standard-library WebSocket client, `PpssppDebuggerClient`, for the subset of debugger operations required by Task 9E. This keeps debugger framing, request/response correlation, event handling, breakpoint operations, register reads, bounded memory reads, and backtraces directly testable in the repository.
+
+Raw debugger transcript bodies are not normalized into committed Task 9E evidence.
+
+## Older manual research-bundle builder
+
+The repository still contains the earlier manual builder and wrapper scripts for general PPSSPP research. That workflow packages both PPSSPP front ends plus upstream `wsdbg` and documents the WebSocket transport.
+
+Its wrappers use the confirmed interface available to the PPSSPP revision they build, including forms such as:
 
 ```bash
 tools/ppsspp-debugger-bundle/run-headless-debugger.sh /path/to/game.iso 20000
-```
-
-Visual SDL session:
-
-```bash
 tools/ppsspp-debugger-bundle/run-sdl-debugger.sh /path/to/game.iso 20000
-```
-
-Connect interactively:
-
-```bash
-tools/ppsspp-debugger-bundle/wsdbg.sh 20000
-```
-
-Send a one-shot command:
-
-```bash
 tools/ppsspp-debugger-bundle/wsdbg.sh 20000 game.status
 ```
 
-The launchers place PPSSPP's runtime configuration and memory-stick files under the bundle-local `runtime/` directory unless `PPSSPP_RUNTIME_DIR` is set explicitly.
+Those wrappers remain useful for general research and diagnostics. They are not the authoritative launch path for the identity-locked Task 9E experiment.
 
 ## Save and state boundary
 
-A PSP state is not required to build or validate the debugger bundle.
+A PSP state is not required to build or validate the debugger bundle. A clean ISO boot can still be useful for transport checks, module-load research, early breakpoints, and interactive scenario preparation.
 
-A clean ISO boot is sufficient for:
+For **Task 9E evidence**, however, a `.ppst` state is required. The CLI requires `--state`, hashes the supplied state before capture, and uses the same state identity for both the successful-save and corrupted-copy controls.
 
-- validating the WebSocket transport;
-- proving module load addresses;
-- installing early breakpoints;
-- tracing initialization and title-screen behavior;
-- creating a new profile through the SDL frontend.
+A battery save supplies the explicit savedata slot under test. The corrupted control is prepared as a temporary deterministic copy; the source slot is inventoried and must remain unchanged.
 
-A battery save becomes useful when repeated research needs unlocked modes or career data. It is more portable across PPSSPP builds than a save state.
+Outside Task 9E, a save state is optional acceleration only. For Task 9E, the state is part of the experiment identity and cannot be omitted.
 
-A PPSSPP save state is optional acceleration only. It must be produced by the exact bundled PPSSPP revision, hashed, kept local, and never treated as authoritative without a clean-boot control.
+## Copyright and evidence boundary
 
-## Copyright boundary
+The runtime adapter never downloads game or save material. ISO, `.ppst`, and savedata inputs remain external and local to the researcher.
 
-The workflow never accepts, downloads, reads, or uploads a game image or save. The published artifact contains PPSSPP binaries, upstream assets, debugger documentation, wrapper scripts, dependency diagnostics, and hashes only.
+Normalized Task 9E evidence may record only bounded, attributable facts such as hashes, sizes, typed addresses, selected registers, callback target, breakpoint observations, and the deterministic one-byte mutation description. Raw save bytes, broad RAM dumps, screenshots, audio/video, and raw debugger transcripts remain outside the repository.
