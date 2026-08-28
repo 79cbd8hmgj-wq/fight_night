@@ -108,7 +108,8 @@ def _tree_entries(
     entries: list[dict[str, object]] = []
     for path in sorted(directory.rglob("*"), key=lambda item: item.as_posix().casefold()):
         if path.is_symlink():
-            raise RuntimeError(f"payload tree contains a symlink: {path.relative_to(root).as_posix()}")
+            relative_path = path.relative_to(root).as_posix()
+            raise RuntimeError(f"payload tree contains a symlink: {relative_path}")
         if not path.is_file():
             continue
         relative = PurePosixPath(path.relative_to(root).as_posix())
@@ -164,7 +165,9 @@ def generate_manifest(repository_root: Path) -> dict[str, object]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Generate the reviewed Fight Night runtime allowlist")
+    parser = argparse.ArgumentParser(
+        description="Generate the reviewed Fight Night runtime allowlist"
+    )
     parser.add_argument("repository_root", type=Path)
     parser.add_argument("output", type=Path)
     args = parser.parse_args()
