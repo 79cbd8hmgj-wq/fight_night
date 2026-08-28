@@ -62,10 +62,14 @@ jobs:
 
   payload-manifest-preview:
     if: github.event_name == 'pull_request'
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out repository
+      - name: Check out PR head branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -96,3 +100,19 @@ jobs:
           path: ${{ runner.temp }}/ulus10066-repository-payload.json
           if-no-files-found: error
           retention-days: 1
+      - name: Commit generated allowlist to PR branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          mkdir -p config/runtime
+          cp "$RUNNER_TEMP/ulus10066-repository-payload.json" \
+            config/runtime/ulus10066-repository-payload.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config/runtime/ulus10066-repository-payload.json
+          if git diff --cached --quiet; then
+            echo "Runtime payload manifest already matches generated allowlist."
+          else
+            git commit -m "config: lock Fight Night runtime payload manifest"
+            git push origin "HEAD:$HEAD_REF"
+          fi
