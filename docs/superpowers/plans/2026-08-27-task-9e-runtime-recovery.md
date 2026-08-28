@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reconstruct a deterministic Fight Night Round 3 runtime image from the committed extracted payload, prepare isolated PPSSPP save/state inputs, and run the existing Task 9E successful-versus-corrupted capture without requiring the 1.1 GB retail ISO.
+**Goal:** Reconstruct a deterministic Fight Night Round 3 runtime image from the committed extracted payload, prepare real PPSSPP save/state inputs, and run the existing Task 9E successful-versus-corrupted capture without requiring the 1.1 GB retail ISO.
 
-**Architecture:** Add a Fight Night-specific runtime preparation layer in front of the already-merged Task 9E adapter. A committed allowlist manifest identity-locks repository payload files, `pycdlib==1.21.0` masters a deterministic temporary ISO, a runtime provenance object keeps retail identity separate from reconstructed-image identity, and each Task 9E control launches the verified PPSSPP bundle with its own `--memstick` root. The existing breakpoint plan and save-payload semantics remain unchanged.
+**Architecture:** Add a Fight Night-specific runtime preparation layer in front of the already-merged Task 9E adapter. A committed allowlist manifest identity-locks repository payload files, `pycdlib==1.21.0` masters a deterministic temporary ISO, runtime provenance keeps retail identity separate from reconstructed-image identity, and each Task 9E control launches the verified PPSSPP bundle with its own `--memstick` root. Bootstrap uses the verified bundle's own `PPSSPPSDL` and `bin/Xvfb`, debugger-injected PSP controls, the locked `load_commit_entry` breakpoint, and PPSSPP's normal F2 save-state action; it never synthesizes save bytes or the `.ppst` format.
 
-**Tech Stack:** Python 3.11+, `pycdlib==1.21.0`, standard-library hashing/JSON/subprocess/tempfile, existing `PpssppDebuggerClient`, verified PPSSPP bundle revision `fa50bb1976065c4f8b1b47af227d367fe9771555`, pytest, Ruff, strict mypy.
+**Tech Stack:** Python 3.11+, `pycdlib==1.21.0`, standard-library hashing/JSON/subprocess/tempfile/ctypes, existing `PpssppDebuggerClient`, verified PPSSPP bundle revision `fa50bb1976065c4f8b1b47af227d367fe9771555`, pytest, Ruff, strict mypy.
 
 **Spec:** `docs/superpowers/specs/2026-08-27-task-9e-runtime-recovery-design.md`
 
@@ -22,12 +22,13 @@
 - `analysis/save/checkpoint-9e-runtime-capture-plan.json` and `analysis/save/save-payload-lifetime.json` remain authoritative and unchanged during this implementation.
 - A skipped live test is not runtime evidence.
 - If committed extracted coverage is incomplete, report the exact missing allowlisted paths; do not fall back to requiring the whole retail ISO.
+- Bootstrap must create savedata through Fight Night and `.ppst` through PPSSPP itself. It must never construct either binary format directly.
 
 ## File Structure
 
 - Create `src/fnr3_re/psp_sfo.py` — deterministic PARAM.SFO writer for locked string metadata.
 - Create `src/fnr3_re/runtime_image.py` — payload-manifest parser/verifier, deterministic ISO mastering, and runtime-image report.
-- Create `src/fnr3_re/runtime_bootstrap.py` — isolated memstick construction, controlled input trace execution, bootstrap save/state discovery, and bootstrap identity report.
+- Create `src/fnr3_re/runtime_bootstrap.py` — isolated memstick, Xvfb/PPSSPPSDL bootstrap session, controlled input, F2 savestate trigger, and bootstrap report.
 - Create `config/runtime/ulus10066-repository-payload.json` — reviewed repository payload allowlist and destination mapping.
 - Create `tools/generate_runtime_payload_manifest.py` — one-time deterministic manifest generator used to produce/review the committed allowlist; runtime code never calls it.
 - Modify `src/fnr3_re/ppsspp_debugger.py` — add bounded game-status, timed-run, and controller-input methods needed by bootstrap automation.
@@ -50,7 +51,7 @@
 **Interfaces:**
 - Consumes: `ReferenceRevision` from `fnr3_re.revision`.
 - Produces: `build_runtime_param_sfo(revision: ReferenceRevision) -> bytes`.
-- Produces: `build_param_sfo_strings(values: Mapping[str, str]) -> bytes` for fixture-level tests only.
+- Produces: `build_param_sfo_strings(values: Mapping[str, str]) -> bytes`.
 
 - [ ] **Step 1: Write failing deterministic SFO tests**
 
@@ -84,19 +85,15 @@ def test_runtime_param_sfo_is_byte_deterministic() -> None:
     assert build_runtime_param_sfo(_revision()) == build_runtime_param_sfo(_revision())
 ```
 
-- [ ] **Step 2: Run the new tests and verify RED**
+- [ ] **Step 2: Verify RED**
 
-Run:
-
-```bash
-pytest tests/unit/test_psp_sfo.py -v
-```
+Run `pytest tests/unit/test_psp_sfo.py -v`.
 
 Expected: collection/import failure because `fnr3_re.psp_sfo` does not exist.
 
 - [ ] **Step 3: Implement the production SFO writer**
 
-Use the already-tested fixture format from `tests/support/psp_iso.py`, but place production code in `src/fnr3_re/psp_sfo.py`. Keep insertion order fixed to these four keys:
+Use the already-tested fixture format from `tests/support/psp_iso.py`, but production code lives in `src/fnr3_re/psp_sfo.py`. Keep insertion order fixed:
 
 ```python
 _RUNTIME_KEYS = ("DISC_ID", "DISC_VERSION", "PSP_SYSTEM_VER", "TITLE")
@@ -113,7 +110,7 @@ def build_runtime_param_sfo(revision: ReferenceRevision) -> bytes:
     )
 ```
 
-`build_param_sfo_strings()` must emit PSF version `0x00000101`, string type `0x0204`, 4-byte-aligned data, and reject empty keys, embedded NULs, duplicate keys after normalization, and non-string values.
+`build_param_sfo_strings()` emits PSF version `0x00000101`, string type `0x0204`, 4-byte-aligned data, and rejects empty keys, embedded NULs, and non-string values.
 
 - [ ] **Step 4: Pin the supplied pycdlib version**
 
@@ -126,11 +123,7 @@ dependencies = [
 ]
 ```
 
-Do not copy GPL PPSSPP code into the project; pycdlib is used only as the ISO mastering dependency.
-
 - [ ] **Step 5: Verify Task 1 GREEN**
-
-Run:
 
 ```bash
 pytest tests/unit/test_psp_sfo.py tests/unit/test_revision.py -v
@@ -159,13 +152,11 @@ git commit -m "feat: add deterministic PSP runtime SFO writer"
 - Test: `tests/integration/test_repository_runtime_payload.py`
 
 **Interfaces:**
-- Produces: `RuntimePayloadEntry`.
-- Produces: `RuntimePayloadManifest`.
-- Produces: `load_runtime_payload_manifest(path: Path) -> RuntimePayloadManifest`.
-- Produces: `verify_runtime_payload(repository_root: Path, manifest: RuntimePayloadManifest) -> tuple[VerifiedRuntimePayloadEntry, ...]`.
-- Later tasks consume the verified entries and the manifest SHA-256.
+- Produces `RuntimePayloadEntry`, `RuntimePayloadManifest`, `VerifiedRuntimePayloadEntry`.
+- Produces `load_runtime_payload_manifest(path: Path) -> RuntimePayloadManifest`.
+- Produces `verify_runtime_payload(repository_root: Path, manifest: RuntimePayloadManifest) -> tuple[VerifiedRuntimePayloadEntry, ...]`.
 
-- [ ] **Step 1: Write RED tests for strict manifest parsing**
+- [ ] **Step 1: Write RED manifest tests**
 
 ```python
 from pathlib import Path
@@ -190,21 +181,15 @@ def test_payload_manifest_rejects_duplicate_destinations(tmp_path: Path) -> None
         load_runtime_payload_manifest(path)
 ```
 
-Add companion tests rejecting absolute/traversal paths, symlinks, malformed SHA-1, nonpositive sizes, unknown roles, and revision mismatch.
+Add tests for absolute/traversal paths, malformed SHA-1, nonpositive sizes, unknown roles, duplicate sources, and revision mismatch.
 
-- [ ] **Step 2: Verify the parser tests fail**
+- [ ] **Step 2: Verify RED**
 
-Run:
+Run `pytest tests/unit/test_runtime_image_manifest.py -v`.
 
-```bash
-pytest tests/unit/test_runtime_image_manifest.py -v
-```
+Expected: import/name failure for the new API.
 
-Expected: import/name failure for the new manifest API.
-
-- [ ] **Step 3: Implement manifest data types and verifier**
-
-Use these frozen interfaces:
+- [ ] **Step 3: Implement strict types and verifier**
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -234,23 +219,11 @@ class VerifiedRuntimePayloadEntry:
     role: str
 ```
 
-`verify_runtime_payload()` must:
-
-1. resolve each source under `repository_root`;
-2. reject symlinks and escapes;
-3. require exact size;
-4. compute SHA-256;
-5. require `sha256` where present;
-6. use `git hash-object --no-filters <file>` and require the committed `git_blob_sha1`;
-7. return entries in manifest order.
-
-If `git` cannot be executed, fail closed with `RuntimeImageError`; do not silently skip blob verification.
+`verify_runtime_payload()` resolves sources under `repository_root`, rejects symlinks/escapes, checks size, hashes SHA-256, checks optional committed SHA-256, and runs `git hash-object --no-filters <file>` to require the committed `git_blob_sha1`. Failure to execute `git` is a hard error.
 
 - [ ] **Step 4: Implement the one-time manifest generator**
 
-`tools/generate_runtime_payload_manifest.py` is allowed to inspect the current checkout because its output is reviewed and committed. It must never be imported by production runtime code.
-
-The generator must use an explicit source-root allowlist defined in the tool, not “everything except source files”. It maps:
+`tools/generate_runtime_payload_manifest.py` is not imported by runtime code. It uses an explicit legacy game-root allowlist and maps:
 
 ```text
 BOOT.BIN                    -> PSP_GAME/SYSDIR/BOOT.BIN
@@ -259,7 +232,7 @@ UPDATE/*                    -> PSP_GAME/SYSDIR/UPDATE/*
 approved legacy game roots  -> PSP_GAME/USRDIR/<same relative path>
 ```
 
-The approved legacy roots are derived from the committed extracted-game tree only. The generated JSON includes `source`, `destination`, `size`, `git_blob_sha1`, optional independently-known `sha256`, and `role`.
+It writes sorted-key JSON containing `source`, `destination`, `size`, `git_blob_sha1`, optional independently known `sha256`, and `role`.
 
 Invocation:
 
@@ -267,45 +240,35 @@ Invocation:
 python tools/generate_runtime_payload_manifest.py . config/runtime/ulus10066-repository-payload.json
 ```
 
-- [ ] **Step 5: Generate and review the real manifest**
-
-Run the generator, then explicitly verify:
+- [ ] **Step 5: Generate and review the committed allowlist**
 
 ```bash
 python -m json.tool config/runtime/ulus10066-repository-payload.json >/dev/null
 python - <<'PY'
 import json
 p=json.load(open('config/runtime/ulus10066-repository-payload.json'))
-print(len(p['entries']))
+assert p['revision_id'] == 'ULUS10066-v1.00'
 assert any(e['destination']=='PSP_GAME/SYSDIR/BOOT.BIN' for e in p['entries'])
 assert any(e['destination'].startswith('PSP_GAME/USRDIR/') for e in p['entries'])
 PY
 ```
 
-Review the diff to ensure no `src/`, `tests/`, `docs/`, `.github/`, `analysis/`, `config/`, or `tools/` path is included as game payload except the intended `UPDATE/*` source directory.
+Review the diff and require no `src/`, `tests/`, `docs/`, `.github/`, `analysis/`, `config/`, or `tools/` payload source.
 
-- [ ] **Step 6: Add repository integration validation**
+- [ ] **Step 6: Add repository integration verification**
 
 ```python
-from pathlib import Path
-
-from fnr3_re.runtime_image import load_runtime_payload_manifest, verify_runtime_payload
-
-
 def test_committed_runtime_payload_manifest_matches_repository() -> None:
     root = Path(__file__).resolve().parents[2]
     manifest = load_runtime_payload_manifest(
         root / "config/runtime/ulus10066-repository-payload.json"
     )
     entries = verify_runtime_payload(root, manifest)
-    assert entries
     boot = next(e for e in entries if str(e.destination) == "PSP_GAME/SYSDIR/BOOT.BIN")
     assert boot.sha256 == "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
 ```
 
 - [ ] **Step 7: Verify Task 2 GREEN**
-
-Run:
 
 ```bash
 pytest tests/unit/test_runtime_image_manifest.py tests/integration/test_repository_runtime_payload.py -v
@@ -313,7 +276,7 @@ ruff check src/fnr3_re/runtime_image.py tools/generate_runtime_payload_manifest.
 mypy src/fnr3_re/runtime_image.py tests/unit/test_runtime_image_manifest.py
 ```
 
-Expected: all pass. If the integration test identifies missing extracted files, report those exact source paths and stop Task 2; do not request the retail ISO.
+If missing extracted coverage is found, print the exact missing source paths and stop; do not request the retail ISO.
 
 - [ ] **Step 8: Commit Task 2**
 
@@ -332,40 +295,32 @@ git commit -m "feat: lock Fight Night repository runtime payload"
 - Test: `tests/integration/test_repository_runtime_image.py`
 
 **Interfaces:**
-- Consumes: `RuntimePayloadManifest`, `VerifiedRuntimePayloadEntry`, `ReferenceRevision`.
-- Produces: `RuntimeImageReport`.
-- Produces: `prepare_runtime_image(repository_root: Path, output_root: Path, manifest: RuntimePayloadManifest, revision: ReferenceRevision, *, force: bool = False) -> RuntimeImageReport`.
-- Produces files: `<output_root>/fight-night-runtime.iso` and `<output_root>/runtime-image.json` transactionally.
+- Produces `RuntimeImageFileReport`, `RuntimeImageReport`.
+- Produces `prepare_runtime_image(repository_root: Path, output_root: Path, manifest: RuntimePayloadManifest, revision: ReferenceRevision, *, force: bool = False) -> RuntimeImageReport`.
+- Writes `<output_root>/fight-night-runtime.iso` and `<output_root>/runtime-image.json` as one transactional replacement.
 
-- [ ] **Step 1: Write RED tests for deterministic ISO construction**
+- [ ] **Step 1: Write RED deterministic-build tests**
 
-Create a synthetic repository fixture with BOOT/EBOOT plus two nested USRDIR files and a manifest using real git-blob calculations. Assert two independent output roots produce byte-identical ISO/report identities:
+Create a synthetic repo with BOOT/EBOOT and nested USRDIR files. Build twice:
 
 ```python
 report_a = prepare_runtime_image(repo, tmp_path / "a", manifest, revision)
 report_b = prepare_runtime_image(repo, tmp_path / "b", manifest, revision)
 assert report_a.runtime_iso_sha256 == report_b.runtime_iso_sha256
-assert report_a.payload_manifest_sha256 == report_b.payload_manifest_sha256
 assert (tmp_path / "a/fight-night-runtime.iso").read_bytes() == (
     tmp_path / "b/fight-night-runtime.iso"
 ).read_bytes()
 ```
 
-Also assert `parse_param_sfo(read_iso9660_file(..., "PSP_GAME/PARAM.SFO"))` returns the locked metadata and that `read_iso9660_file(..., "PSP_GAME/SYSDIR/BOOT.BIN")` matches the source bytes.
+Also read `PSP_GAME/PARAM.SFO` and `PSP_GAME/SYSDIR/BOOT.BIN` back through the existing ISO reader.
 
 - [ ] **Step 2: Verify RED**
 
-Run:
+Run `pytest tests/unit/test_runtime_image_builder.py -v`.
 
-```bash
-pytest tests/unit/test_runtime_image_builder.py -v
-```
+Expected: missing runtime builder/report API.
 
-Expected: `prepare_runtime_image` / `RuntimeImageReport` missing.
-
-- [ ] **Step 3: Implement deterministic ISO mastering with pycdlib**
-
-Use `pycdlib.PyCdlib()` with:
+- [ ] **Step 3: Implement deterministic pycdlib mastering**
 
 ```python
 iso.new(
@@ -377,14 +332,14 @@ iso.new(
 )
 ```
 
-Create directories in parent-before-child sorted order. Add `PARAM.SFO` from Task 1 and all verified payload entries in manifest order. Primary ISO paths are uppercase ISO9660 paths with `;1` on files; Joliet paths retain the manifest destination spelling.
+Create directories parent-before-child. Add Task 1 `PARAM.SFO` plus verified payload. Primary ISO paths are uppercase and files receive `;1`; Joliet paths retain manifest spelling.
 
-Because pycdlib 1.21.0 internally calls `time.time()`, isolate timestamp determinism in one private context manager pinned to this dependency version:
+Pin pycdlib's internal timestamps through one private version-guarded context:
 
 ```python
 @contextmanager
 def _fixed_pycdlib_time() -> Iterator[None]:
-    fixed = 946684800.0  # 2000-01-01T00:00:00Z
+    fixed = 946684800.0
     with (
         mock.patch("pycdlib.headervd.time.time", return_value=fixed),
         mock.patch("pycdlib.pycdlib.time.time", return_value=fixed),
@@ -392,11 +347,9 @@ def _fixed_pycdlib_time() -> Iterator[None]:
         yield
 ```
 
-Use it only around `new()`, `add_directory()`, `add_file()` / `add_fp()`, and `write()` calls. The byte-determinism test is the guard against pycdlib internal drift.
+The two-build byte-equality test is the guard against dependency drift.
 
-- [ ] **Step 4: Implement the normalized report**
-
-Use:
+- [ ] **Step 4: Implement runtime report**
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -415,37 +368,23 @@ class RuntimeImageReport:
     files: tuple[RuntimeImageFileReport, ...]
 ```
 
-`source_mode` must be exactly `"repository_runtime_image"`. The report must serialize sorted-key UTF-8 JSON with a terminal newline. It must never set `runtime_iso_sha256` from the revision config; it must hash the actual newly written image.
+`source_mode` is exactly `repository_runtime_image`. Hash the actual ISO after writing; never substitute the retail hash.
 
-- [ ] **Step 5: Make ISO/report installation transactional**
+- [ ] **Step 5: Make output rollback-safe**
 
-Build in a sibling temporary directory, serialize/hash everything first, then replace `<output_root>` only after validation. Reject symlink output components. Without `force`, existing output fails before mutation. With `force`, a failure while preparing the replacement leaves the prior valid output untouched.
+Build in a sibling temporary directory, validate/hash all files and report, then replace the destination. Reject symlink output components. `force=False` refuses an existing destination without mutation.
 
-- [ ] **Step 6: Add repository-level build integration test**
+- [ ] **Step 6: Add repository integration build**
 
-The integration test uses the committed allowlist and builds into `tmp_path`; it must not upload or retain the ISO as a CI artifact. Assert:
-
-```python
-assert report.revision_id == "ULUS10066-v1.00"
-assert report.retail_iso_sha256 == "b11da5afe208d9791eecd9f6a44d0f57946f7d9de165b7d8dd22f5ee740f4ee2"
-assert report.boot_sha256 == "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
-assert report.runtime_iso_sha256 != ""
-assert report.deterministic is True
-```
-
-Do **not** assert that the reconstructed runtime hash equals the retail ISO hash.
+Build the committed payload into `tmp_path`; never upload the ISO as an artifact. Require locked revision/BOOT provenance and a non-empty actual runtime hash. Do not require equality with the retail ISO hash.
 
 - [ ] **Step 7: Verify Task 3 GREEN**
-
-Run:
 
 ```bash
 pytest tests/unit/test_runtime_image_builder.py tests/integration/test_repository_runtime_image.py -v
 ruff check src/fnr3_re/runtime_image.py tests/unit/test_runtime_image_builder.py tests/integration/test_repository_runtime_image.py
 mypy src/fnr3_re/runtime_image.py tests/unit/test_runtime_image_builder.py
 ```
-
-Expected: all pass; two synthetic builds have identical bytes.
 
 - [ ] **Step 8: Commit Task 3**
 
@@ -467,13 +406,10 @@ git commit -m "feat: build deterministic Fight Night runtime image"
 - Create: `tests/unit/test_save_runtime_9e_provenance.py`
 
 **Interfaces:**
-- Produces: `Task9ERuntimeSource`.
-- Extends: `Task9ECaptureInputs` with `runtime_source` and `memstick_root`.
-- Existing retail mode remains expressible with `source_mode="retail_iso"`.
+- Produces `Task9ERuntimeSource`.
+- Extends `Task9ECaptureInputs` with `runtime_source: Task9ERuntimeSource` and `memstick_root: Path`.
 
 - [ ] **Step 1: Write RED provenance tests**
-
-Define expectations:
 
 ```python
 source = Task9ERuntimeSource.repository_image(
@@ -487,21 +423,13 @@ assert source.source_mode == "repository_runtime_image"
 assert source.runtime_iso_sha256 != source.retail_iso_sha256
 ```
 
-Add tests rejecting wrong revision provenance, wrong BOOT hash, malformed hashes, and runtime-image report mismatch.
+Reject wrong revision, wrong BOOT hash, malformed hashes, and report/provenance mismatch.
 
 - [ ] **Step 2: Verify RED**
 
-Run:
-
-```bash
-pytest tests/unit/test_save_runtime_9e_provenance.py -v
-```
-
-Expected: missing `Task9ERuntimeSource`.
+Run `pytest tests/unit/test_save_runtime_9e_provenance.py -v`.
 
 - [ ] **Step 3: Implement runtime-source validation**
-
-Use this public shape:
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -514,34 +442,13 @@ class Task9ERuntimeSource:
     boot_sha256: str
 ```
 
-Provide classmethods `retail_iso(...)` and `repository_image(...)` so call sites cannot invent mode strings.
+Provide `retail_iso(...)` and `repository_image(...)` constructors.
 
-For repository mode, `_preflight()` must replace the current hard requirement `hash(inputs.iso) == revision.iso_sha256` with:
+Repository-mode preflight requires actual ISO hash == runtime provenance hash, retail provenance == revision hash, and BOOT provenance == Task 9E plan BOOT hash. Retail mode keeps the current exact retail size/hash checks.
 
-```python
-actual_iso_sha256 = hash_file(inputs.iso)
-if actual_iso_sha256 != inputs.runtime_source.runtime_iso_sha256:
-    raise Task9EPlanError("runtime ISO hash does not match runtime provenance")
-if inputs.runtime_source.retail_iso_sha256 != inputs.revision.iso_sha256:
-    raise Task9EPlanError("runtime provenance does not match locked retail revision")
-if inputs.runtime_source.boot_sha256 != inputs.plan.boot_sha256:
-    raise Task9EPlanError("runtime provenance BOOT.BIN does not match Task 9E plan")
-```
+- [ ] **Step 4: Route each control to an explicit memstick**
 
-Retail mode retains the old exact size/hash checks.
-
-- [ ] **Step 4: Add explicit memstick root to each capture**
-
-Extend `Task9ECaptureInputs`:
-
-```python
-memstick_root: Path
-runtime_source: Task9ERuntimeSource
-```
-
-Preflight requires a normal non-symlink directory containing `PSP/SAVEDATA/<slot-name>` equal to `savedata_slot.resolve()`. Reject a slot outside the supplied memstick root.
-
-Launch arguments become:
+Preflight requires a non-symlink `memstick_root` containing the supplied slot at `PSP/SAVEDATA/<slot-name>`. Launch:
 
 ```python
 argv = [
@@ -556,23 +463,19 @@ argv = [
 ]
 ```
 
-Update launcher-fake tests to assert the successful and corrupted controls receive different `--memstick` values.
+Tests must prove successful and corrupted controls receive different memstick roots.
 
-- [ ] **Step 5: Record normalized provenance in evidence**
+- [ ] **Step 5: Normalize provenance in evidence**
 
-`RuntimeControlCapture` gains `runtime_source`. Evidence JSON includes source mode, retail provenance hash, runtime ISO hash, payload-manifest hash, and normalized memstick identity such as `savedata_inventory_sha256`; it must not serialize the absolute memstick path.
+`RuntimeControlCapture` gains `runtime_source`. Committed evidence records source mode, retail provenance hash, runtime ISO hash, payload-manifest hash, and save inventory identity, never absolute memstick paths.
 
 - [ ] **Step 6: Verify Task 4 GREEN**
-
-Run:
 
 ```bash
 pytest tests/unit/test_save_runtime_9e_capture.py tests/unit/test_save_runtime_9e_evidence.py tests/unit/test_save_runtime_9e_provenance.py -v
 ruff check src/fnr3_re/save_runtime_9e.py src/fnr3_re/save_runtime_9e_capture.py src/fnr3_re/save_runtime_9e_evidence.py tests/unit/test_save_runtime_9e_capture.py tests/unit/test_save_runtime_9e_evidence.py tests/unit/test_save_runtime_9e_provenance.py
 mypy src/fnr3_re/save_runtime_9e.py src/fnr3_re/save_runtime_9e_capture.py src/fnr3_re/save_runtime_9e_evidence.py tests/unit/test_save_runtime_9e_provenance.py
 ```
-
-Expected: all pass, including explicit per-control routing assertions.
 
 - [ ] **Step 7: Commit Task 4**
 
@@ -583,7 +486,7 @@ git commit -m "fix: route Task 9E controls through isolated memsticks"
 
 ---
 
-### Task 5: PPSSPP Input Automation and Bootstrap Artifacts
+### Task 5: PPSSPP Input Automation and Real Save/State Bootstrap
 
 **Files:**
 - Modify: `src/fnr3_re/ppsspp_debugger.py`
@@ -592,63 +495,47 @@ git commit -m "fix: route Task 9E controls through isolated memsticks"
 - Create: `tests/unit/test_runtime_bootstrap.py`
 
 **Interfaces:**
-- Extends `PpssppDebuggerClient` with:
-  - `game_status() -> dict[str, object]`
-  - `run_until_time(relative_us: int) -> int`
-  - `press_button(button: str, *, duration_frames: int = 1) -> None`
-  - `set_analog(x: float, y: float) -> None`
-- Produces: `BootstrapInputEvent`, `BootstrapInputTrace`, `Task9EBootstrapReport`.
-- Produces: `prepare_task9e_bootstrap(...) -> Task9EBootstrapReport`.
+- Extends `PpssppDebuggerClient` with `game_status()`, `run_until_time(relative_us: int)`, `press_button(button: str, *, duration_frames: int = 1)`, and `set_analog(x: float, y: float)`.
+- Produces `BootstrapInputEvent`, `BootstrapInputTrace`, `Task9EBootstrapReport`.
+- Produces `prepare_task9e_bootstrap(...) -> Task9EBootstrapReport`.
 
-- [ ] **Step 1: Add RED debugger method tests**
-
-Use the existing fake WebSocket server and assert exact request payloads:
+- [ ] **Step 1: Add RED debugger request tests**
 
 ```python
 client.press_button("cross", duration_frames=2)
-# server observes:
-# {"event":"input.buttons.press","button":"cross","duration":2,"ticket":...}
-
+# input.buttons.press button=cross duration=2
 client.set_analog(0.5, -0.25)
-# {"event":"input.analog.send","x":0.5,"y":-0.25,"stick":"left",...}
-
+# input.analog.send x=0.5 y=-0.25 stick=left
 client.run_until_time(500_000)
-# {"event":"cpu.runUntilTime","relativeUs":500000,...}
+# cpu.runUntilTime relativeUs=500000
 ```
 
-Reject unsupported button names and analog values outside `[-1.0, 1.0]` before sending.
+Reject unsupported buttons, nonpositive durations, and analog values outside `[-1.0, 1.0]`.
 
 - [ ] **Step 2: Verify debugger RED**
 
-Run:
+Run `pytest tests/unit/test_ppsspp_debugger.py -v`.
 
-```bash
-pytest tests/unit/test_ppsspp_debugger.py -v
-```
+- [ ] **Step 3: Implement debugger methods**
 
-Expected: method-not-found failures for new API calls.
+`press_button()` uses `request("input.buttons.press", button=button, duration=duration_frames)`. `set_analog()` uses `request("input.analog.send", x=x, y=y, stick="left")`. `run_until_time()` uses `send("cpu.runUntilTime", relativeUs=relative_us)`.
 
-- [ ] **Step 3: Implement the debugger methods minimally**
+- [ ] **Step 4: Write RED bootstrap-session tests**
 
-Button mapping must use debugger-native names: `cross`, `circle`, `triangle`, `square`, `up`, `down`, `left`, `right`, `start`, `select`, `home`, `ltrigger`, `rtrigger`, `vol_up`, `vol_down`.
+Use fake process/X11/debugger adapters. Assert bootstrap:
 
-`press_button()` uses `request("input.buttons.press", ...)`; `set_analog()` uses `request("input.analog.send", x=x, y=y, stick="left")`; `run_until_time()` validates positive microseconds and uses `send("cpu.runUntilTime", relativeUs=relative_us)`.
+1. verifies bundle before launch;
+2. launches bundle `bin/Xvfb` and `PPSSPPSDL`, not an unverified system emulator;
+3. passes `--memstick <bootstrap-root>` and `--config=<bundle>/ppsspp-debug.ini`;
+4. executes an explicit input trace;
+5. sets an execution breakpoint at the plan's `load_commit_entry` (`0x08B44F64` loaded from the plan, not duplicated as a production constant);
+6. waits for that real breakpoint before savestate creation;
+7. discovers a real new Fight Night savedata slot;
+8. triggers PPSSPP's F2 save-state action through the X11 adapter;
+9. discovers exactly one new `.ppst` under the isolated memstick;
+10. writes only hashes/relative runtime-root paths into the bootstrap report.
 
-- [ ] **Step 4: Write RED bootstrap tests with a fake launcher/client**
-
-The bootstrap unit test creates a runtime image fixture, isolated memstick root, and fake debugger. It asserts:
-
-1. bundle verification happens before launch;
-2. launch receives `--memstick <bootstrap-root>`;
-3. the input trace is executed in exact order;
-4. a newly created `PSP/SAVEDATA/<slot>` is discovered only after the trace;
-5. an existing unrelated save slot is ignored;
-6. source/runtime identities appear in `Task9EBootstrapReport`;
-7. no save bytes or absolute paths appear in `to_mapping()`.
-
-- [ ] **Step 5: Implement bootstrap input trace types**
-
-Use:
+- [ ] **Step 5: Implement explicit bootstrap trace data**
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -662,42 +549,74 @@ class BootstrapInputEvent:
 class BootstrapInputTrace:
     trace_id: str
     events: tuple[BootstrapInputEvent, ...]
+    sha256: str
 ```
 
-The trace is explicit data, not hard-coded sleeps scattered through the runner. For each event, use `run_until_time(delay_us)`, wait for `cpu.stepping`, then `press_button()` and resume.
+The trace is loaded from JSON and validated exactly. During live calibration, debugger/screenshot diagnostics may be used locally to discover the Fight Night menu sequence; only the final button/timing trace is committed.
 
-- [ ] **Step 6: Implement bootstrap save discovery first**
+- [ ] **Step 6: Implement a verified SDL bootstrap session**
 
-`prepare_task9e_bootstrap()` launches the reconstructed runtime with a fresh isolated memstick. It snapshots `PSP/SAVEDATA` before input, runs the supplied trace, then requires exactly one new Fight Night slot directory. It records a hash inventory using the existing `hash_savedata_slot()`.
+`runtime_bootstrap.py` starts a free local X display with:
 
-Do not fabricate `DATA.BIN` or any other save file.
+```text
+<bundle>/bin/Xvfb :N -screen 0 960x544x24 -nolisten tcp
+```
 
-- [ ] **Step 7: Support `.ppst` as an explicit bootstrap output, without blocking cold-boot automation**
+Then launches:
 
-The runtime adapter must support two bootstrap completion forms:
+```text
+<bundle>/PPSSPPSDL --config=<bundle>/ppsspp-debug.ini --memstick <memstick-root> <runtime.iso>
+```
+
+Set `DISPLAY=:N` only in the child environment. Use the already verified bundle paths from `DebuggerBundleIdentity`; never resolve system `PPSSPPSDL` or system `Xvfb`.
+
+- [ ] **Step 7: Implement the X11 F2 state trigger with standard-library ctypes**
+
+Define a private adapter interface so unit tests do not need X11:
+
+```python
+class _HostKeyInjector(Protocol):
+    def press_f2(self, display_name: str) -> None: ...
+```
+
+Production `_X11HostKeyInjector` loads `libX11` and `libXtst` with `ctypes.util.find_library`, opens the selected display, finds the mapped top-level window whose title contains `PPSSPP`, focuses it, translates keysym `F2` with `XKeysymToKeycode`, sends key-down/key-up through `XTestFakeKeyEvent`, calls `XFlush`, and closes the display. Missing libraries, display, PPSSPP window, or XTEST call failure is a hard `RuntimeBootstrapError`.
+
+This invokes PPSSPP's own `VIRTKEY_SAVE_STATE` path; it does not know or write the `.ppst` format.
+
+- [ ] **Step 8: Implement save/state discovery and bootstrap report**
+
+Before the input trace, inventory `PSP/SAVEDATA` and `PSP/PPSSPP_STATE`. Run the trace until the locked load-entry breakpoint is reached. Require exactly one intended Fight Night savedata slot. Trigger F2 while the CPU is stopped at the breakpoint. Require exactly one new `.ppst` file and wait until its size/hash is stable across two polls.
+
+Copy/rename local bootstrap artifacts into deterministic runtime-root locations:
+
+```text
+bootstrap/local/memstick/PSP/SAVEDATA/<slot>/...
+bootstrap/local/task9e.ppst
+bootstrap/task-9e-bootstrap.json
+```
+
+The report contains:
 
 ```python
 @dataclass(frozen=True, slots=True)
 class Task9EBootstrapReport:
+    schema_version: int
     revision_id: str
     runtime_iso_sha256: str
+    payload_manifest_sha256: str
     bundle_revision: str
+    bundle_sdl_sha256: str
     savedata_slot_name: str
     savedata_inventory_sha256: str
-    state_sha256: str | None
+    state_sha256: str
     input_trace_sha256: str
+    state_relative_path: str
+    memstick_relative_path: str
 ```
 
-If the verified bundle/session produces a `.ppst`, record and validate it. If no state is produced, retain `state_sha256=None` and allow the later capture path to use the same deterministic cold-boot input trace rather than manufacturing a state file. This preserves semantic correctness while avoiding a false requirement for synthesizing PPSSPP’s private savestate format.
+Relative paths are resolved only under the runtime root and rejected if they traverse or point through symlinks.
 
-The capture implementation added in Task 6 must therefore support either:
-
-- `state: Path` with exact state hash; or
-- `state=None` plus the bootstrap trace needed to reach the load path.
-
-- [ ] **Step 8: Verify Task 5 GREEN**
-
-Run:
+- [ ] **Step 9: Verify Task 5 GREEN**
 
 ```bash
 pytest tests/unit/test_ppsspp_debugger.py tests/unit/test_runtime_bootstrap.py -v
@@ -705,35 +624,29 @@ ruff check src/fnr3_re/ppsspp_debugger.py src/fnr3_re/runtime_bootstrap.py tests
 mypy src/fnr3_re/ppsspp_debugger.py src/fnr3_re/runtime_bootstrap.py tests/unit/test_runtime_bootstrap.py
 ```
 
-Expected: all pass; bootstrap never synthesizes savedata or `.ppst` bytes.
-
-- [ ] **Step 9: Commit Task 5**
+- [ ] **Step 10: Commit Task 5**
 
 ```bash
 git add src/fnr3_re/ppsspp_debugger.py src/fnr3_re/runtime_bootstrap.py tests/unit/test_ppsspp_debugger.py tests/unit/test_runtime_bootstrap.py
-git commit -m "feat: add PPSSPP save bootstrap automation"
+git commit -m "feat: bootstrap real Fight Night save and PPSSPP state"
 ```
 
 ---
 
-### Task 6: Repository-Runtime CLI and State-or-Cold-Boot Capture
+### Task 6: Repository-Runtime CLI and Dual-Control Capture
 
 **Files:**
-- Modify: `src/fnr3_re/save_runtime_9e.py`
-- Modify: `src/fnr3_re/save_runtime_9e_capture.py`
 - Modify: `src/fnr3_re/cli.py`
 - Modify: `tests/unit/test_save_runtime_9e_cli.py`
 - Create: `tests/unit/test_runtime_image_cli.py`
 - Create: `tests/unit/test_runtime_bootstrap_cli.py`
 
 **Interfaces:**
-- CLI: `fnr3-re prepare-fnr3-runtime REPOSITORY_ROOT OUTPUT_ROOT --bundle BUNDLE [--payload-manifest ...] [--force] [--json]`.
-- CLI: `fnr3-re bootstrap-save-9e RUNTIME_ROOT --bundle BUNDLE --trace TRACE.json [--json]`.
-- Existing CLI: `capture-save-9e` accepts either retail ISO inputs or `--runtime-root RUNTIME_ROOT` plus bootstrap artifacts.
+- `fnr3-re prepare-fnr3-runtime REPOSITORY_ROOT OUTPUT_ROOT --bundle BUNDLE [--payload-manifest ...] [--force] [--json]`.
+- `fnr3-re bootstrap-save-9e RUNTIME_ROOT --bundle BUNDLE --trace TRACE.json [--json]`.
+- `capture-save-9e` accepts either the existing retail arguments or `--runtime-root RUNTIME_ROOT --bootstrap-report REPORT`.
 
-- [ ] **Step 1: Write RED parser tests**
-
-Assert:
+- [ ] **Step 1: Write RED parser/dispatch tests**
 
 ```python
 args = build_parser().parse_args([
@@ -742,149 +655,131 @@ args = build_parser().parse_args([
 assert args.command == "prepare-fnr3-runtime"
 ```
 
-For capture, enforce mutually exclusive source modes:
+For `capture-save-9e`, make source modes mutually exclusive:
 
 ```text
 retail mode:       --iso ISO --state STATE --savedata-slot SLOT
 repository mode:   --runtime-root ROOT --bootstrap-report REPORT
 ```
 
-`--state` becomes optional only in repository mode when the bootstrap report has `state_sha256=null` and a trace is present.
-
 - [ ] **Step 2: Verify CLI RED**
-
-Run:
 
 ```bash
 pytest tests/unit/test_runtime_image_cli.py tests/unit/test_runtime_bootstrap_cli.py tests/unit/test_save_runtime_9e_cli.py -v
 ```
 
-Expected: parser/dispatch failures for new commands/options.
-
 - [ ] **Step 3: Implement `prepare-fnr3-runtime`**
-
-Execution order:
 
 ```python
 revision = load_reference_revision(_DEFAULT_REVISION_CONFIG)
 manifest = load_runtime_payload_manifest(args.payload_manifest)
 verify_ppsspp_bundle(args.bundle, profile=FNR3_DEBUGGER_BUNDLE_PROFILE)
-report = prepare_runtime_image(args.repository_root, args.output_root, manifest, revision, force=args.force)
+report = prepare_runtime_image(
+    args.repository_root, args.output_root, manifest, revision, force=args.force
+)
 ```
 
-The bundle check is included because the command prepares a Task 9E runtime root, not a generic ISO mastering utility.
-
-Human output:
-
-```text
-runtime: revision=ULUS10066-v1.00 iso=<sha256> files=<count> root=<output-root>
-```
-
-JSON contains only normalized report fields and the user-selected output root.
+Human output is a one-line revision/runtime-hash/file-count summary; JSON uses the normalized report.
 
 - [ ] **Step 4: Implement `bootstrap-save-9e`**
 
-Load `<runtime-root>/runtime-image.json`, verify the runtime ISO, verify the bundle, load the explicit trace JSON, and call `prepare_task9e_bootstrap()`. Write `<runtime-root>/bootstrap/task-9e-bootstrap.json` transactionally. Raw save/state files stay under `<runtime-root>/bootstrap/local/` and are ignored by Git policy.
+Load and verify `<runtime-root>/runtime-image.json`, bundle, Task 9E plan, and explicit input trace; call `prepare_task9e_bootstrap()`; write `bootstrap/task-9e-bootstrap.json` transactionally. Raw save/state remain under `bootstrap/local/`.
 
-- [ ] **Step 5: Add cold-boot path to `capture_task9e_control()`**
+- [ ] **Step 5: Implement repository-mode `capture-save-9e`**
 
-Change `Task9ECaptureInputs.state` to `Path | None` and add `bootstrap_trace: BootstrapInputTrace | None`.
+Load `runtime-image.json` and bootstrap report. Verify runtime ISO hash, state hash, save inventory, bundle identity, revision, payload-manifest hash, and BOOT hash. Resolve only report-relative paths under the runtime root.
 
-Launch arguments:
-
-```python
-argv = [str(bundle.launcher_path), str(inputs.iso), "--memstick", str(inputs.memstick_root)]
-if inputs.state is not None:
-    argv.extend(["--state", str(inputs.state)])
-argv.extend(["--port", str(bundle.port)])
-```
-
-When `state is None`, connect, install all fixed Task 9E breakpoints **before resuming**, then execute the supplied bootstrap trace until the first expected Task 9E breakpoint stops execution. The fixed breakpoint state machine thereafter remains unchanged.
-
-Reject `state=None` with no bootstrap trace.
-
-- [ ] **Step 6: Build per-control memsticks in the CLI**
-
-Inside the existing temporary directory create:
+Create temporary control roots:
 
 ```text
 successful-memstick/PSP/SAVEDATA/<slot>/...
 corrupted-memstick/PSP/SAVEDATA/<slot>/...
 ```
 
-Copy the source save into both. Apply `prepare_corrupted_savedata()` only to the corrupted copy. Pass each full memstick root plus its contained slot to its corresponding `Task9ECaptureInputs`.
+Copy the bootstrap save into each. Apply `prepare_corrupted_savedata()` only to the corrupted slot. Pass the same verified `.ppst` and runtime ISO to both controls with their distinct `memstick_root` values.
 
-- [ ] **Step 7: Verify CLI output/raw-artifact exclusion**
+- [ ] **Step 6: Preserve safe output contracts**
 
-Extend the existing checks so no emitted JSON/evidence contains `DATA.BIN`, `data_hex`, `raw_memory`, `transcript`, `.ppst` bytes, or absolute memstick paths.
+Extend existing tests so CLI/evidence never emit `DATA.BIN`, `data_hex`, `raw_memory`, `transcript`, `.ppst` contents, or absolute memstick/state paths. Error output remains one safe line and exit code 1.
 
-- [ ] **Step 8: Verify Task 6 GREEN**
-
-Run:
+- [ ] **Step 7: Verify Task 6 GREEN**
 
 ```bash
 pytest tests/unit/test_runtime_image_cli.py tests/unit/test_runtime_bootstrap_cli.py tests/unit/test_save_runtime_9e_cli.py tests/unit/test_save_runtime_9e_capture.py tests/unit/test_save_runtime_9e_evidence.py -v
-ruff check src/fnr3_re/cli.py src/fnr3_re/save_runtime_9e.py src/fnr3_re/save_runtime_9e_capture.py tests/unit/test_runtime_image_cli.py tests/unit/test_runtime_bootstrap_cli.py tests/unit/test_save_runtime_9e_cli.py
-mypy src/fnr3_re/cli.py src/fnr3_re/save_runtime_9e.py src/fnr3_re/save_runtime_9e_capture.py tests/unit/test_runtime_image_cli.py tests/unit/test_runtime_bootstrap_cli.py tests/unit/test_save_runtime_9e_cli.py
+ruff check src/fnr3_re/cli.py tests/unit/test_runtime_image_cli.py tests/unit/test_runtime_bootstrap_cli.py tests/unit/test_save_runtime_9e_cli.py
+mypy src/fnr3_re/cli.py tests/unit/test_runtime_image_cli.py tests/unit/test_runtime_bootstrap_cli.py tests/unit/test_save_runtime_9e_cli.py
 ```
 
-Expected: all pass.
-
-- [ ] **Step 9: Commit Task 6**
+- [ ] **Step 8: Commit Task 6**
 
 ```bash
-git add src/fnr3_re/cli.py src/fnr3_re/save_runtime_9e.py src/fnr3_re/save_runtime_9e_capture.py tests/unit/test_runtime_image_cli.py tests/unit/test_runtime_bootstrap_cli.py tests/unit/test_save_runtime_9e_cli.py tests/unit/test_save_runtime_9e_capture.py tests/unit/test_save_runtime_9e_evidence.py
+git add src/fnr3_re/cli.py tests/unit/test_runtime_image_cli.py tests/unit/test_runtime_bootstrap_cli.py tests/unit/test_save_runtime_9e_cli.py
 git commit -m "feat: capture Task 9E from reconstructed runtime"
 ```
 
 ---
 
-### Task 7: Live Gate, Documentation, Full Verification, and PR
+### Task 7: Live Calibration, Live Gate, Documentation, and Merge
 
 **Files:**
+- Create after observed calibration: `config/runtime/task9e-bootstrap-trace.json`
 - Modify: `tests/integration/test_task9e_live_capture.py`
 - Modify: `docs/architecture/ppsspp-capture-harness.md`
 - Modify: `docs/architecture/rebuild-pipeline.md`
 - Modify: `README.md`
-- Modify only if required by accurate status: `analysis/save/task-status.json`
+- Modify only after actual semantic evidence: `analysis/save/task-status.json`
 
 **Interfaces:**
-- Live gate supports repository-runtime mode without `FNR3_REFERENCE_ISO`.
-- No semantic Task 9E status is promoted until a real successful/corrupted capture completes and its normalized evidence is reviewed.
+- Live repository-runtime mode no longer requires `FNR3_REFERENCE_ISO`.
+- Task 9E semantic status is promoted only after a real successful/corrupted capture completes and normalized evidence is reviewed.
 
-- [ ] **Step 1: Update the environment-gated live integration test**
+- [ ] **Step 1: Run local runtime-image boot smoke test with the verified bundle**
 
-Repository-runtime live mode requires:
+Build the repository runtime into temporary storage, launch through Task 5 bootstrap session, and require `game.start` / a non-null game path from the debugger. Confirm the locked BOOT hash before launch.
 
-```text
-FNR3_PPSSPP_BUNDLE
+If the game cannot boot, preserve local logs and identify the exact missing/misplaced payload or generated metadata issue. Do not replace the reconstructed image with an unverified ISO.
+
+- [ ] **Step 2: Calibrate the Fight Night input trace against the real game**
+
+Use the debugger's input methods plus local screenshots/logs only as diagnostics. Record the smallest deterministic PSP-button sequence that:
+
+1. clears startup/autosave prompts;
+2. reaches a real path that creates a Fight Night save;
+3. reaches and triggers the game's load path;
+4. stops at the plan-loaded `load_commit_entry` breakpoint.
+
+Write only the observed button/delay sequence to `config/runtime/task9e-bootstrap-trace.json`; do not commit screenshots, saves, or transcripts. Re-run the trace from a fresh memstick and require it to reach the same breakpoint before accepting it.
+
+- [ ] **Step 3: Run bootstrap and require real savedata + `.ppst`**
+
+Run:
+
+```bash
+fnr3-re bootstrap-save-9e /local/fnr3-runtime \
+  --bundle /local/ppsspp-bundle \
+  --trace config/runtime/task9e-bootstrap-trace.json
 ```
 
-and the committed repository payload. It builds a temporary runtime image. If no identity-matched bootstrap save exists, the test must skip with the explicit reason `Task 9E bootstrap save/state not provisioned` rather than failing or pretending evidence exists.
+Require a valid Fight Night savedata inventory and non-empty state hash. Verify source memstick files are unchanged after bootstrap finalization.
 
-A separately provisioned bootstrap may be supplied with:
+- [ ] **Step 4: Run the actual Task 9E dual-control capture**
 
-```text
-FNR3_TASK9E_BOOTSTRAP_ROOT
+```bash
+fnr3-re capture-save-9e /local/fnr3-workspace \
+  --bundle /local/ppsspp-bundle \
+  --runtime-root /local/fnr3-runtime \
+  --bootstrap-report /local/fnr3-runtime/bootstrap/task-9e-bootstrap.json
 ```
 
-Retail mode with `FNR3_REFERENCE_ISO` remains supported for backwards compatibility.
+Require both controls valid, fixed breakpoint sequence complete, dynamic callback observed, and successful/corrupted memstick identities distinct. Review `first_divergence` before making any semantic promotion.
 
-- [ ] **Step 2: Add a repository-runtime smoke gate**
+- [ ] **Step 5: Update the environment-gated integration test**
 
-Before any semantic capture, verify:
+Repository mode requires `FNR3_PPSSPP_BUNDLE`; `FNR3_TASK9E_RUNTIME_ROOT` may point to an already prepared runtime. If bootstrap/runtime evidence is not provisioned, skip with an explicit reason. Retail `FNR3_REFERENCE_ISO` mode remains supported.
 
-1. runtime image builds;
-2. `PSP_GAME/PARAM.SFO` parses to locked identity;
-3. `PSP_GAME/SYSDIR/BOOT.BIN` hashes to the locked BOOT hash;
-4. PPSSPP bundle verification passes;
-5. runtime artifacts are under temporary/output storage, not tracked paths.
+- [ ] **Step 6: Update documentation**
 
-This gate may pass without claiming a save/load callback was observed.
-
-- [ ] **Step 3: Update documentation to distinguish three identities**
-
-Document separately:
+Document the three identities separately:
 
 ```text
 retail provenance identity
@@ -892,19 +787,17 @@ repository payload-manifest identity
 actual reconstructed runtime-ISO identity
 ```
 
-Update Task 9E examples:
+Document:
 
 ```bash
 fnr3-re prepare-fnr3-runtime . /local/fnr3-runtime --bundle /local/ppsspp-bundle
 fnr3-re bootstrap-save-9e /local/fnr3-runtime --bundle /local/ppsspp-bundle --trace config/runtime/task9e-bootstrap-trace.json
-fnr3-re capture-save-9e /local/workspace --bundle /local/ppsspp-bundle --runtime-root /local/fnr3-runtime --bootstrap-report /local/fnr3-runtime/bootstrap/task-9e-bootstrap.json
+fnr3-re capture-save-9e /local/fnr3-workspace --bundle /local/ppsspp-bundle --runtime-root /local/fnr3-runtime --bootstrap-report /local/fnr3-runtime/bootstrap/task-9e-bootstrap.json
 ```
 
-State explicitly that a reconstructed runtime image does not equal the retail ISO, and that this mode is valid for Task 9E because the experiment observes the locked executable/save path rather than UMD sector placement.
+State explicitly that reconstructed runtime hash != retail ISO identity and that no game/save/state binaries are added by this work.
 
-- [ ] **Step 4: Run focused full tests**
-
-Run:
+- [ ] **Step 7: Run full verification**
 
 ```bash
 pytest -q
@@ -912,51 +805,40 @@ ruff check src tests tools
 mypy
 ```
 
-Expected: full suite passes; the live semantic test is skipped unless real bootstrap/runtime inputs are present.
-
-- [ ] **Step 5: Verify immutable Task 9E plan artifacts**
-
-Compare branch against `main` and require no diff in:
+Also require no diff in:
 
 ```text
 analysis/save/checkpoint-9e-runtime-capture-plan.json
 analysis/save/save-payload-lifetime.json
 ```
 
-Their `main` blob SHAs before this work are:
+Their pre-work `main` blob SHAs are:
 
 ```text
 4c5604cf8bfe72d0eae226b3209ade19bf37527f
 98d18eec570b7b3b3e953e7a5e653bcc8f35419a
 ```
 
-- [ ] **Step 6: Audit tracked files for forbidden runtime artifacts**
+- [ ] **Step 8: Audit tracked artifacts**
 
-Require no newly tracked files matching:
+Require no newly tracked `*.iso`, `*.cso`, `*.ppst`, `PSP/SAVEDATA/**`, RAM dumps, screenshots, or raw runtime logs. The payload manifest may reference historical game files already present on `main`, but this branch adds no new game payload binaries.
 
-```text
-*.iso
-*.cso
-*.ppst
-PSP/SAVEDATA/**
-*.dmp
-*.raw
-*.png
-*.jpg
-```
+- [ ] **Step 9: Update Task 9 status only if live evidence justifies it**
 
-unless an image is an existing intentional documentation/test fixture already present on `main`. The new payload manifest may describe copyrighted files already committed historically, but this branch must not add new game payload binaries.
+If the real dual-control capture resolves the follow-up callback/validation/error route, update `analysis/save/task-status.json` and related save evidence conservatively from the normalized observations. If live capture does not complete or is ambiguous, leave the existing 9E evidence gate unchanged.
 
-- [ ] **Step 7: Commit final docs/tests**
+- [ ] **Step 10: Commit final trace/docs/tests/evidence**
+
+Stage only files that actually changed. Example when live evidence succeeds:
 
 ```bash
-git add tests/integration/test_task9e_live_capture.py docs/architecture/ppsspp-capture-harness.md docs/architecture/rebuild-pipeline.md README.md analysis/save/task-status.json
-git commit -m "docs: document reconstructed Task 9E runtime workflow"
+git add config/runtime/task9e-bootstrap-trace.json tests/integration/test_task9e_live_capture.py docs/architecture/ppsspp-capture-harness.md docs/architecture/rebuild-pipeline.md README.md analysis/save/task-status.json analysis/save/
+git commit -m "docs: complete reconstructed Task 9E runtime workflow"
 ```
 
-Do not stage `analysis/save/task-status.json` if no live semantic evidence changed its contents.
+If semantic status did not change, omit `analysis/save/task-status.json` and any unchanged analysis artifacts.
 
-- [ ] **Step 8: Open PR and run exact-head verification**
+- [ ] **Step 11: Open PR and exact-head verify**
 
 PR title:
 
@@ -964,29 +846,21 @@ PR title:
 Task 9E: recover runtime from extracted Fight Night payload
 ```
 
-PR body must explicitly state:
+PR body states: no retail ISO required in repository mode; no new game binaries added; retail/runtime identities remain distinct; `--memstick` routing is fixed; real save/state are produced by Fight Night/PPSSPP; and live semantic evidence is claimed only if Step 4 actually succeeded.
 
-- no retail ISO is required for repository-runtime mode;
-- no new copyrighted runtime binaries are added by this branch;
-- retail ISO identity and reconstructed runtime identity remain distinct;
-- per-control `--memstick` routing bug is fixed;
-- bootstrap/cold-boot support does not itself constitute semantic evidence;
-- Task 9E semantic status remains blocked until a real successful/corrupted capture completes.
+- [ ] **Step 12: Merge only after gates**
 
-- [ ] **Step 9: Merge only after verification**
-
-Require exact PR-head CI success for pytest, Ruff, strict mypy, and PSP-analysis integration; audit review threads/comments; merge the exact verified head; then require post-merge `main` CI success before declaring runtime recovery implemented.
+Require exact PR-head pytest/Ruff/strict-mypy/PSP-analysis success, review-thread audit, exact-head merge, and post-merge `main` CI success.
 
 ---
 
-## Implementation Order and Stop Conditions
-
-Execute Tasks 1–7 in order. The following are hard stop conditions, not reasons to improvise:
+## Stop Conditions
 
 1. **Payload coverage failure:** report exact missing allowlisted source paths and stop before ISO mastering.
-2. **Determinism failure:** if two identical synthetic builds differ, fix timestamp/layout determinism before continuing.
+2. **Determinism failure:** fix identical-input ISO byte instability before PPSSPP work.
 3. **BOOT mismatch:** stop immediately; do not run PPSSPP.
-4. **Bundle mismatch:** stop immediately; do not substitute a different PPSSPP build.
-5. **Memstick-routing ambiguity:** do not interpret successful/corrupted divergence until each control is proven to use its own `--memstick` root.
-6. **Bootstrap failure:** preserve diagnostics locally and report the exact stage reached; do not fabricate save/state artifacts.
-7. **No live evidence:** keep `analysis/save/task-status.json` at the 9E evidence gate even if all runtime-recovery code and CI are green.
+4. **Bundle mismatch:** stop immediately; do not substitute a different emulator build.
+5. **Bootstrap input uncertainty:** keep diagnostics local and calibrate against observed game behavior; do not guess a committed trace.
+6. **Savestate trigger failure:** fix Xvfb/X11/PPSSPP F2 delivery; do not synthesize `.ppst`.
+7. **Memstick-routing ambiguity:** do not interpret control divergence until distinct `--memstick` roots are proven.
+8. **No live evidence:** keep Task 9E semantic status blocked even when runtime-recovery code is green.
