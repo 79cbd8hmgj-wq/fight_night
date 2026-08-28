@@ -35,12 +35,14 @@ def _paths(tmp_path: Path) -> dict[str, Path]:
         "iso": tmp_path / "game.iso",
         "state": tmp_path / "load.ppst",
         "slot": tmp_path / "PSP" / "SAVEDATA" / "ULUS10066SLOT",
+        "runtime": tmp_path / "runtime",
+        "bootstrap": tmp_path / "runtime" / "bootstrap" / "task-9e-bootstrap.json",
         "plan": tmp_path / "custom-plan.json",
         "payload": tmp_path / "custom-payload.json",
     }
 
 
-def test_capture_save_9e_cli_forwards_exact_paths_and_json(
+def test_capture_save_9e_cli_forwards_exact_retail_paths_and_json(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -86,11 +88,13 @@ def test_capture_save_9e_cli_forwards_exact_paths_and_json(
 
     assert result == 0
     assert observed == {
+        "bootstrap_report": None,
         "bundle": paths["bundle"],
         "capture_id": "capture-001",
         "iso": paths["iso"],
         "payload_lifetime_path": paths["payload"],
         "plan_path": paths["plan"],
+        "runtime_root": None,
         "savedata_slot": paths["slot"],
         "state": paths["state"],
         "workspace": paths["workspace"],
@@ -105,6 +109,49 @@ def test_capture_save_9e_cli_forwards_exact_paths_and_json(
         "first_divergence": "memory_hash:before_followup_pointer_load:destination_body",
         "valid": True,
     }
+
+
+def test_capture_save_9e_repository_mode_forwards_runtime_and_bootstrap(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    paths = _paths(tmp_path)
+    observed: dict[str, object] = {}
+
+    def fake_execute(**kwargs: object) -> _FakeSummary:
+        observed.update(kwargs)
+        return _FakeSummary(
+            valid=True,
+            capture_id="capture-repo",
+            callback_target=0x08B488DC,
+            first_divergence=None,
+            evidence_path=paths["workspace"]
+            / "manifests"
+            / "task-9e-runtime-evidence.json",
+        )
+
+    monkeypatch.setattr(cli, "_execute_capture_save_9e", fake_execute, raising=False)
+    result = cli.main(
+        [
+            "capture-save-9e",
+            str(paths["workspace"]),
+            "--bundle",
+            str(paths["bundle"]),
+            "--runtime-root",
+            str(paths["runtime"]),
+            "--bootstrap-report",
+            str(paths["bootstrap"]),
+            "--capture-id",
+            "capture-repo",
+        ]
+    )
+
+    assert result == 0
+    assert observed["runtime_root"] == paths["runtime"]
+    assert observed["bootstrap_report"] == paths["bootstrap"]
+    assert observed["iso"] is None
+    assert observed["state"] is None
+    assert observed["savedata_slot"] is None
 
 
 def test_capture_save_9e_cli_uses_committed_defaults_and_human_summary(
@@ -166,7 +213,41 @@ def test_capture_save_9e_cli_uses_committed_defaults_and_human_summary(
         assert forbidden not in output
 
 
-def test_capture_save_9e_requires_state_and_returns_nonzero_on_capture_error(
+def test_capture_save_9e_source_modes_are_complete_and_mutually_exclusive(
+    tmp_path: Path,
+) -> None:
+    paths = _paths(tmp_path)
+    base = [
+        "capture-save-9e",
+        str(paths["workspace"]),
+        "--bundle",
+        str(paths["bundle"]),
+    ]
+
+    invalid_cases = (
+        [*base, "--iso", str(paths["iso"]), "--savedata-slot", str(paths["slot"])],
+        [*base, "--runtime-root", str(paths["runtime"])],
+        [
+            *base,
+            "--runtime-root",
+            str(paths["runtime"]),
+            "--bootstrap-report",
+            str(paths["bootstrap"]),
+            "--iso",
+            str(paths["iso"]),
+            "--state",
+            str(paths["state"]),
+            "--savedata-slot",
+            str(paths["slot"]),
+        ],
+    )
+    for argv in invalid_cases:
+        with pytest.raises(SystemExit) as exc_info:
+            cli.main(argv)
+        assert exc_info.value.code == 2
+
+
+def test_capture_save_9e_returns_nonzero_on_capture_error(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -179,18 +260,17 @@ def test_capture_save_9e_requires_state_and_returns_nonzero_on_capture_error(
         str(paths["bundle"]),
         "--iso",
         str(paths["iso"]),
+        "--state",
+        str(paths["state"]),
         "--savedata-slot",
         str(paths["slot"]),
     ]
-    with pytest.raises(SystemExit) as exc_info:
-        cli.main(base)
-    assert exc_info.value.code == 2
 
     def fail_execute(**_kwargs: object) -> _FakeSummary:
         raise Task9EPlanError("capture verification failed")
 
     monkeypatch.setattr(cli, "_execute_capture_save_9e", fail_execute, raising=False)
-    result = cli.main([*base, "--state", str(paths["state"])])
+    result = cli.main(base)
 
     streams = capsys.readouterr()
     assert result == 1

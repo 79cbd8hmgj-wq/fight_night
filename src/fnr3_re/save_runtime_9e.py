@@ -15,6 +15,8 @@ from .evidence import Address, AddressType
 _LOCKED_REVISION = "ULUS10066-v1.00"
 _LOCKED_BOOT_SHA256 = "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
 _LOCKED_MAPPING_RULE = "ppsspp_absolute = 0x08804000 + elf_virtual"
+_RETAIL_SOURCE_MODE = "retail_iso"
+_REPOSITORY_SOURCE_MODE = "repository_runtime_image"
 _REQUIRED_BREAKPOINT_IDS = (
     "load_commit_entry",
     "before_body_copy",
@@ -36,6 +38,88 @@ _HASH_CHUNK_SIZE = 1024 * 1024
 
 class Task9EPlanError(ValueError):
     """Raised when committed Task 9E evidence does not match the locked contract."""
+
+
+@dataclass(frozen=True, slots=True)
+class Task9ERuntimeSource:
+    source_mode: str
+    revision_id: str
+    retail_iso_sha256: str
+    runtime_iso_sha256: str
+    payload_manifest_sha256: str | None
+    boot_sha256: str
+
+    def __post_init__(self) -> None:
+        if self.revision_id != _LOCKED_REVISION:
+            raise Task9EPlanError("runtime provenance revision does not match the Task 9E lock")
+        for label, value in (
+            ("retail ISO", self.retail_iso_sha256),
+            ("runtime ISO", self.runtime_iso_sha256),
+            ("BOOT", self.boot_sha256),
+        ):
+            if _SHA256_RE.fullmatch(value) is None:
+                raise Task9EPlanError(f"runtime provenance {label} must be a lowercase SHA-256")
+        if self.boot_sha256 != _LOCKED_BOOT_SHA256:
+            raise Task9EPlanError("runtime provenance BOOT hash does not match the Task 9E lock")
+
+        if self.source_mode == _RETAIL_SOURCE_MODE:
+            if self.runtime_iso_sha256 != self.retail_iso_sha256:
+                raise Task9EPlanError("retail runtime provenance must use the retail ISO hash")
+            if self.payload_manifest_sha256 is not None:
+                raise Task9EPlanError(
+                    "retail runtime provenance must not declare a payload manifest"
+                )
+            return
+
+        if self.source_mode != _REPOSITORY_SOURCE_MODE:
+            raise Task9EPlanError(f"unsupported Task 9E runtime source mode: {self.source_mode}")
+        if self.runtime_iso_sha256 == self.retail_iso_sha256:
+            raise Task9EPlanError(
+                "repository runtime ISO identity must remain distinct from retail"
+            )
+        if (
+            self.payload_manifest_sha256 is None
+            or _SHA256_RE.fullmatch(self.payload_manifest_sha256) is None
+        ):
+            raise Task9EPlanError(
+                "repository runtime payload manifest must be a lowercase SHA-256"
+            )
+
+    @classmethod
+    def retail_iso(
+        cls,
+        *,
+        revision_id: str,
+        retail_iso_sha256: str,
+        boot_sha256: str,
+    ) -> Task9ERuntimeSource:
+        return cls(
+            source_mode=_RETAIL_SOURCE_MODE,
+            revision_id=revision_id,
+            retail_iso_sha256=retail_iso_sha256,
+            runtime_iso_sha256=retail_iso_sha256,
+            payload_manifest_sha256=None,
+            boot_sha256=boot_sha256,
+        )
+
+    @classmethod
+    def repository_image(
+        cls,
+        *,
+        revision_id: str,
+        retail_iso_sha256: str,
+        runtime_iso_sha256: str,
+        payload_manifest_sha256: str,
+        boot_sha256: str,
+    ) -> Task9ERuntimeSource:
+        return cls(
+            source_mode=_REPOSITORY_SOURCE_MODE,
+            revision_id=revision_id,
+            retail_iso_sha256=retail_iso_sha256,
+            runtime_iso_sha256=runtime_iso_sha256,
+            payload_manifest_sha256=payload_manifest_sha256,
+            boot_sha256=boot_sha256,
+        )
 
 
 @dataclass(frozen=True, slots=True)

@@ -7,7 +7,9 @@ name = "fnr3-re"
 version = "0.1.0"
 description = "Evidence-first Fight Night Round 3 PSP reverse-engineering tools"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+  "pycdlib @ git+https://github.com/clalancette/pycdlib.git@5cd8f57225a844d922b8a87f3f444fb79117c2b6",
+]
 
 [project.optional-dependencies]
 dev = [

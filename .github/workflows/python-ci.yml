@@ -25,7 +25,7 @@ jobs:
       - name: Run tests
         run: python -m pytest
       - name: Run Ruff
-        run: python -m ruff check config src tests
+        run: python -m ruff check config src tests tools
       - name: Run mypy
         run: python -m mypy src tests/unit
 
