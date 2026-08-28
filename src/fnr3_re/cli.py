@@ -345,7 +345,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if args.command == "prepare-fnr3-runtime":
         try:
-            report = _execute_prepare_fnr3_runtime(
+            runtime_report = _execute_prepare_fnr3_runtime(
                 repository_root=args.repository_root,
                 output_root=args.output_root,
                 bundle=args.bundle,
@@ -356,17 +356,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             _print_command_error("prepare-fnr3-runtime", exc)
             return 1
         if args.as_json:
-            print(report.to_json(), end="")
+            print(runtime_report.to_json(), end="")
         else:
             print(
                 "runtime: "
-                f"revision={report.revision_id} "
-                f"sha256={report.runtime_iso_sha256} files={len(report.files)}"
+                f"revision={runtime_report.revision_id} "
+                f"sha256={runtime_report.runtime_iso_sha256} "
+                f"files={len(runtime_report.files)}"
             )
         return 0
     if args.command == "bootstrap-save-9e":
         try:
-            report = _execute_bootstrap_save_9e(
+            bootstrap_result = _execute_bootstrap_save_9e(
                 runtime_root=args.runtime_root,
                 bundle=args.bundle,
                 trace_path=args.trace,
@@ -375,12 +376,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             _print_command_error("bootstrap-save-9e", exc)
             return 1
         if args.as_json:
-            print(report.to_json(), end="")
+            print(bootstrap_result.to_json(), end="")
         else:
             print(
                 "task9e-bootstrap: "
-                f"revision={report.revision_id} "
-                f"save={report.savedata_slot_name} state={report.state_sha256}"
+                f"revision={bootstrap_result.revision_id} "
+                f"save={bootstrap_result.savedata_slot_name} "
+                f"state={bootstrap_result.state_sha256}"
             )
         return 0
     if args.command == "capture-save-9e":
@@ -652,7 +654,8 @@ def _execute_capture_save_9e(
             capture_root,
         )
 
-    callback_target = evidence.successful.callback.target.value
+    callback = evidence.successful.callback
+    callback_target = None if callback is None else callback.target.value
     return Task9ECliSummary(
         valid=evidence.successful.valid and evidence.corrupted.valid,
         capture_id=resolved_capture_id,
