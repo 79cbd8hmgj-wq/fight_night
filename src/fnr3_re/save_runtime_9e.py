@@ -66,13 +66,17 @@ class Task9ERuntimeSource:
             if self.runtime_iso_sha256 != self.retail_iso_sha256:
                 raise Task9EPlanError("retail runtime provenance must use the retail ISO hash")
             if self.payload_manifest_sha256 is not None:
-                raise Task9EPlanError("retail runtime provenance must not declare a payload manifest")
+                raise Task9EPlanError(
+                    "retail runtime provenance must not declare a payload manifest"
+                )
             return
 
         if self.source_mode != _REPOSITORY_SOURCE_MODE:
             raise Task9EPlanError(f"unsupported Task 9E runtime source mode: {self.source_mode}")
         if self.runtime_iso_sha256 == self.retail_iso_sha256:
-            raise Task9EPlanError("repository runtime ISO identity must remain distinct from retail")
+            raise Task9EPlanError(
+                "repository runtime ISO identity must remain distinct from retail"
+            )
         if (
             self.payload_manifest_sha256 is None
             or _SHA256_RE.fullmatch(self.payload_manifest_sha256) is None
