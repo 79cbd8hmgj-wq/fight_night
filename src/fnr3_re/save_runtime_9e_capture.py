@@ -21,6 +21,7 @@ from .save_runtime_9e import (
     Task9ELiveGlobal,
     Task9EPlan,
     Task9EPlanError,
+    Task9ERuntimeSource,
     hash_savedata_slot,
 )
 
@@ -100,6 +101,7 @@ class RuntimeControlCapture:
     bundle: DebuggerBundleIdentity
     observations: tuple[RuntimeBreakpointObservation, ...]
     callback: RuntimeCallbackObservation | None
+    runtime_source: Task9ERuntimeSource | None = None
     diagnostics: tuple[str, ...] = ()
 
 
@@ -115,6 +117,8 @@ class Task9ECaptureInputs:
     revision: ReferenceRevision
     control_id: str
     bundle_profile: DebuggerBundleProfile
+    runtime_source: Task9ERuntimeSource | None = None
+    memstick_root: Path | None = None
     timeout_seconds: float = 3.0
 
 
@@ -125,9 +129,45 @@ def _validate_input_file(path: Path, label: str) -> None:
         raise Task9EPlanError(f"{label} file does not exist")
 
 
+def _validate_memstick(inputs: Task9ECaptureInputs) -> Path:
+    memstick_root = inputs.memstick_root
+    if memstick_root is None:
+        raise Task9EPlanError("capture requires an explicit memstick root")
+    if memstick_root.is_symlink():
+        raise Task9EPlanError("memstick root must not be a symlink")
+    if not memstick_root.exists() or not memstick_root.is_dir():
+        raise Task9EPlanError("memstick root directory does not exist")
+
+    expected_slot = memstick_root / "PSP" / "SAVEDATA" / inputs.savedata_slot.name
+    for component in (
+        memstick_root / "PSP",
+        memstick_root / "PSP" / "SAVEDATA",
+        expected_slot,
+    ):
+        if component.is_symlink():
+            raise Task9EPlanError("memstick savedata path must not contain symlinks")
+    try:
+        expected_resolved = expected_slot.resolve(strict=True)
+        supplied_resolved = inputs.savedata_slot.resolve(strict=True)
+    except OSError as exc:
+        raise Task9EPlanError("memstick savedata slot does not exist") from exc
+    if expected_resolved != supplied_resolved:
+        raise Task9EPlanError("supplied savedata slot is not inside the explicit memstick root")
+    if not expected_resolved.is_dir():
+        raise Task9EPlanError("memstick savedata slot must be a directory")
+    return memstick_root
+
+
 def _preflight(
     inputs: Task9ECaptureInputs,
-) -> tuple[str, str, tuple[SavedataInventoryEntry, ...], DebuggerBundleIdentity]:
+) -> tuple[
+    str,
+    str,
+    tuple[SavedataInventoryEntry, ...],
+    DebuggerBundleIdentity,
+    Task9ERuntimeSource,
+    Path,
+]:
     if inputs.timeout_seconds <= 0:
         raise Task9EPlanError("capture timeout must be positive")
     if inputs.control_id not in inputs.plan.required_control_ids:
@@ -138,6 +178,16 @@ def _preflight(
         raise Task9EPlanError("payload lifetime revision does not match the Task 9E plan")
     if inputs.payload_contract.boot_sha256 != inputs.plan.boot_sha256:
         raise Task9EPlanError("payload lifetime BOOT.BIN hash does not match the Task 9E plan")
+
+    runtime_source = inputs.runtime_source
+    if runtime_source is None:
+        raise Task9EPlanError("capture requires explicit runtime provenance")
+    if runtime_source.revision_id != inputs.revision.revision_id:
+        raise Task9EPlanError("runtime provenance revision does not match capture revision")
+    if runtime_source.retail_iso_sha256 != inputs.revision.iso_sha256:
+        raise Task9EPlanError("runtime provenance retail ISO hash does not match capture revision")
+    if runtime_source.boot_sha256 != inputs.plan.boot_sha256:
+        raise Task9EPlanError("runtime provenance BOOT hash does not match the Task 9E plan")
 
     workspace_result = verify_workspace(inputs.workspace)
     if not workspace_result.valid:
@@ -152,17 +202,28 @@ def _preflight(
         raise Task9EPlanError("workspace ISO hash does not match capture revision")
 
     _validate_input_file(inputs.iso, "ISO")
-    if inputs.iso.stat().st_size != inputs.revision.iso_size:
-        raise Task9EPlanError("ISO size does not match the locked revision")
     iso_sha256 = hash_file(inputs.iso)
-    if iso_sha256 != inputs.revision.iso_sha256:
-        raise Task9EPlanError("ISO SHA-256 does not match the locked revision")
+    if runtime_source.source_mode == "retail_iso":
+        if inputs.iso.stat().st_size != inputs.revision.iso_size:
+            raise Task9EPlanError("ISO size does not match the locked revision")
+        if iso_sha256 != inputs.revision.iso_sha256:
+            raise Task9EPlanError("ISO SHA-256 does not match the locked revision")
+    elif iso_sha256 != runtime_source.runtime_iso_sha256:
+        raise Task9EPlanError("ISO SHA-256 does not match repository runtime provenance")
 
     _validate_input_file(inputs.state, "state")
     state_sha256 = hash_file(inputs.state)
+    memstick_root = _validate_memstick(inputs)
     savedata_inventory = hash_savedata_slot(inputs.savedata_slot)
     bundle = verify_ppsspp_bundle(inputs.bundle_root, profile=inputs.bundle_profile)
-    return iso_sha256, state_sha256, savedata_inventory, bundle
+    return (
+        iso_sha256,
+        state_sha256,
+        savedata_inventory,
+        bundle,
+        runtime_source,
+        memstick_root,
+    )
 
 
 def _runtime(value: int) -> Address:
@@ -369,10 +430,19 @@ def capture_task9e_control(
     *,
     client_factory: Callable[..., _DebuggerClient] = PpssppDebuggerClient,
 ) -> RuntimeControlCapture:
-    iso_sha256, state_sha256, savedata_inventory, bundle = _preflight(inputs)
+    (
+        iso_sha256,
+        state_sha256,
+        savedata_inventory,
+        bundle,
+        runtime_source,
+        memstick_root,
+    ) = _preflight(inputs)
     argv = [
         str(bundle.launcher_path),
         str(inputs.iso),
+        "--memstick",
+        str(memstick_root),
         "--state",
         str(inputs.state),
         "--port",
@@ -449,6 +519,7 @@ def capture_task9e_control(
             bundle=bundle,
             observations=tuple(observations),
             callback=callback,
+            runtime_source=runtime_source,
         )
     finally:
         if client is not None:
