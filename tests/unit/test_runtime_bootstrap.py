@@ -155,7 +155,7 @@ class FakeDebugger:
     def __init__(self, state: dict[str, Any]) -> None:
         self.state = state
         self.calls: list[tuple[object, ...]] = []
-        self.events = [
+        self.events: list[dict[str, object]] = [
             {"event": "cpu.stepping", "reason": "time"},
             {
                 "event": "cpu.stepping",
