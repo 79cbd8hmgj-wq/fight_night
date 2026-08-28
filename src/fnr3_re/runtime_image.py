@@ -1,19 +1,34 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
+import os
 import re
+import shutil
 import subprocess
+import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path, PurePosixPath
-from typing import cast
+from typing import Iterator, cast
+from unittest import mock
 
-from .revision import hash_file
+import pycdlib  # type: ignore[import-untyped]
+
+from .psp_sfo import build_runtime_param_sfo
+from .revision import ReferenceRevision, hash_file
 
 _LOCKED_REVISION_ID = "ULUS10066-v1.00"
 _SHA1_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _ALLOWED_ROLES = frozenset({"executable", "game_data", "metadata", "padding"})
+_RUNTIME_ISO_NAME = "fight-night-runtime.iso"
+_RUNTIME_REPORT_NAME = "runtime-image.json"
+_RUNTIME_SOURCE_MODE = "repository_runtime_image"
+_PYCDLIB_VERSION = "1.21.0"
+_FIXED_MASTERING_TIME = 946684800.0
 
 
 class RuntimeImageError(ValueError):
@@ -45,6 +60,67 @@ class VerifiedRuntimePayloadEntry:
     size: int
     sha256: str
     role: str
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeImageFileReport:
+    destination: str
+    size: int
+    sha256: str
+    role: str
+    generated: bool
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeImageReport:
+    schema_version: int
+    revision_id: str
+    source_mode: str
+    retail_iso_sha256: str
+    payload_manifest_sha256: str
+    boot_sha256: str
+    eboot_sha256: str
+    generated_metadata: tuple[tuple[str, str], ...]
+    runtime_iso_size: int
+    runtime_iso_sha256: str
+    deterministic: bool
+    files: tuple[RuntimeImageFileReport, ...]
+
+    def to_json(self) -> str:
+        return (
+            json.dumps(
+                {
+                    "boot_sha256": self.boot_sha256,
+                    "deterministic": self.deterministic,
+                    "eboot_sha256": self.eboot_sha256,
+                    "files": [
+                        {
+                            "destination": item.destination,
+                            "generated": item.generated,
+                            "role": item.role,
+                            "sha256": item.sha256,
+                            "size": item.size,
+                        }
+                        for item in self.files
+                    ],
+                    "generated_metadata": [
+                        {"destination": destination, "sha256": sha256}
+                        for destination, sha256 in self.generated_metadata
+                    ],
+                    "payload_manifest_sha256": self.payload_manifest_sha256,
+                    "retail_iso_sha256": self.retail_iso_sha256,
+                    "revision_id": self.revision_id,
+                    "runtime_iso_sha256": self.runtime_iso_sha256,
+                    "runtime_iso_size": self.runtime_iso_size,
+                    "schema_version": self.schema_version,
+                    "source_mode": self.source_mode,
+                },
+                indent=2,
+                sort_keys=True,
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
 
 
 def load_runtime_payload_manifest(path: Path) -> RuntimePayloadManifest:
@@ -178,6 +254,180 @@ def verify_runtime_payload(
             )
         )
     return tuple(verified)
+
+
+def prepare_runtime_image(
+    repository_root: Path,
+    output_root: Path,
+    manifest: RuntimePayloadManifest,
+    revision: ReferenceRevision,
+    *,
+    force: bool = False,
+) -> RuntimeImageReport:
+    if manifest.revision_id != revision.revision_id or revision.revision_id != _LOCKED_REVISION_ID:
+        raise RuntimeImageError("runtime image revision does not match the locked Fight Night revision")
+
+    verified = verify_runtime_payload(repository_root, manifest)
+    boot = _required_verified_destination(verified, "PSP_GAME/SYSDIR/BOOT.BIN")
+    eboot = _required_verified_destination(verified, "PSP_GAME/SYSDIR/EBOOT.BIN")
+    param_sfo = build_runtime_param_sfo(revision)
+    param_sha256 = hashlib.sha256(param_sfo).hexdigest()
+
+    destination = output_root.absolute()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists() and not force:
+        raise FileExistsError(f"runtime output already exists: {destination}")
+
+    temporary = destination.parent / f".{destination.name}.tmp-{uuid.uuid4().hex}"
+    try:
+        temporary.mkdir(parents=False, exist_ok=False)
+        runtime_iso = temporary / _RUNTIME_ISO_NAME
+        _master_runtime_iso(runtime_iso, verified, param_sfo)
+        runtime_iso_size = runtime_iso.stat().st_size
+        runtime_iso_sha256 = hash_file(runtime_iso)
+
+        file_reports = [
+            RuntimeImageFileReport(
+                destination=entry.destination.as_posix(),
+                size=entry.size,
+                sha256=entry.sha256,
+                role=entry.role,
+                generated=False,
+            )
+            for entry in verified
+        ]
+        file_reports.append(
+            RuntimeImageFileReport(
+                destination="PSP_GAME/PARAM.SFO",
+                size=len(param_sfo),
+                sha256=param_sha256,
+                role="metadata",
+                generated=True,
+            )
+        )
+        report = RuntimeImageReport(
+            schema_version=1,
+            revision_id=revision.revision_id,
+            source_mode=_RUNTIME_SOURCE_MODE,
+            retail_iso_sha256=revision.iso_sha256,
+            payload_manifest_sha256=manifest.sha256,
+            boot_sha256=boot.sha256,
+            eboot_sha256=eboot.sha256,
+            generated_metadata=(("PSP_GAME/PARAM.SFO", param_sha256),),
+            runtime_iso_size=runtime_iso_size,
+            runtime_iso_sha256=runtime_iso_sha256,
+            deterministic=True,
+            files=tuple(sorted(file_reports, key=lambda item: item.destination.casefold())),
+        )
+        (temporary / _RUNTIME_REPORT_NAME).write_text(report.to_json(), encoding="utf-8")
+
+        if destination.exists():
+            shutil.rmtree(destination)
+        os.replace(temporary, destination)
+        return report
+    except Exception:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+
+
+def _master_runtime_iso(
+    output: Path,
+    entries: tuple[VerifiedRuntimePayloadEntry, ...],
+    param_sfo: bytes,
+) -> None:
+    _require_pycdlib_version()
+    iso = pycdlib.PyCdlib()
+    param_stream = io.BytesIO(param_sfo)
+    try:
+        with _fixed_pycdlib_time():
+            iso.new(
+                interchange_level=3,
+                joliet=3,
+                sys_ident="PSP GAME",
+                vol_ident="FNR3_ULUS10066_RUNTIME",
+                app_ident_str="fnr3-re runtime recovery",
+            )
+            destinations = [entry.destination for entry in entries]
+            destinations.append(PurePosixPath("PSP_GAME/PARAM.SFO"))
+            for directory in _runtime_directories(destinations):
+                iso.add_directory(
+                    iso_path=_iso_directory_path(directory),
+                    joliet_path=_joliet_path(directory),
+                )
+
+            iso.add_fp(
+                param_stream,
+                len(param_sfo),
+                iso_path=_iso_file_path(PurePosixPath("PSP_GAME/PARAM.SFO")),
+                joliet_path=_joliet_path(PurePosixPath("PSP_GAME/PARAM.SFO")),
+            )
+            for entry in sorted(entries, key=lambda item: item.destination.as_posix().casefold()):
+                iso.add_file(
+                    str(entry.source_path),
+                    iso_path=_iso_file_path(entry.destination),
+                    joliet_path=_joliet_path(entry.destination),
+                )
+            iso.write(str(output))
+    finally:
+        iso.close()
+
+
+def _runtime_directories(paths: list[PurePosixPath]) -> tuple[PurePosixPath, ...]:
+    directories: set[PurePosixPath] = set()
+    for path in paths:
+        parent = path.parent
+        while parent != PurePosixPath("."):
+            directories.add(parent)
+            parent = parent.parent
+    return tuple(
+        sorted(
+            directories,
+            key=lambda path: (len(path.parts), path.as_posix().casefold()),
+        )
+    )
+
+
+def _iso_directory_path(path: PurePosixPath) -> str:
+    return "/" + "/".join(part.upper() for part in path.parts)
+
+
+def _iso_file_path(path: PurePosixPath) -> str:
+    return _iso_directory_path(path) + ";1"
+
+
+def _joliet_path(path: PurePosixPath) -> str:
+    return "/" + path.as_posix()
+
+
+def _required_verified_destination(
+    entries: tuple[VerifiedRuntimePayloadEntry, ...],
+    destination: str,
+) -> VerifiedRuntimePayloadEntry:
+    target = destination.casefold()
+    match = next((entry for entry in entries if entry.destination.as_posix().casefold() == target), None)
+    if match is None:
+        raise RuntimeImageError(f"runtime payload is missing required destination: {destination}")
+    return match
+
+
+def _require_pycdlib_version() -> None:
+    try:
+        observed = package_version("pycdlib")
+    except PackageNotFoundError as exc:
+        raise RuntimeImageError("pycdlib is not installed") from exc
+    if observed != _PYCDLIB_VERSION:
+        raise RuntimeImageError(
+            f"runtime image mastering requires pycdlib {_PYCDLIB_VERSION}, got {observed}"
+        )
+
+
+@contextmanager
+def _fixed_pycdlib_time() -> Iterator[None]:
+    with (
+        mock.patch("pycdlib.headervd.time.time", return_value=_FIXED_MASTERING_TIME),
+        mock.patch("pycdlib.pycdlib.time.time", return_value=_FIXED_MASTERING_TIME),
+    ):
+        yield
 
 
 def _required_str(mapping: dict[str, object], key: str) -> str:
