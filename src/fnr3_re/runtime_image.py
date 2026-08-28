@@ -139,7 +139,9 @@ def verify_runtime_payload(
     manifest: RuntimePayloadManifest,
 ) -> tuple[VerifiedRuntimePayloadEntry, ...]:
     if manifest.revision_id != _LOCKED_REVISION_ID:
-        raise RuntimeImageError("runtime payload manifest revision is not the locked Fight Night revision")
+        raise RuntimeImageError(
+            "runtime payload manifest revision is not the locked Fight Night revision"
+        )
     if repository_root.is_symlink():
         raise RuntimeImageError("repository root must not be a symlink")
     try:
