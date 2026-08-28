@@ -9,7 +9,7 @@ import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, cast
+from typing import cast
 from uuid import uuid4
 
 from .ea_archive import EaArchive, extract_ea_archive, parse_ea_archive
@@ -588,7 +588,12 @@ def _execute_capture_save_9e(
             capture_iso = runtime_iso
             capture_state = bootstrap.state
         else:
-            if bootstrap_report is not None or iso is None or state is None or savedata_slot is None:
+            if (
+                bootstrap_report is not None
+                or iso is None
+                or state is None
+                or savedata_slot is None
+            ):
                 raise Task9EPlanError("invalid retail capture source arguments")
             runtime_source = Task9ERuntimeSource.retail_iso(
                 revision_id=revision.revision_id,
