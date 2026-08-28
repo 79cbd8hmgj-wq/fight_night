@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path, PurePosixPath
 
 import pytest
 
-from fnr3_re import runtime_image
 from fnr3_re.revision import ReferenceRevision
 from fnr3_re.runtime_image import (
     RuntimeImageError,
@@ -90,7 +90,7 @@ def test_force_replace_rolls_back_if_atomic_swap_fails(
     marker = output / "known-good.txt"
     marker.write_text("preserve me", encoding="utf-8")
 
-    real_replace = runtime_image.os.replace
+    real_replace = os.replace
     failed_final_swap = False
 
     def fail_final_replace(source: str | Path, destination: str | Path) -> None:
@@ -106,7 +106,7 @@ def test_force_replace_rolls_back_if_atomic_swap_fails(
             raise OSError("simulated atomic replacement failure")
         real_replace(source, destination)
 
-    monkeypatch.setattr(runtime_image.os, "replace", fail_final_replace)
+    monkeypatch.setattr("fnr3_re.runtime_image.os.replace", fail_final_replace)
 
     with pytest.raises(OSError, match="simulated atomic replacement failure"):
         prepare_runtime_image(
