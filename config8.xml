@@ -1,0 +1,407 @@
+<!-- Fight Night PSP Controller Configuration -->
+<!-- this is a sample comment -->
+<!-- 
+	Time is represented in fractions of the game rate in seconds
+	0.1 = 1/10th of a second
+-->
+
+<!-- test config -->
+<config name="config8">
+<!-- shift the fake button 'rshift' -->
+	<shift>
+	<time value="0.3"/>	
+	<button1 value="BUT_R"/>
+	<toggle value="BUT_RSHIFT"/>
+	</shift>
+	
+	<global>
+	<time value="0.01"/>	
+	<action value="punch_high"/>
+	<button1 value="BUT_R"/>	
+	<negate value="1"/>				<!-- when BUT_R is held, negate punch_high ie. body punch -->
+	</global>
+
+	<!-- blocking is on the l-analog stick, when the L shoulder button is pressed -->
+	<analog>	
+	<action value="block"/>
+	<analog_type value="right"/>
+	<button1 value="BUT_L"/>
+	</analog>
+	
+	<!-- illegal punch -->
+	<tap>	
+	<time	value="0.3"/>
+	<action value="illegal"/>
+	<button1 value="D_LEFT"/>	
+	</tap>
+	
+	<!-- taunt -->
+	<tap>	
+	<time	value="0.3"/>
+	<action value="taunt"/>
+	<button1 value="D_UP"/>	
+	</tap>
+	
+	<!-- grab / clinch -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="grab"/>
+	<button1 value="D_RIGHT"/>	
+	</tap>
+	
+	<!-- signature -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="signature"/>
+	<button1 value="D_DOWN"/>	
+	</tap>
+
+<!-- button based movement -->
+	<!-- backward x = min, y = mid -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="backward"/>
+		<button1 value="BUT_X"/>
+		<analog_type value="left"/>
+		<analog_x value="0"/>
+		<analog_y value="128"/>
+	</buttonEmulateAnalog>
+	
+	<!-- forward x = max, y = mid -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="forward"/>
+		<button1 value="BUT_TRI"/>		
+		<analog_type value="left"/>
+		<analog_x value="255"/>
+		<analog_y value="128"/>
+	</buttonEmulateAnalog>
+	
+	<!-- left/up x = mid, y = max -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="left"/>
+		<button1 value="BUT_SQR"/>		
+		<analog_type value="left"/>
+		<analog_x value="128"/>
+		<analog_y value="255"/>
+	</buttonEmulateAnalog>
+	
+	<!-- right/down x = mid, y = min -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="right"/>
+		<button1 value="BUT_CIR"/>		
+		<analog_type value="left"/>
+		<analog_x value="128"/>
+		<analog_y value="0"/>
+	</buttonEmulateAnalog>
+	
+	<!-- button-based leaning -->
+	<!-- lean high-left x = mid, y = max -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="lean"/>
+		<button1 value="BUT_RSHIFT"/>
+		<button2 value="BUT_TRI"/>		
+		<!-- leans must use this type -->
+		<analog_type value="left"/>
+		<analog_x value="128"/>
+		<analog_y value="255"/>
+	</buttonEmulateAnalog>
+	
+	<!-- lean-forward x = max, y = mid -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="lean"/>
+		<button1 value="BUT_RSHIFT"/>
+		<button2 value="BUT_CIR"/>		
+		<!-- blocks must use this type -->
+		<analog_type value="left"/>
+		<analog_x value="255"/>
+		<analog_y value="128"/>
+	</buttonEmulateAnalog>
+	
+	<!-- lean-back x = min, y = mid -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="lean"/>
+		<button1 value="BUT_RSHIFT"/>
+		<button2 value="BUT_SQR"/>
+		<!-- blocks must use this type -->
+		<analog_type value="left"/>
+		<analog_x value="0"/>
+		<analog_y value="128"/>
+	</buttonEmulateAnalog>
+	
+	<!-- lean-right left x = mid, y = min -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="lean"/>
+		<button1 value="BUT_RSHIFT"/>
+		<button2 value="BUT_X"/>
+		<!-- blocks must use this type -->
+		<analog_type value="left"/>
+		<analog_x value="128"/>
+		<analog_y value="0"/>
+	</buttonEmulateAnalog>
+	
+	<!-- add lean corners ? -->
+<!-- analog-based punching -->
+	<!-- analog combo -->
+	<!-- actions spawned by multiple analog movement in distinct directions -->
+	
+	<!-- left straight -->	
+	<analogCombo>		
+		<time	value="1.0"/>		
+		<combo>	
+			<action			value="punch_l"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="64"/>
+			<end_x			value="40"/>
+			<end_y			value="210"/>
+			<end_range		value="64"/>
+		</combo>				
+	</analogCombo>
+	
+	<!-- right straight -->
+	<analogCombo>		
+		<time	value="1.0"/>
+		<combo>	
+			<action			value="punch_r"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="210"/>
+			<end_y			value="210"/>
+			<end_range		value="60"/>
+		</combo>				
+	</analogCombo>
+	
+	<!-- left hook : right then left -->
+	<analogCombo>		
+		<time	value="1.0"/>
+		<combo>			
+			<action			value="start_hook_l"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="240"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>			
+			<action			value="hook_l"/>
+			<start_x		value="240"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="20"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>
+		</combo>
+	</analogCombo>
+	
+	<!-- right hook : left then right -->
+	<analogCombo>		
+		<time	value="1.0"/>
+		<combo>	
+			<action			value="start_hook_r"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="20"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>			
+		</combo>
+		<combo>
+			<action			value="hook_r"/>
+			<start_x		value="20"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="240"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>			
+		</combo>				
+	</analogCombo>
+	
+	<!-- right uppercut : bottom left, bottom right -->
+	<analogCombo>		
+		<time	value="2.0"/>
+		<combo>	
+			<action			value="start_uppercut_r"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="40"/>
+			<end_y			value="40"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>	
+			<action			value="uppercut_r"/>
+			<start_x		value="40"/>
+			<start_y		value="40"/>
+			<start_range	value="60"/>
+			<end_x			value="210"/>
+			<end_y			value="20"/>
+			<end_range		value="60"/>
+		</combo>
+	</analogCombo>
+	
+	<!-- left uppercut : bottom right, bottom left -->
+	<analogCombo>		
+		<time	value="2.0"/>
+		<combo>
+			<action			value="start_uppercut_l"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="210"/>
+			<end_y			value="20"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>
+			<action			value="uppercut_l"/>
+			<start_x		value="210"/>
+			<start_y		value="20"/>
+			<start_range	value="60"/>
+			<end_x			value="40"/>
+			<end_y			value="60"/>
+			<end_range		value="60"/>
+		</combo>
+	</analogCombo>
+	
+	<!-- right haymaker hook : left, up (left side), right -->
+	<analogCombo>		
+		<time	value="1.0"/>
+		<combo>	
+			<action			value="start_hook_r"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="20"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>			
+		</combo>
+		<combo>	
+			<action			value="start_hook_r"/>
+			<start_x		value="20"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="40"/>
+			<end_y			value="210"/>
+			<end_range		value="60"/>			
+		</combo>
+		<combo>
+			<action			value="hook_r"/>
+			<start_x		value="40"/>
+			<start_y		value="210"/>
+			<start_range	value="40"/>
+			<end_x			value="240"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>			
+		</combo>				
+	</analogCombo>
+	
+	
+	<!-- left haymaker hook : right, up (right side), left -->
+	<!-- same start and end location, intermediate step of going up -->
+	<analogCombo>		
+		<time	value="1.0"/>
+		<combo>			
+			<action			value="start_hook_l"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="240"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>			
+			<action			value="start_hook_l"/>
+			<start_x		value="240"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="240"/>
+			<end_y			value="240"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>			
+			<action			value="hook_l"/>
+			<start_x		value="240"/>
+			<start_y		value="240"/>
+			<start_range	value="60"/>
+			<end_x			value="20"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>
+		</combo>
+	</analogCombo>
+	
+	<!-- right haymaker uppercut : bottom left, left middle, bottom right -->
+	<analogCombo>		
+		<time	value="1.0"/>
+		<combo>	
+			<action			value="start_uppercut_r"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="20"/>
+			<end_y			value="20"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>	
+			<action			value="start_uppercut_r"/>
+			<start_x		value="20"/>
+			<start_y		value="20"/>
+			<start_range	value="60"/>
+			<end_x			value="20"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>	
+			<action			value="uppercut_r"/>
+			<start_x		value="20"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="240"/>
+			<end_y			value="20"/>
+			<end_range		value="60"/>
+		</combo>
+	</analogCombo>
+	
+	
+	<!-- left haymaker uppercut : bottom right, right middle, bottom left -->
+	<analogCombo>		
+		<time	value="1.0"/>
+		<combo>
+			<action			value="start_uppercut_l"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="240"/>
+			<end_y			value="20"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>
+			<action			value="start_uppercut_l"/>
+			<start_x		value="240"/>
+			<start_y		value="20"/>
+			<start_range	value="60"/>
+			<end_x			value="240"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>
+			<action			value="uppercut_l"/>
+			<start_x		value="240"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="20"/>
+			<end_y			value="20"/>
+			<end_range		value="60"/>
+		</combo>
+	</analogCombo>
+	
+</config>
+
+<!-- end config -->

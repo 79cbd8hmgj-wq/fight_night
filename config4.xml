@@ -1,0 +1,119 @@
+<!-- Fight Night PSP Controller Configuration -->
+<!-- this is a sample comment -->
+<!-- 
+	Time is represented in fractions of the game rate in seconds
+	0.1 = 1/10th of a second
+-->
+
+<!-- Notes / special cases -->
+<!-- when applying analog to the lean action, you need to set the analog_type to left -->
+<!-- when applying block / lean to a button it must be of the buttonEmulateAnalog type -->
+
+<config name="config4">
+
+	<!-- analog supported lean w/ shift modifier -->
+	<analog>
+	<action value="lean"/>
+	<analog_type value="left"/>
+	<button1 value="BUT_L"/>
+	</analog>
+	
+	<!-- global modifier -->
+	<global>
+	<time value="0.01"/>	
+	<action value="punch_high"/>
+	<button1 value="BUT_L"/>	
+	<negate value="1"/>				<!-- when BUT_L is held, negate punch_high ie. body punch -->
+	</global>
+	
+	<!-- illegal punch -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="illegal"/>
+	<button1 value="D_LEFT"/>	
+	</tap>
+	
+	<!-- taunt -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="taunt"/>
+	<button1 value="D_UP"/>	
+	</tap>
+	
+	<!-- grab / clinch -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="grab"/>
+	<button1 value="D_RIGHT"/>	
+	</tap>
+	
+	<!-- signature -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="signature"/>
+	<button1 value="D_DOWN"/>	
+	</tap>
+
+	<!-- button-based blocking -->
+	
+	<!-- block high x = mid, y = max -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="block"/>
+		<random_lr value="1"/>	<!-- 1 equals 'true' -->
+		<button1 value="BUT_TRI"/>
+		<!-- blocks must use this type -->
+		<analog_type value="right"/>		
+		<analog_x value="128"/>
+		<analog_y value="255"/>
+	</buttonEmulateAnalog>
+	
+	<!-- block low x = mid, y = min -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="block"/>		
+		<random_lr value="1"/>		<!-- 1 equals 'true' -->
+		<button1 value="BUT_SQR"/>		
+		<!-- blocks must use this type -->
+		<analog_type value="right"/>
+		<analog_x value="128"/>
+		<analog_y value="0"/>
+	</buttonEmulateAnalog>
+
+	<!-- button-based punches -->
+		
+	<!-- random punch -->
+	<tap>
+		<time	value="0.3"/>
+		<action value="random_punch_high"/>
+		<button1 value="BUT_X"/>
+	</tap>
+	
+	<tap>
+		<time	value="0.3"/>
+		<action value="random_punch_low"/>
+		<button1 value="BUT_CIR"/>
+	</tap>
+	
+	<holdrelease>
+		<time	value="0.3"/>
+		<action value="random_haymaker_high"/>
+		<action2 value="random_haymaker_high"/>
+		<button1 value="BUT_X"/>
+	</holdrelease>
+	
+	<holdrelease>
+		<time	value="0.3"/>
+		<action value="random_haymaker_low"/>
+		<action2 value="random_haymaker_low"/>
+		<button1 value="BUT_CIR"/>
+	</holdrelease>
+	
+	<!-- analog movement -->	
+	<analog>
+	<action value="movement"/>
+	<analog_type value="left"/>
+	</analog>
+</config>
+
+<!-- end config -->

@@ -1,0 +1,231 @@
+<!-- Fight Night PSP Controller Configuration -->
+<!-- this is a sample comment -->
+<!-- 
+	Time is represented in fractions of the game rate in seconds
+	0.1 = 1/10th of a second
+-->
+
+<!-- Notes / special cases -->
+<!-- when applying analog to the lean action, you need to set the analog_type to left -->
+<!-- when applying block / lean to a button it must be of the buttonEmulateAnalog type -->
+
+<!-- same punches as config 1, different haymakers -->
+
+<config name="config6">
+	<!-- analog supported lean w/ shift modifier -->		
+	<analog>
+	<action value="lean"/>
+	<analog_type value="left"/>
+	<button1 value="BUT_L"/>
+	</analog>
+	
+	<!-- global modifier -->
+	<global>
+	<time value="0.01"/>	
+	<action value="punch_high"/>
+	<button1 value="BUT_L"/>	
+	<negate value="1"/>				<!-- when BUT_L is held, negate punch_high ie. body punch -->
+	</global>
+	
+	<!-- illegal punch -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="illegal"/>
+	<button1 value="D_LEFT"/>	
+	</tap>
+	
+	<!-- taunt -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="taunt"/>
+	<button1 value="D_UP"/>	
+	</tap>
+	
+	<!-- grab / clinch -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="grab"/>
+	<button1 value="D_RIGHT"/>	
+	</tap>
+	
+	<!-- signature -->
+	<tap>
+	<time	value="0.3"/>
+	<action value="signature"/>
+	<button1 value="D_DOWN"/>	
+	</tap>
+
+	<!-- button-based blocking -->
+	
+	<!-- block high x = mid, y = max -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="block"/>
+		<button1 value="BUT_R"/>
+		<button2 value="BUT_TRI"/>
+		<button3 value="BUT_CIR"/>
+		<!-- blocks must use this type -->
+		<analog_type value="right"/>
+		<analog_x value="128"/>
+		<analog_y value="255"/>
+	</buttonEmulateAnalog>
+	
+	<!-- block low x = mid, y = min -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="block"/>
+		<button1 value="BUT_R"/>
+		<button2 value="BUT_X"/>
+		<button3 value="BUT_SQR"/>
+		<!-- blocks must use this type -->
+		<analog_type value="right"/>
+		<analog_x value="128"/>
+		<analog_y value="0"/>
+	</buttonEmulateAnalog>
+	
+	<!-- parry high right x = max, y = max -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="block"/>
+		<button1 value="BUT_R"/>
+		<button2 value="BUT_TRI"/>
+		<!-- blocks must use this type -->
+		<analog_type value="right"/>
+		<analog_x value="255"/>
+		<analog_y value="255"/>
+	</buttonEmulateAnalog>
+	
+	<!-- parry high left x = min, y = max -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="block"/>
+		<button1 value="BUT_R"/>
+		<button2 value="BUT_SQR"/>
+		<!-- blocks must use this type -->
+		<analog_type value="right"/>
+		<analog_x value="0"/>
+		<analog_y value="128"/>
+	</buttonEmulateAnalog>
+	
+	<!-- parry low right x = max, y = min -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="block"/>
+		<button1 value="BUT_R"/>
+		<button2 value="BUT_CIR"/>
+		<!-- blocks must use this type -->
+		<analog_type value="right"/>
+		<analog_x value="255"/>
+		<analog_y value="0"/>
+	</buttonEmulateAnalog>
+	
+	<!-- parry low left x = min, y = min -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="block"/>
+		<button1 value="BUT_R"/>
+		<button2 value="BUT_X"/>
+		<!-- blocks must use this type -->
+		<analog_type value="right"/>
+		<analog_x value="0"/>
+		<analog_y value="0"/>
+	</buttonEmulateAnalog>
+
+	<!-- button-based punches -->
+	
+	<!-- right straight -->	
+	<tap>
+		<time	value="0.3"/>
+		<action value="punch_r"/>
+		<button1 value="BUT_TRI"/>
+	</tap>
+	
+	<!-- left straight -->	
+	<tap>
+		<time	value="0.3"/>
+		<action value="punch_l"/>
+		<button1 value="BUT_SQR"/>
+	</tap>
+	
+	<!-- right hook -->
+	<tap>
+		<time	value="0.3"/>
+		<action value="hook_r"/>
+		<button1 value="BUT_CIR"/>
+	</tap>
+	
+	<!-- left hook -->
+	<tap>
+		<time	value="0.3"/>
+		<action value="hook_l"/>
+		<button1 value="BUT_X"/>
+	</tap>
+	
+	<!-- button & button combos -->
+	
+	<!-- left uppercut -->
+	<buttonNbutton>
+		<time	value="0.3"/>
+		<action	value="uppercut_l"/>
+		<button1 value="BUT_X"/>
+		<button2 value="BUT_SQR"/>
+	</buttonNbutton>
+	
+	<!-- right uppercut -->
+	<buttonNbutton>
+		<time	value="0.3"/>
+		<action	value="uppercut_r"/>
+		<button1 value="BUT_TRI"/>
+		<button2 value="BUT_CIR"/>		
+	</buttonNbutton>
+	
+	<!-- haymaker left hook -->
+	<holdtap>
+		<time	value="0.2"/>
+		<tap_time value="0.1"/>
+		<action value="start_hook_l"/>
+		<action2 value="hook_l"/>
+		<button1 value="BUT_X"/>
+		<button2 value="BUT_X"/>
+	</holdtap>
+	
+	<!-- haymaker right hook -->
+	<holdtap>
+		<time	value="0.2"/>
+		<tap_time value="0.1"/>
+		<action value="start_hook_r"/>
+		<action2 value="hook_r"/>
+		<button1 value="BUT_CIR"/>
+		<button2 value="BUT_CIR"/>
+	</holdtap>
+	
+	<!-- haymaker left uppercut -->
+	<holdtap>
+		<time	value="0.2"/>
+		<tap_time value="0.1"/>
+		<action value="start_uppercut_l"/>
+		<action2 value="uppercut_l"/>
+		<button1 value="BUT_SQR"/>
+		<button2 value="BUT_SQR"/>
+	</holdtap>
+	
+	<!-- haymaker right uppercut -->
+	<holdtap>
+		<time	value="0.2"/>
+		<tap_time value="0.1"/>
+		<action value="start_uppercut_r"/>
+		<action2 value="uppercut_r"/>
+		<button1 value="BUT_TRI"/>
+		<button2 value="BUT_TRI"/>
+	</holdtap>
+	
+
+	<!-- analog movement -->	
+	<analog>
+	<action value="movement"/>
+	<analog_type value="left"/>
+	</analog>
+	
+</config>
+
+<!-- end config -->

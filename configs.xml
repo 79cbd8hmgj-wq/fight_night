@@ -1,0 +1,248 @@
+<!-- Fight Night PSP Controller Configuration -->
+<!-- Explanation of various button properties / actions that can be used when creating a config -->
+
+<!-- Button List - use these names when attaching values to the 'button' property : -->
+<!--
+	"BUT_CIR"
+	"BUT_SQR"
+	"BUT_TRI"
+	"BUT_X"
+	"D_UP"
+	"D_LEFT"
+	"D_RIGHT"
+	"D_DOWN"
+	"BUT_SELECT"
+	"BUT_START"
+	"BUT_L"
+	"BUT_R"
+	"BUT_RSHIFT"
+-->
+
+
+<!--  Action List - use these names when attaching actions to the 'action' property : -->
+<!--
+	"punch_l"
+	"punch_r"
+	"hook_l"
+	"hook_r"
+	"uppercut_l"
+	"uppercut_r"
+	"jab"
+	"lunge"
+	"lean"
+	"block"
+	"signature"
+	"illegal"
+	"punch_high"
+	"taunt"
+	"feint"
+	"grab"
+	"push"
+	"release"
+	"start_hook_l"
+	"start_hook_r"
+	"start_uppercut_l"
+	"start_uppercut_r"
+-->
+
+<!-- 
+	Time is represented in fractions of the game rate in seconds
+	0.1 = 1/10th of a second
+-->
+
+<!--
+Analog boundaries (x,y)
+
+(0,255)    (128,255)      (255,255)
+       |------------------|       
+       |                  |
+       |                  |
+       |                  |
+       |     (center)     |
+(0,128)|    (128, 128)    |(255,128)
+       |                  |
+       |                  |
+       |                  |
+       |                  |
+       |------------------|
+(0,0)                      (255,0)
+
+
+-->
+
+<!-- samples -->
+
+<!-- sample shift -->
+<!-- the button R_SHIFT will be toggled -->
+<!-- R_SHIFT can be used as a regular button, so you can use R_SHIFT in conjunction with any action -->
+	<shift>
+	<time value="0.3"/>	
+	<button1 value="BUT_R"/>
+	<toggle value="BUT_RSHIFT"/>
+	</shift>
+
+<!-- sample tap -->
+<!-- punch will occur if the button is pressed and released before the time elapses -->
+<!-- illegal punch -->
+	<tap>	
+	<time	value="0.3"/>
+	<action value="illegal"/>
+	<button1 value="D_LEFT"/>	
+	</tap>
+	
+<!-- sample hold -->
+<!-- punch will occur if the button is pressed for at least as long as the time -->
+<!-- illegal punch -->
+	<hold>
+	<time	value="0.3"/>
+	<action value="illegal"/>
+	<button1 value="D_LEFT"/>	
+	</hold>
+
+<!-- sample button & button -->
+<!-- punch will occur if all buttons are pressed for at least as long as the time -->
+<!-- can have up to 3 buttons -->
+<!-- left uppercut -->
+	<buttonNbutton>		
+		<time	value="0.1"/>
+		<action	value="uppercut_l"/>
+		<button1 value="BUT_X"/>
+		<button2 value="BUT_SQR"/>
+		<!-- <button3 value="BUT_"/> -->
+	</buttonNbutton>
+	
+<!-- sample button that emulates analog -->
+<!-- the analog values 0, 128 are given when the X button is held -->
+	<!-- button based backwards movement -->
+	<!-- backward x = min, y = mid -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>		
+		<action	value="backward"/>
+		<button1 value="BUT_X"/>
+		<!-- <button2 value="BUT_"/> -->
+		<!-- <button3 value="BUT_"/> -->
+		<analog_type value="left"/>
+		<analog_x value="0"/>
+		<analog_y value="128"/>
+	</buttonEmulateAnalog>
+
+
+<!-- analog movement -->
+<!-- use this to add analog movement -->
+	<analog>
+	<action value="movement"/>
+	<analog_type value="left"/>
+	</analog>	
+	
+<!-- sample analog leaning -->
+<!-- boxer will lean if the L-shoulder button is pressed -->
+	<analog>	
+	<action value="lean"/>
+	<analog_type value="left"/>
+	<button1 value="BUT_L"/>
+	</analog>
+	
+<!-- sample button based movement -->
+	<!-- backward x = min, y = mid -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="backward"/>
+		<button1 value="BUT_X"/>
+		<analog_type value="left"/>
+		<analog_x value="0"/>
+		<analog_y value="128"/>
+	</buttonEmulateAnalog>
+	
+	<!-- forward x = max, y = mid -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="forward"/>
+		<button1 value="BUT_TRI"/>		
+		<analog_type value="left"/>
+		<analog_x value="255"/>
+		<analog_y value="128"/>
+	</buttonEmulateAnalog>
+	
+	<!-- left/up x = mid, y = max -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="left"/>
+		<button1 value="BUT_SQR"/>		
+		<analog_type value="left"/>
+		<analog_x value="128"/>
+		<analog_y value="255"/>
+	</buttonEmulateAnalog>
+	
+	<!-- right/down x = mid, y = min -->
+	<buttonEmulateAnalog>
+		<time	value="0.01"/>
+		<action	value="right"/>
+		<button1 value="BUT_CIR"/>		
+		<analog_type value="left"/>
+		<analog_x value="128"/>
+		<analog_y value="0"/>
+	</buttonEmulateAnalog>
+
+<!-- sample analog combo -->
+<!--
+the start_x and start_y are where this combo begins, once the begin condition is satisfied, the
+game will check if the end condition is met before the time elapses.
+In this case the start condition is the center (128, 128)
+The end condition is to the top right (210, 64)
+Start_range and End_range are the ranges around the x,y 
+-->
+<!-- left straight -->	
+	<analogCombo>		
+		<time	value="1.0"/>		
+		<combo>	
+			<action			value="punch_l"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="64"/>
+			<end_x			value="40"/>
+			<end_y			value="210"/>
+			<end_range		value="64"/>
+		</combo>				
+	</analogCombo>
+	
+<!-- analog combo with several chained analog actions. Max of 4 actions -->
+<!-- left hook : right then left -->
+	<analogCombo>		
+		<time	value="1.0"/>		
+		<combo>			
+			<action			value="start_hook_l"/>
+			<start_x		value="128"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="240"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>
+		</combo>
+		<combo>			
+			<action			value="hook_l"/>
+			<start_x		value="240"/>
+			<start_y		value="128"/>
+			<start_range	value="60"/>
+			<end_x			value="20"/>
+			<end_y			value="128"/>
+			<end_range		value="60"/>
+		</combo>
+	</analogCombo>
+
+<!-- hold / release -->
+<!--
+    represents a two button action, when the button is held, action 1 takes place
+    when the button is released, action 2 is executed
+    currently used for the 'hold button for haymaker' feature, but can be extended to anything
+    can have up to two buttons (button1, button2)
+-->
+	<!-- haymaker right hook -->
+	<holdrelease>
+		<time	value="0.3"/>
+		<action value="start_hook_r"/>
+		<action2 value="hook_r"/>
+		<button1 value="BUT_CIR"/>
+	</holdrelease>
+
+
+<!-- end config -->
