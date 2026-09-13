@@ -7,7 +7,7 @@ from types import ModuleType
 from typing import Any
 
 EXPECTED_PSPDISASM_REPOSITORY = "https://github.com/79cbd8hmgj-wq/PSP-disassembly-tool.git"
-EXPECTED_PSPDISASM_REVISION = "b3a07f4d0880b7933f87a9557b5e0aa3f364fa5a"
+EXPECTED_PSPDISASM_REVISION = "6bff5a7acb7499050a84fefb6e9b0501703c1353"
 EXPECTED_PSPDISASM_VERSION = "0.9.0"
 
 
@@ -62,7 +62,7 @@ def load_psp_toolchain(*, allow_unpinned: bool) -> PspToolchainInfo:
     )
     if not revision_locked and not allow_unpinned:
         raise PspToolchainError(
-            "pspdisasm does not match the locked Phase 7G baseline; install fnr3-re "
+            "pspdisasm does not match the locked Phase 8D baseline; install fnr3-re "
             "with the psp-analysis extra or use --allow-unpinned-toolkit for "
             "exploratory local analysis"
         )

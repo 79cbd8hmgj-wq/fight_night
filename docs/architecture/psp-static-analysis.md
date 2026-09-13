@@ -9,7 +9,7 @@ Fight Night analysis is revision-locked to:
 - Fight Night Round 3 PSP USA revision: `ULUS10066-v1.00`
 - Reference ISO SHA-256: `b11da5afe208d9791eecd9f6a44d0f57946f7d9de165b7d8dd22f5ee740f4ee2`
 - PSP Disassembly Toolkit repository: `https://github.com/79cbd8hmgj-wq/PSP-disassembly-tool.git`
-- PSP Disassembly Toolkit revision: `b3a07f4d0880b7933f87a9557b5e0aa3f364fa5a`
+- PSP Disassembly Toolkit revision: `6bff5a7acb7499050a84fefb6e9b0501703c1353` (Phase 8D: adds an automated decompile -> build -> match pipeline on top of the Phase 7G analysis surface this integration already consumes)
 - PSP Disassembly Toolkit package version: `0.9.0`
 
 The toolkit is an optional research dependency. The base `fnr3-re` package remains usable without it.

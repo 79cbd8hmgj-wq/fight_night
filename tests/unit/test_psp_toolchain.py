@@ -72,14 +72,14 @@ def test_exact_revision_is_locked(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_mismatched_revision_is_rejected_in_strict_mode(monkeypatch: pytest.MonkeyPatch) -> None:
     _install_fake_toolchain(monkeypatch, version="0.9.0", commit_id="1" * 40)
 
-    with pytest.raises(PspToolchainError, match="locked Phase 7G baseline"):
+    with pytest.raises(PspToolchainError, match="locked Phase 8D baseline"):
         load_psp_toolchain(allow_unpinned=False)
 
 
 def test_unpinned_install_requires_explicit_override(monkeypatch: pytest.MonkeyPatch) -> None:
     _install_fake_toolchain(monkeypatch, version="0.9.0", commit_id=None)
 
-    with pytest.raises(PspToolchainError, match="locked Phase 7G baseline"):
+    with pytest.raises(PspToolchainError, match="locked Phase 8D baseline"):
         load_psp_toolchain(allow_unpinned=False)
 
     info = load_psp_toolchain(allow_unpinned=True)
