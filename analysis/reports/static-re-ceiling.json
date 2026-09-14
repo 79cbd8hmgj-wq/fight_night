@@ -285,8 +285,9 @@
       "program_id": "program-04",
       "subsystem": "Boxers",
       "question": "What does func_00186464's 8-bit-masked linked-list index actually select (boxer record vs. table-instance registration)?",
-      "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "The index is proven 8 bits wide; the walk proceeds via a +0x10 'next' pointer per node, consistent with either interpretation. No node constructor or list-insertion writer was located to disambiguate. This delta pass searched selectboxer.big (the one screen most likely to exercise this accessor) for a direct connection: selectBoxer.const's own boxer-list variables (objBoxerIDs, iListLength, iEndList, iBoxerID) are populated by the native function 'GetSelectBoxerInfo', but GetSelectBoxerInfo's own BOOT.BIN string owners (func_001D537C/func_001D5438) proved to be generic native-function *registration* trampolines only (they call a shared registrar, func_0CDAC0/func_0CDA70, also seen registering DEBUG_GetDebugMenuData, GetOptionsSettings, GetRecordBooksInfo, GetCareerHistoryInfo, and GetAdhocRivalsInfo/GetAdhocRivalsUserInfo under the same pattern) -- not the actual data-producing implementation. The real GetSelectBoxerInfo implementation, which would very plausibly call through func_00186464, was not located this pass.",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "RESOLVED during Overhaul Alpha 1's targeted static RE (analysis/resources/overhaul-alpha1-evidence.json entry alpha1-03). func_0018654C (a caller of func_00186464 flagged since the first boxer-schema pass) was disassembled in full: it walks func_186464(0), func_186464(1), ... via the proven 8-bit index until null, calling an INDIRECT FUNCTION POINTER read from a per-node vtable-like sub-table for each node (the same {i16,funcptr} shape already proven for the generic resource-table loader), then appends its own caller-supplied object onto the list's end by writing the found node's +0x10 'next' field (node->0x10 = new_object; new_object->0xC = node -- the previously-missing list-insertion writer). This is a table-instance REGISTRY append/measure pattern over heterogeneous nodes each queried via its own function pointer -- not a homogeneous boxer-record array. Boxer records are proven (program-04-02) to be indexed via xdbboxr.adf's own header word0 through func_001AD268, a completely separate mechanism. The 'table-instance registration' interpretation is confirmed; the 'boxer record' interpretation is ruled out.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -295,12 +296,10 @@
       "sources": {
         "functions": [
           "func_00186464",
-          "func_001D537C",
-          "func_001D5438"
+          "func_0018654C"
         ]
       },
-      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's native-function name registration is later dispatched (i.e. where the string name 'GetSelectBoxerInfo' is looked up and its real implementation invoked) to finally reach the function that actually walks the boxer list for the select-boxer screen; only then would this accessor's use (or non-use) of func_00186464 be directly observable. Locating the node type's constructor/allocator and any writer of node+0x10 remains the other standing avenue.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-04"
@@ -840,12 +839,17 @@
       "subsystem": "Judging",
       "question": "Do per-judge weighting differences (e.g. 'generous' vs. 'strict' judges) exist statically?",
       "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "Three distinct judge score fields exist per boxer, consistent with either identical scoring criteria applied three times (redundancy/averaging) or genuinely different per-judge weighting; no formula was disassembled to distinguish these. This delta pass's 11 newly-added files were checked for relevance: none is a scorecard/judging screen (the closest, careerfighthistory.big, tracks fight *results* -- opponent/rounds-lasted/TKO-time/pro-vs-amateur -- not per-judge scoring detail) and no judge-related identifier appears in any of the 11 files' decoded .const constant pools. No relevant evidence found this pass; classification is unchanged.",
+      "evidence": "PARTIALLY RESOLVED during Overhaul Alpha 1's targeted static RE (analysis/resources/overhaul-alpha1-evidence.json entry alpha1-06). T_001F7248 (the real GetJudgesScoreInfo implementation, confirmed real by its 216-instruction size) was disassembled in full: it fetches three judge-object handles via func_01ED5C(context, judge_index) for judge_index in {0,1,2} (independently proving TOTAL_JUDGES==3, matching judgesscores.big!judgesScores.const's own TOTAL_JUDGES constant), then applies an IDENTICAL call shape (same func_08A02C/func_08A00C calls, same argument pattern) to each of the three handles -- CONFIRMED: no differential weighting exists in this calling code. What remains open: func_08A02C's own body (not disassembled this pass) could still apply a per-judge-object internal bias baked into each judge handle's own state; that narrower sub-question is why this entry remains STATICALLY_AMBIGUOUS rather than fully resolved.",
       "affected_features": [
         "combat"
       ],
-      "remaining_static_work": "Disassemble T_001F7248 fully; compare the code paths that compute aJudge1/2/3 scores for any per-judge constant differences before considering this ambiguous.",
-      "sources": {},
+      "sources": {
+        "functions": [
+          "T_001F7248",
+          "func_01ED5C"
+        ]
+      },
+      "remaining_static_work": "Disassemble func_08A02C/func_08A00C/func_01ED5C to determine whether a judge object's own internal state carries any per-judge bias not visible at the T_001F7248 call site.",
       "confidence": "CANDIDATE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -1403,9 +1407,9 @@
     }
   ],
   "counts_overall": {
-    "STATICALLY_RESOLVED": 28,
+    "STATICALLY_RESOLVED": 29,
     "STATICALLY_SOLVABLE": 30,
-    "STATICALLY_AMBIGUOUS": 5,
+    "STATICALLY_AMBIGUOUS": 4,
     "RUNTIME_ESSENTIAL": 0
   },
   "counts_by_program": {
@@ -1428,9 +1432,9 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "program-04": {
-      "STATICALLY_RESOLVED": 3,
+      "STATICALLY_RESOLVED": 4,
       "STATICALLY_SOLVABLE": 2,
-      "STATICALLY_AMBIGUOUS": 2,
+      "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "program-05": {
@@ -1520,21 +1524,21 @@
   },
   "counts_by_feature": {
     "career-2": {
-      "STATICALLY_RESOLVED": 13,
+      "STATICALLY_RESOLVED": 14,
       "STATICALLY_SOLVABLE": 9,
-      "STATICALLY_AMBIGUOUS": 3,
-      "RUNTIME_ESSENTIAL": 0
-    },
-    "amateur": {
-      "STATICALLY_RESOLVED": 11,
-      "STATICALLY_SOLVABLE": 7,
       "STATICALLY_AMBIGUOUS": 2,
       "RUNTIME_ESSENTIAL": 0
     },
+    "amateur": {
+      "STATICALLY_RESOLVED": 12,
+      "STATICALLY_SOLVABLE": 7,
+      "STATICALLY_AMBIGUOUS": 1,
+      "RUNTIME_ESSENTIAL": 0
+    },
     "roster": {
-      "STATICALLY_RESOLVED": 11,
+      "STATICALLY_RESOLVED": 12,
       "STATICALLY_SOLVABLE": 8,
-      "STATICALLY_AMBIGUOUS": 4,
+      "STATICALLY_AMBIGUOUS": 3,
       "RUNTIME_ESSENTIAL": 0
     },
     "divisions": {
@@ -1570,13 +1574,13 @@
   },
   "static_ceiling": {
     "definition": "Count-based projection = STATICALLY_RESOLVED + STATICALLY_SOLVABLE, i.e. every question with either evidence already in hand or a concrete named static avenue remaining. STATICALLY_AMBIGUOUS questions are excluded from the ceiling because they are not proven closeable by static work alone yet (their alternatives may or may not collapse to one answer statically).",
-    "statically_resolved": 28,
+    "statically_resolved": 29,
     "statically_solvable": 30,
-    "ceiling_count": 58,
+    "ceiling_count": 59,
     "total_bounded_questions": 63,
-    "ceiling_fraction_of_total": 0.9206,
+    "ceiling_fraction_of_total": 0.9365,
     "excluded_pending_further_static_work": {
-      "STATICALLY_AMBIGUOUS": 5,
+      "STATICALLY_AMBIGUOUS": 4,
       "RUNTIME_ESSENTIAL": 0
     }
   },

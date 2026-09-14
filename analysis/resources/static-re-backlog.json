@@ -1,9 +1,9 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "revision": "ULUS10066-v1.00",
-  "purpose": "Every STATICALLY_SOLVABLE and STATICALLY_AMBIGUOUS evidence question from analysis/reports/static-re-ceiling.json, each carrying a concrete named static avenue. Supersedes schema_version 1 of this file (regenerated after the delta-only pass over 11 newly-added retail .big/.hud files: debugmenu.big, genericbackground.big, internetmainmenu.big, mainmenu.big, tutorialoverlay.big, adhocrivals.big, careerfighthistory.big, recordbooks.big, fnhud.hud, optionsettings.big, selectboxer.big). This file supersedes the narrower Task 10/11 analysis/resources/static-discovery-backlog.json for corpus-wide planning purposes; static-discovery-backlog.json is preserved unmodified as the detailed working log for the boxer/resource-loader packages it already documents, several of whose entries are also referenced here. Per task policy, none of these may be moved to runtime-minimum-backlog.json until every named avenue below is exhausted.",
+  "purpose": "Every STATICALLY_SOLVABLE and STATICALLY_AMBIGUOUS evidence question from analysis/reports/static-re-ceiling.json, each carrying a concrete named static avenue. Regenerated after Overhaul Alpha 1's targeted static RE (PR: Overhaul Alpha 1 -- Core Boxer + Fight Systems), which resolved program-04-04 (func_00186464's linked list) and partially advanced program-11-03 (judge weighting) as a direct byproduct of the minimum focused RE that milestone's own implementation work required -- not a renewed broad assessment pass. This file supersedes the narrower Task 10/11 analysis/resources/static-discovery-backlog.json for corpus-wide planning purposes; static-discovery-backlog.json is preserved unmodified. Per task policy, none of these may be moved to runtime-minimum-backlog.json until every named avenue below is exhausted.",
   "related_backlog": "analysis/resources/static-discovery-backlog.json (Task 10/11-scoped predecessor, still valid)",
-  "entry_count": 35,
+  "entry_count": 34,
   "entries": [
     {
       "id": "program-01-02",
@@ -90,26 +90,6 @@
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
-        ]
-      }
-    },
-    {
-      "id": "program-04-04",
-      "program_id": "program-04",
-      "subsystem": "Boxers",
-      "status": "STATICALLY_AMBIGUOUS",
-      "question": "What does func_00186464's 8-bit-masked linked-list index actually select (boxer record vs. table-instance registration)?",
-      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's native-function name registration is later dispatched (i.e. where the string name 'GetSelectBoxerInfo' is looked up and its real implementation invoked) to finally reach the function that actually walks the boxer list for the select-boxer screen; only then would this accessor's use (or non-use) of func_00186464 be directly observable. Locating the node type's constructor/allocator and any writer of node+0x10 remains the other standing avenue.",
-      "affected_features": [
-        "career-2",
-        "amateur",
-        "roster"
-      ],
-      "sources": {
-        "functions": [
-          "func_00186464",
-          "func_001D537C",
-          "func_001D5438"
         ]
       }
     },
@@ -356,11 +336,16 @@
       "subsystem": "Judging",
       "status": "STATICALLY_AMBIGUOUS",
       "question": "Do per-judge weighting differences (e.g. 'generous' vs. 'strict' judges) exist statically?",
-      "remaining_static_work": "Disassemble T_001F7248 fully; compare the code paths that compute aJudge1/2/3 scores for any per-judge constant differences before considering this ambiguous.",
+      "remaining_static_work": "Disassemble func_08A02C/func_08A00C/func_01ED5C to determine whether a judge object's own internal state carries any per-judge bias not visible at the T_001F7248 call site.",
       "affected_features": [
         "combat"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "T_001F7248",
+          "func_01ED5C"
+        ]
+      }
     },
     {
       "id": "program-12-03",

@@ -1,0 +1,6 @@
+{
+  "finish_opponent_health_fraction": 0.2,
+  "finish_opponent_stamina_fraction": 0.25,
+  "hurt_health_fraction": 0.3,
+  "low_stamina_fraction": 0.35
+}

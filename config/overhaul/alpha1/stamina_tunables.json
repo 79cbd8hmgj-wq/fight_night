@@ -1,0 +1,16 @@
+{
+  "action_costs": {
+    "clinch": 1.5,
+    "hook": 6.0,
+    "jab": 3.0,
+    "power_punch": 9.0,
+    "uppercut": 7.0
+  },
+  "base_capacity": 100.0,
+  "between_round_recovery_fraction": 0.35,
+  "exhausted_cost_multiplier": 1.3,
+  "exhausted_recovery_multiplier": 0.6,
+  "exhausted_threshold_fraction": 0.15,
+  "passive_recovery_per_second": 0.6,
+  "rating_to_capacity": 1.0
+}

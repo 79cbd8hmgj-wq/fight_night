@@ -32,6 +32,17 @@ Infrastructure Shell.txt`, `config/subsystem_registry.json`,
   pass's corpus-wide sweep and does not claim full-ISO completeness (see
   `analysis/resources/corpus-resource-index.json`'s `delta_passes` block).
   The inventory grew from 57 to 63 questions.
+- **Overhaul Alpha 1** (this revision): the first implementation tranche
+  (Core Boxer + Fight Systems, `src/fnr3_re/overhaul/`) is not a static-RE
+  assessment pass and did not re-sweep the corpus. It performed the
+  *minimum focused static RE* its own implementation work required (per
+  its own methodology: "targeted static RE -> establish replacement
+  boundary -> implement -> validate statically"), which resolved
+  `program-04-04` (func_00186464's linked list, see
+  `analysis/resources/overhaul-alpha1-evidence.json` entry `alpha1-03`)
+  and partially advanced `program-11-03` (judge weighting, entry
+  `alpha1-06`) as a direct byproduct. These two updates are recorded here
+  for consistency, not as a renewed broad-assessment effort.
 
 ## Classification
 
@@ -56,18 +67,21 @@ Every bounded evidence question is placed in exactly one of four categories:
 
 | Category | Count | Share of 63 |
 |---|---|---|
-| STATICALLY_RESOLVED | 28 | 44.4% |
+| STATICALLY_RESOLVED | 29 | 46.0% |
 | STATICALLY_SOLVABLE | 30 | 47.6% |
-| STATICALLY_AMBIGUOUS | 5 | 7.9% |
+| STATICALLY_AMBIGUOUS | 4 | 6.3% |
 | RUNTIME_ESSENTIAL | 0 | 0.0% |
 | **Total bounded questions** | **63** | 100% |
 
 ## Static ceiling
 
-**Static ceiling = STATICALLY_RESOLVED + STATICALLY_SOLVABLE = 28 + 30 = 58 of 63 questions (92.1%).**
+**Static ceiling = STATICALLY_RESOLVED + STATICALLY_SOLVABLE = 29 + 30 = 59 of 63 questions (93.7%).**
 
-Up from 52/57 (91.2%) before this delta pass. This is a count-based
-projection, not a subjective guess.
+Up from 52/57 (91.2%) before the delta pass, then 58/63 (92.1%) after it,
+then 59/63 (93.7%) as a byproduct of Overhaul Alpha 1's own targeted RE.
+This project does not optimize for this number -- it is reported here only
+because a real, evidence-backed question was genuinely resolved along the
+way. This is a count-based projection, not a subjective guess.
 
 ## Runtime floor
 
@@ -88,7 +102,7 @@ or left STATICALLY_AMBIGUOUS with named next steps.
 | program-00 | Intake | 2 | 0 | 0 | 0 | 2 |
 | program-01 | Build/Rebuild | 1 | 1 | 0 | 0 | 2 |
 | program-03 | Modules | 3 | 2 | 0 | 0 | 5 |
-| program-04 | Boxers | 3 | 2 | 2 | 0 | 7 |
+| program-04 | Boxers | 4 | 2 | 1 | 0 | 7 |
 | program-05 | Fight | 1 | 3 | 0 | 0 | 4 |
 | program-06 | Punches | 1 | 2 | 0 | 0 | 3 |
 | program-07 | Stamina | 1 | 2 | 0 | 0 | 3 |
@@ -220,7 +234,8 @@ sum to 63.
 ## Related artifacts
 
 - `analysis/reports/static-re-ceiling.json` -- the full 63-question machine-readable matrix, counts, static ceiling, and runtime floor.
-- `analysis/resources/static-re-backlog.json` -- 35 STATICALLY_SOLVABLE/STATICALLY_AMBIGUOUS questions' named remaining static avenues (schema_version 2).
+- `analysis/resources/static-re-backlog.json` -- 34 STATICALLY_SOLVABLE/STATICALLY_AMBIGUOUS questions' named remaining static avenues (schema_version 3).
+- `analysis/resources/overhaul-alpha1-evidence.json` -- Section L evidence discipline for Overhaul Alpha 1's own findings (fight-session singleton, generic stat accessor, punch-accuracy formula, judging call-site uniformity, etc.), each with original owner, confidence, and replacement-boundary status.
 - `analysis/resources/runtime-minimum-backlog.json` -- empty (schema_version 4).
 - `analysis/resources/corpus-resource-index.json` -- extended this pass with the 11 new files under `archives_enumerated` and a `delta_passes` record (schema_version 2).
 - `analysis/resources/static-discovery-backlog.json` -- the earlier Task 10/11-scoped backlog (boxer/resource-loader detail), preserved unmodified.

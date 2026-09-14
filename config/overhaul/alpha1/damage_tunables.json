@@ -1,0 +1,8 @@
+{
+  "base_health": 100.0,
+  "knockdown_health_fraction": 0.2,
+  "max_knockdowns_per_round_before_stoppage": 3,
+  "rating_to_health": 0.5,
+  "stun_recovery_per_second": 0.5,
+  "stun_threshold_fraction": 0.35
+}
