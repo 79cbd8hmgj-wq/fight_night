@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00",
+  "source_module": {"path": "BOOT.BIN", "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"},
+  "chain": [
+    {"stage": "resource", "identity": "preload/db.viv!xdbboxr.adf", "evidence": "archive enumeration + RefPack decode, see xdb-schema-evidence.json"},
+    {"stage": "archive_open", "function": "func_001AD694", "address": "0x001AD694", "role": "xdb table-set dispatcher; requests xdbboxr.adf when bit 0x1 of its argument bitmask is set"},
+    {"stage": "member_lookup", "function": "func_0033B58C", "address": "0x0033B58C", "role": "shared archive-member-by-name lookup, returns an opaque member handle"},
+    {"stage": "table_trampoline", "function": "func_001863B4", "address": "0x001863B4", "size": "0x30", "role": "boxer-specific: calls the boxer table singleton accessor, then the shared generic loader"},
+    {"stage": "singleton_accessor", "function": "func_00186408", "address": "0x00186408", "size": "0x5C", "role": "lazily-initialized singleton getter for the boxer table object", "backing_address": "0x000080B4", "backing_address_type": "elf_virtual", "backing_address_evidence": "func_00186408 computes this address as (func_00007E80 + 0x234) and, on first call only, invokes an initializer (func_001A0AE4) and a registration call (func_004B975C) against it before returning it; every later call returns the same address without re-initializing."},
+    {"stage": "generic_loader", "function": "func_001A0C74", "address": "0x001A0C74", "size": "0x64", "role": "shared per-table loader reused verbatim by all 10 xdb tables (see resource-loader-map.json); invokes a decode/extract function pointer read out of the member handle, then populates the boxer table singleton"}
+  ],
+  "boxer_table_singleton": {
+    "address": "0x000080B4",
+    "address_type": "elf_virtual",
+    "confidence": "PROBABLE",
+    "known_fields": [
+      {"offset": "+0x0", "width": 1, "candidate_meaning": "loaded/valid flag (byte)", "evidence": "func_001A0C74 writes a literal 1 here immediately after a successful decode"},
+      {"offset": "+0x4", "width": 4, "candidate_meaning": "size or count copied from the archive member handle's own +0x4 field", "evidence": "func_001A0C74 copies member_handle[+0x4] here verbatim; the member handle's own +0x4 semantics were not traced"},
+      {"offset": "+0x8", "width": 4, "candidate_meaning": "pointer to the decoded xdbboxr.adf payload buffer", "evidence": "func_001A0C74 stores the decode function pointer's return value here"},
+      {"offset": "+0x10", "width": 4, "candidate_meaning": "unknown; consumed as a 'next' pointer by func_00186464 (see accessor entry below)", "evidence": "func_00186464 dereferences node+0x10 repeatedly while walking from this singleton"}
+    ],
+    "unresolved_fields": "Everything at +0xC and beyond +0x10 that was not directly exercised by the two consumer functions examined in this pass."
+  },
+  "consumers": {
+    "traced": [
+      {
+        "function": "func_00186464",
+        "address": "0x00186464",
+        "size": "0x54",
+        "proven_behavior": "Masks its single argument to 8 bits ($a0 & 0xFF) -- this is a directly proven, concrete fact: the boxer index/ID parameter accepted by this accessor is 8 bits wide. It then calls the singleton accessor and walks a linked list starting from the returned singleton, dereferencing each visited node's +0x10 field up to 'index' times, stopping early if a node is null.",
+        "confidence": "PROBABLE",
+        "unresolved_question": "Whether each node visited by this walk is one boxer record, one loaded-table-instance registration, or some other chained object -- see the RUNTIME_BLOCKED entry in static-resolution-matrix.json."
+      },
+      {
+        "function": "func_001863E4",
+        "address": "0x001863E4",
+        "size": "0x24",
+        "proven_behavior": "Calls the singleton accessor, then passes the result into a second shared generic function (func_001A0D78) not disassembled in this pass.",
+        "confidence": "CANDIDATE"
+      },
+      {
+        "function": "func_00185114",
+        "address": "0x00185114",
+        "size": "0x5C",
+        "proven_behavior": "Calls the singleton accessor, then constructs a separate object (not the singleton itself) that stores a pointer to a fixed data address (D_005817D4) and clears one byte field, then calls another function (func_00186284). Shape is consistent with a cursor/view/query object constructor rather than a direct record reader.",
+        "confidence": "CANDIDATE"
+      }
+    ],
+    "identified_but_not_yet_disassembled": [
+      {"function": "T_0018E4F4", "address": "0x0018E4F4", "size": "0x8C"},
+      {"function": "func_001AF768", "address": "0x001AF768", "size": "0x260"}
+    ],
+    "notes": "These 5 functions (plus the loader trampoline itself) are exactly the complete set of direct callers of func_00186408 found by a whole-binary text search across all 24,576 disassembled functions in BOOT.BIN. No other function in BOOT.BIN references the boxer table singleton accessor by name; a caller could in principle still reach the singleton indirectly through one of these 5, or the singleton's raw address (0x80B4) could be hardcoded elsewhere without going through the accessor -- a direct-address search found zero such references, but that does not rule out access via a relocated pointer computed at runtime."
+  },
+  "fixed_counts_and_limits": [
+    {
+      "claim": "Boxer index/ID parameter to func_00186464 is masked to 8 bits (0-255).",
+      "confidence": "PROBABLE",
+      "evidence": "Direct disassembly: andi $s1, $a0, 0xFF at 0x0018646C.",
+      "caveat": "This proves the accessor's own parameter width, not the database's own record-count field (see xdbboxr-schema.json word0=121, unconfirmed as a record count)."
+    }
+  ],
+  "cross_resource_relationships": [
+    {
+      "relationship": "preload/tables.viv hairstyle files <-> preload/bootpreloads.viv HK_*.bh preload descriptors",
+      "confidence": "CANDIDATE",
+      "evidence": "8 of bootpreloads.viv's members (HK_ali.bh, HK_hatto.bh, HK_lazca.bh, HK_leona.bh, HK_moral.bh, HK_pacqu.bh, HK_punch.bh, HK_robin.bh) share name stems with 8 of tables.viv's boxer-surname .txt files (ali.txt, hatton.txt, lazcano.txt, leonard.txt, morales.txt, pacquiao.txt, punchout.txt, robinson.txt). All 7 real-boxer-named pairs correspond to widely-known historical/legend boxers (Ali, Hatton, Lazcano, Leonard, Morales, Pacquiao, Robinson); 'HK_punch'/'punchout.txt' does not match a real boxer name and is plausibly a placeholder/test entry rather than a licensed legend.",
+      "why_not_stronger": "No executable code path connecting these two archives was traced in this pass; the relationship rests on name-stem matching alone, which the evidence standard explicitly treats as insufficient for anything above CANDIDATE."
+    },
+    {
+      "relationship": "scripts/scripts.viv <-> scripts/scrptpal.viv paired parameter sets",
+      "confidence": "PROBABLE",
+      "evidence": "Both archives contain the identical 167 member names in the identical order with identical per-member sizes. scripts.viv's members are RefPack-compressed; scrptpal.viv's are not. For the sampled member 'addanims.bin', decompress_refpack(scripts.viv member) and the raw scrptpal.viv member are the same length (248 bytes) and share the same 4-byte magic ('stp\\x01') plus most byte positions, but differ at specific integer fields (e.g. a length-like field is 0x4E3 in scripts.viv's decoded copy versus 0x413 in scrptpal.viv's raw copy). This proves the two archives hold two distinct, same-shaped parameter sets for the same named script entries -- not that one is a decompressed duplicate of the other.",
+      "open_question": "Why two parameter sets exist (difficulty variant, palette/style variant, or a before/after tuning pass) is not decidable from static evidence alone -- see static-resolution-matrix.json."
+    },
+    {
+      "relationship": "preload/boxerpre.viv damage morph targets <-> program-10 (Medical)",
+      "confidence": "CANDIDATE",
+      "evidence": "boxerpre.viv's 8 mor_base_head_dam*.o members (cheek/eye/mouth/nose, left/right) are named for facial damage regions, structurally consistent with the cut/swelling visualization the Medical subsystem's stoppage/damage path would need. No executable code path was traced connecting this archive to any Medical-owning function in this pass."
+    }
+  ]
+}

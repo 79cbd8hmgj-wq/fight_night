@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00",
+  "tasks": ["Task 10 -- Resource loaders", "Task 11 -- Boxer and roster package (static portion only)"],
+  "entries": [
+    {
+      "question": "Does the RefPack compression layer apply uniformly and decode deterministically across every member of the Task 10/11 target archives (db.viv, tables.viv, contracts.viv, scripts.viv, scrptpal.viv, boxerpre.viv, bootpreloads.viv)?",
+      "status": "STATICALLY_RESOLVED",
+      "reason": "All 335 RefPack-flagged members across the 7 target archives (out of 511 total members) decode with zero errors, zero trailing bytes, and a self-consistent decode/encode round trip using the existing src/fnr3_re/refpack.py codec. The 176 non-RefPack members (all of scrptpal.viv, 9 of bootpreloads.viv) are exact-match negatives, not decode failures."
+    },
+    {
+      "question": "What is the BIGF/BIG4 archive-directory structure of the 7 target archives?",
+      "status": "STATICALLY_RESOLVED",
+      "reason": "Reused unmodified from Task 5 (docs/architecture/resource-codecs.md); all 7 archives parse cleanly with src/fnr3_re/ea_archive.py, member counts/names/offsets/sizes recorded in xdb-schema-evidence.json."
+    },
+    {
+      "question": "Do the 10 xdbNNNN.adf tables share a common header format?",
+      "status": "STATICALLY_RESOLVED",
+      "reason": "All 10 decoded tables open with the identical 8-word (32-byte) little-endian structure; codified in src/fnr3_re/xdb.py::parse_xdb_header and cross-checked in xdb-schema-evidence.json. The one structural exception found (xdbtrain.adf's section_size_a disagreeing with section_size_b/c) is itself a positive, deterministic finding, not a gap in the header model."
+    },
+    {
+      "question": "Which function opens preload/db.viv and requests each of its 10 xdb tables?",
+      "status": "STATICALLY_RESOLVED",
+      "reason": "func_001AD694 (BOOT.BIN, ELF virtual 0x001AD694) is confirmed by direct disassembly to be a bitmask-driven dispatcher that opens db.viv once and, per requested table, looks up the named member (func_0033B58C) and hands it to a table-specific trampoline. The bit-to-table mapping was cross-validated two independent ways (string-table extraction and instruction-operand extraction) with an exact match for all 10 tables."
+    },
+    {
+      "question": "Is there a shared, reusable per-table loading routine, or does each xdb table have its own bespoke loader?",
+      "status": "STATICALLY_RESOLVED",
+      "reason": "All 10 per-table trampolines are byte-identical in size and instruction count (0x30 bytes, 12 instructions) and all call the same shared generic loader (func_001A0C74) after their own table-specific singleton accessor. This was confirmed by disassembling all 10 trampolines and diffing their call targets."
+    },
+    {
+      "question": "What is the runtime ownership/storage location of the loaded boxer table (xdbboxr.adf)?",
+      "status": "STATICALLY_RESOLVED",
+      "reason": "func_00186408 is a lazily-initialized singleton accessor whose backing object address (func_00007E80+0x234 = ELF virtual 0x000080B4) was directly read from its own initialization code. The first three fields of that singleton (loaded-flag byte at +0x0, a copied size/count at +0x4, and the decoded-payload pointer at +0x8) were directly proven by disassembling the shared generic loader that populates it (func_001A0C74)."
+    },
+    {
+      "question": "What is the exact per-record field layout of xdbboxr.adf (offsets, widths, signedness, enums, strings, IDs) for name/rating/weight/division/stance/handedness/appearance/hair/shorts/hometown/career-eligibility/rivals/training/store-unlock/created-boxer data?",
+      "status": "RUNTIME_BLOCKED",
+      "function_or_resource": "preload/db.viv!xdbboxr.adf decoded payload (9704 bytes); no field-accessor function was located in this pass",
+      "what_static_evidence_proves": "The shared 32-byte header (word0=121, word1=37, a 9012-byte leading section, a 692-byte trailing region) and the fact that the table is reached through func_001863B4/func_00186408/func_001A0C74 as described above.",
+      "why_static_cannot_resolve_it": "No arithmetic combination of the header's two count-like words and the total/section sizes produces an integer record stride, and the one runtime accessor located (func_00186464) walks a linked list via a +0x10 'next' pointer rather than doing index*stride array arithmetic -- meaning the record boundary is not a simple fixed-stride array reachable by inspection of the header alone, and finding the true per-record parser requires locating and disassembling additional functions among BOOT.BIN's 24,576 total functions that this pass did not reach.",
+      "smallest_future_static_step": "Before any runtime step: search BOOT.BIN for functions that dereference the boxer table singleton's +0x8 payload pointer directly (rather than through func_00186464's linked-list walk), since a direct-indexing field accessor would settle the stride question without needing PPSSPP at all.",
+      "smallest_future_runtime_experiment": "If the static step above does not resolve it: a single breakpoint at func_00186464's node dereference (0x00186490) during a menu boxer-select screen for one known retail boxer, recording the sequence of node addresses visited and their contents, would show directly whether each node is a boxer record (and thus reveal the record stride from the address deltas) or a table-instance registration."
+    },
+    {
+      "question": "Does word0=121 in xdbboxr.adf's header mean 'boxer record count', and does word1=37 mean 'field count'?",
+      "status": "RUNTIME_BLOCKED",
+      "function_or_resource": "preload/db.viv!xdbboxr.adf header words 0 and 1",
+      "what_static_evidence_proves": "The two values (121, 37) are stable, deterministic facts read directly from the decoded header.",
+      "why_static_cannot_resolve_it": "Both interpretations are equally plausible from the numbers alone (a boxer database plausibly has on the order of 100-150 rows including legends/create-a-boxer templates, and 37 is a plausible field count for a rich boxer schema), and no executable code path read either word and used it as a loop bound, array size, or field-count argument in the functions traced in this pass. The evidence standard explicitly prohibits promoting a claim from 'a plausible numeric value' alone.",
+      "smallest_future_runtime_experiment": "Observe the loop bound used by whichever function actually iterates the full boxer roster (e.g. the roster-select screen's population loop) via a single breakpoint on its loop-counter compare; the observed maximum matches either word0 or neither, settling the question."
+    },
+    {
+      "question": "What does the 8-bit index parameter to func_00186464 actually select -- one boxer record, one loaded-table-instance registration, or something else?",
+      "status": "RUNTIME_BLOCKED",
+      "function_or_resource": "func_00186464 (BOOT.BIN, ELF virtual 0x00186464)",
+      "what_static_evidence_proves": "The function masks its argument to 8 bits and walks a linked list from the boxer table singleton via each node's +0x10 field, that many times, stopping early on a null node.",
+      "why_static_cannot_resolve_it": "A linked-list walk is consistent with either per-boxer-record indexing (if each xdbboxr.adf record is wrapped in its own heap node) or per-table-instance chaining (if multiple loaded copies of the boxer table -- e.g. career vs. exhibition vs. online -- are chained together); the two callers of this function traced in this pass (func_001863E4, func_00185114) did not disambiguate which.",
+      "smallest_future_runtime_experiment": "A single breakpoint at the node dereference (0x00186490) during any screen that lists more than one boxer (e.g. the roster-select screen) would show whether the visited nodes' addresses are evenly spaced by a constant stride (boxer records) or scattered (heap-allocated table-instance registrations)."
+    },
+    {
+      "question": "Why do scripts/scripts.viv and scripts/scrptpal.viv hold two same-shaped but differently-valued parameter sets for the identical 167 named script entries?",
+      "status": "RUNTIME_BLOCKED",
+      "function_or_resource": "scripts/scripts.viv and scripts/scrptpal.viv, all 167 shared member names",
+      "what_static_evidence_proves": "Byte-for-byte comparison of one sampled member pair (addanims.bin) proves the two files share identical framing (magic 'stp\\x01', identical length, several identical constant fields) but differ in specific integer fields -- this is a proven structural fact, not a filename inference.",
+      "why_static_cannot_resolve_it": "No string reference to 'scrptpal.viv' exists anywhere in BOOT.BIN's extracted string table, so the function that opens it (if any function in BOOT.BIN does) was not located; without that function, there is no static path to learn which conditions select one parameter set over the other.",
+      "smallest_future_runtime_experiment": "A watchpoint on either file's decoded buffer address during a single fight, comparing which archive's parameter values actually reach the fight-script interpreter, would settle whether this is a difficulty toggle, a build/debug variant, or something else -- but this is out of Task 10/11's boxer/resource-loader scope and belongs to the fight-engine (program-05/06) investigation."
+    },
+    {
+      "question": "What does the tables.viv/bootpreloads.viv boxer-surname cross-reference (ali/hatton/lazcano/leonard/morales/pacquiao/robinson, plus one unmatched 'punchout') actually gate -- a licensed-legend unlock system, a fixed preload set, or plain shared assets?",
+      "status": "RUNTIME_BLOCKED",
+      "function_or_resource": "preload/tables.viv (7 boxer-surname .txt files) and preload/bootpreloads.viv (8 HK_*.bh members)",
+      "what_static_evidence_proves": "The name-stem correspondence itself, established by direct enumeration of both archives.",
+      "why_static_cannot_resolve_it": "No loader function for either the tables.viv hairstyle files or the bootpreloads.viv HK_ members was traced to a common caller in this pass, and name-stem matching is explicitly insufficient for anything above CANDIDATE per the evidence standard.",
+      "smallest_future_runtime_experiment": "Not warranted yet -- the correct next static step is locating tables.viv's own loader (currently untraced; see resource-loader-map.json's 'structural_findings_not_yet_traced_to_a_loader') before any runtime step is justified."
+    }
+  ]
+}

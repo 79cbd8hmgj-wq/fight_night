@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00",
+  "source_module": {
+    "path": "BOOT.BIN",
+    "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+    "format": "plain ELF32 little-endian MIPS/PSP executable",
+    "address_type": "elf_virtual",
+    "analysis_note": "Repository-root BOOT.BIN is legacy/non-authoritative as a workspace input, but its sha256 matches the tracked golden fixture (analysis/modules/tracked-module-map.json) and the ULUS10066-v1.00 revision lock, so it is used here as a hash-verified static-analysis sample (same convention already established by the Task 9 save-system package)."
+  },
+  "notes": [
+    "Addresses below are ELF virtual addresses in BOOT.BIN unless stated otherwise.",
+    "'proven_by' identifies how each fact was established: exact disassembly of the addressed function(s), cross-checked against the independently-extracted string table.",
+    "Confidence follows docs/architecture/evidence-standard.md: decompiler/disassembly output alone caps a claim at PROBABLE, never CONFIRMED."
+  ],
+  "archives": [
+    {
+      "archive": "preload/db.viv",
+      "string_address": "0x005090FC",
+      "opened_in": {
+        "function": "func_001AD694",
+        "address": "0x001AD694",
+        "size": "0x470",
+        "role": "xdb table-set loader/dispatcher"
+      },
+      "confidence": "PROBABLE",
+      "dispatcher": {
+        "function": "func_001AD694",
+        "address": "0x001AD694",
+        "signature_note": "First argument ($a0) is a bitmask selecting which of the 10 xdbNNNN.adf tables to load this call. Each bit is tested in ascending order and, if set, opens the named db.viv member and hands it to that table's own loader trampoline.",
+        "member_lookup_function": {
+          "function": "func_0033B58C",
+          "address": "0x0033B58C",
+          "size": "0x5B0",
+          "role": "shared archive-member-by-name lookup (called once per requested table, with $s1=open db.viv handle, $a1=member-name string)"
+        },
+        "bit_to_table_map": [
+          {"bit": "0x001", "member": "xdbboxr.adf", "string_address": "0x00509104", "trampoline": "func_001863B4"},
+          {"bit": "0x002", "member": "xdbvenue.adf", "string_address": "0x00509110", "trampoline": "func_001B99F0"},
+          {"bit": "0x004", "member": "xdbalias.adf", "string_address": "0x00509120", "trampoline": "func_00184C34"},
+          {"bit": "0x008", "member": "xdbevent.adf", "string_address": "0x00509130", "trampoline": "func_001A1BB4"},
+          {"bit": "0x010", "member": "xdbhmtwn.adf", "string_address": "0x00509140", "trampoline": "func_001A8C4C"},
+          {"bit": "0x020", "member": "xdbstore.adf", "string_address": "0x00509150", "trampoline": "func_001B8B88"},
+          {"bit": "0x040", "member": "xdbpref.adf", "string_address": "0x00509160", "trampoline": "func_001AC1E4"},
+          {"bit": "0x080", "member": "xdbrivl.adf", "string_address": "0x0050916C", "trampoline": "func_001AE9B4"},
+          {"bit": "0x100", "member": "xdbtrain.adf", "string_address": "0x00509178", "trampoline": "func_001B9CE8"},
+          {"bit": "0x200", "member": "xdbcutpn.adf", "string_address": "0x00509188", "trampoline": "func_001A08CC"}
+        ],
+        "bit_to_table_map_evidence": "Each string_address above was independently confirmed twice: once from the extracted string table (StringRecord.address) and once from the lui/addiu %hi/%lo operand pair on the instruction immediately preceding the corresponding trampoline call inside func_001AD694. The two extractions agree exactly for all 10 tables."
+      },
+      "per_table_trampoline_shape": {
+        "size": "0x30 (12 instructions) for all 10 tables, byte-identical shape",
+        "pattern": "trampoline(member_handle) => generic_loader(table_singleton_accessor(), member_handle)",
+        "generic_loader": {
+          "function": "func_001A0C74",
+          "address": "0x001A0C74",
+          "size": "0x64",
+          "role": "shared per-table loader, reused verbatim by all 10 xdb tables",
+          "observed_effect": "Reads a decode/extract entry point from the member handle's sub-object (member_handle+0xC, function pointer at +0x24 with a length/offset field at +0x20), invokes it, and stores the result pointer and a size value into the caller-supplied table singleton (see analysis/resources/boxer-ownership-map.json for the xdbboxr instance of this singleton's layout)."
+        }
+      },
+      "table_singleton_accessors": [
+        {"table": "xdbboxr.adf", "trampoline": "func_001863B4", "accessor": "func_00186408"},
+        {"table": "xdbvenue.adf", "trampoline": "func_001B99F0", "accessor": "func_001B9A44"},
+        {"table": "xdbalias.adf", "trampoline": "func_00184C34", "accessor": "func_00184C88"},
+        {"table": "xdbevent.adf", "trampoline": "func_001A1BB4", "accessor": "func_001A1C08"},
+        {"table": "xdbhmtwn.adf", "trampoline": "func_001A8C4C", "accessor": "func_001A8CA0"},
+        {"table": "xdbstore.adf", "trampoline": "func_001B8B88", "accessor": "func_001B8DF4"},
+        {"table": "xdbpref.adf", "trampoline": "func_001AC1E4", "accessor": "func_001AC238"},
+        {"table": "xdbrivl.adf", "trampoline": "func_001AE9B4", "accessor": "func_001AEA08"},
+        {"table": "xdbtrain.adf", "trampoline": "func_001B9CE8", "accessor": "func_001B9D3C"},
+        {"table": "xdbcutpn.adf", "trampoline": "func_001A08CC", "accessor": "func_001A0920"}
+      ],
+      "table_singleton_accessors_evidence": "Each accessor was confirmed by direct disassembly to be a lazily-initialized singleton getter (checks a fixed-address 'already initialized' flag, allocates/registers the struct once, returns its address on every call). Only the xdbboxr.adf accessor (func_00186408) was traced to its actual backing address (0x0056?)-relative struct at func_00007E80+0x234; the other nine were confirmed to follow the identical accessor shape but their individual backing addresses were not separately resolved in this pass."
+    },
+    {
+      "archive": "contract/contracts.viv",
+      "string_address": "0x005085D4",
+      "opened_in": {"function": "func_0019FDE4", "address": "0x0019FDE4", "size": "0xD8"},
+      "confidence": "PROBABLE",
+      "members": [
+        {"member": "cutman.fnc", "string_address": "0x005085E8", "referencing_function": "func_001A023C", "address": "0x001A023C", "size": "0xE4"},
+        {"member": "fights.fnc", "string_address": "0x0050872C", "referencing_function": "func_001A3D48", "address": "0x001A3D48", "size": "0x274"},
+        {"member": "trainer.fnc", "string_address": "0x005095F0", "referencing_function": "func_001B9334", "address": "0x001B9334", "size": "0xDC"}
+      ],
+      "notes": "The three .fnc members are each referenced from a distinct function, unlike the ten xdb tables which share one dispatcher. Each referencing function's internal structure was not traced further in this pass; only the string xref (opener/consumer location) is established."
+    },
+    {
+      "archive": "preload/bootpreloads.viv",
+      "string_address": "0x0051EB04",
+      "opened_in": {"function": "T_0033A614", "address": "0x0033A614", "size": "0xBC"},
+      "confidence": "CANDIDATE",
+      "notes": "Single xref located; the boot-preload dispatch logic inside T_0033A614 was not traced further in this pass."
+    },
+    {
+      "archive": "scripts/scripts.viv",
+      "string_address": "0x004F9C5C",
+      "opened_in": {"function": "func_000852BC", "address": "0x000852BC", "size": "0x270"},
+      "confidence": "CANDIDATE",
+      "notes": "scripts/scrptpal.viv has no string reference anywhere in BOOT.BIN's extracted string table; it is either opened by a runtime-constructed path (base name + suffix), opened from a different module/PRX, or opened only under a condition this pass did not reach. This is recorded as an open question, not assumed."
+    }
+  ],
+  "structural_findings_not_yet_traced_to_a_loader": [
+    {
+      "resource": "preload/tables.viv",
+      "confidence": "CANDIDATE",
+      "notes": "No direct string xref to 'tables.viv' was found in BOOT.BIN's extracted string table (consistent with the existing analysis/resources/ea-codec-evidence.json, which also does not claim one). The archive's 8 CSV tables (actors/cabstore/facemorph/facialhair/haircolor/hairtable/morphslots/shoes/shorts) and ~63 named hairstyle/lighting text files were enumerated and RefPack-decoded (see xdb-schema-evidence.json's sibling archive notes) but not traced to a loader function in this pass."
+    },
+    {
+      "resource": "preload/boxerpre.viv",
+      "confidence": "CANDIDATE",
+      "notes": "No direct string xref found. Contains a shared base model/shadow pair (mod_base.orl/.ord, shad_base.orl/.ord) and 8 face-region damage morph targets (mor_base_head_dam{cheek,eye,mouth,nose}{left,right}.o) -- a plausible cross-link to the Medical/damage subsystem (program-10), not confirmed by any executable evidence in this pass."
+    }
+  ]
+}
