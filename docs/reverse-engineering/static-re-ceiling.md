@@ -2,12 +2,11 @@
 
 ## Purpose
 
-This document answers one question for the whole verified `ULUS10066-v1.00`
-corpus and the whole planned overhaul (not Task 10/11, not boxer data alone,
-not any single archive or module): **how much of the complete planned Fight
-Night Round 3 PSP overhaul can be understood, mapped, reconstructed, and
-prepared using static evidence alone, before any runtime reverse engineering
-is required?**
+This document answers one question for the verified `ULUS10066-v1.00`
+corpus enumerated so far and the whole planned overhaul: **how much of the
+complete planned Fight Night Round 3 PSP overhaul can be understood, mapped,
+reconstructed, and prepared using static evidence alone, before any runtime
+reverse engineering is required?**
 
 It is a bounded, machine-readable evidence-question inventory, not a
 subjective estimate. Every number below is a count over
@@ -18,6 +17,21 @@ was performed to produce it or any prior pass this project has run.
 Governing documents: `Fight Night Round 3 PSP Reverse Engineering
 Infrastructure Shell.txt`, `config/subsystem_registry.json`,
 `docs/architecture/evidence-standard.md`, `docs/architecture/decompilation-gate.md`.
+
+## Revision history
+
+- **Base pass** (PR #32): built the original 57-question corpus-wide
+  inventory.
+- **Delta pass** (this revision): a *delta-only* static investigation of 11
+  newly-added retail files -- `debugmenu.big`, `genericbackground.big`,
+  `internetmainmenu.big`, `mainmenu.big`, `tutorialoverlay.big`,
+  `adhocrivals.big`, `careerfighthistory.big`, `recordbooks.big`,
+  `fnhud.hud`, `optionsettings.big`, `selectboxer.big` -- evaluated
+  specifically against the 5 previously STATICALLY_AMBIGUOUS questions and
+  the wider STATICALLY_SOLVABLE backlog. It did **not** repeat the base
+  pass's corpus-wide sweep and does not claim full-ISO completeness (see
+  `analysis/resources/corpus-resource-index.json`'s `delta_passes` block).
+  The inventory grew from 57 to 63 questions.
 
 ## Classification
 
@@ -40,41 +54,32 @@ Every bounded evidence question is placed in exactly one of four categories:
 
 ## Overall totals
 
-| Category | Count | Share of 57 |
+| Category | Count | Share of 63 |
 |---|---|---|
-| STATICALLY_RESOLVED | 25 | 43.9% |
-| STATICALLY_SOLVABLE | 27 | 47.4% |
-| STATICALLY_AMBIGUOUS | 5 | 8.8% |
+| STATICALLY_RESOLVED | 28 | 44.4% |
+| STATICALLY_SOLVABLE | 30 | 47.6% |
+| STATICALLY_AMBIGUOUS | 5 | 7.9% |
 | RUNTIME_ESSENTIAL | 0 | 0.0% |
-| **Total bounded questions** | **57** | 100% |
+| **Total bounded questions** | **63** | 100% |
 
 ## Static ceiling
 
-**Static ceiling = STATICALLY_RESOLVED + STATICALLY_SOLVABLE = 25 + 27 = 52 of 57 questions (91.2%).**
+**Static ceiling = STATICALLY_RESOLVED + STATICALLY_SOLVABLE = 28 + 30 = 58 of 63 questions (92.1%).**
 
-This is a count-based projection, not a subjective guess: it is the number of
-questions that either already have static evidence in hand, or have a
-concrete, named static avenue that has not yet been walked. The remaining 5
-questions (8.8%) are STATICALLY_AMBIGUOUS -- narrowed to specific named
-alternatives, each with its own next disassembly step, not abandoned to
-runtime.
+Up from 52/57 (91.2%) before this delta pass. This is a count-based
+projection, not a subjective guess.
 
 ## Runtime floor
 
-**Runtime floor = 0 questions.**
+**Runtime floor = 0 questions** (unchanged).
 
-No question in this pass's 57-question inventory was found to be genuinely
-RUNTIME_ESSENTIAL. The one candidate drafted during this pass -- whether the
-career save format (`program-16-05`, "does the save format have unused/reserved
-space for Career Mode 2.0 / Amateur Career fields") -- was re-examined against
-the project's anti-premature-classification rule and reclassified
-`STATICALLY_SOLVABLE`: the maximum length the career-payload serializer can
-ever write is a static, code-determined fact (sum of fixed-size field writes
-plus variable-length writes bounded by other statically-provable maxima),
-not something that requires observing a real played-in save file. See
-`analysis/resources/runtime-minimum-backlog.json` (schema_version 3, empty)
-and `analysis/resources/static-re-backlog.json` entry `program-16-05` for the
-named next step.
+No question surfaced by this delta pass -- including several genuinely new
+structural findings (the shared native-function-registration mechanism, the
+packed options bitfield, `fnhud.hud`'s component-tag container) -- was found
+to be genuinely RUNTIME_ESSENTIAL. Each was classified STATICALLY_SOLVABLE
+or left STATICALLY_AMBIGUOUS with named next steps.
+`analysis/resources/runtime-minimum-backlog.json` remains empty
+(schema_version 4).
 
 ## Breakdown by Program
 
@@ -82,19 +87,19 @@ named next step.
 |---|---|---|---|---|---|---|
 | program-00 | Intake | 2 | 0 | 0 | 0 | 2 |
 | program-01 | Build/Rebuild | 1 | 1 | 0 | 0 | 2 |
-| program-03 | Modules | 3 | 1 | 0 | 0 | 4 |
+| program-03 | Modules | 3 | 2 | 0 | 0 | 5 |
 | program-04 | Boxers | 3 | 2 | 2 | 0 | 7 |
-| program-05 | Fight | 1 | 2 | 0 | 0 | 3 |
+| program-05 | Fight | 1 | 3 | 0 | 0 | 4 |
 | program-06 | Punches | 1 | 2 | 0 | 0 | 3 |
 | program-07 | Stamina | 1 | 2 | 0 | 0 | 3 |
-| program-08 | Damage | 2 | 2 | 0 | 0 | 4 |
+| program-08 | Damage | 2 | 3 | 0 | 0 | 5 |
 | program-09 | Defense | 1 | 1 | 0 | 0 | 2 |
 | program-10 | Medical | 1 | 2 | 0 | 0 | 3 |
 | program-11 | Judging | 1 | 1 | 1 | 0 | 3 |
-| program-12 | AI | 1 | 1 | 1 | 0 | 3 |
+| program-12 | AI | 2 | 1 | 1 | 0 | 4 |
 | program-13 | Weights | 1 | 2 | 0 | 0 | 3 |
-| program-16 | Career/save | 2 | 3 | 0 | 0 | 5 |
-| program-28 | UI/commentary | 1 | 2 | 1 | 0 | 4 |
+| program-16 | Career/save | 3 | 4 | 0 | 0 | 7 |
+| program-28 | UI/commentary | 2 | 1 | 1 | 0 | 4 |
 | program-29 | Budgets | 3 | 1 | 0 | 0 | 4 |
 | interface-audio | Audio | 0 | 1 | 0 | 0 | 1 |
 | interface-renderer | Renderer | 0 | 1 | 0 | 0 | 1 |
@@ -106,64 +111,97 @@ array (`counts_by_program` block has the same table in machine-readable form).
 ## Breakdown by planned overhaul feature
 
 Each question may tag more than one planned feature, so these columns do not
-sum to 57.
+sum to 63.
 
 | Feature | Resolved | Solvable | Ambiguous | Runtime |
 |---|---|---|---|---|
-| combat | 10 | 14 | 2 | 0 |
-| career-2 | 10 | 9 | 3 | 0 |
-| roster | 9 | 8 | 4 | 0 |
-| amateur | 9 | 6 | 2 | 0 |
-| generated-boxers | 8 | 2 | 2 | 0 |
-| divisions | 8 | 6 | 1 | 0 |
-| career-health | 7 | 7 | 0 | 0 |
-| legacy | 2 | 0 | 0 | 0 |
+| combat | 11 | 16 | 2 | 0 |
+| career-2 | 13 | 9 | 3 | 0 |
+| roster | 11 | 8 | 4 | 0 |
+| amateur | 11 | 7 | 2 | 0 |
+| generated-boxers | 10 | 3 | 2 | 0 |
+| divisions | 9 | 7 | 1 | 0 |
+| career-health | 7 | 10 | 0 | 0 |
+| legacy | 2 | 2 | 0 | 0 |
 
-`combat` (the core punch/stamina/damage/defense/AI/judging overhaul) has the
-largest STATICALLY_SOLVABLE count -- expected, since it spans the most
-individual Programs (05/06/07/08/09/12) and none of those programs' internal
-formulas (stamina cost, damage/stun thresholds, hit-detection convergence,
-AI decision loop) were disassembled to completion in this pass, only located
-by name/string evidence and handed a concrete next disassembly target.
+## The five STATICALLY_AMBIGUOUS questions, re-evaluated against the 11 new files
 
-## Major findings this pass
+1. **`func_00186464`'s 8-bit linked-list index** -- no direct new evidence
+   found. The lead advanced one hop: `selectboxer.big`'s `GetSelectBoxerInfo`
+   (the boxer-list-selection screen's own native data accessor) is owned in
+   BOOT.BIN only by a generic native-function *registration* trampoline
+   (`func_001D537C`/`func_001D5438`, calling the shared registrar
+   `func_0CDAC0`/`func_0CDA70`), not by the real implementation. **Remains
+   STATICALLY_AMBIGUOUS**, with a concrete new avenue: trace the registration
+   mechanism to reach the real implementation.
+2. **Fixed maximum roster/database count (121)** -- `selectboxer.big`'s 397
+   named UI constants contain no `MAX_BOXER`/`MAX_ROSTER`-style cap (a
+   genuine negative result across all 10 newly-decoded `.const` pools; only
+   `MAX_WEIGHTCLASS` and generic display-pagination limits exist). This rules
+   out one of four original interpretations ("a UI-authored maximum") but not
+   the others. **Remains STATICALLY_AMBIGUOUS.**
+3. **Judges' distinct per-judge scoring weights** -- none of the 11 files is
+   a scorecard/judging screen; no relevant identifier found. **Remains
+   STATICALLY_AMBIGUOUS, unaffected by this pass.**
+4. **AI difficulty/fighting-style enum** -- **RESOLVED for the difficulty
+   half.** A raw byte-level search of `optionsettings.big` (not the
+   extracted-string-table search the prior pass relied on) found, at file
+   offset `0x8548`, three consecutive localization-key strings inside
+   `optionSettings.const`'s data region: `m_arrText = ["$O_Easy",
+   "$O_Medium", "$O_Hard"]`, bound to the `cpToggleDifficulty` widget
+   (`$M_Difficulty`). This is direct, unambiguous proof of a named 3-level
+   difficulty enum. The fighting-style half (swarmer/slugger/etc.) was
+   **split into its own question** and remains STATICALLY_AMBIGUOUS -- no
+   style name was found in any of the 11 files either.
+5. **Commentary lookup/event-ID architecture** -- new evidence:
+   `optionsettings.big` proves commentary is a real, named, toggleable rule
+   (`cpToggleCommentary`/`iDisplayCommentaryOption`), and the latter's 3
+   BOOT.BIN string sites are each owned by a different, disassemblable
+   function (`T_001D9A08`, `T_001DC5DC`, `T_001FB69C` -- the same 3 that
+   decode a packed options bitfield, see below). **Remains
+   STATICALLY_AMBIGUOUS** (the on/off toggle is now well-evidenced; whether
+   the actual audio *selection* is table-driven is still open), but with 3
+   concrete new disassembly targets in place of one string reference.
 
-- **6 weight divisions are confirmed in executable code**, not inferred from
-  data alone: `INFO_Division_1` through `INFO_Division_6` plus an explicit
-  `INFO_Division_Unknown` fallback, appearing at 4 separate string-table
-  locations, each consumed by a distinct function
-  (`func_0019527C`, `func_001B798C`, `T_001E9A58`, `T_00202170`/`T_00201BB4`).
-  This is direct evidence relevant to the planned Bantamweight/Cruiserweight
-  roster-expansion feature.
-- **A 3-judge, per-boxer, per-round scorecard model is proven**: 6 named
-  fields (`aJudge1Boxer1Score` .. `aJudge3Boxer2Score`) under one function
-  (`T_001F7248`).
-- **A named, per-player-slot AI tuning-category system is proven**: 6
-  `ai/mods/p%d/...` debug-path strings (misc offense, defense, bag-o-tricks,
-  attack power, energy and health, phys damage), two of which are consumed by
-  two distinct functions.
-- **A generic localization indirection is proven**: `s_pfnGetLocalizedString`,
-  a named function-pointer variable, referenced by `T_000CE8A0`.
-- Named-but-unresolved evidence for stamina (`iStamina`, two consuming
-  functions), knockdowns/TKO (`strKnockdowns*`, `astrTKOTime`, the
-  `M_3_Knockdown_Rule`), the cutman economy (`strCutmanRate`/`strCutmanAmount`),
-  and career/training accessors (`GetCareerMode`/`SetCareerMode`,
-  `GetTrainingInfo`/`SetTrainingInfo`) -- each STATICALLY_SOLVABLE with a
-  named next disassembly target, not RUNTIME_ESSENTIAL.
+## Other backlog questions advanced this pass
 
-## Questions previously at risk of premature runtime classification
-
-`program-16-05` (career save reserved space) is the only question in this
-pass that was drafted as RUNTIME_ESSENTIAL before being re-examined and
-reclassified STATICALLY_SOLVABLE per the project's explicit rule that a
-question is not runtime-essential merely because a value has not yet been
-traced through code. See "Runtime floor" above.
-
-No prior-pass runtime-classified questions needed re-examination in this
-pass: the prior PR #31 passes already drove
-`analysis/resources/runtime-minimum-backlog.json` to empty
-(schema_version 2) before this pass began; this pass's own corpus-wide sweep
-did not surface any new evidence contradicting that.
+- **Boxer per-record schema** (program-04): `selectboxer.big` names an exact,
+  ordered 9-field boxer rating-stat schema (Power/Speed/Agility/Stamina/
+  Chin/Body/Heart/Cuts/Overall, bounded by `NUM_STATS`), all 9 confirmed as
+  BOOT.BIN strings owned by the *same* function pair (`T_001D54A0`/
+  `T_001E83E0`) already tied to `iStamina` alone in the base pass.
+- **Stamina cost/regeneration formula** (program-07): **corrected**, not
+  advanced -- `T_001D54A0`/`T_001E83E0` are now proven to be UI
+  rating-display registration trampolines, not in-fight stamina logic. The
+  formula must be sought elsewhere; this prevents a future pass from
+  wrongly disassembling the wrong functions.
+- **Weight-division count** (program-13): independently corroborated by a
+  second resource (`selectboxer.big` names exactly the same 6 divisions --
+  Featherweight/Lightweight/Welterweight/Middleweight/Light-Heavyweight/
+  Heavyweight -- as BOOT.BIN's `INFO_Division_1..6`).
+- **Boxer-selection UI screen identity** (program-28): **RESOLVED** --
+  `selectboxer.big` is proven to be the boxer-selection screen
+  (`TL_Select_Boxer`), with 4 native accessors and a Red/Blue two-corner,
+  custom-boxer-aware selection model.
+- **Amateur vs. professional fight history** (new, program-16):
+  **RESOLVED** -- `careerfighthistory.big` proves the retail game already
+  distinguishes Professional and Amateur fight records, directly relevant to
+  the planned Amateur Career feature.
+- **Hall of Fame / records-book legacy system** (new, program-16):
+  `recordbooks.big` proves a 6-category records/Hall-of-Fame screen exists
+  (Most Wins, Fastest KOs, Most KOs, Top 10, Career Earnings), relevant to
+  the `legacy` planned feature.
+- **Damage/stoppage rule surface** (new, program-08): `optionsettings.big`'s
+  17-entry rules-toggle list adds 5 previously-unevidenced named rules --
+  `cpToggleIllegalBlows`, `cpToggleSavedByBell`, `cpToggleAutoRecovery`,
+  `cpToggleKOMoment`, `cpToggleFightStoppage` -- and reveals that the
+  options/rules storage format is a **packed 32-bit bitfield** (proven by
+  partial disassembly of `T_001D9A08`), not one scalar per option.
+- **A third resource-dispatch mechanism** (new, program-03): every
+  `GetXxxInfo`/`SetXxxInfo`/`DEBUG_GetXxxData` native name found across all
+  11 files is owned by a small trampoline that calls a shared registrar,
+  `func_0CDAC0`/`func_0CDA70` -- a single mechanism whose further tracing
+  would advance many other open questions at once.
 
 ## Discipline confirmation
 
@@ -174,13 +212,16 @@ did not surface any new evidence contradicting that.
   fighters, training, world simulation) was implemented.
 - No new copyrighted retail payload (ISO, extracted binary, reconstructed
   archive) was committed; all evidence is normalized JSON, hashes, schemas,
-  and documentation referencing hash-verified samples already tracked by the
-  repository's existing precedent.
+  and documentation referencing hash-verified samples already present in the
+  repository.
+- This pass does not claim full-ISO completeness -- it is delta-only over 11
+  named files plus their static cross-references into `BOOT.BIN`.
 
 ## Related artifacts
 
-- `analysis/reports/static-re-ceiling.json` -- the full 57-question machine-readable matrix, counts, static ceiling, and runtime floor.
-- `analysis/resources/static-re-backlog.json` -- the 32 STATICALLY_SOLVABLE/STATICALLY_AMBIGUOUS questions' named remaining static avenues, corpus-wide.
-- `analysis/resources/runtime-minimum-backlog.json` -- empty (schema_version 3).
+- `analysis/reports/static-re-ceiling.json` -- the full 63-question machine-readable matrix, counts, static ceiling, and runtime floor.
+- `analysis/resources/static-re-backlog.json` -- 35 STATICALLY_SOLVABLE/STATICALLY_AMBIGUOUS questions' named remaining static avenues (schema_version 2).
+- `analysis/resources/runtime-minimum-backlog.json` -- empty (schema_version 4).
+- `analysis/resources/corpus-resource-index.json` -- extended this pass with the 11 new files under `archives_enumerated` and a `delta_passes` record (schema_version 2).
 - `analysis/resources/static-discovery-backlog.json` -- the earlier Task 10/11-scoped backlog (boxer/resource-loader detail), preserved unmodified.
 - `docs/decomp/packages/resource-loaders/README.md`, `docs/decomp/packages/xdb-schema/README.md`, `docs/decomp/packages/save-system/README.md` -- the narrative packages this inventory draws on.
