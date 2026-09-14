@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": "analysis/save/career-runtime-evidence-2026-09-14.json",
+  "checkpoint": {
+    "id": 9,
+    "description": "Post-rival-rematch training result used as a confirmation pass for the persistent boxer attribute layout.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_9.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "f8f07d107998968469f87cb40d908838c86c95c2343b4bfce030a2c2c76dfd0f",
+      "ram_sha256": "42096bc55555da91c313aff06b154741a2078b08be67ee0275f74685b126e792",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "visible_training_result": {
+      "power": 1,
+      "speed": 1,
+      "agility": 0,
+      "stamina": 1,
+      "chin": 1,
+      "body": 1,
+      "heart": 1,
+      "cuts": 1
+    },
+    "runtime_training_payload": {
+      "address": "0x0938BA59",
+      "raw": "aStats=45,34,27,35,39,32,36,39,6&aStatsDelta=1,1,0,1,1,1,1,1,1",
+      "visible_stat_order": [
+        "Power",
+        "Speed",
+        "Agility",
+        "Stamina",
+        "Chin",
+        "Body",
+        "Heart",
+        "Cuts"
+      ],
+      "note": "The ninth aStats/aStatsDelta element is preserved as an unresolved training-summary/overall-like value. It is not yet proven to be a persistent boxer attribute."
+    },
+    "career_control_state": {
+      "record": "3-0-0",
+      "kos": 2,
+      "bank": 3190,
+      "rival": "Blake Jacobs",
+      "note": "Record and bank remain unchanged through this training-only comparison, providing a clean control against checkpoint 8."
+    }
+  },
+  "persistent_attribute_deltas_checkpoint_8_to_9": [
+    {"address": "0x08D9AABA", "name": "power", "before": 45, "after": 46, "delta": 1, "confidence": "confirmed"},
+    {"address": "0x08D9AABC", "name": "power_correlated_pair", "before": 45, "after": 46, "delta": 1, "confidence": "confirmed_correlation_exact_semantics_unresolved"},
+    {"address": "0x08D9AABE", "name": "speed", "before": 34, "after": 35, "delta": 1, "confidence": "confirmed"},
+    {"address": "0x08D9AAC0", "name": "agility", "before": 27, "after": 27, "delta": 0, "confidence": "confirmed"},
+    {"address": "0x08D9AAC2", "name": "stamina", "before": 35, "after": 36, "delta": 1, "confidence": "confirmed"},
+    {"address": "0x08D9AAC4", "name": "chin", "before": 39, "after": 40, "delta": 1, "confidence": "confirmed"},
+    {"address": "0x08D9AAC6", "name": "heart", "before": 36, "after": 37, "delta": 1, "confidence": "confirmed"},
+    {"address": "0x08D9AAC8", "name": "cuts", "before": 39, "after": 40, "delta": 1, "confidence": "confirmed"},
+    {"address": "0x08D9AACA", "name": "body", "before": 32, "after": 33, "delta": 1, "confidence": "confirmed"}
+  ],
+  "resolved_implications": [
+    "Checkpoint 9 independently reconfirms every visible member of the eight-stat training layout with a new delta pattern.",
+    "The second Power-correlated field at 0x08D9AABC again moves exactly with visible Power, strengthening the paired/mirror interpretation without yet proving why two fields exist.",
+    "Routine training checkpoints have diminishing RE value now that the visible stat layout and UI payload order are resolved; future savestates should prioritize ranking, amateur-to-pro, special rival/story events, and materially different contract types."
+  ]
+}
