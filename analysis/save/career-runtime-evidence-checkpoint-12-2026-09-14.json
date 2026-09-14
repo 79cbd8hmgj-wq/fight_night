@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": "analysis/save/career-runtime-evidence-2026-09-14.json",
+  "checkpoint": {
+    "id": 12,
+    "description": "Post-Charity Event career checkpoint; first observed Amateur Package unlock in Fight Store.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_12.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "d8331f38af099e7f8007bafa7834e9b710fb7709f08a589bee08b371f52cd824",
+      "ram_sha256": "cacc4da4009cf4ae29d1a0bbd0e8617340f0daf5c98edf01ce0df6774a2ea50e",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "visible_state": {
+      "boxer": "Jacob Morgan",
+      "weight_class": "AMATEUR MIDDLEWEIGHT",
+      "date": "July 28, 2027",
+      "rank": "UNRANKED",
+      "record": "6-0-0",
+      "kos": 5,
+      "rival": "Blake Jacobs",
+      "bank": 9706
+    },
+    "charity_event_result": {
+      "opponent": "Vashon Robinson",
+      "event_type": "CHARITY EVENT",
+      "format": "15 untimed rounds",
+      "observed_runtime_rule": "A knockdown ends the current round; if the downed boxer rises the next round begins; the bout continues until a boxer fails to rise.",
+      "player_knockdowns_by_round": [1, 1, 1, 1, 1],
+      "player_knockdowns_total": 5,
+      "opponent_knockdowns_total": 0,
+      "visible_payout": {
+        "total_purse": 11000,
+        "player_share": 6600,
+        "player_percentage": 60,
+        "promoter_expense": 660,
+        "net_pay": 5940
+      }
+    },
+    "fight_store_unlock": {
+      "name": "AMATEUR PACKAGE",
+      "runtime_popup_address": "0x08D9C3EE",
+      "runtime_popup_summary": "Congratulations popup reports that the Amateur Package has been unlocked in the Fight Store.",
+      "significance": "First observed store/progression unlock in the controlled career; potentially useful for identifying career milestone gates and existing unlock infrastructure for Amateur Career 2.0."
+    }
+  },
+  "confirmed_field_deltas_checkpoint_11_to_12": [
+    {"address": "0x08D98504", "name": "career_wins", "before": 5, "after": 6, "confidence": "confirmed"},
+    {"address": "0x08D98506", "name": "career_ko_count", "before": 4, "after": 5, "confidence": "confirmed"},
+    {"address": "0x08D98574", "name": "career_bank", "before": 3766, "after": 9706, "delta": 5940, "confidence": "confirmed", "evidence": "Matches the visible Charity Event net pay exactly."}
+  ],
+  "unlock_or_progression_candidates": [
+    {
+      "address": "0x08D98546",
+      "type": "u8",
+      "before": 0,
+      "after": 1,
+      "historical_late_career_value": 1,
+      "confidence": "strong_candidate_unresolved_semantics",
+      "evidence": "Stayed 0 through controlled checkpoints 1-11, changed to 1 at the same checkpoint as the first observed Amateur Package unlock, and is also 1 in the preserved 20-0 late-career baseline. Could be the package unlock or a coincident milestone/progression flag; not yet named as confirmed."
+    },
+    {
+      "range": "0x08D985B2-0x08D985B4",
+      "before_hex": "000000",
+      "after_hex": "ffff03",
+      "confidence": "candidate_unresolved_semantics",
+      "evidence": "First observed non-zero transition at checkpoint 12; may be an unlock/event bitmask or unrelated post-event state. Requires another store/progression transition or static writer trace."
+    },
+    {
+      "address": "0x08D985E4",
+      "type": "u8",
+      "before": 2,
+      "after": 6,
+      "confidence": "candidate_unresolved_semantics",
+      "evidence": "Changed materially across the Charity Event checkpoint and may be a progression/event counter; semantics not assigned."
+    }
+  ],
+  "overhaul_implications": [
+    "Retail career already exposes a gated Fight Store unlock path tied to career progression, giving the overhaul an existing milestone/unlock mechanism to investigate rather than inventing one blindly.",
+    "The Charity Event proves that special event archetypes can alter not only presentation and purse but also round-ending and fight-ending rules.",
+    "Because the Amateur Package unlock coincides with several persistent field changes, the next static RE target should be the code path that formats/triggers the Amateur Package popup and writes the candidate progression fields."
+  ],
+  "next_capture": [
+    "Open the Fight Store and capture the Amateur Package details (price, description, requirements/effects) with screenshots; no additional savestate is necessary unless purchasing it changes persistent state.",
+    "If the package is purchased, take one pre-purchase and one post-purchase savestate to distinguish unlock-availability state from ownership/activation state.",
+    "Continue prioritizing the first UNRANKED-to-numeric-rank and Amateur-to-Pro transitions."
+  ]
+}
