@@ -1,9 +1,9 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "revision": "ULUS10066-v1.00",
-  "purpose": "Every STATICALLY_SOLVABLE and STATICALLY_AMBIGUOUS evidence question from analysis/reports/static-re-ceiling.json, each carrying a concrete named static avenue. This file supersedes the narrower Task 10/11 analysis/resources/static-discovery-backlog.json for corpus-wide planning purposes; static-discovery-backlog.json is preserved unmodified as the detailed working log for the boxer/resource-loader packages it already documents, several of whose entries are also referenced here. Per task policy, none of these may be moved to runtime-minimum-backlog.json until every named avenue below is exhausted.",
+  "purpose": "Every STATICALLY_SOLVABLE and STATICALLY_AMBIGUOUS evidence question from analysis/reports/static-re-ceiling.json, each carrying a concrete named static avenue. Supersedes schema_version 1 of this file (regenerated after the delta-only pass over 11 newly-added retail .big/.hud files: debugmenu.big, genericbackground.big, internetmainmenu.big, mainmenu.big, tutorialoverlay.big, adhocrivals.big, careerfighthistory.big, recordbooks.big, fnhud.hud, optionsettings.big, selectboxer.big). This file supersedes the narrower Task 10/11 analysis/resources/static-discovery-backlog.json for corpus-wide planning purposes; static-discovery-backlog.json is preserved unmodified as the detailed working log for the boxer/resource-loader packages it already documents, several of whose entries are also referenced here. Per task policy, none of these may be moved to runtime-minimum-backlog.json until every named avenue below is exhausted.",
   "related_backlog": "analysis/resources/static-discovery-backlog.json (Task 10/11-scoped predecessor, still valid)",
-  "entry_count": 32,
+  "entry_count": 35,
   "entries": [
     {
       "id": "program-01-02",
@@ -31,12 +31,50 @@
       }
     },
     {
+      "id": "program-03-05",
+      "program_id": "program-03",
+      "subsystem": "Modules",
+      "status": "STATICALLY_SOLVABLE",
+      "question": "Is the UI-script container format used by all .big screen packages (member types .apt/.const/.o/.msh) identified, and is there a proven mechanism connecting UI scripts to BOOT.BIN native functions?",
+      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's registration is later resolved/dispatched at script-call time (i.e. where the registered name string is looked up and its real implementation function invoked) -- this single mechanism gates nearly every UI-side lead opened by this delta pass (GetSelectBoxerInfo's real implementation, GetRecordBooksInfo's real implementation, etc.), so resolving it once would advance several other STATICALLY_SOLVABLE questions at once. Decoding the .apt bytecode format itself (to recover literal numeric constants such as the difficulty enum's 'm_arrValues') is a separate, larger undertaking not attempted this pass.",
+      "affected_features": [
+        "career-2",
+        "amateur",
+        "roster",
+        "divisions",
+        "generated-boxers",
+        "career-health",
+        "legacy"
+      ],
+      "sources": {
+        "code": [
+          "src/fnr3_re/ea_archive.py (reused, unmodified)"
+        ],
+        "functions": [
+          "func_0CDAC0",
+          "func_0CDA70"
+        ],
+        "ui_resources": [
+          "debugmenu.big",
+          "optionsettings.big",
+          "selectboxer.big",
+          "adhocrivals.big",
+          "careerfighthistory.big",
+          "recordbooks.big",
+          "genericbackground.big",
+          "internetmainmenu.big",
+          "mainmenu.big",
+          "tutorialoverlay.big"
+        ]
+      }
+    },
+    {
       "id": "program-04-03",
       "program_id": "program-04",
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Disassemble func_0018654C (consumes func_001AD268's result); structurally analyze the payload tail; cross-check the +0x18 model against another xdb table's own consumer function.",
+      "remaining_static_work": "Disassemble func_0018654C (consumes func_001AD268's result); structurally analyze the payload tail specifically searching for a 9-field (Power/Speed/Agility/Stamina/Chin/Body/Heart/Cuts/Overall) stat block, now that the exact field set and order are known from selectBoxer.const; cross-check the +0x18 model against another xdb table's own consumer function.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -46,7 +84,12 @@
       "sources": {
         "resource": "preload/db.viv!xdbboxr.adf",
         "functions": [
-          "func_001AD268"
+          "func_001AD268",
+          "T_001D54A0",
+          "T_001E83E0"
+        ],
+        "ui_resource": [
+          "selectboxer.big!selectBoxer.const"
         ]
       }
     },
@@ -56,7 +99,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_AMBIGUOUS",
       "question": "What does func_00186464's 8-bit-masked linked-list index actually select (boxer record vs. table-instance registration)?",
-      "remaining_static_work": "Locate the node type's constructor/allocator and any writer of node+0x10 before concluding this needs runtime observation.",
+      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's native-function name registration is later dispatched (i.e. where the string name 'GetSelectBoxerInfo' is looked up and its real implementation invoked) to finally reach the function that actually walks the boxer list for the select-boxer screen; only then would this accessor's use (or non-use) of func_00186464 be directly observable. Locating the node type's constructor/allocator and any writer of node+0x10 remains the other standing avenue.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -64,7 +107,9 @@
       ],
       "sources": {
         "functions": [
-          "func_00186464"
+          "func_00186464",
+          "func_001D537C",
+          "func_001D5438"
         ]
       }
     },
@@ -92,12 +137,16 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_AMBIGUOUS",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
-      "remaining_static_work": "Search for a literal immediate 121 (0x79) used as an array-size bound or allocation size elsewhere in BOOT.BIN, independent of the header value itself.",
+      "remaining_static_work": "Search for a literal immediate 121 (0x79) used as an array-size bound or allocation size elsewhere in BOOT.BIN, independent of the header value itself. Also: reach GetSelectBoxerInfo's real implementation (see the func_00186464 entry above for the same registration-mechanism blocker) to observe what count value it actually computes and hands to iListLength.",
       "affected_features": [
         "roster",
         "generated-boxers"
       ],
-      "sources": {}
+      "sources": {
+        "ui_resource": [
+          "selectboxer.big!selectBoxer.const"
+        ]
+      }
     },
     {
       "id": "program-05-02",
@@ -124,6 +173,21 @@
         "combat"
       ],
       "sources": {}
+    },
+    {
+      "id": "program-05-04",
+      "program_id": "program-05",
+      "subsystem": "Fight",
+      "status": "STATICALLY_SOLVABLE",
+      "question": "Does fnhud.hud's format expose named field bindings for stamina, health, damage, stun, knockdowns, rounds, timers, scorecards, judges, or boxer slots (relevant to programs 05/07/08/10/11's in-fight HUD data)?",
+      "remaining_static_work": "Fully decode fnhud.hud's header table structure (the repeating size/type/offset triples) to establish an authoritative component hierarchy, then determine whether any component ties back to a BOOT.BIN-owned numeric field (e.g. via a renderer-consumer function) rather than inferring meaning from the 4-character tags alone.",
+      "affected_features": [
+        "combat",
+        "career-health"
+      ],
+      "sources": {
+        "resource": "fnhud.hud"
+      }
     },
     {
       "id": "program-06-02",
@@ -155,7 +219,7 @@
       "subsystem": "Stamina",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the exact stamina cost/regeneration formula, its caps, and rating inputs?",
-      "remaining_static_work": "Disassemble T_001D54A0 and T_001E83E0 to recover the formula; cross-reference against xdbboxr.adf's still-unresolved per-record fields for a stamina-rating input.",
+      "remaining_static_work": "T_001D54A0/T_001E83E0 are ruled out as the formula's location (see corrected evidence above). The actual in-fight stamina consumption/regeneration code must be sought elsewhere -- e.g. via the fight-session/round-lifecycle functions still being traced under program-05, not via the boxer-rating-card UI accessors.",
       "affected_features": [
         "combat",
         "divisions",
@@ -202,6 +266,30 @@
         "career-health"
       ],
       "sources": {}
+    },
+    {
+      "id": "program-08-05",
+      "program_id": "program-08",
+      "subsystem": "Damage",
+      "status": "STATICALLY_SOLVABLE",
+      "question": "Beyond the already-proven '3-knockdown rule', does the retail options menu expose other named, distinct damage/stoppage rule toggles (auto-recovery, KO moment/highlight, fight stoppage, illegal blows, saved-by-the-bell)?",
+      "remaining_static_work": "Complete the bit-field decode of T_001D9A08/T_001DC5DC/T_001FB69C (struct offsets +0x15C/+0x19A8/+0x1955) and correlate each extracted bit-range, in order, against optionSettings.const's own toggle-declaration order (cpToggleSFX...cpToggleDifficulty...cpToggleKnockdownRule...cpToggleAutoRecovery...) to assign each named option its exact bit position and value range.",
+      "affected_features": [
+        "combat",
+        "career-health"
+      ],
+      "sources": {
+        "ui_resource": [
+          "optionsettings.big!optionSettings.const"
+        ],
+        "functions": [
+          "T_001D9A08",
+          "T_001DC5DC",
+          "T_001FB69C",
+          "func_001D9870",
+          "func_001D98E4"
+        ]
+      }
     },
     {
       "id": "program-09-02",
@@ -275,12 +363,12 @@
       "sources": {}
     },
     {
-      "id": "program-12-02",
+      "id": "program-12-03",
       "program_id": "program-12",
       "subsystem": "AI",
       "status": "STATICALLY_AMBIGUOUS",
-      "question": "Does a named AI difficulty or fighting-style enum/table exist?",
-      "remaining_static_work": "Apply the raw-byte-search methodology (proven effective for the boxer registry table) to search for likely style-name candidates directly in the binary rather than relying on the automated string extractor; also check whether other PRX modules (not analyzed in any session so far) carry AI logic.",
+      "question": "Distinct from the now-resolved difficulty enum (Easy/Medium/Hard), does a separate named AI *fighting-style* enum/table exist (e.g. swarmer/slugger/out-boxer/counter-puncher)?",
+      "remaining_static_work": "Apply the same raw-byte-search technique (proven effective twice now: the boxer-appearance registry table, and this pass's difficulty enum) to further UI .big packages as they are added, prioritizing any boxer-attribute/create-a-champ/training screen; also check whether other PRX modules (not analyzed in any session so far) carry AI logic.",
       "affected_features": [
         "combat",
         "career-2",
@@ -292,7 +380,7 @@
       "sources": {}
     },
     {
-      "id": "program-12-03",
+      "id": "program-12-04",
       "program_id": "program-12",
       "subsystem": "AI",
       "status": "STATICALLY_SOLVABLE",
@@ -326,7 +414,11 @@
       "affected_features": [
         "divisions"
       ],
-      "sources": {}
+      "sources": {
+        "ui_resource": [
+          "selectboxer.big!selectBoxer.const"
+        ]
+      }
     },
     {
       "id": "program-16-03",
@@ -360,6 +452,9 @@
         "functions": [
           "func_001E8A24",
           "func_001E89C8"
+        ],
+        "ui_resource": [
+          "mainmenu.big!MainMenu.const"
         ]
       }
     },
@@ -375,6 +470,29 @@
         "amateur"
       ],
       "sources": {}
+    },
+    {
+      "id": "program-16-07",
+      "program_id": "program-16",
+      "subsystem": "Career/save",
+      "status": "STATICALLY_SOLVABLE",
+      "question": "Does a retail 'Records/Hall of Fame' legacy-tracking system exist (relevant to the planned legacy-systems overhaul feature)?",
+      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's native-function-name registration is dispatched at call time to reach GetRecordBooksInfo's real implementation and observe what record categories/limits it actually populates (e.g. is 'Top 10' a hard cap of exactly 10 entries).",
+      "affected_features": [
+        "legacy"
+      ],
+      "sources": {
+        "ui_resource": [
+          "recordbooks.big!recordBooks.const"
+        ],
+        "strings": [
+          "GetRecordBooksInfo@0x50cce0"
+        ],
+        "functions": [
+          "func_001EE218",
+          "func_001EE28C"
+        ]
+      }
     },
     {
       "id": "program-28-02",
@@ -395,31 +513,20 @@
       "subsystem": "UI/commentary",
       "status": "STATICALLY_AMBIGUOUS",
       "question": "Is commentary lookup/ID data (audio triggers tied to fight events) statically evidenced?",
-      "remaining_static_work": "Locate and disassemble the function referencing 'Decision Announcement Script' before concluding whether commentary selection is statically reconstructable.",
+      "remaining_static_work": "Disassemble T_001D9A08/T_001DC5DC/T_001FB69C fully (partial disassembly this pass only reached the bitfield-decode prologue) and separately locate and disassemble the function referencing 'Decision Announcement Script' before concluding whether commentary AUDIO selection (not just the on/off toggle) is statically reconstructable.",
       "affected_features": [
         "career-2",
         "roster"
       ],
       "sources": {
         "strings": [
-          "Decision Announcement Script@0x4fa4e8"
-        ]
-      }
-    },
-    {
-      "id": "program-28-04",
-      "program_id": "program-28",
-      "subsystem": "UI/commentary",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "Are the boxer-selection/roster-browser UI screens identified?",
-      "remaining_static_work": "Search for callers of func_001AF768 and disassemble its 9 chained subsystem-init calls to identify the screen by its other dependencies.",
-      "affected_features": [
-        "roster",
-        "career-2"
-      ],
-      "sources": {
+          "Decision Announcement Script@0x4fa4e8",
+          "iDisplayCommentaryOption@0x50b330"
+        ],
         "functions": [
-          "func_001AF768"
+          "T_001D9A08",
+          "T_001DC5DC",
+          "T_001FB69C"
         ]
       }
     },

@@ -1,47 +1,287 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "revision": "ULUS10066-v1.00",
   "purpose": "A corpus-wide classification pass so no potentially relevant resource is missed by starting from a predetermined filename list. This is a breadth index, not a claim that every listed resource has been reversed -- most entries are inventory only (type/magic/count), and only the archives with a 'members' block have been enumerated and RefPack/zlib-verified.",
   "scope_note": "Repository-root and known game-subdirectory files, excluding the fnr3-re tool's own src/tests/docs/tools/config/analysis directories. 428 top-level files classified. Not yet expanded: recursive enumeration of every archive's own members (only the archives listed under 'archives_enumerated' were opened).",
   "corpus_summary_by_type": [
-    {"type": "BIGF (EA archive)", "count": 272, "extension": ".big"},
-    {"type": "BIG4 (EA archive)", "count": 83, "extension": ".viv"},
-    {"type": "zlb (length-prefixed zlib, new codec this pass)", "count": 26, "extension": ".zlb"},
-    {"type": "VIV4 (unidentified container, new magic this pass)", "count": 2, "extension": ".bh"},
-    {"type": "PSP encrypted container (~SCE)", "count": 6, "extension": ".prx", "notes": "audiocodec.prx, mpegbase.prx, sc_sascore.prx, videocodec.prx, libatrac3plus.prx, mpeg.prx -- PSP system media codec modules, needs_decryption, not opened by any static analysis in this pass"},
-    {"type": "PSAR (PSP savedata archive resource)", "count": 2, "notes": "DATA.BIN and one other; consistent with the Task 9 save-system package's existing findings, not re-investigated here"},
-    {"type": "PSP encrypted container (~PSP)", "count": 2, "notes": "EBOOT.BIN and one other"},
-    {"type": "PNG", "count": 2, "notes": "ICON0.PNG, PIC1.PNG -- decorative, no further investigation"},
-    {"type": "PSF (PARAM.SFO)", "count": 2},
-    {"type": "ELF (plain)", "count": 1, "notes": "BOOT.BIN -- the primary static-analysis source for this and the prior pass"},
-    {"type": "PSMF/PMF (PSP video)", "count": 1, "notes": "ICON1.PMF -- decorative save-icon animation, no further investigation"},
-    {"type": "RIFF/AT3", "count": 1, "notes": "SND0.AT3 -- save-icon audio, no further investigation"},
-    {"type": "XML (plain text)", "count": 9, "notes": "config1.xml through config8.xml, configs.xml -- not yet content-inspected in this pass"},
-    {"type": "plain text", "count": 5, "notes": "aptlogfile.txt, bootfonts.txt, bootfonttable.txt, fonttable.txt, realfonts.txt -- APT/font system files, not content-inspected"},
-    {"type": "unclassified single files", "count": 5, "notes": "data/fusion.bts (text-looking content, not inspected), hud/fnhud.hud (custom binary header, not inspected), pad1.pad (all-zero sample, likely a savedata padding template), actors.viv.manifest.json (this pass's own reassembly metadata), _audit_output/*.md and *.json (pre-existing, pre-evidence-standard exploratory audit -- historical research hint only, not authoritative; used in this pass only as a lead generator, independently re-verified before citing anything from it)"}
+    {
+      "type": "BIGF (EA archive)",
+      "count": 272,
+      "extension": ".big"
+    },
+    {
+      "type": "BIG4 (EA archive)",
+      "count": 83,
+      "extension": ".viv"
+    },
+    {
+      "type": "zlb (length-prefixed zlib, new codec this pass)",
+      "count": 26,
+      "extension": ".zlb"
+    },
+    {
+      "type": "VIV4 (unidentified container, new magic this pass)",
+      "count": 2,
+      "extension": ".bh"
+    },
+    {
+      "type": "PSP encrypted container (~SCE)",
+      "count": 6,
+      "extension": ".prx",
+      "notes": "audiocodec.prx, mpegbase.prx, sc_sascore.prx, videocodec.prx, libatrac3plus.prx, mpeg.prx -- PSP system media codec modules, needs_decryption, not opened by any static analysis in this pass"
+    },
+    {
+      "type": "PSAR (PSP savedata archive resource)",
+      "count": 2,
+      "notes": "DATA.BIN and one other; consistent with the Task 9 save-system package's existing findings, not re-investigated here"
+    },
+    {
+      "type": "PSP encrypted container (~PSP)",
+      "count": 2,
+      "notes": "EBOOT.BIN and one other"
+    },
+    {
+      "type": "PNG",
+      "count": 2,
+      "notes": "ICON0.PNG, PIC1.PNG -- decorative, no further investigation"
+    },
+    {
+      "type": "PSF (PARAM.SFO)",
+      "count": 2
+    },
+    {
+      "type": "ELF (plain)",
+      "count": 1,
+      "notes": "BOOT.BIN -- the primary static-analysis source for this and the prior pass"
+    },
+    {
+      "type": "PSMF/PMF (PSP video)",
+      "count": 1,
+      "notes": "ICON1.PMF -- decorative save-icon animation, no further investigation"
+    },
+    {
+      "type": "RIFF/AT3",
+      "count": 1,
+      "notes": "SND0.AT3 -- save-icon audio, no further investigation"
+    },
+    {
+      "type": "XML (plain text)",
+      "count": 9,
+      "notes": "config1.xml through config8.xml, configs.xml -- not yet content-inspected in this pass"
+    },
+    {
+      "type": "plain text",
+      "count": 5,
+      "notes": "aptlogfile.txt, bootfonts.txt, bootfonttable.txt, fonttable.txt, realfonts.txt -- APT/font system files, not content-inspected"
+    },
+    {
+      "type": "unclassified single files",
+      "count": 5,
+      "notes": "data/fusion.bts (text-looking content, not inspected), hud/fnhud.hud (custom binary header, not inspected), pad1.pad (all-zero sample, likely a savedata padding template), actors.viv.manifest.json (this pass's own reassembly metadata), _audit_output/*.md and *.json (pre-existing, pre-evidence-standard exploratory audit -- historical research hint only, not authoritative; used in this pass only as a lead generator, independently re-verified before citing anything from it)"
+    }
   ],
   "archives_enumerated": [
-    {"path": "preload/db.viv", "members": 10, "note": "reused from the prior pass; see xdb-schema-evidence.json, not re-enumerated"},
-    {"path": "preload/tables.viv", "members": 72, "note": "reused from the prior pass"},
-    {"path": "contract/contracts.viv", "members": 3, "note": "reused from the prior pass"},
-    {"path": "scripts/scripts.viv", "members": 167, "note": "reused from the prior pass"},
-    {"path": "scripts/scrptpal.viv", "members": 167, "note": "reused from the prior pass"},
-    {"path": "preload/boxerpre.viv", "members": 12, "note": "reused from the prior pass"},
-    {"path": "preload/bootpreloads.viv", "members": 80, "note": "reused from the prior pass"},
-    {"path": "actors.viv", "members": 1657, "magic": "BIG4", "refpack_members": 1657, "refpack_decode_status": "all 1657 decode cleanly, zero errors", "reconstruction": "Reassembled in a scratch location (never committed) from actors.viv.part01-04 per actors.viv.manifest.json; sha256 04dabd8aca4113cd1489097a9deaf8deb9ae30468246487e5745df6a00f92803 confirmed byte-for-byte against the manifest before enumeration; the reconstructed file was deleted after extracting these normalized facts.", "member_extension_breakdown": {"msh": 1479, "ord": 62, "orl": 62, "o": 49, "bin": 2, "off": 3}, "notes": "The dominant character/model/mesh archive. body_fifadna1.msh (EA FIFA-engine-derived base body geometry), body_boxer.msh, face_hires.off/face.off/swelltool.off (facial damage/swelling geometry, cross-referencing preload/boxerpre.viv's damage morph targets and program-10 Medical), plus 62 .ord/.orl model-data pairs and 49 .o morph-target files -- far more than boxerpre.viv's original 8, confirming the .msh/.ord/.orl/.o family is used broadly across many characters, not just the shared preload base."},
-    {"path": "boxersh.viv", "members": 1328, "magic": "BIG4", "notes": "damage.msh/damage_0.msh/damage_1.msh/damage_2.msh (multiple damage-state body models -- direct evidence of a staged/leveled damage visualization system) plus per-glove-size/style gloves_N_M.msh models. Newly discovered this pass; not previously investigated."},
-    {"path": "cboxshr.viv", "members": 225, "magic": "BIG4", "notes": "shor1_<pattern><NN>.msh -- boxing shorts models by pattern name (bdstrp=bold stripe, bicolr=bicolor, etc.) and numbered variant. Directly matches preload/tables.viv's shorts.csv target. Newly discovered this pass."},
-    {"path": "boxmisc.viv", "members": 69, "magic": "BIG4", "notes": "face.off, face_cuts.off (direct damage/medical relevance), fringe.off, gravity_head.off, hilite.off, laces.off -- miscellaneous per-boxer appearance/damage geometry. Newly discovered this pass."},
-    {"path": "boxmisc2.viv", "members": 63, "magic": "BIG4", "notes": "mor_hair_headgear_<code>.o -- headgear-compatibility hair morph targets keyed by a boxer short-code (agat, atar, bhop, cbyr, ...) matching the BL_<code>.viv per-boxer archives found at the repository root. Newly discovered this pass."},
-    {"path": "hk_*.viv (36 files)", "members": "13-19 each (generic hairstyle templates) or 1 (named-boxer-specific)", "magic": "BIG4", "notes": "Two distinct kinds confirmed by direct enumeration: (1) generic hairstyle templates (afro1, aight, braid, busta, ...) each containing a full morph-target set (cranium shape x8 directions, ears x4, forebrow x2, headgear compatibility, plus a mod_hair_<style>.o base model); (2) named-legend-boxer files (hk_ali.viv, hk_hatto.viv, hk_lazca.viv, hk_leona.viv, hk_moral.viv, hk_pacqu.viv, hk_punch.viv, hk_robin.viv) each containing exactly one mod_hair_<name>.o bespoke hair model. This resolves the prior pass's CANDIDATE cross-reference to preload/bootpreloads.viv's HK_*.bh descriptors and preload/tables.viv's boxer-surname .txt files into a much better-supported PROBABLE structural family -- see boxer-ownership-map.json."},
-    {"path": "enviro/*.zlb (24 files, 12 base+\"t\"-suffix pairs)", "members": null, "magic": "zlb (new codec, see src/fnr3_re/zlb.py)", "notes": "12 venue/training-location base names (atlntic, cafrica, countyf, dodge, elevese, hbtokyo, loflush, minick, sparrin, staples, trainin, viceroy), each with a paired \"...t\" variant. All 26 corpus .zlb files (including beload.zlb/feload.zlb) decode cleanly. Plausible but not confirmed cross-reference to xdbvenue.adf's header word0=9 (12 candidate location names is more than 9 -- at least 'sparrin'/'trainin' read as practice/training locations rather than competition venues, which would narrow the count closer to 9, but this is not proven)."}
+    {
+      "path": "preload/db.viv",
+      "members": 10,
+      "note": "reused from the prior pass; see xdb-schema-evidence.json, not re-enumerated"
+    },
+    {
+      "path": "preload/tables.viv",
+      "members": 72,
+      "note": "reused from the prior pass"
+    },
+    {
+      "path": "contract/contracts.viv",
+      "members": 3,
+      "note": "reused from the prior pass"
+    },
+    {
+      "path": "scripts/scripts.viv",
+      "members": 167,
+      "note": "reused from the prior pass"
+    },
+    {
+      "path": "scripts/scrptpal.viv",
+      "members": 167,
+      "note": "reused from the prior pass"
+    },
+    {
+      "path": "preload/boxerpre.viv",
+      "members": 12,
+      "note": "reused from the prior pass"
+    },
+    {
+      "path": "preload/bootpreloads.viv",
+      "members": 80,
+      "note": "reused from the prior pass"
+    },
+    {
+      "path": "actors.viv",
+      "members": 1657,
+      "magic": "BIG4",
+      "refpack_members": 1657,
+      "refpack_decode_status": "all 1657 decode cleanly, zero errors",
+      "reconstruction": "Reassembled in a scratch location (never committed) from actors.viv.part01-04 per actors.viv.manifest.json; sha256 04dabd8aca4113cd1489097a9deaf8deb9ae30468246487e5745df6a00f92803 confirmed byte-for-byte against the manifest before enumeration; the reconstructed file was deleted after extracting these normalized facts.",
+      "member_extension_breakdown": {
+        "msh": 1479,
+        "ord": 62,
+        "orl": 62,
+        "o": 49,
+        "bin": 2,
+        "off": 3
+      },
+      "notes": "The dominant character/model/mesh archive. body_fifadna1.msh (EA FIFA-engine-derived base body geometry), body_boxer.msh, face_hires.off/face.off/swelltool.off (facial damage/swelling geometry, cross-referencing preload/boxerpre.viv's damage morph targets and program-10 Medical), plus 62 .ord/.orl model-data pairs and 49 .o morph-target files -- far more than boxerpre.viv's original 8, confirming the .msh/.ord/.orl/.o family is used broadly across many characters, not just the shared preload base."
+    },
+    {
+      "path": "boxersh.viv",
+      "members": 1328,
+      "magic": "BIG4",
+      "notes": "damage.msh/damage_0.msh/damage_1.msh/damage_2.msh (multiple damage-state body models -- direct evidence of a staged/leveled damage visualization system) plus per-glove-size/style gloves_N_M.msh models. Newly discovered this pass; not previously investigated."
+    },
+    {
+      "path": "cboxshr.viv",
+      "members": 225,
+      "magic": "BIG4",
+      "notes": "shor1_<pattern><NN>.msh -- boxing shorts models by pattern name (bdstrp=bold stripe, bicolr=bicolor, etc.) and numbered variant. Directly matches preload/tables.viv's shorts.csv target. Newly discovered this pass."
+    },
+    {
+      "path": "boxmisc.viv",
+      "members": 69,
+      "magic": "BIG4",
+      "notes": "face.off, face_cuts.off (direct damage/medical relevance), fringe.off, gravity_head.off, hilite.off, laces.off -- miscellaneous per-boxer appearance/damage geometry. Newly discovered this pass."
+    },
+    {
+      "path": "boxmisc2.viv",
+      "members": 63,
+      "magic": "BIG4",
+      "notes": "mor_hair_headgear_<code>.o -- headgear-compatibility hair morph targets keyed by a boxer short-code (agat, atar, bhop, cbyr, ...) matching the BL_<code>.viv per-boxer archives found at the repository root. Newly discovered this pass."
+    },
+    {
+      "path": "hk_*.viv (36 files)",
+      "members": "13-19 each (generic hairstyle templates) or 1 (named-boxer-specific)",
+      "magic": "BIG4",
+      "notes": "Two distinct kinds confirmed by direct enumeration: (1) generic hairstyle templates (afro1, aight, braid, busta, ...) each containing a full morph-target set (cranium shape x8 directions, ears x4, forebrow x2, headgear compatibility, plus a mod_hair_<style>.o base model); (2) named-legend-boxer files (hk_ali.viv, hk_hatto.viv, hk_lazca.viv, hk_leona.viv, hk_moral.viv, hk_pacqu.viv, hk_punch.viv, hk_robin.viv) each containing exactly one mod_hair_<name>.o bespoke hair model. This resolves the prior pass's CANDIDATE cross-reference to preload/bootpreloads.viv's HK_*.bh descriptors and preload/tables.viv's boxer-surname .txt files into a much better-supported PROBABLE structural family -- see boxer-ownership-map.json."
+    },
+    {
+      "path": "enviro/*.zlb (24 files, 12 base+\"t\"-suffix pairs)",
+      "members": null,
+      "magic": "zlb (new codec, see src/fnr3_re/zlb.py)",
+      "notes": "12 venue/training-location base names (atlntic, cafrica, countyf, dodge, elevese, hbtokyo, loflush, minick, sparrin, staples, trainin, viceroy), each with a paired \"...t\" variant. All 26 corpus .zlb files (including beload.zlb/feload.zlb) decode cleanly. Plausible but not confirmed cross-reference to xdbvenue.adf's header word0=9 (12 candidate location names is more than 9 -- at least 'sparrin'/'trainin' read as practice/training locations rather than competition venues, which would narrow the count closer to 9, but this is not proven)."
+    },
+    {
+      "path": "debugmenu.big",
+      "members": 2,
+      "member_names": [
+        "debugMenu.apt",
+        "debugMenu.const"
+      ],
+      "note": "delta pass: developer debug-menu UI screen; native accessor DEBUG_GetDebugMenuData found in BOOT.BIN."
+    },
+    {
+      "path": "genericbackground.big",
+      "members": 4,
+      "member_names": [
+        "GenericBackground.apt",
+        "GenericBackground.const",
+        "GenericBackground.o",
+        "GenericBackground.msh"
+      ],
+      "note": "delta pass: generic decorative background package, no gameplay-relevant bindings found."
+    },
+    {
+      "path": "internetmainmenu.big",
+      "members": 2,
+      "member_names": [
+        "InternetMainMenu.apt",
+        "InternetMainMenu.const"
+      ],
+      "note": "delta pass: online/internet main-menu screen navigation scaffolding, no gameplay-field bindings found."
+    },
+    {
+      "path": "mainmenu.big",
+      "members": 4,
+      "member_names": [
+        "MainMenu.apt",
+        "MainMenu.const",
+        "MainMenu.o",
+        "MainMenu.msh"
+      ],
+      "note": "delta pass: main menu; trainer-hire state machine (TRAINER_NONE/TRAINER_HIRE/etc.) and career-central/rival-challenge navigation constants found."
+    },
+    {
+      "path": "tutorialoverlay.big",
+      "members": 4,
+      "member_names": [
+        "tutorialOverlay.apt",
+        "tutorialOverlay.const",
+        "tutorialOverlay.o",
+        "tutorialOverlay.msh"
+      ],
+      "note": "delta pass: tutorial help-overlay popups; only generic knockdown/cutman tutorial-topic labels found, no gameplay logic."
+    },
+    {
+      "path": "adhocrivals.big",
+      "members": 2,
+      "member_names": [
+        "adhocRivals.apt",
+        "adhocRivals.const"
+      ],
+      "note": "delta pass: ad-hoc multiplayer rival tracking; native accessors GetAdhocRivalsInfo/GetAdhocRivalsUserInfo found in BOOT.BIN."
+    },
+    {
+      "path": "careerfighthistory.big",
+      "members": 2,
+      "member_names": [
+        "careerFightHistory.apt",
+        "careerFightHistory.const"
+      ],
+      "note": "delta pass: career fight-history list screen; confirms retail Professional/Amateur record distinction; native accessor GetCareerHistoryInfo found in BOOT.BIN."
+    },
+    {
+      "path": "recordbooks.big",
+      "members": 2,
+      "member_names": [
+        "recordBooks.apt",
+        "recordBooks.const"
+      ],
+      "note": "delta pass: Hall of Fame / records-book legacy screen; native accessor GetRecordBooksInfo found in BOOT.BIN."
+    },
+    {
+      "path": "optionsettings.big",
+      "members": 4,
+      "member_names": [
+        "optionSettings.apt",
+        "optionSettings.const",
+        "optionSettings.o",
+        "optionSettings.msh"
+      ],
+      "note": "delta pass: options/rules menu; raw-byte search found a 3-level difficulty enum (Easy/Medium/Hard) and 17 named gameplay-rule toggles; native accessor GetOptionsSettings and a packed options bitfield (struct offset +0x15C) found in BOOT.BIN."
+    },
+    {
+      "path": "selectboxer.big",
+      "members": 4,
+      "member_names": [
+        "selectBoxer.apt",
+        "selectBoxer.const",
+        "selectBoxer.o",
+        "selectBoxer.msh"
+      ],
+      "note": "delta pass: boxer-selection screen (TL_Select_Boxer); confirms 6 named weight divisions, a 9-field boxer rating-stat schema, created/custom-boxer support, and Red/Blue two-corner selection; native accessors GetSelectBoxerInfo/UpdateSelectBoxerInfo/LoadSelectBoxer/SetSelectBoxerInfo found in BOOT.BIN."
+    },
+    {
+      "path": "fnhud.hud",
+      "members": null,
+      "note": "delta pass: NOT a BIGF archive -- custom binary container (magic 01 00 f4 f1), partially decoded as a component-indexed vector-HUD-geometry format (4-character component tags RN/RC/RCH/CM/CD/MH/OL/OV/PU/CY, plus POLY/fill/flre/blnk rendering primitives); no semantic field bindings inferred from these tags alone."
+    }
   ],
   "newly_discovered_relevant_resources": [
     "boxersh.viv, cboxshr.viv, boxmisc.viv, boxmisc2.viv -- referenced from a 9-entry resource descriptor table found directly in BOOT.BIN (see resource-loader-map.json's 'boxer_family_registry_table'); not part of the prior pass's target list.",
     "36 hk_*.viv per-hairstyle/per-legend-boxer archives.",
     "12 enviro/*.zlb venue-location asset pairs, plus the .zlb codec itself.",
     "actors.viv (reassembled, hash-verified, enumerated -- 1657 members).",
-    "A 9-entry data-driven resource registry table inside BOOT.BIN, distinct from the xdb bitmask dispatcher, proving a second, table-driven (not string-xref-driven) resource loading mechanism exists."
+    "A 9-entry data-driven resource registry table inside BOOT.BIN, distinct from the xdb bitmask dispatcher, proving a second, table-driven (not string-xref-driven) resource loading mechanism exists.",
+    "This session's delta pass over 11 newly-added retail files (debugmenu.big, genericbackground.big, internetmainmenu.big, mainmenu.big, tutorialoverlay.big, adhocrivals.big, careerfighthistory.big, recordbooks.big, fnhud.hud, optionsettings.big, selectboxer.big) -- see the 11 new 'archives_enumerated' entries above and analysis/reports/static-re-ceiling.json for the full evidence-question impact. These files were added to the repository after the prior pass's 428-file corpus_summary_by_type count was taken; that count is NOT updated by this pass and should not be read as covering these 11 files -- corpus completeness beyond the files actually enumerated in this index is explicitly NOT claimed."
   ],
   "explicitly_not_yet_investigated": [
     "The 272 BIGF .big files (UI widgets, career-mode screens, fight-hype screens) -- inventoried by count only.",
@@ -49,5 +289,24 @@
     "data/fusion.bts, hud/fnhud.hud, pad1.pad -- single unusual files, not opened.",
     "The 6 ~SCE-encrypted codec PRX modules -- needs_decryption, out of static reach without a recovery backend.",
     "Every archive member's own internal format beyond RefPack/zlib decode status (e.g. the actual .msh mesh binary layout) -- decoding container/compression is proven; interpreting the decoded geometry/model formats was not attempted, as it is not required by Task 10/11's boxer-database focus."
+  ],
+  "delta_passes": [
+    {
+      "pass": "2026-09-14 delta pass (11 newly-added retail files)",
+      "files": [
+        "debugmenu.big",
+        "genericbackground.big",
+        "internetmainmenu.big",
+        "mainmenu.big",
+        "tutorialoverlay.big",
+        "adhocrivals.big",
+        "careerfighthistory.big",
+        "recordbooks.big",
+        "fnhud.hud",
+        "optionsettings.big",
+        "selectboxer.big"
+      ],
+      "note": "This pass did not re-inventory the full ISO corpus or the 428 files already classified in corpus_summary_by_type. It is a targeted, delta-only investigation of these 11 files plus their static cross-references into BOOT.BIN. Full-corpus completeness is explicitly not claimed by this or any prior pass -- see scope_note."
+    }
   ]
 }
