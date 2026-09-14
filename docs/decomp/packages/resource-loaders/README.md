@@ -2,7 +2,9 @@
 
 ## Status
 
-**Task 10 -- static-only pass complete for the primary archive set; loaders traced for `preload/db.viv` (all 10 xdb tables) and `contract/contracts.viv` (all 3 .fnc members); `preload/tables.viv`, `preload/boxerpre.viv`, `scripts/scripts.viv`, and `preload/bootpreloads.viv` enumerated and RefPack-verified but not yet traced to a loader function.**
+**Task 10 -- corpus-wide static pass (second PR #31 commit). Loaders traced for `preload/db.viv` (all 10 xdb tables), `contract/contracts.viv` (all 3 .fnc members), and a second, distinct data-driven registry mechanism found this pass covering 9 boxer-appearance-family archives. `preload/tables.viv`, `preload/boxerpre.viv`, `scripts/scripts.viv`, and `preload/bootpreloads.viv` remain enumerated and RefPack-verified but not yet traced to a loader function -- see `analysis/resources/static-discovery-backlog.json` for named next steps on each.**
+
+This pass also expanded from the original 7 target archives to a corpus-wide inventory (428 top-level files classified; see `analysis/resources/corpus-resource-index.json`), proved a second compression codec (`.zlb`, zlib-based, `src/fnr3_re/zlb.py`), and reassembled/hash-verified/enumerated `actors.viv` (1657 members).
 
 This package records how the game's EA BIG/VIV archives and their RefPack-compressed members are opened, looked up, and handed to per-table loading code inside `BOOT.BIN`. It reuses the Task 5 archive/RefPack codecs unmodified (`docs/architecture/resource-codecs.md`) and does not re-prove container or compression format -- it moves inward to the functions that actually call those codecs at runtime.
 
@@ -21,10 +23,13 @@ Repository-root `BOOT.BIN` is legacy/non-authoritative as a workspace input; it 
 Machine-readable evidence:
 
 ```text
+analysis/resources/corpus-resource-index.json      (new this pass: corpus-wide inventory)
+analysis/resources/loader-hierarchy.json           (new this pass: loader architecture as a tree)
 analysis/resources/resource-loader-map.json
 analysis/resources/xdb-schema-evidence.json
 analysis/resources/static-resolution-matrix.json
-analysis/resources/runtime-minimum-backlog.json
+analysis/resources/runtime-minimum-backlog.json    (empty this pass)
+analysis/resources/static-discovery-backlog.json   (new this pass)
 ```
 
 Codec and parser code reused/added:
@@ -32,7 +37,8 @@ Codec and parser code reused/added:
 ```text
 src/fnr3_re/ea_archive.py   (Task 5, unmodified)
 src/fnr3_re/refpack.py      (Task 5, unmodified)
-src/fnr3_re/xdb.py          (new: the proven shared xdb table header only)
+src/fnr3_re/xdb.py          (the proven shared xdb table header only)
+src/fnr3_re/zlb.py          (new this pass: the proven .zlb codec, a second compression format distinct from RefPack)
 ```
 
 ## Archive enumeration and RefPack coverage
@@ -61,24 +67,26 @@ func_001AD694 (dispatcher, tests one bitmask bit)
 
 Each of the 3 `.fnc` members is referenced from a distinct function (`cutman.fnc` from `func_001A023C`, `fights.fnc` from `func_001A3D48`, `trainer.fnc` from `func_001B9334`), unlike the shared-dispatcher shape above. None of the three referencing functions were traced further in this pass beyond locating the string xref.
 
+## A second, data-driven registry mechanism
+
+This pass found a completely different resource-dispatch mechanism from `func_001AD694`'s bitmask dispatcher: a 9-entry, 16-byte-stride array at ELF virtual `0x567D60`, each entry `{name_ptr, word1, word2, word3}`, listing `misc.viv` (referenced but absent from the currently-tracked corpus), `boxersh.viv`, `actors.viv`, `cboxshr.viv`, `boxerpre.viv`, `allhair.viv`, `boxmisc.viv`, `boxmisc2.viv`, and `tables.viv`. **This table's own string references were missed entirely by this project's automated string/xref extraction** -- they were found only by a direct raw-byte search of `BOOT.BIN`, cross-checked against (but not taken on the authority of) a pre-existing, pre-evidence-standard exploratory audit already on disk. The practical lesson, recorded in `analysis/resources/resource-loader-map.json`'s `discovery_methodology_note`: absence from the automated extraction does not prove a resource is unreferenced. See `analysis/resources/loader-hierarchy.json` for the full architecture as a tree.
+
 ## Not yet traced
 
-`preload/tables.viv`, `preload/boxerpre.viv`, and `preload/bootpreloads.viv` have no direct string reference to their own archive filename found via `func_001AD694`'s dispatcher pattern; `bootpreloads.viv` has exactly one string xref (inside `T_0033A614`) that was not traced further, and `tables.viv`/`boxerpre.viv` have none in this pass. `scripts/scripts.viv` has one xref (inside `func_000852BC`); **`scripts/scrptpal.viv` has zero string references anywhere in `BOOT.BIN`'s extracted string table**, meaning either it is opened via a runtime-constructed path, from a different module/PRX, or under a code path this pass did not reach -- recorded as an open question in `analysis/resources/resource-loader-map.json`, not assumed.
+`preload/tables.viv`'s and `preload/bootpreloads.viv`'s own dispatch logic (the registry table above lists `tables.viv` but its consuming function was not located); `scripts/scripts.viv` has one xref (inside `func_000852BC`); **`scripts/scrptpal.viv` has zero string references anywhere in `BOOT.BIN`'s extracted string table** -- deferred to program-05/06 static analysis, out of Task 10/11 scope (see `analysis/resources/static-resolution-matrix.json`).
 
 ## Verification
 
 ```text
-4 new unit tests (tests/unit/test_xdb.py) -- pass
+11 unit tests (tests/unit/test_xdb.py: 4, tests/unit/test_zlb.py: 7) -- pass
 Full repository test suite -- see PR for the run recorded at merge time
 Ruff and strict mypy -- clean
 ```
 
-## Explicitly unresolved (see `analysis/resources/static-resolution-matrix.json` and `runtime-minimum-backlog.json`)
+## Explicitly unresolved (see `analysis/resources/static-resolution-matrix.json` and `static-discovery-backlog.json`)
 
-- Loader functions for `preload/tables.viv`, `preload/boxerpre.viv`, `preload/bootpreloads.viv`'s dispatch logic, and `scripts/scrptpal.viv`.
-- The 9 individually non-RefPack members of `preload/bootpreloads.viv` (`HK_*.bh`, `serial.txt`) were not traced to any consumer.
-- Whether `scripts/scrptpal.viv`'s paired-but-different parameter set (proven distinct from `scripts.viv`'s decoded content for the one sampled member) is a difficulty variant, a build/debug artifact, or something else -- deferred to the fight-engine investigation, out of Task 10/11 scope.
+Every open question from this pass is STATIC_PENDING with a named next avenue, not RUNTIME_BLOCKED -- see `analysis/resources/static-discovery-backlog.json` for the full list, including: the consumer of the 9-entry registry table; loaders for `preload/tables.viv` and `preload/bootpreloads.viv`'s dispatch; and whether `scripts/scrptpal.viv` is opened by any code path reachable from `BOOT.BIN` at all.
 
 ## Next checkpoint
 
-**Locate the loader/dispatch functions for `preload/tables.viv` and `preload/bootpreloads.viv` (the two remaining primary targets with no traced loader), and determine whether `scripts/scrptpal.viv` is opened by any code path in `BOOT.BIN` at all.**
+**Trace the pointer at ELF virtual `0x6DE908` (a raw pointer to the registry table's base address, found in a data region) to the function that actually walks the 9-entry table, and locate the loader/dispatch function for `preload/tables.viv`.**

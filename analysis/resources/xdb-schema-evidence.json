@@ -19,9 +19,13 @@
     ],
     "unresolved": [
       "Whether word0 or word1 is a record count, a field/column count, a string-table entry count, or something else -- neither interpretation produces an integer (word2-32)/count stride for more than 2 of the 10 tables, so this cannot be settled by arithmetic alone.",
-      "The meaning of the word5/word6/word7 trailing words when non-zero.",
       "The exact meaning and boundary of the 'trailing_bytes' region in the 8 tables where word4 < payload size."
-    ]
+    ],
+    "revised_this_pass": {
+      "confidence": "PROBABLE for word0-as-count; CANDIDATE for the flags-array reinterpretation",
+      "finding": "Direct disassembly of func_001AD268 (see analysis/resources/boxer-ownership-map.json's header_word0_proof and revised_header_model) proves word0 is read and used as a genuine per-entry loop count by real executable code, and that payload offset +0x18 -- previously modeled here as a scalar 'word6' -- is very likely the start of a packed 2-bit-per-entry array of word0 entries, not a reserved scalar. This directly explains why word6 is zero for every table with word0 <= 12 (the packed array fits within 4 bytes) and non-zero for xdbboxr.adf (121 entries) and xdbcutpn.adf (word1=239): reinterpreting a multi-entry packed byte array as a single u32 necessarily produces what looks like an arbitrary nonzero number.",
+      "not_yet_resolved": "Whether word0 specifically (versus word1) sizes this array for every table, not just xdbboxr.adf; whether the same +0x18 packed-array layout applies uniformly across all 10 tables (only xdbboxr.adf's consumer was directly observed)."
+    }
   },
   "tables": [
     {

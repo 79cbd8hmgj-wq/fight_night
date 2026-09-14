@@ -100,6 +100,31 @@
       "notes": "scripts/scrptpal.viv has no string reference anywhere in BOOT.BIN's extracted string table; it is either opened by a runtime-constructed path (base name + suffix), opened from a different module/PRX, or opened only under a condition this pass did not reach. This is recorded as an open question, not assumed."
     }
   ],
+  "boxer_family_registry_table": {
+    "confidence": "PROBABLE for the table's own contents; CANDIDATE for its consuming function",
+    "description": "A second, distinct resource-dispatch mechanism from the xdb bitmask dispatcher: a 9-entry, 16-byte-stride array found at ELF virtual 0x567D60, discovered by raw-byte search rather than the automated string/xref extraction pass (which missed all 4 of this table's newly-identified string references -- see 'discovery_methodology_note').",
+    "table_address": "0x00567D60",
+    "table_address_type": "elf_virtual",
+    "entry_layout": "{name_ptr: char* (u32), word1: u32, word2: u32, word3: u32}",
+    "entries": [
+      {"index": 0, "name": "misc.viv", "word1": "0x100", "word2": 1, "word3": "0x10", "note": "referenced by this table but not present anywhere in the currently-tracked corpus -- a genuine gap, not assumed to be identical to boxmisc.viv"},
+      {"index": 1, "name": "boxersh.viv", "word1": "0x100", "word2": 1, "word3": "0x11"},
+      {"index": 2, "name": "actors.viv", "word1": "0x100", "word2": 1, "word3": "0x12"},
+      {"index": 3, "name": "cboxshr.viv", "word1": "0x500", "word2": 1, "word3": "0x11"},
+      {"index": 4, "name": "boxerpre.viv", "word1": "0x100", "word2": 1, "word3": "0x23"},
+      {"index": 5, "name": "allhair.viv", "word1": "0x100", "word2": 1, "word3": "0x11"},
+      {"index": 6, "name": "boxmisc.viv", "word1": "0x100", "word2": 1, "word3": "0x11"},
+      {"index": 7, "name": "boxmisc2.viv", "word1": "0x100", "word2": 1, "word3": "0x11"},
+      {"index": 8, "name": "tables.viv", "word1": "0x100", "word2": 4, "word3": "0x23"}
+    ],
+    "field_interpretation": {
+      "word1": "CANDIDATE: a flags word, 0x100 for 8/9 entries and 0x500 for cboxshr.viv only (differs by bit 0x400)",
+      "word2": "CANDIDATE: 1 for 8/9 entries and 4 for tables.viv only",
+      "word3": "CANDIDATE: a small category/group id (0x10-0x23); repeated values (0x11 appears 5 times, 0x23 appears twice) suggest a category grouping, not a unique per-entry id"
+    },
+    "discovery_methodology_note": "boxersh.viv/cboxshr.viv/boxmisc.viv/boxmisc2.viv's string references were found by direct raw-byte search of BOOT.BIN (each occurring exactly once), not by this project's own automated string/reference extraction, which returned zero matches for all 4. A pre-existing, pre-evidence-standard exploratory audit already on disk (_audit_output/psp_executable_string_hits.md) had separately noted the same 4 strings at the same file offsets; this was treated only as a lead and independently re-verified byte-for-byte in this pass before being relied on. The practical lesson: absence from the automated extraction is not proof a resource is unreferenced.",
+    "consuming_function": "Not located. No code cross-reference to the table's own base address (0x567D60) was found by either the automated reference extractor or a manual raw-4-byte-pointer search across the whole file. One further indirection was found -- a raw pointer to the table's base address stored at ELF virtual 0x6DE908, itself inside a data region rather than any disassembled function -- but the function that reads through that pointer was not located in this pass."
+  },
   "structural_findings_not_yet_traced_to_a_loader": [
     {
       "resource": "preload/tables.viv",

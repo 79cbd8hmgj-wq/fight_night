@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00",
+  "source_module": {"path": "BOOT.BIN", "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"},
+  "purpose": "The loader architecture as a hierarchy (filesystem -> archive -> compression -> subsystem parser -> owner), not a flat list of loader functions.",
+  "layers": [
+    {
+      "layer": 0,
+      "name": "container format",
+      "description": "BIGF/BIG4 directory format (Task 5, unmodified). Confirmed to cover every .big and .viv file sampled across the corpus (355 files by magic byte).",
+      "code": "src/fnr3_re/ea_archive.py"
+    },
+    {
+      "layer": 1,
+      "name": "compression",
+      "description": "Two distinct compression layers confirmed in this corpus: RefPack (10 FB/90 FB, Task 5) for the vast majority of archive members, and a newly-proven zlib-based '.zlb' format (4-byte declared size + standard zlib deflate) for 26 loose files (boot-load screens and paired venue/environment assets under enviro/). Both are decode-proven with self-consistent round trips.",
+      "code": ["src/fnr3_re/refpack.py", "src/fnr3_re/zlb.py"]
+    },
+    {
+      "layer": 2,
+      "name": "resource dispatch (two distinct mechanisms found)",
+      "mechanisms": [
+        {
+          "kind": "bitmask dispatcher",
+          "example": "func_001AD694 (0x001AD694) -- opens preload/db.viv once, tests a 10-bit caller-supplied bitmask, and requests the named xdbNNNN.adf member per set bit.",
+          "member_lookup": "func_0033B58C (shared)",
+          "per_table_loader": "func_001A0C74 (shared, reused verbatim by all 10 xdb tables)"
+        },
+        {
+          "kind": "data-driven registry table",
+          "description": "A 9-entry, 16-byte-stride array found at ELF virtual 0x567D60 (file offset 0x567E60 in the raw ELF), each entry {name_ptr: char*, word1: u32 (0x100 for 8/9 entries, 0x500 for one), word2: u32 (1 for 8/9 entries, 4 for one), word3: u32, a small category id 0x10-0x23}. Lists (in order): misc.viv (referenced but not present anywhere in the currently-tracked corpus -- a genuine gap, not assumed away), boxersh.viv, actors.viv, cboxshr.viv, boxerpre.viv, allhair.viv, boxmisc.viv, boxmisc2.viv, tables.viv.",
+          "discovery_method": "This table was found by raw-byte search, not by the automated string/xref extraction pass -- see 'methodology_note' below.",
+          "consuming_function": "Not located in this pass: no code xref to the table's own base address (0x567D60) was found by either the automated reference extractor or a manual raw-pointer search; one further indirection (a pointer to the table stored at ELF virtual 0x6DE908) was found in a data region, but the function that dereferences that pointer was not located. This is recorded as STATIC_PENDING, not assumed."
+        }
+      ],
+      "methodology_note": "The automated string/xref extraction pass missed all 4 of boxersh.viv/cboxshr.viv/boxmisc.viv/boxmisc2.viv's string references (0 hits) even though a direct raw-byte search of BOOT.BIN found each exactly once, at the exact file offset the pre-existing (pre-evidence-standard) audit in _audit_output/ had separately noted. This was independently re-verified in this pass, not taken on the audit's authority. The practical conclusion: absence from the automated string/reference extraction is not proof a resource is unreferenced -- a raw-byte search is required before concluding no reference exists."
+    },
+    {
+      "layer": 3,
+      "name": "per-table object construction and category filtering",
+      "description": "func_001AD268 (0x001AD268, 267 instructions) is called against at least the boxer table singleton (twice, with different third-argument values 5 and 0x28, from func_001AF768; once with value 1, from T_0018E4F4). It dereferences the singleton's +0x8 payload pointer, reads the payload's first 4 bytes (header word0) as a genuine loop count -- proven directly, not inferred -- and scans a 2-bit-per-entry packed byte array starting at payload offset +0x18 for that many entries, classifying each into one of 4 buckets before computing a re-packed output buffer sized using the third argument as a per-entry byte stride.",
+      "confidence": "PROBABLE",
+      "significance": "This is the strongest direct proof found so far that a header count word (word0) is genuinely consumed as a per-record iteration bound by real code, not merely a plausible-looking number. It also reveals that offset +0x18 in the decoded payload (previously treated as reserved header space, 'word6') is very likely the start of a 2-bit-per-entry flags/category array, not a scalar reserved field -- see xdbboxr-schema.json's revised model."
+    },
+    {
+      "layer": 4,
+      "name": "object ownership / UI consumption",
+      "description": "func_001AF768 (0x001AF768, 152 instructions) constructs a large object (writes observed up to offset +0x7084) that embeds sub-objects at +0x19F4 and +0x1A08, each populated by calling func_00186408 (boxer table singleton accessor) then func_001AD268. Immediately afterward it calls 9 further subsystem-initialization functions (func_00186954, func_001B9B58, func_001850C0, func_001A1D1C, func_001A90D8, func_001B8F08, func_001AC34C, func_001B6338, and one more) with a zero argument each -- consistent with a UI/menu-screen constructor that pulls in boxer data alongside several other subsystems. T_0018E4F4 (0x0018E4F4, 35 instructions) is a smaller, similarly-shaped constructor for a different object.",
+      "confidence": "CANDIDATE",
+      "unresolved": "Which screen (roster-select, career-boxer-list, exhibition setup, etc.) this constructs was not determined; none of the 9 chained subsystem-init calls were disassembled in this pass."
+    }
+  ],
+  "not_yet_placed_in_this_hierarchy": [
+    "contract/contracts.viv's 3 .fnc members (each opened from a distinct, individually-traced function, not the shared dispatcher or registry-table pattern above)",
+    "preload/tables.viv, preload/bootpreloads.viv's own dispatch logic (a single string xref for bootpreloads.viv was found but not traced further)",
+    "scripts/scrptpal.viv (zero string references found anywhere in BOOT.BIN; not resolved which module, if any, opens it)",
+    "actors.viv, boxersh.viv, cboxshr.viv, boxmisc.viv, boxmisc2.viv, allhair.viv's own loader/consumer functions beyond their listing in the layer-2 registry table"
+  ]
+}
