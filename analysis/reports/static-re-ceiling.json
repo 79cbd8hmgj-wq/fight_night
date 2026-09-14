@@ -1,0 +1,1377 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00",
+  "source_module": {
+    "path": "BOOT.BIN",
+    "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+  },
+  "purpose": "A master, bounded evidence-question inventory spanning the whole verified corpus and the whole overhaul plan (Master Plan / Infrastructure Shell programs), not limited to Task 10/11 or boxer data. Built from this session's corpus-wide static investigation plus the two prior PR #31 passes and the existing Task 9 save-system package.",
+  "governing_documents": [
+    "Fight Night Round 3 PSP Reverse Engineering Infrastructure Shell.txt",
+    "config/subsystem_registry.json",
+    "docs/architecture/evidence-standard.md",
+    "docs/architecture/decompilation-gate.md"
+  ],
+  "status_definitions": {
+    "STATICALLY_RESOLVED": "Enough static/deterministic evidence exists that no runtime observation is required for this bounded question.",
+    "STATICALLY_SOLVABLE": "Not solved yet, but concrete static avenues remain (named files/functions/techniques); never placed in the runtime backlog.",
+    "STATICALLY_AMBIGUOUS": "Extensive static work has narrowed the possibilities to two or more remaining interpretations; runtime may eventually be needed only after the relevant static graph is exhausted.",
+    "RUNTIME_ESSENTIAL": "The answer fundamentally depends on dynamic information no static evidence can supply."
+  },
+  "questions": [
+    {
+      "program_id": "program-00",
+      "subsystem": "Intake",
+      "question": "Is the supported retail revision (ULUS10066-v1.00) exactly identified by ISO hash, disc id, and version?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "CONFIRMED",
+      "evidence": "config/revisions/ulus10066-v1.00.json and analysis/reference/ulus10066-intake-validation.json record iso_sha256, disc_id, disc_version, and title, independently cross-validated against BOOT.BIN's own tracked hash.",
+      "sources": {
+        "config": [
+          "config/revisions/ulus10066-v1.00.json"
+        ]
+      },
+      "affected_features": [],
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-00-01"
+    },
+    {
+      "program_id": "program-00",
+      "subsystem": "Intake",
+      "question": "Is a deterministic, hash-verified local workspace extraction procedure defined?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "CONFIRMED",
+      "evidence": "docs/architecture/workspace-layout.md and tools/build_reference_workspace.py define extract-image + verify-workspace with a manifest schema; no verified workspace was available in this session, so repository-root hash-verified samples were used instead per established precedent.",
+      "remaining_static_work": "A live extraction against the real reference ISO has not been performed in any session so far -- the pipeline is proven by code and schema, not yet exercised end-to-end in this repository's CI.",
+      "affected_features": [],
+      "sources": {},
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-00-02"
+    },
+    {
+      "program_id": "program-01",
+      "subsystem": "Build/Rebuild",
+      "question": "Do the EA archive (BIGF/BIG4) and RefPack codecs achieve deterministic, byte-perfect decode with self-consistent round trips across the full corpus?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "CONFIRMED",
+      "evidence": "335/335 RefPack members (7 target archives) + 1657/1657 (actors.viv) + 26/26 (.zlb) decode cleanly with zero errors; no-change archive rebuild proven in Task 5's own tests.",
+      "sources": {
+        "code": [
+          "src/fnr3_re/ea_archive.py",
+          "src/fnr3_re/refpack.py",
+          "src/fnr3_re/zlb.py"
+        ]
+      },
+      "affected_features": [],
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-01-01"
+    },
+    {
+      "program_id": "program-01",
+      "subsystem": "Build/Rebuild",
+      "question": "Is a no-change whole-ISO rebuild (extract -> reinsert -> byte-identical image) proven?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "docs/architecture/rebuild-pipeline.md describes the mechanism; src/fnr3_re/rebuild.py implements it; no verified reference ISO was available in any session to exercise it end-to-end against the real disc image.",
+      "remaining_static_work": "Run tools/build_reference_workspace.py and the rebuild pipeline against a verified local ISO once available; this is a mechanical exercise of already-written code, not new reverse engineering.",
+      "affected_features": [],
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-01-02"
+    },
+    {
+      "program_id": "program-03",
+      "subsystem": "Modules",
+      "question": "Is BOOT.BIN's exact ELF structure (sections, entry point, program headers) fully and exactly known?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "CONFIRMED",
+      "evidence": "Full ELF section table extracted this session: 58 sections, entry point 0x0034DECC, .text 5,203,108 bytes, .data 378,720 bytes, .bss 218,532 bytes at 0x005923C0-0x005C7964 (cross-validated exactly against Task 9's independently-derived .bss range).",
+      "sources": {
+        "module": "BOOT.BIN",
+        "hash": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+      },
+      "affected_features": [],
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-03-01"
+    },
+    {
+      "program_id": "program-03",
+      "subsystem": "Modules",
+      "question": "Are all imported PSP OS libraries and their stub sizes known?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "CONFIRMED",
+      "evidence": "26 .sceStub.text.* sections extracted with exact sizes this session (Kernel_Library, InterruptManager, sceNet*, scePower, sceMpeg, sceAtrac3plus, sceAudio, sceSasCore, sceGe_user, sceCtrl, sceUtility, sceRtc, sceUmdUser, sceDisplay, ThreadManForUser, SysMemUserForUser, IoFileMgrForUser, ModuleMgrForUser, and others).",
+      "sources": {
+        "module": "BOOT.BIN"
+      },
+      "affected_features": [],
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-03-02"
+    },
+    {
+      "program_id": "program-03",
+      "subsystem": "Modules",
+      "question": "Is the full PRX inventory (bundled system/media codec modules) identified and their encryption state known?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "6 ~SCE-encrypted PRX modules identified by corpus-wide classification: audiocodec.prx, mpegbase.prx, sc_sascore.prx, videocodec.prx, libatrac3plus.prx, mpeg.prx. All needs_decryption; none opened.",
+      "sources": {
+        "resources": [
+          "audiocodec.prx",
+          "mpegbase.prx",
+          "sc_sascore.prx",
+          "videocodec.prx",
+          "libatrac3plus.prx",
+          "mpeg.prx"
+        ]
+      },
+      "remaining_static_work": "None beyond decryption (out of scope: no Phase-I-approved recovery backend was configured in this session).",
+      "affected_features": [],
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-03-03"
+    },
+    {
+      "program_id": "program-03",
+      "subsystem": "Modules",
+      "question": "Is the two-tier resource-dispatch architecture (bitmask dispatcher vs. data-driven registry table) inside BOOT.BIN fully mapped?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Both mechanisms found and one fully traced (xdb bitmask dispatcher); the second (9-entry registry table at 0x567D60) has its contents proven but its own consuming function not yet located.",
+      "sources": {
+        "functions": [
+          "func_001AD694",
+          "0x567D60"
+        ]
+      },
+      "remaining_static_work": "Trace the pointer at ELF virtual 0x6DE908 to its owning function (analysis/resources/static-discovery-backlog.json entry 'registry-table-consumer').",
+      "affected_features": [],
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-03-04"
+    },
+    {
+      "program_id": "program-04",
+      "subsystem": "Boxers",
+      "question": "What is the exact loading/ownership chain for xdbboxr.adf, from archive member to owning runtime singleton?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "Full chain proven: func_001AD694 (dispatcher) -> func_0033B58C (member lookup) -> func_001863B4 (trampoline) -> func_00186408 (singleton accessor, backing object at ELF virtual 0x000080B4) -> func_001A0C74 (generic loader, populates +0x0/+0x4/+0x8).",
+      "affected_features": [
+        "career-2",
+        "amateur",
+        "roster",
+        "generated-boxers"
+      ],
+      "sources": {
+        "functions": [
+          "func_001AD694",
+          "func_0033B58C",
+          "func_001863B4",
+          "func_00186408",
+          "func_001A0C74"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-04-01"
+    },
+    {
+      "program_id": "program-04",
+      "subsystem": "Boxers",
+      "question": "Is xdbboxr.adf's header word0 genuinely a per-entry count consumed by executable code?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "func_001AD268 reads word0 from the singleton's payload and uses it directly as a scanning-loop bound.",
+      "affected_features": [
+        "career-2",
+        "amateur",
+        "roster",
+        "generated-boxers"
+      ],
+      "sources": {
+        "functions": [
+          "func_001AD268"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-04-02"
+    },
+    {
+      "program_id": "program-04",
+      "subsystem": "Boxers",
+      "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "A packed 2-bit-per-entry flags array was proven at payload offset +0x18 (121 entries, ~31 bytes); the byte range past it (offset ~0x37 through the payload's 9704 bytes) has not been structurally analyzed.",
+      "affected_features": [
+        "career-2",
+        "amateur",
+        "roster",
+        "generated-boxers"
+      ],
+      "sources": {
+        "resource": "preload/db.viv!xdbboxr.adf",
+        "functions": [
+          "func_001AD268"
+        ]
+      },
+      "remaining_static_work": "Disassemble func_0018654C (consumes func_001AD268's result); structurally analyze the payload tail; cross-check the +0x18 model against another xdb table's own consumer function.",
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-04-03"
+    },
+    {
+      "program_id": "program-04",
+      "subsystem": "Boxers",
+      "question": "What does func_00186464's 8-bit-masked linked-list index actually select (boxer record vs. table-instance registration)?",
+      "status": "STATICALLY_AMBIGUOUS",
+      "evidence": "The index is proven 8 bits wide; the walk proceeds via a +0x10 'next' pointer per node, consistent with either interpretation. No node constructor or list-insertion writer was located to disambiguate.",
+      "affected_features": [
+        "career-2",
+        "amateur",
+        "roster"
+      ],
+      "sources": {
+        "functions": [
+          "func_00186464"
+        ]
+      },
+      "remaining_static_work": "Locate the node type's constructor/allocator and any writer of node+0x10 before concluding this needs runtime observation.",
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-04-04"
+    },
+    {
+      "program_id": "program-04",
+      "subsystem": "Boxers",
+      "question": "Is boxer appearance data (models, morphs, hair, shorts, damage geometry) confirmed as a resource family separate from the xdbboxr.adf database record?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "9-entry registry table groups boxersh.viv/cboxshr.viv/boxmisc.viv/boxmisc2.viv/boxerpre.viv/allhair.viv/actors.viv/tables.viv together as a distinct 3D-model/geometry resource family; content-verified (1328+225+69+63+12+1657 members).",
+      "affected_features": [
+        "roster",
+        "generated-boxers"
+      ],
+      "sources": {
+        "resources": [
+          "boxersh.viv",
+          "cboxshr.viv",
+          "boxmisc.viv",
+          "boxmisc2.viv",
+          "boxerpre.viv",
+          "actors.viv"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-04-05"
+    },
+    {
+      "program_id": "program-04",
+      "subsystem": "Boxers",
+      "question": "Which UI/menu screen(s) construct boxer-table queries, and what does func_001AF768's dual query (strides 5 and 0x28) feed?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "func_001AF768 queries the boxer singleton twice via func_001AD268 with two different output strides, then chains 9 further subsystem-init calls.",
+      "affected_features": [
+        "roster",
+        "career-2"
+      ],
+      "sources": {
+        "functions": [
+          "func_001AF768",
+          "T_0018E4F4"
+        ]
+      },
+      "remaining_static_work": "Search for callers of func_001AF768/T_0018E4F4; disassemble the 9 chained subsystem-init calls.",
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-04-06"
+    },
+    {
+      "program_id": "program-04",
+      "subsystem": "Boxers",
+      "question": "Is there a fixed maximum roster/boxer-database record count?",
+      "status": "STATICALLY_AMBIGUOUS",
+      "evidence": "xdbboxr.adf's header word0=121 is proven to be consumed as a count by real code, but whether 121 is a hard compiled maximum (vs. simply 'however many rows this specific database currently has') was not established -- no bounds-check or fixed-size array declaration referencing 121 as a compile-time constant was located.",
+      "affected_features": [
+        "roster",
+        "generated-boxers"
+      ],
+      "remaining_static_work": "Search for a literal immediate 121 (0x79) used as an array-size bound or allocation size elsewhere in BOOT.BIN, independent of the header value itself.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-04-07"
+    },
+    {
+      "program_id": "program-05",
+      "subsystem": "Fight",
+      "question": "Does a named, string-evidenced 'combat event' tagging system exist that could anchor a fight-event API reconstruction?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "DRONE_-prefixed event tag strings found this session: DRONE_KNOCKDOWN_ATTACK, DRONE_BREAKCLINCH, DRONE_CLINCH, DRONE_ILLEGAL_PUNCH, DRONE_SIGNATURE_PUNCH, DRONE_COUNTER_PUNCH -- consistent with a replay-camera trigger system keyed to fight events.",
+      "affected_features": [
+        "combat"
+      ],
+      "sources": {
+        "strings": [
+          "DRONE_KNOCKDOWN_ATTACK@0x4f9aa0",
+          "DRONE_CLINCH@0x4f9a64",
+          "DRONE_ILLEGAL_PUNCH@0x4f9968"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-05-01"
+    },
+    {
+      "program_id": "program-05",
+      "subsystem": "Fight",
+      "question": "What is the fight-session/context object's structure (fighter pointers, round state, result state)?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not yet located this session; only event-tag strings and their immediate referencing functions were found, not a session-owning object.",
+      "affected_features": [
+        "combat",
+        "career-2",
+        "amateur"
+      ],
+      "remaining_static_work": "Trace xrefs/callers of the DRONE_ tag referencing function (T_004D3104 for DRONE_CLINCH) upward to find the enclosing fight-loop/session structure.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-05-02"
+    },
+    {
+      "program_id": "program-05",
+      "subsystem": "Fight",
+      "question": "What are the fight lifecycle functions (init/round-start/round-end/result/cleanup)?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not located this session.",
+      "affected_features": [
+        "combat"
+      ],
+      "remaining_static_work": "Search for functions called from the exhibition/career fight-setup UI screens (see program-28 findings) that in turn call into the DRONE_-tag-referencing function region.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-05-03"
+    },
+    {
+      "program_id": "program-06",
+      "subsystem": "Punches",
+      "question": "Are punch-type identifiers and move metadata evidenced in strings/tables?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "'hook'/'uppercut'/'not hook'/'not uppercut' condition strings, '_Hook'/'_Uppercut' resource-name suffixes, 'Punch Stats', 'Punches.abk' (an animation/audio bank), and 'aiPunchesThrown' (a named AI statistic) all found this session.",
+      "affected_features": [
+        "combat"
+      ],
+      "sources": {
+        "strings": [
+          "hook@0x4fa424",
+          "uppercut@0x4fa438",
+          "aiPunchesThrown@0x50bc1c",
+          "Punches.abk@0x5067b4"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-06-01"
+    },
+    {
+      "program_id": "program-06",
+      "subsystem": "Punches",
+      "question": "What is the exact hit-detection/collision pipeline and its player/AI convergence point?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not traced this session; only string-level evidence of punch categories exists so far.",
+      "affected_features": [
+        "combat"
+      ],
+      "remaining_static_work": "Disassemble the function referencing 'aiPunchesThrown' (T_001E2084) and trace its callers/callees toward the hit-resolution code.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-06-02"
+    },
+    {
+      "program_id": "program-06",
+      "subsystem": "Punches",
+      "question": "What animation-bank format do .abk files (Blocks.abk, Punches.abk) use, and is it decode-proven?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Referenced by name in strings; no .abk file's own container format was inspected in any session so far (not among the archives enumerated).",
+      "affected_features": [
+        "combat"
+      ],
+      "remaining_static_work": "Locate .abk files in the corpus (none were enumerated in the 428-file corpus-resource-index.json pass -- they may be archive members rather than loose files) and attempt format identification via magic bytes.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-06-03"
+    },
+    {
+      "program_id": "program-07",
+      "subsystem": "Stamina",
+      "question": "Does a named stamina field exist in BOOT.BIN's strings, and is its owning/referencing function known?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "'iStamina' found twice (0x50aee8, 0x50c6c8), referenced from T_001D54A0 and T_001E83E0 respectively -- two distinct functions, suggesting at least two consumers or two related stamina fields (e.g. per-boxer, or current-vs-max).",
+      "affected_features": [
+        "combat",
+        "divisions",
+        "career-health"
+      ],
+      "sources": {
+        "strings": [
+          "iStamina@0x50aee8",
+          "iStamina@0x50c6c8"
+        ],
+        "functions": [
+          "T_001D54A0",
+          "T_001E83E0"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-07-01"
+    },
+    {
+      "program_id": "program-07",
+      "subsystem": "Stamina",
+      "question": "What is the exact stamina cost/regeneration formula, its caps, and rating inputs?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not disassembled this session -- only the field name and two referencing functions were located.",
+      "affected_features": [
+        "combat",
+        "divisions",
+        "career-health"
+      ],
+      "remaining_static_work": "Disassemble T_001D54A0 and T_001E83E0 to recover the formula; cross-reference against xdbboxr.adf's still-unresolved per-record fields for a stamina-rating input.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-07-02"
+    },
+    {
+      "program_id": "program-07",
+      "subsystem": "Stamina",
+      "question": "Is there a round-boundary stamina recovery mechanism, and is it distinct from in-round regeneration?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not investigated this session.",
+      "affected_features": [
+        "combat",
+        "career-health"
+      ],
+      "remaining_static_work": "Search for a round-transition function (likely shared with the round-state machine sought under program-05) that also touches the iStamina fields.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-07-03"
+    },
+    {
+      "program_id": "program-08",
+      "subsystem": "Damage",
+      "question": "Are knockdown-count and TKO-timer fields named and owned by a specific function?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "strKnockdownsLeft/strKnockdownsRight found (referenced by T_001F2E00); astrTKOTime found (0x50cd50); GetKnockdownsScorecardInfo (0x50f368) ties knockdowns directly to the scorecard system (program-11).",
+      "affected_features": [
+        "combat",
+        "divisions",
+        "career-health"
+      ],
+      "sources": {
+        "strings": [
+          "strKnockdownsLeft@0x50cfb0",
+          "astrTKOTime@0x50cd50"
+        ],
+        "functions": [
+          "T_001F2E00"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-08-01"
+    },
+    {
+      "program_id": "program-08",
+      "subsystem": "Damage",
+      "question": "Is the '3-knockdown rule' a real, named, statically-evidenced game rule?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "'M_3_Knockdown_Rule' found twice (0x50e17c, 0x50eb6c), referenced by T_002027F4 and T_00205458 respectively -- two separate referencing functions, suggesting the rule is checked/displayed in at least two different contexts (likely rules-toggle UI and in-fight enforcement).",
+      "affected_features": [
+        "combat",
+        "career-health"
+      ],
+      "sources": {
+        "strings": [
+          "M_3_Knockdown_Rule@0x50e17c"
+        ],
+        "functions": [
+          "T_002027F4",
+          "T_00205458"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-08-02"
+    },
+    {
+      "program_id": "program-08",
+      "subsystem": "Damage",
+      "question": "What is the health/vitality field structure, hit-resolution formula, and stun/dazed state machine?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not disassembled this session; only naming/UI-string-level evidence found (no 'health'/'vitality' field name strings were found directly, unlike stamina).",
+      "affected_features": [
+        "combat",
+        "divisions",
+        "career-health"
+      ],
+      "remaining_static_work": "Disassemble T_001F2E00 (knockdowns) and T_002027F4/T_00205458 (3-KD rule) and trace backward to the health/damage state they read.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-08-03"
+    },
+    {
+      "program_id": "program-08",
+      "subsystem": "Damage",
+      "question": "What triggers the KO/TKO decision path, and is the referee's stoppage decision statically traceable?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "astrTKOTime suggests a timer-based TKO mechanism exists; not traced to its consuming function this session.",
+      "affected_features": [
+        "combat",
+        "career-health"
+      ],
+      "remaining_static_work": "Find the referencing function for astrTKOTime and trace its callers.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-08-04"
+    },
+    {
+      "program_id": "program-09",
+      "subsystem": "Defense",
+      "question": "Do named clinch/dodge/block event constants exist with identifiable owning functions?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "DRONE_CLINCH (referenced by T_004D3104) and DRONE_BREAKCLINCH found; 'Blocks.abk' animation bank found; 'dodge' appears widely (playNowFE/febeDodgeLoadScreen, StartPlayDodgeCommerical -- likely a loading-screen tip system, not gameplay dodge logic itself).",
+      "affected_features": [
+        "combat"
+      ],
+      "sources": {
+        "strings": [
+          "DRONE_CLINCH@0x4f9a64",
+          "Blocks.abk@0x5067cc"
+        ],
+        "functions": [
+          "T_004D3104"
+        ]
+      },
+      "remaining_static_work": "Distinguish the UI-facing 'dodge load screen' strings from any actual gameplay dodge/slip/weave mechanic, which was not separately evidenced this session.",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-09-01"
+    },
+    {
+      "program_id": "program-09",
+      "subsystem": "Defense",
+      "question": "What are the movement constants and balance/stance state transitions?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not investigated this session.",
+      "affected_features": [
+        "combat"
+      ],
+      "remaining_static_work": "Trace T_004D3104 (DRONE_CLINCH consumer) outward to the surrounding movement/positioning state machine.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-09-02"
+    },
+    {
+      "program_id": "program-10",
+      "subsystem": "Medical",
+      "question": "Is a cutman/cut-rate/cut-amount economy statically evidenced with owning functions?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "strCutmanRate and strCutmanAmount found, both referenced by T_00209664; O_Hire_Cutman / $O_Hire_Cutman menu-option strings found; cutman.fnc (contract/contracts.viv) already traced in the prior pass.",
+      "affected_features": [
+        "combat",
+        "career-health"
+      ],
+      "sources": {
+        "strings": [
+          "strCutmanRate@0x50f020",
+          "strCutmanAmount@0x50f030"
+        ],
+        "functions": [
+          "T_00209664"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-10-01"
+    },
+    {
+      "program_id": "program-10",
+      "subsystem": "Medical",
+      "question": "Is facial-region cut/swelling damage geometry connected to a specific accumulation/state-tracking function?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "HT_Swelling string found, referenced by func_0024013C; boxerpre.viv/actors.viv/boxmisc.viv's damage morph geometry (face_cuts.off, mor_base_head_dam*.o) is a proven resource family (program-04 evidence) but not yet connected to func_0024013C by any traced code path.",
+      "affected_features": [
+        "combat",
+        "career-health"
+      ],
+      "sources": {
+        "strings": [
+          "HT_Swelling@0x510218"
+        ],
+        "functions": [
+          "func_0024013C"
+        ]
+      },
+      "remaining_static_work": "Disassemble func_0024013C and trace whether it references the same damage-morph resource family identified in the boxer ownership map.",
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-10-02"
+    },
+    {
+      "program_id": "program-10",
+      "subsystem": "Medical",
+      "question": "What determines a referee/doctor stoppage decision?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not investigated this session beyond the cutman economy strings.",
+      "affected_features": [
+        "combat",
+        "career-health"
+      ],
+      "remaining_static_work": "Trace func_0024013C and T_00209664 outward toward any stoppage-decision function; cross-reference with program-08's KO/TKO investigation, which likely converges on the same decision point.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-10-03"
+    },
+    {
+      "program_id": "program-11",
+      "subsystem": "Judging",
+      "question": "Are individual judges' per-round scores statically evidenced as named fields with a single owning function?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "6 explicitly named fields found -- aJudge1Boxer1Score, aJudge2Boxer1Score, aJudge3Boxer1Score, aJudge1Boxer2Score, aJudge2Boxer2Score, aJudge3Boxer2Score -- all under one function, T_001F7248. This directly proves a 3-judge scoring model with per-boxer, per-judge scorecards.",
+      "affected_features": [
+        "combat",
+        "career-2",
+        "amateur"
+      ],
+      "sources": {
+        "strings": [
+          "aJudge1Boxer1Score@0x50d39c"
+        ],
+        "functions": [
+          "T_001F7248"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-11-01"
+    },
+    {
+      "program_id": "program-11",
+      "subsystem": "Judging",
+      "question": "What is the round-scoring formula (the 10-point-must system or equivalent) computed from underlying fight statistics?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "GetJudgesScoreInfo, GetKnockdownsScorecardInfo, and GetWhichChallengeScorecard were found as named accessor functions but not disassembled.",
+      "affected_features": [
+        "combat",
+        "career-2",
+        "amateur"
+      ],
+      "remaining_static_work": "Disassemble T_001F7248 and the three Get*ScorecardInfo/GetJudgesScoreInfo functions to recover the actual scoring computation.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-11-02"
+    },
+    {
+      "program_id": "program-11",
+      "subsystem": "Judging",
+      "question": "Do per-judge weighting differences (e.g. 'generous' vs. 'strict' judges) exist statically?",
+      "status": "STATICALLY_AMBIGUOUS",
+      "evidence": "Three distinct judge score fields exist per boxer, consistent with either identical scoring criteria applied three times (redundancy/averaging) or genuinely different per-judge weighting; no formula was disassembled to distinguish these.",
+      "affected_features": [
+        "combat"
+      ],
+      "remaining_static_work": "Disassemble T_001F7248 fully; compare the code paths that compute aJudge1/2/3 scores for any per-judge constant differences before considering this ambiguous.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-11-03"
+    },
+    {
+      "program_id": "program-12",
+      "subsystem": "AI",
+      "question": "Are AI tuning/modifier categories statically evidenced?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "Six named, per-player-slot AI modifier debug-path strings found: 'ai/mods/p%d/misc offense', 'ai/mods/p%d/defense', 'ai/mods/p%d/bagotricks', 'ai/mods/p%d/attack power', 'ai/mods/p%d/energy and health', 'ai/mods/p%d/phys damage'. 'attack power' is referenced by 2 functions (func_00093C5C, func_00091D24).",
+      "affected_features": [
+        "combat",
+        "career-2",
+        "amateur",
+        "roster",
+        "divisions",
+        "generated-boxers"
+      ],
+      "sources": {
+        "strings": [
+          "ai/mods/p%d/attack power@0x4fa33c",
+          "ai/mods/p%d/defense@0x4fa310"
+        ],
+        "functions": [
+          "func_00093C5C",
+          "func_00091D24"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-12-01"
+    },
+    {
+      "program_id": "program-12",
+      "subsystem": "AI",
+      "question": "Does a named AI difficulty or fighting-style enum/table exist?",
+      "status": "STATICALLY_AMBIGUOUS",
+      "evidence": "An extensive keyword search this session (aidiff, difficulty, style_id, boxingstyle, peekaboo, swarmer, outboxer, slugger, brawler, counter puncher) found zero string matches in BOOT.BIN's extracted string table. Either the enum/style names are not stored as human-readable strings (e.g. pure numeric IDs), the relevant table lives in a PRX not yet analyzed, or the automated string extraction missed them the same way it missed the boxer-appearance registry table's strings in the prior pass.",
+      "affected_features": [
+        "combat",
+        "career-2",
+        "amateur",
+        "roster",
+        "divisions",
+        "generated-boxers"
+      ],
+      "remaining_static_work": "Apply the raw-byte-search methodology (proven effective for the boxer registry table) to search for likely style-name candidates directly in the binary rather than relying on the automated string extractor; also check whether other PRX modules (not analyzed in any session so far) carry AI logic.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-12-02"
+    },
+    {
+      "program_id": "program-12",
+      "subsystem": "AI",
+      "question": "What is the AI decision-update loop and action-selection logic?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Not traced this session beyond locating the 6 tuning-category debug strings.",
+      "affected_features": [
+        "combat"
+      ],
+      "remaining_static_work": "Disassemble func_00093C5C/func_00091D24 (the 'attack power' consumers) and trace outward to the decision loop.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-12-03"
+    },
+    {
+      "program_id": "program-13",
+      "subsystem": "Weights",
+      "question": "How many weight divisions does the retail game define, and are they named/enumerated in the executable?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "6 explicit division localization keys found, plus an explicit unknown/fallback: INFO_Division_1 through INFO_Division_6, and INFO_Division_Unknown. This pattern repeats at 4 separate string-table locations (0x507d90, 0x509270, 0x50c804, 0x50db18), each referenced by a different function (func_0019527C, func_001B798C, T_001E9A58, and both T_00202170/T_00201BB4), consistent with the division list being consumed by at least 4 independent UI/logic contexts.",
+      "affected_features": [
+        "divisions",
+        "roster",
+        "career-2"
+      ],
+      "sources": {
+        "strings": [
+          "INFO_Division_1@0x507d90",
+          "INFO_Division_Unknown@0x507df0"
+        ],
+        "functions": [
+          "func_0019527C",
+          "func_001B798C",
+          "T_001E9A58",
+          "T_00202170",
+          "T_00201BB4"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-13-01"
+    },
+    {
+      "program_id": "program-13",
+      "subsystem": "Weights",
+      "question": "What are the exact weight-limit values (in-game units) for each of the 6 divisions?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "The 6 division labels are proven to exist and be consumed by real code; the numeric weight-limit values themselves were not located or disassembled this session.",
+      "affected_features": [
+        "divisions",
+        "roster"
+      ],
+      "remaining_static_work": "Disassemble func_0019527C/func_001B798C/T_001E9A58/T_00202170/T_00201BB4 to find where each maps a division index to a numeric weight boundary.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-13-02"
+    },
+    {
+      "program_id": "program-13",
+      "subsystem": "Weights",
+      "question": "Is the division count (6) a fixed compile-time constant with identifiable consumers that would need updating for new divisions (e.g. Bantamweight, Cruiserweight)?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "6 divisions plus an 'Unknown' fallback is strong, repeated evidence of a fixed enum; whether the number 6 (or 7 counting Unknown) appears as a literal array-size/loop-bound immediate in the 5 referencing functions was not checked.",
+      "affected_features": [
+        "divisions"
+      ],
+      "remaining_static_work": "Disassemble the 5 referencing functions specifically looking for a literal 6 or 7 used as an array bound -- this would directly answer whether adding a division requires an executable patch versus only a data change.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-13-03"
+    },
+    {
+      "program_id": "program-16",
+      "subsystem": "Career/save",
+      "question": "Is the PSP savedata utility parameter block and save/load dispatch fully mapped?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "Fully covered by the existing Task 9 save-system package (docs/decomp/packages/save-system/README.md): savedata parameter block layout, save/load controllers, payload dispatch table, envelope/lifetime -- Checkpoints 9A-9D complete.",
+      "affected_features": [
+        "career-2",
+        "amateur",
+        "roster",
+        "divisions",
+        "generated-boxers",
+        "career-health",
+        "legacy"
+      ],
+      "sources": {
+        "docs": [
+          "docs/decomp/packages/save-system/README.md"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-16-01"
+    },
+    {
+      "program_id": "program-16",
+      "subsystem": "Career/save",
+      "question": "Are career-mode get/set accessor functions for the overall career state identified?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "GetCareerMode/SetCareerMode found this session, both referenced from func_001CF9FC and func_001CFBA8 -- two functions sharing both accessors, consistent with a get/set pair used together at both call sites (likely a save-on-exit or state-transition pattern).",
+      "affected_features": [
+        "career-2",
+        "amateur"
+      ],
+      "sources": {
+        "strings": [
+          "GetCareerMode@0x50a5b0",
+          "SetCareerMode@0x50a600"
+        ],
+        "functions": [
+          "func_001CF9FC",
+          "func_001CFBA8"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-16-02"
+    },
+    {
+      "program_id": "program-16",
+      "subsystem": "Career/save",
+      "question": "What is the per-field serializer/deserializer for the career payload body, and what does the load-commit follow-up callback (unresolved in Task 9) do?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Task 9 explicitly left this open ('load-commit follow-up callback target and owner' remains unresolved in the save-system package).",
+      "affected_features": [
+        "career-2",
+        "amateur",
+        "career-health"
+      ],
+      "remaining_static_work": "Continue Task 9's own documented next checkpoint (see docs/decomp/packages/save-system/README.md's 'Next checkpoint').",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-16-03"
+    },
+    {
+      "program_id": "program-16",
+      "subsystem": "Career/save",
+      "question": "Is training/staff/contract state (GetTrainingInfo, iTrainerContractSigned) part of the same career payload, or a separately-serialized structure?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "GetTrainingInfo/SetTrainingInfo found this session, referenced by func_001E8A24/func_001E89C8; not yet cross-referenced against the career payload structure Task 9 already mapped.",
+      "affected_features": [
+        "career-2",
+        "amateur"
+      ],
+      "sources": {
+        "strings": [
+          "GetTrainingInfo@0x50c738"
+        ],
+        "functions": [
+          "func_001E8A24",
+          "func_001E89C8"
+        ]
+      },
+      "remaining_static_work": "Disassemble func_001E8A24/func_001E89C8 and compare their storage location against Task 9's known career-payload envelope address range.",
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-16-04"
+    },
+    {
+      "program_id": "program-16",
+      "subsystem": "Career/save",
+      "question": "Does the save format have unused/reserved space that could accommodate new Career Mode 2.0 / Amateur Career fields without a save-format version bump?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Task 9 already established the exact envelope size (0x755C bytes total, 0x7530-byte body capacity) and that unused capacity is deterministic zero padding. Per this task's explicit rule (a question is not runtime-essential merely because a value has not yet been traced through code), the *maximum length the serializer can ever write* is itself a static, code-determined fact -- it does not require observing a real played-in save, only tracing every field write the serializer function performs (including any variable-length arrays, whose element counts are themselves bounded by other statically-provable maxima such as the roster/record counts this session already established for program-04/program-13). No prior pass has actually disassembled the per-field serializer to sum these bounds.",
+      "affected_features": [
+        "career-2",
+        "amateur"
+      ],
+      "remaining_static_work": "Disassemble the career-payload serializer (the function(s) that write between envelope+0x2C and the body's declared 0x7530-byte capacity) field by field, summing fixed-size writes and bounding any variable-length writes (e.g. per-boxer or per-record loops) by their own already-proven or separately-provable maxima, to compute the serializer's own maximum possible written length and compare it against the proven 0x7530 capacity. This is ordinary data-flow/allocation-site tracing, not a runtime observation.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-16-05"
+    },
+    {
+      "program_id": "program-28",
+      "subsystem": "UI/commentary",
+      "question": "Is a generic localization/string-lookup mechanism identified?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "PROBABLE",
+      "evidence": "'s_pfnGetLocalizedString' found -- a named function-pointer variable for a localization callback -- referenced by T_000CE8A0. This is strong evidence of a generic, swappable string-lookup indirection, useful for a 'generic fallback capability' the task specifically asked about.",
+      "affected_features": [
+        "career-2",
+        "amateur",
+        "roster",
+        "divisions",
+        "generated-boxers",
+        "career-health",
+        "legacy"
+      ],
+      "sources": {
+        "strings": [
+          "s_pfnGetLocalizedString@0x4fad68"
+        ],
+        "functions": [
+          "T_000CE8A0"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-28-01"
+    },
+    {
+      "program_id": "program-28",
+      "subsystem": "UI/commentary",
+      "question": "Are the division-name UI strings (INFO_Division_N) served through the same localization indirection, or hardcoded per-screen?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Both the division strings (program-13) and s_pfnGetLocalizedString were found independently this session; no code path connecting them was traced.",
+      "affected_features": [
+        "divisions",
+        "roster"
+      ],
+      "remaining_static_work": "Disassemble T_000CE8A0 and the 5 division-string referencing functions to determine whether they share a call path.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-28-02"
+    },
+    {
+      "program_id": "program-28",
+      "subsystem": "UI/commentary",
+      "question": "Is commentary lookup/ID data (audio triggers tied to fight events) statically evidenced?",
+      "status": "STATICALLY_AMBIGUOUS",
+      "evidence": "'Decision Announcement Script' was found, suggesting a scripted commentary/announcement system exists, but no commentary ID table or lookup function was located or disassembled this session -- it is unclear whether commentary selection is table-driven (statically reconstructable) or driven by a runtime state machine whose branch conditions were not traced.",
+      "affected_features": [
+        "career-2",
+        "roster"
+      ],
+      "sources": {
+        "strings": [
+          "Decision Announcement Script@0x4fa4e8"
+        ]
+      },
+      "remaining_static_work": "Locate and disassemble the function referencing 'Decision Announcement Script' before concluding whether commentary selection is statically reconstructable.",
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-28-03"
+    },
+    {
+      "program_id": "program-28",
+      "subsystem": "UI/commentary",
+      "question": "Are the boxer-selection/roster-browser UI screens identified?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "func_001AF768 is CANDIDATE evidence of a large UI/menu-construction routine that queries the boxer table twice (program-04 finding); which specific screen it constructs (roster-select, career boxer list, exhibition setup) was not determined.",
+      "affected_features": [
+        "roster",
+        "career-2"
+      ],
+      "sources": {
+        "functions": [
+          "func_001AF768"
+        ]
+      },
+      "remaining_static_work": "Search for callers of func_001AF768 and disassemble its 9 chained subsystem-init calls to identify the screen by its other dependencies.",
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-28-04"
+    },
+    {
+      "program_id": "program-29",
+      "subsystem": "Budgets",
+      "question": "Are BOOT.BIN's exact executable/static-data/BSS size budgets known?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "CONFIRMED",
+      "evidence": "Exact ELF section sizes extracted this session: .text 5,203,108 bytes; .rodata family ~224,904 bytes; .data 378,720 bytes; .bss 218,532 bytes (0x005923C0-0x005C7964, cross-validated against Task 9's independently-derived range); total file 7,270,664 bytes.",
+      "affected_features": [
+        "combat",
+        "career-2",
+        "amateur",
+        "roster",
+        "divisions",
+        "generated-boxers",
+        "career-health"
+      ],
+      "sources": {
+        "module": "BOOT.BIN"
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-29-01"
+    },
+    {
+      "program_id": "program-29",
+      "subsystem": "Budgets",
+      "question": "Is the PSP savedata size budget (relevant to any Career Mode 2.0 / Amateur Career save expansion) exactly known?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "CONFIRMED",
+      "evidence": "Task 9 established the exact envelope (0x755C bytes total, 0x7530-byte body capacity, 0x2C-byte header) as static BSS with module-load-to-unload lifetime.",
+      "affected_features": [
+        "career-2",
+        "amateur"
+      ],
+      "sources": {
+        "docs": [
+          "docs/decomp/packages/save-system/README.md"
+        ]
+      },
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-29-02"
+    },
+    {
+      "program_id": "program-29",
+      "subsystem": "Budgets",
+      "question": "Are archive-size constraints for the resource families touched by roster/division expansion (db.viv, tables.viv, boxer-appearance archives) known?",
+      "status": "STATICALLY_RESOLVED",
+      "confidence": "CONFIRMED",
+      "evidence": "Exact sizes recorded for every enumerated archive in analysis/resources/corpus-resource-index.json and analysis/resources/xdb-schema-evidence.json (e.g. db.viv 21,854 bytes total, actors.viv 68,821,920 bytes, boxersh.viv 5,304,776 bytes).",
+      "affected_features": [
+        "roster",
+        "generated-boxers",
+        "divisions"
+      ],
+      "sources": {},
+      "remaining_static_work": null,
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-29-03"
+    },
+    {
+      "program_id": "program-29",
+      "subsystem": "Budgets",
+      "question": "Is there identifiable free/padding space in BOOT.BIN or its BSS that could host new code/data without growing the module?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "Section boundaries are exactly known (this pass); whether any inter-section gaps or over-aligned padding regions are large enough to be useful was not analyzed.",
+      "affected_features": [
+        "combat",
+        "career-2",
+        "roster",
+        "divisions"
+      ],
+      "remaining_static_work": "Compute inter-section gaps from the now-exact section offset/size table and cross-reference against alignment requirements.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "program-29-04"
+    },
+    {
+      "program_id": "interface-audio",
+      "subsystem": "Audio",
+      "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "'Decision Announcement Script' and the DRONE_ event tags suggest audio/commentary is event-triggered, but the actual ABI boundary (what data a caller must supply) was not traced.",
+      "affected_features": [
+        "roster"
+      ],
+      "remaining_static_work": "Trace the DRONE_ tag consumer functions and the Decision Announcement Script reference toward their audio-triggering call sites.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "interface-audio-01"
+    },
+    {
+      "program_id": "interface-renderer",
+      "subsystem": "Renderer",
+      "question": "Is the renderer interface ABI for boxer model/morph data (relevant to roster expansion and generated boxers) identified?",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "The full boxer-appearance resource family (actors.viv, boxersh.viv, etc.) is enumerated and its container/compression format proven, but the code that hands decoded .msh/.ord/.orl/.o data to the PSP GE (graphics engine, imported as sceGe_user) was not traced.",
+      "affected_features": [
+        "roster",
+        "generated-boxers"
+      ],
+      "remaining_static_work": "Trace xrefs to the sceGe_user stub imports toward whatever function consumes decoded model data.",
+      "sources": {},
+      "confidence": "CANDIDATE",
+      "runtime_necessary": false,
+      "minimum_runtime_experiment": null,
+      "id": "interface-renderer-01"
+    }
+  ],
+  "counts_overall": {
+    "STATICALLY_RESOLVED": 25,
+    "STATICALLY_SOLVABLE": 27,
+    "STATICALLY_AMBIGUOUS": 5,
+    "RUNTIME_ESSENTIAL": 0
+  },
+  "counts_by_program": {
+    "program-00": {
+      "STATICALLY_RESOLVED": 2,
+      "STATICALLY_SOLVABLE": 0,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-01": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-03": {
+      "STATICALLY_RESOLVED": 3,
+      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-04": {
+      "STATICALLY_RESOLVED": 3,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 2,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-05": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-06": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-07": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-08": {
+      "STATICALLY_RESOLVED": 2,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-09": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-10": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-11": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_AMBIGUOUS": 1,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-12": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_AMBIGUOUS": 1,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-13": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-16": {
+      "STATICALLY_RESOLVED": 2,
+      "STATICALLY_SOLVABLE": 3,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-28": {
+      "STATICALLY_RESOLVED": 1,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 1,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "program-29": {
+      "STATICALLY_RESOLVED": 3,
+      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "interface-audio": {
+      "STATICALLY_RESOLVED": 0,
+      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "interface-renderer": {
+      "STATICALLY_RESOLVED": 0,
+      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    }
+  },
+  "counts_by_feature": {
+    "career-2": {
+      "STATICALLY_RESOLVED": 10,
+      "STATICALLY_SOLVABLE": 9,
+      "STATICALLY_AMBIGUOUS": 3,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "amateur": {
+      "STATICALLY_RESOLVED": 9,
+      "STATICALLY_SOLVABLE": 6,
+      "STATICALLY_AMBIGUOUS": 2,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "roster": {
+      "STATICALLY_RESOLVED": 9,
+      "STATICALLY_SOLVABLE": 8,
+      "STATICALLY_AMBIGUOUS": 4,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "generated-boxers": {
+      "STATICALLY_RESOLVED": 8,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 2,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "combat": {
+      "STATICALLY_RESOLVED": 10,
+      "STATICALLY_SOLVABLE": 14,
+      "STATICALLY_AMBIGUOUS": 2,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "divisions": {
+      "STATICALLY_RESOLVED": 8,
+      "STATICALLY_SOLVABLE": 6,
+      "STATICALLY_AMBIGUOUS": 1,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "career-health": {
+      "STATICALLY_RESOLVED": 7,
+      "STATICALLY_SOLVABLE": 7,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    },
+    "legacy": {
+      "STATICALLY_RESOLVED": 2,
+      "STATICALLY_SOLVABLE": 0,
+      "STATICALLY_AMBIGUOUS": 0,
+      "RUNTIME_ESSENTIAL": 0
+    }
+  },
+  "static_ceiling": {
+    "definition": "Count-based projection = STATICALLY_RESOLVED + STATICALLY_SOLVABLE, i.e. every question with either evidence already in hand or a concrete named static avenue remaining. STATICALLY_AMBIGUOUS questions are excluded from the ceiling because they are not proven closeable by static work alone yet (their alternatives may or may not collapse to one answer statically).",
+    "statically_resolved": 25,
+    "statically_solvable": 27,
+    "ceiling_count": 52,
+    "total_bounded_questions": 57,
+    "ceiling_fraction_of_total": 0.9123,
+    "excluded_pending_further_static_work": {
+      "STATICALLY_AMBIGUOUS": 5,
+      "RUNTIME_ESSENTIAL": 0
+    }
+  },
+  "runtime_floor": {
+    "definition": "The list of ONLY questions currently classified RUNTIME_ESSENTIAL -- i.e. genuinely believed to require dynamic observation because no static avenue remains. Per task policy this list must be kept as small as evidence honestly allows and must NEVER include a question that still has a named static avenue (those belong in STATICALLY_SOLVABLE/STATICALLY_AMBIGUOUS instead).",
+    "count": 0,
+    "questions": []
+  }
+}
