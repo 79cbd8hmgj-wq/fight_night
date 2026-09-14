@@ -1,0 +1,6 @@
+{
+  "schema_version": 2,
+  "revision": "ULUS10066-v1.00",
+  "note": "Every prior entry in this file (schema_version 1: xdbboxr record stride, header word semantics, boxer index semantics, scripts/scrptpal selection) was re-evaluated per this task's explicit instruction to re-exhaust static avenues before any runtime classification survives. None had actually exhausted the static dependency graph -- each still has concrete, named static avenues remaining (see analysis/resources/static-resolution-matrix.json and analysis/resources/static-discovery-backlog.json) -- so all were reclassified STATIC_PENDING rather than kept here. This file is intentionally empty this pass. A future pass may re-populate it once the static avenues listed in the discovery backlog are genuinely exhausted for a given question.",
+  "entries": []
+}

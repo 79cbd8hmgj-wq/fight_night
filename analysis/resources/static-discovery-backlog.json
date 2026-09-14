@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00",
+  "purpose": "Concrete unresolved static investigations for later system-specific passes. Every entry here has a named starting point (a function address, table, or archive) -- none are generic 'investigate further' placeholders.",
+  "entries": [
+    {
+      "id": "disassemble-func-0018654c",
+      "description": "Disassemble func_0018654C (called by both T_0018E4F4 and func_001AF768 immediately after func_001AD268) to learn what it does with the boxer-table classification result.",
+      "relevance": "boxer schema / program-04"
+    },
+    {
+      "id": "boxer-payload-tail",
+      "description": "Structurally analyze xdbboxr.adf's decoded payload bytes from offset ~0x37 (just past the proven +0x18 flags array) through its 9704-byte end, looking for string data, a second record array, or further sub-headers.",
+      "relevance": "boxer schema / program-04"
+    },
+    {
+      "id": "cross-table-flags-array-check",
+      "description": "Apply the +0x18 packed-2-bit-array model found for xdbboxr.adf to at least one other xdb table's own consumer function (accessor functions for xdbvenue/xdbalias/xdbevent/xdbhmtwn/xdbstore/xdbpref/xdbrivl/xdbtrain/xdbcutpn were only located, not disassembled, in either pass) to confirm or refute that the layout generalizes across the xdb family.",
+      "relevance": "XDB family / program-04"
+    },
+    {
+      "id": "node-plus-0x10-constructor",
+      "description": "Locate the constructor/allocator for whatever object type has a +0x10 'next' field walked by func_00186464, and any function that writes to that field (list insertion). Neither was found in this pass.",
+      "relevance": "boxer ownership / program-04"
+    },
+    {
+      "id": "callers-of-func-001af768-and-t-0018e4f4",
+      "description": "Search for callers of func_001AF768 and T_0018E4F4 (one level up from where this pass stopped) to identify which UI screen(s) they construct.",
+      "relevance": "UI/commentary / program-28, boxer ownership / program-04"
+    },
+    {
+      "id": "subsystem-init-cascade",
+      "description": "Disassemble the 9 subsystem-init functions chained after func_001AF768's two boxer-table queries (func_00186954, func_001B9B58, func_001850C0, func_001A1D1C, func_001A90D8, func_001B8F08, func_001AC34C, func_001B6338, and one more) to learn what other subsystems this screen depends on.",
+      "relevance": "cross-subsystem dependency mapping / program-28 and others depending on which subsystems are found"
+    },
+    {
+      "id": "registry-table-consumer",
+      "description": "Trace the pointer at ELF virtual 0x6DE908 (a raw pointer to the 9-entry boxer-appearance-family registry table's base address, found in a data region) to whatever larger structure or function reads through it.",
+      "relevance": "resource loaders / program-03/04"
+    },
+    {
+      "id": "tables-viv-loader",
+      "description": "Locate the loader/dispatch function for preload/tables.viv (72 members: CSV tables plus hairstyle/lighting text files). No string xref to 'tables.viv' exists in BOOT.BIN's extracted string table; a raw-byte search (the same technique that found the registry table) was not yet performed for this specific name in isolation from the registry table's own listing.",
+      "relevance": "resource loaders / program-04, program-28 (appearance UI)"
+    },
+    {
+      "id": "bootpreloads-dispatch",
+      "description": "Trace T_0033A614 (the sole function referencing 'bootpreloads.viv') further to learn its boot-preload dispatch logic, including whether it references the HK_*.bh / hk_*.viv family by name.",
+      "relevance": "boot/preload architecture / program-00, program-04 (appearance)"
+    },
+    {
+      "id": "scrptpal-consumer-search",
+      "description": "Search BOOT.BIN (already covered) and other PRX modules (not analyzed in any pass so far) for any reference to 'scrptpal.viv' or a runtime-constructed equivalent, and locate the call site using the '%s%s.viv' generic path-builder format string found near the registry table's string data.",
+      "relevance": "program-05/06 (fight-engine scripts), explicitly deferred out of Task 10/11 scope"
+    },
+    {
+      "id": "big-file-family-survey",
+      "description": "The 272 BIGF .big files (UI widgets, career-mode screens, fight-hype screens) were inventoried by count only in this pass. A follow-on pass should enumerate at least the career-mode and boxer-selection-relevant ones (createchamp*.big, careerhalloffame.big, selectalegend.big, selectfightcontract.big, boxerbiooverlay.big) since their names directly suggest boxer/roster/career UI relevance.",
+      "relevance": "UI/commentary / program-28, career/save / program-16"
+    },
+    {
+      "id": "config-xml-inspection",
+      "description": "config1.xml through config8.xml and configs.xml were classified as plain text but not opened/read in this pass.",
+      "relevance": "unclassified -- could affect any subsystem depending on content"
+    },
+    {
+      "id": "fusion-bts-and-fnhud-hud",
+      "description": "data/fusion.bts (text-looking content) and hud/fnhud.hud (custom binary header, first bytes 01 00 f4 f1 01 00 00 00) were noted but not opened in this pass.",
+      "relevance": "unclassified"
+    },
+    {
+      "id": "psp-encrypted-codec-prx-modules",
+      "description": "6 ~SCE-encrypted PRX modules (audiocodec.prx, mpegbase.prx, sc_sascore.prx, videocodec.prx, libatrac3plus.prx, mpeg.prx) remain needs_decryption; out of static reach without a Phase-I-approved recovery backend (see docs/architecture/psp-static-analysis.md's existing recovery-backend boundary). Not investigated further in this pass.",
+      "relevance": "audio/renderer interfaces / interface-audio, interface-renderer"
+    }
+  ]
+}

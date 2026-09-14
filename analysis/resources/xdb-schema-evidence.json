@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00",
+  "source_archive": {
+    "path": "preload/db.viv",
+    "magic": "BIG4",
+    "sha256_note": "Repository-root historical archive sample; not the authoritative verified workspace. Reused from the same tracked sample already cited by analysis/resources/ea-codec-evidence.json (Task 5)."
+  },
+  "shared_header_format": {
+    "confidence": "PROBABLE",
+    "size_bytes": 32,
+    "layout": "8 little-endian uint32 words, parsed by src/fnr3_re/xdb.py::parse_xdb_header",
+    "proven_facts": [
+      "Identical 8-word shape observed in all 10 decoded members with zero exceptions.",
+      "word2, word3, and word4 are numerically equal in 9 of 10 tables; xdbtrain.adf is the one exception (word2=5288, word3=word4=7200), proving these are not always three redundant copies of one field.",
+      "word4 equals the decoded payload size exactly in 2 of 10 tables (xdbevent.adf, xdbrivl.adf); in the other 8 it is smaller than the payload by a per-table remainder (see per_table entries), consistent with a trailing region (e.g. a string pool) after a fixed-size leading section.",
+      "word5 is 0 in every table.",
+      "word6 is non-zero only in xdbboxr.adf (21) and xdbcutpn.adf (16389); word7 is non-zero only in xdbvenue.adf, xdbalias.adf, and xdbhmtwn.adf."
+    ],
+    "unresolved": [
+      "Whether word0 or word1 is a record count, a field/column count, a string-table entry count, or something else -- neither interpretation produces an integer (word2-32)/count stride for more than 2 of the 10 tables, so this cannot be settled by arithmetic alone.",
+      "The exact meaning and boundary of the 'trailing_bytes' region in the 8 tables where word4 < payload size."
+    ],
+    "revised_this_pass": {
+      "confidence": "PROBABLE for word0-as-count; CANDIDATE for the flags-array reinterpretation",
+      "finding": "Direct disassembly of func_001AD268 (see analysis/resources/boxer-ownership-map.json's header_word0_proof and revised_header_model) proves word0 is read and used as a genuine per-entry loop count by real executable code, and that payload offset +0x18 -- previously modeled here as a scalar 'word6' -- is very likely the start of a packed 2-bit-per-entry array of word0 entries, not a reserved scalar. This directly explains why word6 is zero for every table with word0 <= 12 (the packed array fits within 4 bytes) and non-zero for xdbboxr.adf (121 entries) and xdbcutpn.adf (word1=239): reinterpreting a multi-entry packed byte array as a single u32 necessarily produces what looks like an arbitrary nonzero number.",
+      "not_yet_resolved": "Whether word0 specifically (versus word1) sizes this array for every table, not just xdbboxr.adf; whether the same +0x18 packed-array layout applies uniformly across all 10 tables (only xdbboxr.adf's consumer was directly observed)."
+    }
+  },
+  "tables": [
+    {
+      "member": "xdbboxr.adf",
+      "compressed_size": 3117,
+      "decoded_size": 9704,
+      "refpack": {"header": "10fb", "declared_size": 9704, "decode_status": "clean: exact declared-size match, zero trailing bytes, self-consistent round trip"},
+      "header": {"word0": 121, "word1": 37, "section_size_a": 9012, "section_size_b": 9012, "section_size_c": 9012, "word5": 0, "word6": 21, "word7": 0},
+      "trailing_bytes": 692,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_001863B4 (see resource-loader-map.json)",
+      "notes": "Highest-priority table; see xdbboxr-schema.json and boxer-ownership-map.json for what static evidence adds beyond this shared header."
+    },
+    {
+      "member": "xdbvenue.adf",
+      "compressed_size": 545,
+      "decoded_size": 792,
+      "refpack": {"header": "10fb", "declared_size": 792, "decode_status": "clean"},
+      "header": {"word0": 9, "word1": 12, "section_size_a": 244, "section_size_b": 244, "section_size_c": 244, "word5": 0, "word6": 4215040, "word7": 524288000},
+      "trailing_bytes": 548,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_001B99F0 (see resource-loader-map.json)",
+      "notes": "word0=9 is consistent with a small fixed venue list; not confirmed."
+    },
+    {
+      "member": "xdbalias.adf",
+      "compressed_size": 867,
+      "decoded_size": 1468,
+      "refpack": {"header": "10fb", "declared_size": 1468, "decode_status": "clean"},
+      "header": {"word0": 4, "word1": 76, "section_size_a": 636, "section_size_b": 636, "section_size_c": 636, "word5": 0, "word6": 1, "word7": 550502400},
+      "trailing_bytes": 832,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_00184C34 (see resource-loader-map.json)"
+    },
+    {
+      "member": "xdbevent.adf",
+      "compressed_size": 256,
+      "decoded_size": 436,
+      "refpack": {"header": "10fb", "declared_size": 436, "decode_status": "clean"},
+      "header": {"word0": 4, "word1": 51, "section_size_a": 436, "section_size_b": 436, "section_size_c": 436, "word5": 0, "word6": 0, "word7": 0},
+      "trailing_bytes": 0,
+      "structural_status": "header_and_body_pattern_observed",
+      "confidence": "CANDIDATE",
+      "loader": "func_001A1BB4 (see resource-loader-map.json)",
+      "notes": "The 404-byte body after the header is a dense run of small 16-bit fields including a strictly-increasing sequential index (1..50 observed by inspection); no string data appears anywhere in the decoded payload. This is a numeric cross-reference/index-style table, not a boxer-style named-record table. Not reduced to an exact field schema in this pass."
+    },
+    {
+      "member": "xdbhmtwn.adf",
+      "compressed_size": 805,
+      "decoded_size": 1284,
+      "refpack": {"header": "10fb", "declared_size": 1284, "decode_status": "clean"},
+      "header": {"word0": 5, "word1": 63, "section_size_a": 660, "section_size_b": 660, "section_size_c": 660, "word5": 0, "word6": 16384, "word7": 570163200},
+      "trailing_bytes": 624,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_001A8C4C (see resource-loader-map.json)",
+      "notes": "word0=5 is consistent with a small fixed hometown/region list ('hmtwn'); not confirmed."
+    },
+    {
+      "member": "xdbstore.adf",
+      "compressed_size": 8204,
+      "decoded_size": 18252,
+      "refpack": {"header": "10fb", "declared_size": 18252, "decode_status": "clean"},
+      "header": {"word0": 10, "word1": 404, "section_size_a": 8108, "section_size_b": 8108, "section_size_c": 8108, "word5": 0, "word6": 5242880, "word7": 661913600},
+      "trailing_bytes": 10144,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_001B8B88 (see resource-loader-map.json)"
+    },
+    {
+      "member": "xdbpref.adf",
+      "compressed_size": 281,
+      "decoded_size": 756,
+      "refpack": {"header": "10fb", "declared_size": 756, "decode_status": "clean"},
+      "header": {"word0": 7, "word1": 26, "section_size_a": 392, "section_size_b": 392, "section_size_c": 392, "word5": 0, "word6": 1024, "word7": 0},
+      "trailing_bytes": 364,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_001AC1E4 (see resource-loader-map.json)"
+    },
+    {
+      "member": "xdbrivl.adf",
+      "compressed_size": 1604,
+      "decoded_size": 7240,
+      "refpack": {"header": "10fb", "declared_size": 7240, "decode_status": "clean"},
+      "header": {"word0": 59, "word1": 61, "section_size_a": 7240, "section_size_b": 7240, "section_size_c": 7240, "word5": 0, "word6": 0, "word7": 0},
+      "trailing_bytes": 0,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_001AE9B4 (see resource-loader-map.json)",
+      "notes": "word0=59 and word1=61 are close in value, unlike most other tables where word1 is much larger than word0; plausibly consistent with a rivalry list sized near the roster (see xdbboxr.adf's own word0=121), but not confirmed."
+    },
+    {
+      "member": "xdbtrain.adf",
+      "compressed_size": 3201,
+      "decoded_size": 8032,
+      "refpack": {"header": "10fb", "declared_size": 8032, "decode_status": "clean"},
+      "header": {"word0": 11, "word1": 239, "section_size_a": 5288, "section_size_b": 7200, "section_size_c": 7200, "word5": 0, "word6": 2641921, "word7": 0},
+      "trailing_bytes": 832,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_001B9CE8 (see resource-loader-map.json)",
+      "notes": "The only table where section_size_a disagrees with section_size_b/c -- proves these three words are not always redundant copies of one field."
+    },
+    {
+      "member": "xdbcutpn.adf",
+      "compressed_size": 2398,
+      "decoded_size": 5244,
+      "refpack": {"header": "10fb", "declared_size": 5244, "decode_status": "clean"},
+      "header": {"word0": 9, "word1": 239, "section_size_a": 4332, "section_size_b": 4332, "section_size_c": 4332, "word5": 0, "word6": 16389, "word7": 0},
+      "trailing_bytes": 912,
+      "structural_status": "header_only",
+      "confidence": "CANDIDATE",
+      "loader": "func_001A08CC (see resource-loader-map.json)",
+      "notes": "word1=239 matches xdbtrain.adf's word1 exactly; both are consumed by contract/contracts.viv's trainer.fnc/cutman.fnc side of the game (training staff and cut personnel), a plausible but unconfirmed cross-table relationship."
+    }
+  ],
+  "sibling_archives_investigated": [
+    {
+      "archive": "preload/tables.viv",
+      "member_count": 72,
+      "refpack_members": 72,
+      "refpack_decode_status": "all 72 decode cleanly (zero errors, zero trailing bytes, self-consistent round trip)",
+      "member_families": [
+        "8 CSV tables: actors, cabstore, facemorph, facialhair, haircolor, hairtable, morphslots, shoes, shorts",
+        "63 named .txt/.lit files keyed by hairstyle name (actorhair1-9, afro variants, braid, cornrow1, dreads, flattop, mohawk, mullet, ponytail, ...) or by boxer surname (ali, barrera, byrd, duran, frazier, hatton, lamotta, lazcano, leonard, morales, norton, pacquiao, robinson, ward, ...)"
+      ],
+      "notes": "Not traced to a loader function in this pass (see resource-loader-map.json). The boxer-surname-keyed files plausibly select a named real-world boxer's hairstyle/lighting preset by name lookup, cross-referencing preload/bootpreloads.viv's HK_*.bh descriptors which share the identical stems (ali, hatton, lazcano, leonard, morales, pacquiao, robinson) -- see boxer-ownership-map.json's cross_resource_relationships."
+    },
+    {
+      "archive": "contract/contracts.viv",
+      "member_count": 3,
+      "refpack_members": 3,
+      "refpack_decode_status": "all 3 decode cleanly",
+      "members": ["cutman.fnc", "fights.fnc", "trainer.fnc"]
+    },
+    {
+      "archive": "preload/boxerpre.viv",
+      "member_count": 12,
+      "refpack_members": 12,
+      "refpack_decode_status": "all 12 decode cleanly",
+      "members": [
+        "mod_base.orl", "mod_base.ord", "shad_base.orl", "shad_base.ord",
+        "mor_base_head_damcheekleft.o", "mor_base_head_damcheekright.o",
+        "mor_base_head_dameyeleft.o", "mor_base_head_dameyeright.o",
+        "mor_base_head_dammouthleft.o", "mor_base_head_dammouthright.o",
+        "mor_base_head_damnoseleft.o", "mor_base_head_damnoseright.o"
+      ],
+      "notes": "A shared base boxer model/shadow pair plus 8 face-region damage morph targets -- structurally consistent with a shared cut/swelling visualization asset used across all boxers, plausibly consumed by the Medical/damage subsystem (program-10). Not confirmed by executable evidence."
+    },
+    {
+      "archive": "preload/bootpreloads.viv",
+      "member_count": 80,
+      "refpack_members": 71,
+      "non_refpack_members": ["HK_ali.bh", "HK_hatto.bh", "HK_lazca.bh", "HK_leona.bh", "HK_moral.bh", "HK_pacqu.bh", "HK_punch.bh", "HK_robin.bh", "serial.txt"],
+      "notes": "The 8 uncompressed 'HK_' members share name stems with 8 of preload/tables.viv's boxer-surname .txt files (ali, hatton->hatto, lazcano->lazca, leonard->leona, morales->moral, pacquiao->pacqu, robinson->robin) plus one ('HK_punch', matching 'punchout.txt') that does not correspond to a real boxer name -- see boxer-ownership-map.json. Everything else in this archive (actors.bh, allhair.bh, allmorph.bh, per-boxer BL_*.bh, SKIN_0-5.bh, tables.bh) is RefPack-compressed."
+    },
+    {
+      "archive": "scripts/scripts.viv",
+      "member_count": 167,
+      "refpack_members": 167,
+      "refpack_decode_status": "all 167 decode cleanly",
+      "notes": "Fight-move/combo script data keyed by weight-class and corner-color/style codes (BCS_BLU_*, BE1-4_*_NOE, BLR/BWR_VNT_*, KOL/KOW_*, TKO*, VSS_*_NOE, ...). Outside Task 10/11's boxer/resource-loader focus; recorded for the cross-check against scrptpal.viv below."
+    },
+    {
+      "archive": "scripts/scrptpal.viv",
+      "member_count": 167,
+      "refpack_members": 0,
+      "notes": "Identical member name list, order, and per-member size to scripts/scripts.viv, but none of its 167 members are RefPack-compressed -- see the paired-parameter-set finding in boxer-ownership-map.json's cross_resource_relationships (this is NOT a decompressed duplicate of scripts.viv: for the sampled member both files share the same 8-byte 'stp\\x01' framing and most byte positions but differ in specific integer fields)."
+    }
+  ]
+}

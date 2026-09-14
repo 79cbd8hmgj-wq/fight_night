@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "model_version": 2,
+  "revision": "ULUS10066-v1.00",
+  "resource": "preload/db.viv!xdbboxr.adf",
+  "status": "static_header_only",
+  "confidence": "CANDIDATE",
+  "summary": "Only the shared 32-byte xdb table header (see xdb-schema-evidence.json) is currently proven for xdbboxr.adf. No per-record field offset, width, or signedness is included here because no static evidence -- header arithmetic, byte-pattern inspection, or executable parser code -- reliably pinned the record boundary in this pass. This file exists so future work extends a versioned model instead of re-deriving the header from scratch, and so no downstream consumer accidentally treats an unproven field as confirmed.",
+  "container": {
+    "compressed_size": 3117,
+    "decoded_size": 9704,
+    "refpack_header": "10fb",
+    "refpack_decode": "clean: exact declared-size match (9704 bytes), zero trailing bytes, self-consistent decode/encode round trip via src/fnr3_re/refpack.py"
+  },
+  "proven_header_fields": {
+    "word0": {"value": 121, "candidate_meaning": "record count", "confidence": "CANDIDATE", "reason": "121 is a plausible boxer-database row count (larger than the ~40-fighter playable roster commonly reported for this title, consistent with also including legends/created-boxer template slots), but no stride arithmetic or executable code confirms it names a record count rather than some other quantity."},
+    "word1": {"value": 37, "candidate_meaning": "field/column count", "confidence": "CANDIDATE", "reason": "37 is a plausible per-boxer field count for a rich boxer schema (name, ratings, attributes, appearance, ...), but this is a plausibility judgement, not a proven claim -- flagged explicitly per the evidence standard's prohibition on promoting a claim from a value that merely 'looks right'."},
+    "section_size_a": {"value": 9012, "candidate_meaning": "size in bytes of a leading fixed-size section, distinct from a 692-byte trailing region", "confidence": "CANDIDATE"},
+    "trailing_bytes": {"value": 692, "candidate_meaning": "possible string pool or secondary section following the fixed section", "confidence": "CANDIDATE"},
+    "word6": {"value": 21, "candidate_meaning": "unknown; xdbboxr.adf is one of only two tables (with xdbcutpn.adf) where this word is non-zero", "confidence": "CANDIDATE"}
+  },
+  "record_layout": {
+    "status": "partially_resolved",
+    "record_count": 121,
+    "record_count_confidence": "PROBABLE",
+    "record_count_evidence": "func_001AD268 reads word0 directly from the payload and uses it as a genuine per-entry loop bound (see boxer-ownership-map.json's header_word0_proof) -- this settles the structural question of whether word0 is consumed as a count at all, though it does not yet prove the counted entries are specifically 'boxer records' as opposed to some other per-row flag.",
+    "record_stride": null,
+    "fields": [],
+    "flags_array": {
+      "offset": "+0x18",
+      "confidence": "CANDIDATE",
+      "layout": "2 bits per entry, 4 entries per byte, for word0 (121) entries -- ceil(121/4) = 31 bytes, spanning payload offset 0x18 through 0x36",
+      "evidence": "func_001AD268 computes each entry's address as payload+0x18+(index>>2) and extracts (byte >> shift) & 0x3 where shift depends on index&0x3; see boxer-ownership-map.json's revised_header_model.",
+      "meaning_of_the_4_values": "unresolved -- not determined whether 0/1/2/3 correspond to boxer status categories (e.g. active/legend/created/hidden) or something unrelated to boxer semantics specifically"
+    },
+    "why_still_unresolved_beyond_the_above": [
+      "No boxer-record field accessor (a function that reads a specific named field -- rating, weight, name, etc. -- out of an indexed boxer entry) was located and traced in this pass; BOOT.BIN contains 24,576 disassembled functions and the boxer table's known consumers (6 direct singleton-accessor callers plus func_001AD268) do not themselves read individual named fields.",
+      "The boxer-table runtime accessor found in BOOT.BIN (func_00186464, see boxer-ownership-map.json) walks the loaded table via a linked-list 'next' pointer at offset +0x10 of each visited node rather than doing index*stride array arithmetic against the payload directly -- whether this linked list is built from the payload's flags-array entries, or is a separate structure entirely, was not determined.",
+      "The byte range after the +0x18 flags array (payload offset ~0x37 onward, out of 9704 total bytes) was not further structurally analyzed in this pass."
+    ]
+  },
+  "boxer_data_is_not_confined_to_this_table": {
+    "confidence": "PROBABLE for the archive family, CANDIDATE for any specific field split",
+    "finding": "xdbboxr.adf is not the sole boxer database. A 9-entry resource registry table found in BOOT.BIN (see analysis/resources/resource-loader-map.json) groups xdbboxr.adf's containing archive (preload/db.viv is not itself in that table, but 4 sibling appearance archives are) alongside boxersh.viv (staged damage models, gloves), cboxshr.viv (shorts models), boxmisc.viv (face/damage/equipment geometry), boxmisc2.viv (headgear-compatible hair morphs), boxerpre.viv, allhair.viv, actors.viv, and tables.viv. None of these are xdbboxr.adf-format tables -- they are 3D model/geometry archives -- so boxer *appearance* data is confirmed split across a completely separate resource family from boxer *database* fields, consistent with a normal game-engine separation of database records (identity/stats) from rendering assets (models/textures), not a schema-splitting surprise.",
+    "see_also": "analysis/resources/boxer-ownership-map.json's cross_resource_relationships and analysis/resources/corpus-resource-index.json"
+  },
+  "explicitly_not_claimed": [
+    "field offsets for name/rating/weight/division/stance/handedness/appearance/hair/shorts/equipment/hometown/nationality/career-eligibility/rivals/training/store-unlock/created-boxer flags -- none of these have been located in xdbboxr.adf's decoded bytes or in executable field-accessor code",
+    "whether word0=121 counts playable roster boxers, all database rows including templates, or something else",
+    "whether the 692-byte trailing region is a string pool, a secondary record array, or padding"
+  ]
+}

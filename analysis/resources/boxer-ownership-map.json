@@ -1,0 +1,131 @@
+{
+  "schema_version": 2,
+  "revision": "ULUS10066-v1.00",
+  "source_module": {"path": "BOOT.BIN", "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"},
+  "changelog": "schema_version 2 (this pass): resolved all 5 previously-'identified_but_not_yet_disassembled' consumers (3 were already traced; the remaining 2 -- T_0018E4F4 and func_001AF768 -- are now disassembled and interpreted); proved header word0 is genuinely consumed as a per-entry loop count by func_001AD268; found a second boxer-relevant object constructor and UI-adjacent consumer; added 4 newly-discovered boxer-appearance archives (boxersh.viv, cboxshr.viv, boxmisc.viv, boxmisc2.viv) and the 36-file hk_*.viv family, strengthening the tables.viv/bootpreloads.viv cross-reference from CANDIDATE toward PROBABLE.",
+  "chain": [
+    {"stage": "resource", "identity": "preload/db.viv!xdbboxr.adf", "evidence": "archive enumeration + RefPack decode, see xdb-schema-evidence.json"},
+    {"stage": "archive_open", "function": "func_001AD694", "address": "0x001AD694", "role": "xdb table-set dispatcher; requests xdbboxr.adf when bit 0x1 of its argument bitmask is set"},
+    {"stage": "member_lookup", "function": "func_0033B58C", "address": "0x0033B58C", "role": "shared archive-member-by-name lookup, returns an opaque member handle"},
+    {"stage": "table_trampoline", "function": "func_001863B4", "address": "0x001863B4", "size": "0x30", "role": "boxer-specific: calls the boxer table singleton accessor, then the shared generic loader"},
+    {"stage": "singleton_accessor", "function": "func_00186408", "address": "0x00186408", "size": "0x5C", "role": "lazily-initialized singleton getter for the boxer table object", "backing_address": "0x000080B4", "backing_address_type": "elf_virtual", "backing_address_evidence": "func_00186408 computes this address as (func_00007E80 + 0x234) and, on first call only, invokes an initializer (func_001A0AE4) and a registration call (func_004B975C) against it before returning it; every later call returns the same address without re-initializing."},
+    {"stage": "generic_loader", "function": "func_001A0C74", "address": "0x001A0C74", "size": "0x64", "role": "shared per-table loader reused verbatim by all 10 xdb tables (see resource-loader-map.json); invokes a decode/extract function pointer read out of the member handle, then populates the boxer table singleton"},
+    {"stage": "record_scan_and_repack", "function": "func_001AD268", "address": "0x001AD268", "size": "0x42C", "role": "reads the singleton's +0x8 payload pointer, reads the payload's byte-0 word (header word0) as a genuine loop count, and scans a packed 2-bit-per-entry array for that many entries -- see 'header_word0_proof' below"},
+    {"stage": "object_construction", "functions": ["T_0018E4F4 (0x0018E4F4)", "func_001AF768 (0x001AF768)"], "role": "construct larger objects (a UI/menu-adjacent object for func_001AF768, given writes up to +0x7084 and 9 chained subsystem-init calls afterward) that embed a sub-object populated via the singleton accessor plus func_001AD268"}
+  ],
+  "header_word0_proof": {
+    "confidence": "PROBABLE",
+    "claim": "xdb header word0 (the first 4 bytes of a decoded xdb table's payload) is read and used as a genuine per-entry iteration bound by real executable code -- not merely a plausible-looking number.",
+    "evidence": "func_001AD268 executes `lw $a1, 0x8($s1)` (singleton's payload pointer) then `lw $a3, 0x0($s3)` (word0 of that payload) and uses $a3 directly as the upper bound of a `sltu`-guarded loop (`.L001AD2EC`/`.L001AD370`) that advances one entry per iteration.",
+    "upgrade_from_prior_pass": "The prior pass (PR #31's first commit) could not distinguish 'word0 is a record count' from 'word0 is some other plausible-looking value' and marked this RUNTIME_BLOCKED. This pass's direct disassembly of the actual consumer settles the structural question -- word0 is consumed as a count -- without yet settling what is being counted (see 'revised_header_model' below and static-resolution-matrix.json)."
+  },
+  "revised_header_model": {
+    "confidence": "CANDIDATE",
+    "claim": "The bytes at payload offset +0x18 (previously modeled as a scalar 'word6' reserved field in xdb-schema-evidence.json's schema_version 1) are very likely the start of a packed 2-bit-per-entry array of word0 entries, not a reserved scalar.",
+    "evidence": "func_001AD268 computes the array base as `payload_ptr + 0x18` and indexes it as `base + (entry_index >> 2)`, extracting 2 bits per entry via `(byte >> shift) & 0x3` where shift depends on `entry_index & 0x3`. This directly explains why 'word6' was zero for tables with few entries (word0 <= 12, so ceil(word0/4) <= 3 bytes, well within a single 4-byte word) and non-zero for xdbboxr.adf (121 entries, ceil(121/4)=31 bytes -- far exceeding 4 bytes, so reinterpreting bytes 24-27 as one u32 necessarily looks like unrelated noise, which is exactly what was observed) and for xdbcutpn.adf (word1=239, plausibly the relevant count for its own flags array).",
+    "does_not_resolve": "Whether word0 specifically (versus word1) sizes this array for every table; whether the 4 classification buckets (0,1,2,3) correspond to any specific boxer semantic (active/legend/created/hidden, or something else entirely); the layout of whatever comes after this flags array."
+  },
+  "boxer_table_singleton": {
+    "address": "0x000080B4",
+    "address_type": "elf_virtual",
+    "confidence": "PROBABLE",
+    "known_fields": [
+      {"offset": "+0x0", "width": 1, "candidate_meaning": "loaded/valid flag (byte)", "evidence": "func_001A0C74 writes a literal 1 here immediately after a successful decode"},
+      {"offset": "+0x4", "width": 4, "candidate_meaning": "size or count copied from the archive member handle's own +0x4 field", "evidence": "func_001A0C74 copies member_handle[+0x4] here verbatim; the member handle's own +0x4 semantics were not traced"},
+      {"offset": "+0x8", "width": 4, "candidate_meaning": "pointer to the decoded xdbboxr.adf payload buffer", "evidence": "func_001A0C74 stores the decode function pointer's return value here, and func_001AD268 independently reads it back the same way"},
+      {"offset": "+0x10", "width": 4, "candidate_meaning": "unknown; consumed as a 'next' pointer by func_00186464 (see accessor entry below)", "evidence": "func_00186464 dereferences node+0x10 repeatedly while walking from this singleton"}
+    ],
+    "unresolved_fields": "Everything at +0xC and beyond +0x10 that was not directly exercised by the consumer functions examined in this pass."
+  },
+  "consumers": {
+    "traced": [
+      {
+        "function": "func_00186464",
+        "address": "0x00186464",
+        "size": "0x54",
+        "proven_behavior": "Masks its single argument to 8 bits ($a0 & 0xFF) -- this is a directly proven, concrete fact: the boxer index/ID parameter accepted by this accessor is 8 bits wide. It then calls the singleton accessor and walks a linked list starting from the returned singleton, dereferencing each visited node's +0x10 field up to 'index' times, stopping early if a node is null.",
+        "confidence": "PROBABLE",
+        "unresolved_question": "Whether each node visited by this walk is one boxer record, one loaded-table-instance registration, or some other chained object -- see static-resolution-matrix.json."
+      },
+      {
+        "function": "func_001863E4",
+        "address": "0x001863E4",
+        "size": "0x24",
+        "proven_behavior": "Calls the singleton accessor, then passes the result into a second shared generic function (func_001A0D78) not disassembled in this pass.",
+        "confidence": "CANDIDATE"
+      },
+      {
+        "function": "func_00185114",
+        "address": "0x00185114",
+        "size": "0x5C",
+        "proven_behavior": "Calls the singleton accessor, then constructs a separate object (not the singleton itself) that stores a pointer to a fixed data address (D_005817D4) and clears one byte field, then calls another function (func_00186284). Shape is consistent with a cursor/view/query object constructor rather than a direct record reader.",
+        "confidence": "CANDIDATE"
+      },
+      {
+        "function": "T_0018E4F4",
+        "address": "0x0018E4F4",
+        "size": "0x8C",
+        "proven_behavior": "Constructs an object ($a0): initializes a sub-object at +0x18 (size 0x34, via shared function func_001A1638), stores a fixed vtable-like pointer (D_005817F4) at +0x14, initializes another sub-object at +0x50 (via the same generic initializer func_001A0AE4 used to construct the boxer singleton itself), calls the boxer singleton accessor, then calls func_001AD268(dest=+0x50 sub-object, singleton, stride=1). Stores a 16-bit result from a further call (func_0018654C) at +0x4C, then calls func_0018E60C before returning the constructed object.",
+        "confidence": "PROBABLE",
+        "significance": "The +0x14 vtable-like pointer and +0x18 sized sub-object strongly suggest this constructs a small, well-defined C++-style object type (not raw scratch memory), and its direct call into func_001AD268 with the boxer singleton is the clearest evidence found of code that specifically reads and reshapes boxer-table data for another consumer.",
+        "unresolved": "No caller of T_0018E4F4 was found anywhere in BOOT.BIN's 24,576 disassembled functions -- it may be reached only via a function pointer/vtable dispatch the static xref pass does not resolve, or from a different module/PRX not analyzed here."
+      },
+      {
+        "function": "func_001AF768",
+        "address": "0x001AF768",
+        "size": "0x260",
+        "proven_behavior": "Constructs a much larger object (writes observed up to offset +0x7084 of $a0), with two internal sub-objects at +0x19F4 and +0x1A08. For EACH sub-object, it calls the boxer singleton accessor and then func_001AD268(dest=sub-object, singleton, stride) with two DIFFERENT stride/category values -- 5 for the +0x19F4 sub-object, 0x28 (40) for the +0x1A08 sub-object -- storing each call's 16-bit follow-up result (via func_0018654C) at +0x198C and +0x198E respectively. Immediately after, it calls 9 further functions (func_00186954, func_001B9B58, func_001850C0, func_001A1D1C, func_001A90D8, func_001B8F08, func_001AC34C, func_001B6338, and one more not fully captured in this pass) each with a zero argument, then passes $a0 itself into the last one.",
+        "confidence": "CANDIDATE",
+        "significance": "Two independent calls into the boxer table with different output strides, followed by a cascade of 9 unrelated-looking subsystem initializations, is the strongest evidence found connecting boxer data ownership to a larger screen/menu-construction routine -- exactly the kind of 'selection-screen consumer' Task 11's static portion was asked to find.",
+        "unresolved": "Which screen this constructs (roster-select, career boxer list, exhibition setup, or something else) was not determined; the 9 chained subsystem-init calls were not disassembled; the meaning of stride values 5 and 0x28 was not resolved."
+      }
+    ],
+    "notes": "These 6 functions (including the loader trampoline func_001863B4 itself) are exactly the complete set of direct callers of func_00186408 found by a whole-binary text search across all 24,576 disassembled functions in BOOT.BIN. All 6 have now been disassembled and interpreted in this pass (5 in the prior pass plus T_0018E4F4/func_001AF768 newly this pass -- 6 total across both passes, with func_00186464/func_001863E4/func_00185114 carried over unchanged from PR #31's first commit). No other function in BOOT.BIN references the boxer table singleton accessor by name; a caller could in principle still reach the singleton indirectly, or the singleton's raw address (0x80B4) could be hardcoded elsewhere without going through the accessor -- a direct-address search found zero such references, but that does not rule out access via a relocated pointer computed at runtime."
+  },
+  "fixed_counts_and_limits": [
+    {
+      "claim": "Boxer index/ID parameter to func_00186464 is masked to 8 bits (0-255).",
+      "confidence": "PROBABLE",
+      "evidence": "Direct disassembly: andi $s1, $a0, 0xFF at 0x0018646C.",
+      "caveat": "This proves the accessor's own parameter width, not the database's own record-count field."
+    },
+    {
+      "claim": "xdbboxr.adf header word0 (121) is read and used as a genuine per-entry loop count by func_001AD268.",
+      "confidence": "PROBABLE",
+      "evidence": "See header_word0_proof above.",
+      "caveat": "Proves word0 counts *something* iterated one 2-bit flag entry at a time; does not yet prove it is specifically a 'boxer record count' as opposed to some other per-row flag count that happens to share the same header field."
+    }
+  ],
+  "cross_resource_relationships": [
+    {
+      "relationship": "preload/tables.viv hairstyle files <-> preload/bootpreloads.viv HK_*.bh preload descriptors <-> repository-root hk_*.viv archives",
+      "confidence": "PROBABLE",
+      "evidence": "This pass found and enumerated 36 repository-root hk_*.viv archives, confirming two distinct kinds by direct content inspection: (1) 28 generic hairstyle-template archives (hk_afro1.viv, hk_aight.viv, hk_braid.viv, ...) each containing a full morph-target set (cranium shape x8 directions, ears x4, forebrow x2, headgear compatibility, plus a mod_hair_<style>.o base model); (2) 8 named-legend-boxer archives (hk_ali.viv, hk_hatto.viv, hk_lazca.viv, hk_leona.viv, hk_moral.viv, hk_pacqu.viv, hk_punch.viv, hk_robin.viv) each containing exactly one bespoke mod_hair_<name>.o model. The 8 named archives' stems match exactly bootpreloads.viv's 8 HK_*.bh descriptors and 7 of tables.viv's boxer-surname .txt files (the 8th, 'punch'/'punchout.txt', now reads far more plausibly as a hairstyle-template alias rather than a placeholder, since it sits alongside 'aight' in a naming pattern of short colloquial style nicknames).",
+      "why_upgraded_from_candidate": "The prior pass's finding rested on filename-stem matching alone across two archives. This pass independently verified the content of all 36 archives directly (not just their names), confirming the two-kind split (generic style vs. named-legend) is a real structural distinction proven by member enumeration, not an assumption from filenames.",
+      "why_not_confirmed": "No executable code path connecting hk_*.viv, bootpreloads.viv's HK_*.bh descriptors, and tables.viv's boxer-surname .txt files was traced in this pass; the relationship is still established by content/name correspondence, not by a shared consumer function."
+    },
+    {
+      "relationship": "boxersh.viv / cboxshr.viv / boxmisc.viv / boxmisc2.viv <-> boxer appearance and damage systems",
+      "confidence": "CANDIDATE",
+      "evidence": "All 4 archives are listed together in the 9-entry resource registry table found in BOOT.BIN (see resource-loader-map.json), alongside boxerpre.viv, actors.viv, allhair.viv, and tables.viv. Content confirms strong topical relevance: boxersh.viv contains staged damage.msh/damage_0/1/2.msh models (direct evidence of a leveled damage-visualization system) plus glove models; cboxshr.viv contains numbered/patterned shorts models (direct match to tables.viv's shorts.csv target); boxmisc.viv contains face.off/face_cuts.off (direct medical/damage relevance) plus fringe/gravity_head/hilite/laces geometry; boxmisc2.viv contains headgear-compatibility hair morph targets keyed by the same short-codes as the root-level BL_<code>.viv per-boxer archives.",
+      "why_not_stronger": "No executable code path from these 4 archives to any specific boxer record, Medical function, or equipment field was traced in this pass; the registry table proves they are all managed together as one resource family, not that any specific field of xdbboxr.adf selects among them."
+    },
+    {
+      "relationship": "scripts/scripts.viv <-> scripts/scrptpal.viv paired parameter sets",
+      "confidence": "PROBABLE",
+      "evidence": "Both archives contain the identical 167 member names in the identical order with identical per-member sizes. scripts.viv's members are RefPack-compressed; scrptpal.viv's are not. For the sampled member 'addanims.bin', decompress_refpack(scripts.viv member) and the raw scrptpal.viv member are the same length (248 bytes) and share the same 4-byte magic ('stp\\x01') plus most byte positions, but differ at specific integer fields. This proves the two archives hold two distinct, same-shaped parameter sets for the same named script entries -- not that one is a decompressed duplicate of the other.",
+      "open_question": "Deferred to program-05/06 static analysis (fight-engine scripts), out of Task 10/11 scope -- see static-resolution-matrix.json."
+    },
+    {
+      "relationship": "preload/boxerpre.viv and actors.viv/boxmisc.viv damage/morph geometry <-> program-10 (Medical)",
+      "confidence": "CANDIDATE",
+      "evidence": "boxerpre.viv's 8 mor_base_head_dam*.o members, actors.viv's face_hires.off/face.off/swelltool.off, and boxmisc.viv's face_cuts.off are all named for facial damage/swelling/cut visualization, structurally consistent with the Medical subsystem's stoppage/damage path. No executable code path was traced connecting any of these archives to a Medical-owning function in this pass."
+    },
+    {
+      "relationship": "enviro/*.zlb venue-location assets <-> xdbvenue.adf",
+      "confidence": "CANDIDATE",
+      "evidence": "12 base venue/location names found under enviro/ (atlntic, cafrica, countyf, dodge, elevese, hbtokyo, loflush, minick, sparrin, staples, trainin, viceroy), each RefPack-independent (.zlb, not RefPack) but each paired with a 't'-suffix variant of identical role.",
+      "why_not_stronger": "xdbvenue.adf's header word0 is 9, not 12; at least 'sparrin'/'trainin' read as practice/training locations that might not count as competition 'venues' in the database, but this narrowing was not proven by any executable code path in this pass."
+    }
+  ]
+}
