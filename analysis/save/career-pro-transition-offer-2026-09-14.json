@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": "analysis/save/career-runtime-evidence-checkpoint-14-2026-09-14.json",
+  "evidence_type": "screenshot_observation",
+  "binary_state_note": "No additional savestate accompanied these screenshots; this artifact records only visible UI evidence and intentionally makes no new RAM-field claims.",
+  "career_state": {
+    "bank": 15795,
+    "earnings_displayed_on_sign_contract": 15795,
+    "status_before_signing": "AMATEUR",
+    "weight_class": "MIDDLEWEIGHT",
+    "player_rank_display": "--",
+    "calendar": "2029-WEEK 9"
+  },
+  "sign_contract_screen": {
+    "selected_offer_type": "UNDERCARD FIGHT",
+    "selected_goal": "GO PRO",
+    "selected_opponent": "BREVIN SAMPSON",
+    "selected_opponent_rank": 48,
+    "selected_total_purse": 4100,
+    "selected_player_cut": 1640,
+    "selected_player_cut_percent": 40,
+    "venue": "COLLINA DEL MAR",
+    "weeks_until_fight": 2,
+    "alternative_offer": {
+      "goal": "GO PRO",
+      "opponent": "RICKY VAUGHN",
+      "opponent_rank": 49,
+      "total_purse": 4100
+    },
+    "third_option": "RETIRE"
+  },
+  "fight_store_observations": [
+    {
+      "category": "FOUL PROTECTORS",
+      "items_owned": 2,
+      "new_items_available": 3,
+      "items_locked": 11,
+      "visible_new_items": ["BASIC GUARD III", "BASIC GUARD IV", "PRO GUARD I"],
+      "selected_item": {
+        "name": "BASIC GUARD III",
+        "price": 1000,
+        "description": "A RED, FOAM / LEATHER PRO GUARD WITH EXTRA WRAP-AROUND PROTECTION.",
+        "effect": "BODY +1"
+      }
+    },
+    {
+      "category": "MOUTHGUARDS",
+      "items_owned": 1,
+      "new_items_available": 1,
+      "items_locked": 4,
+      "visible_new_items": ["SINGLE GUARD"],
+      "selected_item": {
+        "name": "SINGLE GUARD",
+        "price": 1000,
+        "description": "CLASSIC-STYLE, SINGLE GUARD MOUTHPIECE IN WHITE.",
+        "effect": "CHIN +1"
+      }
+    }
+  ],
+  "resolved_or_strengthened_findings": [
+    {
+      "finding": "The top-line EARNINGS display is not sourced from the checkpoint-14 field 0x08D98568, because that RAM candidate was zero while the UI displays EARNINGS $15,795.",
+      "status": "negative_evidence",
+      "implication": "The prior current-year/current-cycle-earnings hypothesis for 0x08D98568 is rejected."
+    },
+    {
+      "finding": "After winning the amateur title, the player is offered explicit GO PRO contracts while still labeled AMATEUR before signing.",
+      "status": "confirmed_visible_behavior",
+      "implication": "The amateur-to-professional transition is at least exposed as a player contract choice rather than occurring automatically at the title-fight result screen."
+    },
+    {
+      "finding": "The first observed GO PRO offers target professional ranks 48 and 49, while the player's own rank remains '--' before signing.",
+      "status": "confirmed_visible_behavior",
+      "implication": "The transition contract appears to bridge the unranked amateur state into the bottom of the professional ranking ladder. Exact starting-rank assignment still requires post-sign/post-fight evidence."
+    },
+    {
+      "finding": "The Amateur Championship Package unlock corresponds with newly available purchasable gear in multiple Fight Store categories.",
+      "status": "strong_visible_correlation",
+      "implication": "The package is not yet proven to be a single purchasable bundle; current evidence is more consistent with a milestone that unlocks individual gear entries. Full package composition requires category-by-category capture."
+    }
+  ],
+  "next_capture": [
+    "Choose one GO PRO offer and sign it.",
+    "Immediately after signing, before training or advancing the calendar, capture Career Central and make the next savestate. This is the highest-value transition point because it can reveal whether professional status and starting rank are assigned on contract signing or only after the debut fight.",
+    "If a unique confirmation/promotion popup appears during signing, screenshot it before dismissing it.",
+    "Do not spend money in the Fight Store before the post-sign savestate; preserve checkpoint 14 as the clean pre-purchase baseline for a later bank-vs-earnings experiment.",
+    "When convenient, continue through the remaining Fight Store categories and capture which entries are marked NEW so the Amateur Championship Package's actual unlock set can be reconstructed."
+  ]
+}
