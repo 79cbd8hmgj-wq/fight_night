@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": [
+    "analysis/save/career-runtime-evidence-2026-09-14.json",
+    "analysis/save/career-runtime-evidence-checkpoint-12-2026-09-14.json"
+  ],
+  "checkpoint": {
+    "id": 13,
+    "description": "First observed Amateur Title Fight contract and scheduled-fight checkpoint before the Nathan Ferguson title bout.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_13.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "70fe89aa2d6a61bf56d3e9b6e1f3166e9a5eb29872ac9615b94766db002e24c0",
+      "ram_sha256": "24f7a233ed91c092f56bffd87cdb8626ad9c7cec3ca7aecb92840dcf70debbb1",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "visible_career_state": {
+      "boxer": "Jacob Morgan",
+      "weight_class": "AMATEUR MIDDLEWEIGHT",
+      "date": "June 7, 2028",
+      "rank": "UNRANKED",
+      "record": "9-0-0",
+      "kos": 8,
+      "rival": "Blake Jacobs",
+      "bank": 10570
+    },
+    "amateur_title_contract": {
+      "event_type": "AMATEUR TITLE FIGHT",
+      "opponent": "Nathan Ferguson",
+      "venue": "THE VICEROY",
+      "weeks_until_fight": 12,
+      "total_purse": 22000,
+      "player_cut": 5500,
+      "player_cut_percent": 25,
+      "promoter_cut_percent": 5,
+      "rounds": 6,
+      "minutes_per_round": 2,
+      "division": "MIDDLEWEIGHT",
+      "awards": "AMATEUR BELT",
+      "rank_change": "N/A",
+      "bonus": "N/A",
+      "sponsor_fight": false,
+      "future_contracts_remaining": "N/A",
+      "weightclass_change": false,
+      "tools": "N/A",
+      "cutmen": false,
+      "rules": [
+        "HEADGEAR REQUIRED",
+        "EXCESSIVE CUTS MAY STOP FIGHT",
+        "3 KNOCKDOWN RULE"
+      ],
+      "alternative_offers": [
+        {"opponent": "Josh Randall", "purse": 750},
+        {"opponent": "Charles Simmons", "purse": 750}
+      ]
+    },
+    "runtime_payloads": [
+      {"address": "0x09453DE4", "kind": "career_central", "value": "strBoxerName=Jacob Morgan&strWeightClass=AMATEUR MIDDLEWEIGHT&strWinLossRecord=9-0-0, 8 KO&strRank=UNRANKED&strMoney=$$10,570&strRivalName=BLAKE JACOBS&strCROBoxer=strCareerBoxer&strCROBoxer=strCareerCentralBoxer&strDate=JUNE 7, 2028&iRetired=0"},
+      {"address": "0x09396F98", "kind": "contract_summary", "value": "strFightType=AMATEUR TITLE FIGHT&strPurseCut=YOUR CUT OF PURSE: $5,500 (25%25)&strRankChange=RANK CHANGE: N/A&strDivision=DIVISION: MIDDLEWEIGHT&strVenue=VENUE: THE VICEROY&strTimetoFight=WEEKS UNTIL FIGHT: 12&iUnderCardFight=0"},
+      {"address": "0x093972B4", "kind": "contract_confirmation", "value": "iHasRival=1&strRivalName=BLAKE JACOBS&iPopupType=0&strPopupText=THIS CONTRACT IS FOR A FIGHT 12 WEEK(S) OUT AGAINST NATHAN FERGUSON. DO YOU STILL WISH TO SIGN THIS CONTRACT?"},
+      {"address": "0x093F7750", "kind": "scheduled_fight", "value": "strEventName=AMATEUR TITLE FIGHT&strBoxerLeftFirstName=Jacob&strBoxerLeftLastName=Morgan&strBoxerRightFirstName=NATHAN&strBoxerRightLastName=FERGUSON&strVenueName=VENUE: THE VICEROY&strRoundInfo=6,2 MINUTE ROUNDS&strCutPercentage=YOUR CUT OF THE PURSE: $5,500 (25%25)&strSideObjective=AWARDS: AMATEUR BELT\nRANK CHANGE: N/A\nBONUS: N/A&strRules=HEADGEAR REQUIRED\nEXCESSIVE CUTS MAY STOP FIGHT\n3 KNOCKDOWN RULE\n"}
+    ]
+  },
+  "confirmed_field_values": [
+    {"address": "0x08D98504", "type": "u16", "name": "career_wins", "value": 9, "confidence": "confirmed"},
+    {"address": "0x08D98506", "type": "u16", "name": "career_ko_count", "value": 8, "confidence": "confirmed"},
+    {"address": "0x08D98574", "type": "u32", "name": "career_bank", "value": 10570, "confidence": "confirmed"}
+  ],
+  "contract_block_correlations": [
+    {"address": "0x08D9AF98", "type": "u32", "value": 12, "correlates_with": "weeks_until_fight", "confidence": "strong_candidate"},
+    {"address": "0x08D9AFA0", "type": "u32", "value": 22000, "correlates_with": "total_purse", "confidence": "strong_candidate"},
+    {"address": "0x08D9AFB0", "type": "u32", "value": 6, "correlates_with": "round_count", "confidence": "strong_candidate"},
+    {"address": "0x08D9AFC4", "type": "u32", "value": 25, "correlates_with": "player_purse_percentage", "confidence": "strong_candidate"},
+    {"address": "0x08D9AFD0", "type": "u32", "value": 2, "correlates_with": "minutes_per_round", "confidence": "candidate", "note": "A second value of 2 exists nearby. Checkpoint 14 later shows this field clearing after fight completion while most retained contract values persist, so this remains only a correlation candidate."}
+  ],
+  "checkpoint_12_candidate_followup": [
+    {"address": "0x08D98546", "type": "u8", "value": 1, "interpretation": "The durable Amateur Package unlock/progression candidate remains set after checkpoint 12.", "confidence": "strong_candidate_unresolved_semantics"},
+    {"range": "0x08D985B2-0x08D985B4", "checkpoint_12_hex": "ffff03", "checkpoint_13_hex": "000000", "interpretation": "The field reverted, which is strong negative evidence against interpreting it as a persistent Amateur Package ownership/unlock bitmask. It is more likely transient event/UI/message state or another event-local bitfield.", "confidence": "strong_negative_evidence"},
+    {"address": "0x08D985E4", "type": "u8", "value": 6, "interpretation": "The unresolved progression/event-counter candidate remains at its checkpoint-12 value.", "confidence": "candidate_unresolved_semantics"}
+  ],
+  "derived_observations": [
+    "This is the first observed Amateur Title Fight in the controlled career, appearing while Jacob is still UNRANKED at 9-0-0 with 8 KOs. One observation is not enough to infer the exact title-fight trigger threshold.",
+    "The title contract materially changes the amateur fight format from previously observed ordinary/rival four-round bouts to six two-minute rounds and explicitly awards the Amateur Belt.",
+    "The correlated contract block contains total purse 22000 and player split 25 while the UI renders a $5,500 player cut. No independent 5500 value was identified in the same block, strongly suggesting that the displayed player cut is derived from total purse and split rather than stored independently.",
+    "Jacob remains UNRANKED at the first observed amateur title opportunity, showing that a numeric professional-style rank is not required for this observed amateur title-fight state."
+  ],
+  "next_capture": [
+    "Preserve checkpoint 13 as the pre-title baseline.",
+    "Fight Nathan Ferguson and win naturally; there is no reverse-engineering need to force a decision or a loss.",
+    "Capture the result/payout screen and any Amateur Champion, belt, newspaper, or Amateur-to-Pro transition messaging.",
+    "Take one new savestate at the next stable post-fight Career Central/progression state before training or signing another contract. Only take an extra state if a unique modal transition exposes a distinct state that disappears after one input."
+  ]
+}
