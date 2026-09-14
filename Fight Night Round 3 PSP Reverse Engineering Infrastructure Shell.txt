@@ -1,0 +1,1845 @@
+FIGHT NIGHT ROUND 3 PSP
+OVERHAUL-SCOPE FUNCTIONAL REVERSE-ENGINEERING
+INFRASTRUCTURE SHELL
+
+Purpose
+=======
+
+This document defines the repository infrastructure that should exist before
+large-scale subsystem reverse engineering begins.
+
+The shell is intentionally evidence-safe.
+
+It provides:
+
+- Repository structure
+- Shared data models
+- Evidence confidence rules
+- Runtime-address and file-offset types
+- Subsystem package templates
+- Binary and instruction guards
+- Runtime trace schemas
+- Replacement-boundary models
+- Completion validators
+- Testing structure
+- Command-line interface structure
+- Phase I and Phase II gates
+- Explicit failure behavior for unknown systems
+
+It does not provide:
+
+- Guessed combat formulas
+- Guessed boxer-record layouts
+- Guessed save structures
+- Final AI architecture
+- Final career-state architecture
+- Unverified MIPS hooks
+- Placeholder gameplay behavior that silently returns fake values
+
+Unknown behavior must remain visibly unknown until static and runtime evidence
+supports a confirmed implementation.
+
+
+1. PROJECT PRINCIPLE
+====================
+
+Before overhaul implementation begins, every system modified by the overhaul,
+and every system that owns, stores, calls, displays, saves, or consumes its
+data, must be functionally reverse-engineered to a verified replacement
+boundary.
+
+Unrelated systems require only interface mapping or inventory unless later
+evidence shows that they affect an overhaul system.
+
+The project uses three subsystem classes:
+
+Class A
+-------
+
+Functional reconstruction required.
+
+A Class A package is complete only when it contains:
+
+- Confirmed symbols
+- Confirmed structures and fields
+- Caller and consumer inventories
+- Readable original-behavior reconstruction
+- Runtime evidence
+- Regression tests
+- Save and UI impact analysis
+- A documented replacement boundary
+
+Class B
+-------
+
+Interface-boundary mapping required.
+
+A Class B package must identify:
+
+- Public entry points
+- Inputs and outputs
+- Memory ownership
+- Error behavior
+- Callers used by Class A systems
+- Compatibility requirements
+
+Its internals do not need a complete functional reconstruction unless it is
+later promoted to Class A.
+
+Class C
+-------
+
+Inventory only.
+
+A Class C package records:
+
+- Module or resource identity
+- Load location
+- High-level purpose
+- Known dependencies
+- Reason it is currently outside overhaul scope
+
+
+2. RECOMMENDED REPOSITORY LAYOUT
+================================
+
+fight_night/
+├── README.md
+├── pyproject.toml
+├── Makefile
+├── .gitignore
+├── config/
+│   ├── revisions/
+│   │   └── ulus10066_v1_00.json
+│   ├── modules/
+│   │   ├── boot_bin.json
+│   │   └── prx_inventory.json
+│   └── policies/
+│       ├── evidence_policy.json
+│       └── copyright_policy.json
+├── docs/
+│   ├── architecture/
+│   │   ├── repository-layout.md
+│   │   ├── evidence-model.md
+│   │   ├── address-model.md
+│   │   ├── subsystem-package-contract.md
+│   │   ├── phase-gates.md
+│   │   └── terminology.md
+│   ├── reverse-engineering/
+│   │   ├── iso-map.md
+│   │   ├── executable-map.md
+│   │   ├── prx-map.md
+│   │   ├── save-system.md
+│   │   ├── boxer-system.md
+│   │   ├── fight-engine.md
+│   │   └── career-system.md
+│   ├── replacement-boundaries/
+│   │   └── README.md
+│   └── superpowers/
+│       ├── specs/
+│       └── plans/
+├── src/
+│   └── fnr3_re/
+│       ├── __init__.py
+│       ├── cli.py
+│       ├── errors.py
+│       ├── paths.py
+│       ├── hashing.py
+│       ├── addresses.py
+│       ├── evidence/
+│       │   ├── __init__.py
+│       │   ├── confidence.py
+│       │   ├── references.py
+│       │   ├── artifacts.py
+│       │   ├── package_status.py
+│       │   └── validation.py
+│       ├── image/
+│       │   ├── __init__.py
+│       │   ├── revision.py
+│       │   ├── iso9660.py
+│       │   ├── extractor.py
+│       │   ├── rebuilder.py
+│       │   └── manifests.py
+│       ├── codecs/
+│       │   ├── __init__.py
+│       │   ├── refpack.py
+│       │   ├── ea_big.py
+│       │   ├── adf.py
+│       │   └── fnc.py
+│       ├── executable/
+│       │   ├── __init__.py
+│       │   ├── elf.py
+│       │   ├── module_map.py
+│       │   ├── symbols.py
+│       │   ├── instruction_guard.py
+│       │   └── call_graph.py
+│       ├── runtime/
+│       │   ├── __init__.py
+│       │   ├── ppsspp.py
+│       │   ├── trace.py
+│       │   ├── breakpoint.py
+│       │   ├── memory_snapshot.py
+│       │   └── experiment.py
+│       ├── subsystems/
+│       │   ├── __init__.py
+│       │   ├── registry.py
+│       │   ├── common.py
+│       │   ├── boxer_roster/
+│       │   ├── fight_session/
+│       │   ├── punch_pipeline/
+│       │   ├── stamina/
+│       │   ├── damage_stun_knockdown/
+│       │   ├── defense_movement_clinch/
+│       │   ├── cuts_referee_medical/
+│       │   ├── judging_statistics/
+│       │   ├── ai_styles_difficulty/
+│       │   ├── weight_classes/
+│       │   ├── career_core/
+│       │   ├── save_data/
+│       │   ├── world_simulation/
+│       │   ├── training_staff_economy/
+│       │   ├── amateur_career/
+│       │   ├── generated_boxers/
+│       │   └── ui_localization_presentation/
+│       ├── gates/
+│       │   ├── __init__.py
+│       │   ├── phase_one.py
+│       │   └── phase_two.py
+│       └── reports/
+│           ├── __init__.py
+│           ├── subsystem_report.py
+│           ├── memory_budget.py
+│           └── migration_report.py
+├── analysis/
+│   ├── manifests/
+│   ├── symbols/
+│   ├── callgraphs/
+│   ├── structures/
+│   ├── runtime/
+│   ├── experiments/
+│   ├── evidence/
+│   └── reports/
+├── schemas/
+│   ├── evidence-artifact.schema.json
+│   ├── subsystem-package.schema.json
+│   ├── runtime-trace.schema.json
+│   ├── replacement-boundary.schema.json
+│   ├── memory-budget.schema.json
+│   └── migration-report.schema.json
+├── templates/
+│   ├── class-a-subsystem/
+│   ├── class-b-subsystem/
+│   └── class-c-subsystem/
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   ├── reference/
+│   ├── regression/
+│   ├── runtime/
+│   └── gates/
+└── tools/
+    ├── generate_subsystem.py
+    ├── validate_package.py
+    ├── import_runtime_trace.py
+    ├── create_manifest.py
+    └── check_copyright.py
+
+
+3. CORE ERROR TYPES
+===================
+
+File:
+src/fnr3_re/errors.py
+
+Suggested shell:
+
+```python
+class FNR3Error(Exception):
+    """Base exception for the reverse-engineering framework."""
+
+
+class UnsupportedRevisionError(FNR3Error):
+    """Raised when an image or binary does not match a supported revision."""
+
+
+class EvidenceNotConfirmedError(FNR3Error):
+    """Raised when code attempts to use unconfirmed behavior as authoritative."""
+
+
+class GuardMismatchError(FNR3Error):
+    """Raised when expected original bytes or hashes do not match."""
+
+
+class IncompleteSubsystemError(FNR3Error):
+    """Raised when a subsystem package fails its completion contract."""
+
+
+class ReplacementBoundaryError(FNR3Error):
+    """Raised when a proposed replacement boundary is incomplete or unsafe."""
+
+
+class CopyrightPolicyError(FNR3Error):
+    """Raised when repository output would include prohibited game data."""
+```
+
+
+4. ADDRESS MODEL
+================
+
+Runtime addresses, ELF-relative offsets, file offsets, archive-entry offsets,
+and ISO extents must never be represented as interchangeable integers.
+
+File:
+src/fnr3_re/addresses.py
+
+```python
+from dataclasses import dataclass
+from enum import StrEnum
+
+
+class AddressSpace(StrEnum):
+    PSP_RUNTIME = "psp_runtime"
+    ELF_VIRTUAL = "elf_virtual"
+    ELF_FILE = "elf_file"
+    MODULE_RELATIVE = "module_relative"
+    ARCHIVE_ENTRY = "archive_entry"
+    ISO_FILE = "iso_file"
+    ISO_LBA = "iso_lba"
+
+
+@dataclass(frozen=True, slots=True)
+class Address:
+    space: AddressSpace
+    value: int
+    module: str | None = None
+    source_file: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.value < 0:
+            raise ValueError("Address values must be non-negative")
+
+        if self.space in {
+            AddressSpace.PSP_RUNTIME,
+            AddressSpace.ELF_VIRTUAL,
+            AddressSpace.MODULE_RELATIVE,
+        } and not self.module:
+            raise ValueError(f"{self.space} requires a module name")
+
+
+@dataclass(frozen=True, slots=True)
+class AddressRange:
+    start: Address
+    size: int
+
+    def __post_init__(self) -> None:
+        if self.size <= 0:
+            raise ValueError("AddressRange size must be positive")
+
+    @property
+    def end_exclusive(self) -> int:
+        return self.start.value + self.size
+```
+
+Rules:
+
+- Never accept raw integers in public APIs when the address space matters.
+- Conversions require a validated module mapping.
+- Conversion failures must raise an explicit exception.
+- Runtime observations must record module identity and load base.
+- File patches must use file or module-relative offsets, not naked runtime
+  addresses.
+
+
+5. EVIDENCE CONFIDENCE MODEL
+============================
+
+File:
+src/fnr3_re/evidence/confidence.py
+
+```python
+from enum import StrEnum
+
+
+class EvidenceConfidence(StrEnum):
+    CANDIDATE = "candidate"
+    PROBABLE = "probable"
+    CONFIRMED = "confirmed"
+    REJECTED = "rejected"
+```
+
+Definitions:
+
+Candidate
+---------
+
+A plausible interpretation supported by one or more observations but lacking
+sufficient static or runtime proof.
+
+Probable
+--------
+
+Supported by multiple independent observations, but one important control,
+lifecycle check, or alternate-path check remains incomplete.
+
+Confirmed
+---------
+
+Supported by exact executable or resource evidence and controlled runtime
+validation where runtime behavior matters.
+
+Rejected
+--------
+
+A prior interpretation contradicted by stronger evidence.
+
+Rules:
+
+- Only CONFIRMED evidence may define authoritative structure fields,
+  replacement code, save migrations, or implementation claims.
+- REJECTED evidence remains preserved to prevent repeated investigation.
+- Promotion requires recording prior status, new evidence, reviewer, and date.
+- Confidence applies to individual claims, not merely whole files.
+
+
+6. EVIDENCE REFERENCES
+======================
+
+File:
+src/fnr3_re/evidence/references.py
+
+```python
+from dataclasses import dataclass
+from pathlib import Path
+
+from fnr3_re.addresses import Address, AddressRange
+from fnr3_re.evidence.confidence import EvidenceConfidence
+
+
+@dataclass(frozen=True, slots=True)
+class StaticEvidence:
+    confidence: EvidenceConfidence
+    binary_name: str
+    binary_sha256: str
+    address_range: AddressRange
+    instruction_sha256: str | None
+    disassembly_path: Path
+    notes: str
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeEvidence:
+    confidence: EvidenceConfidence
+    experiment_id: str
+    executable_sha256: str
+    emulator_build: str
+    trace_path: Path
+    breakpoint_addresses: tuple[Address, ...]
+    pre_state_path: Path | None
+    post_state_path: Path | None
+    notes: str
+
+
+@dataclass(frozen=True, slots=True)
+class ResourceEvidence:
+    confidence: EvidenceConfidence
+    container_path: str
+    container_sha256: str
+    entry_name: str
+    entry_sha256: str
+    decoded_sha256: str | None
+    analysis_path: Path
+    notes: str
+```
+
+
+7. SUBSYSTEM REGISTRY
+=====================
+
+File:
+src/fnr3_re/subsystems/registry.py
+
+```python
+from dataclasses import dataclass
+from enum import StrEnum
+
+
+class SubsystemClass(StrEnum):
+    CLASS_A = "class_a"
+    CLASS_B = "class_b"
+    CLASS_C = "class_c"
+
+
+@dataclass(frozen=True, slots=True)
+class SubsystemDefinition:
+    subsystem_id: str
+    display_name: str
+    subsystem_class: SubsystemClass
+    dependencies: tuple[str, ...]
+    owners: tuple[str, ...]
+    consumers: tuple[str, ...]
+    save_relevant: bool
+    ui_relevant: bool
+    runtime_validation_required: bool
+```
+
+The registry should include every Class A, B, and C subsystem defined by the
+master plan.
+
+
+8. SUBSYSTEM PACKAGE CONTRACT
+=============================
+
+Every Class A subsystem uses the same internal layout:
+
+subsystems/<subsystem_id>/
+├── __init__.py
+├── README.md
+├── status.json
+├── model.py
+├── symbols.py
+├── evidence.py
+├── original_behavior.py
+├── callers.py
+├── consumers.py
+├── replacement_boundary.py
+├── validation.py
+└── tests.md
+
+Responsibilities
+----------------
+
+README.md
+    Human-readable scope, exclusions, dependencies, and risks.
+
+status.json
+    Machine-readable completion state and unresolved evidence questions.
+
+model.py
+    Confirmed structures, enums, field offsets, and pure value objects.
+
+symbols.py
+    Confirmed and provisional symbol declarations.
+
+evidence.py
+    Evidence-reference loading and claim validation.
+
+original_behavior.py
+    Readable functional reconstruction of original behavior.
+
+callers.py
+    Inventory of direct and indirect callers.
+
+consumers.py
+    Inventory of systems that consume outputs or state.
+
+replacement_boundary.py
+    Exact hook, call, ownership, lifecycle, and compatibility contract.
+
+validation.py
+    Completion validator for the subsystem.
+
+tests.md
+    Required runtime and regression scenarios.
+
+
+9. SUBSYSTEM STATUS MODEL
+=========================
+
+File:
+src/fnr3_re/evidence/package_status.py
+
+```python
+from dataclasses import dataclass
+from enum import StrEnum
+
+
+class PackageStage(StrEnum):
+    NOT_STARTED = "not_started"
+    STATIC_DISCOVERY = "static_discovery"
+    RUNTIME_VALIDATION = "runtime_validation"
+    NORMALIZATION = "normalization"
+    COMPLETE = "complete"
+    BLOCKED = "blocked"
+
+
+@dataclass(frozen=True, slots=True)
+class SubsystemStatus:
+    subsystem_id: str
+    stage: PackageStage
+    class_name: str
+    confirmed_claims: tuple[str, ...]
+    probable_claims: tuple[str, ...]
+    candidate_claims: tuple[str, ...]
+    rejected_claims: tuple[str, ...]
+    unresolved_questions: tuple[str, ...]
+    blockers: tuple[str, ...]
+```
+
+A package cannot report COMPLETE while:
+
+- Candidate claims are required by its replacement boundary.
+- Runtime-required behavior lacks runtime evidence.
+- Caller or consumer inventory is incomplete.
+- Save or UI impact remains unknown.
+- Original-behavior tests are missing.
+- Binary guard hashes are missing.
+- Replacement memory ownership is unresolved.
+
+
+10. UNKNOWN-BEHAVIOR POLICY
+===========================
+
+Unconfirmed functions must fail explicitly.
+
+```python
+from fnr3_re.errors import EvidenceNotConfirmedError
+
+
+def calculate_original_punch_cost(context: "PunchContext") -> int:
+    raise EvidenceNotConfirmedError(
+        "The original punch-cost calculation has not reached a "
+        "verified replacement boundary."
+    )
+```
+
+Forbidden placeholder behavior:
+
+```python
+def calculate_original_punch_cost(context):
+    return 0
+```
+
+```python
+def calculate_original_damage(context):
+    return context.power
+```
+
+Allowed temporary behavior:
+
+- Raise EvidenceNotConfirmedError.
+- Return a typed evidence-bound value that cannot be consumed as confirmed.
+- Load evidence artifacts without interpreting unknown fields.
+- Record raw bytes, addresses, hashes, and observations.
+
+
+11. EVIDENCE-BOUND VALUE
+========================
+
+```python
+from dataclasses import dataclass
+from typing import Generic, TypeVar
+
+from fnr3_re.evidence.confidence import EvidenceConfidence
+from fnr3_re.errors import EvidenceNotConfirmedError
+
+T = TypeVar("T")
+
+
+@dataclass(frozen=True, slots=True)
+class EvidenceBoundValue(Generic[T]):
+    value: T
+    confidence: EvidenceConfidence
+    claim_id: str
+
+    def require_confirmed(self) -> T:
+        if self.confidence is not EvidenceConfidence.CONFIRMED:
+            raise EvidenceNotConfirmedError(
+                f"Claim {self.claim_id} is {self.confidence}, not confirmed"
+            )
+        return self.value
+```
+
+
+12. SYMBOL MODEL
+================
+
+File:
+src/fnr3_re/executable/symbols.py
+
+```python
+from dataclasses import dataclass
+from enum import StrEnum
+
+from fnr3_re.addresses import Address
+from fnr3_re.evidence.confidence import EvidenceConfidence
+
+
+class SymbolKind(StrEnum):
+    FUNCTION = "function"
+    GLOBAL = "global"
+    TABLE = "table"
+    VTABLE = "vtable"
+    STRING = "string"
+    IMPORT = "import"
+    EXPORT = "export"
+
+
+@dataclass(frozen=True, slots=True)
+class Symbol:
+    name: str
+    kind: SymbolKind
+    address: Address
+    size: int | None
+    confidence: EvidenceConfidence
+    original_name_known: bool
+    evidence_ids: tuple[str, ...]
+```
+
+Naming rules:
+
+- Candidate names use a candidate_ prefix.
+- Probable names use a probable_ prefix.
+- Confirmed semantic names omit confidence prefixes.
+- Original imports and exports retain exact discovered spelling.
+- Rejected names remain in evidence history, not the active symbol map.
+
+
+13. STRUCTURE-FIELD MODEL
+=========================
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class StructureField:
+    structure_name: str
+    field_name: str
+    offset: int
+    size: int
+    signed: bool | None
+    semantic_type: str
+    confidence: EvidenceConfidence
+    evidence_ids: tuple[str, ...]
+```
+
+Requirements:
+
+- Offset and size may be recorded before semantics are known.
+- Unknown fields use names such as field_0x34.
+- Do not assign semantic names only because a value appears plausible.
+- Array length requires bounds evidence.
+- Pointer fields require lifetime and ownership evidence.
+- Save fields require read, write, reset, and checksum-path evidence.
+
+
+14. ORIGINAL-BEHAVIOR RECONSTRUCTION
+====================================
+
+Original-behavior reconstruction should be pure and testable whenever
+possible.
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class OriginalPunchCostInput:
+    punch_id: int
+    current_stamina: int
+    boxer_efficiency: int
+    combo_index: int
+
+
+def calculate_original_punch_cost(
+    value: OriginalPunchCostInput,
+) -> int:
+    raise EvidenceNotConfirmedError(
+        "Original punch-cost behavior is not confirmed."
+    )
+```
+
+After confirmation, replace the exception with readable behavior and retain
+exact regression vectors from runtime captures.
+
+Requirements:
+
+- Do not model presentation-only behavior as authoritative gameplay logic.
+- Record integer width, signedness, overflow, saturation, and rounding.
+- Preserve mode-specific behavior.
+- Preserve AI and human path differences when confirmed.
+- Keep scripted bypasses separate from normal paths.
+
+
+15. CALLER AND CONSUMER INVENTORIES
+===================================
+
+Caller
+------
+
+A function that directly or indirectly invokes a subsystem function.
+
+Consumer
+--------
+
+A system that reads, stores, displays, saves, or otherwise depends on a
+subsystem output or state.
+
+```python
+@dataclass(frozen=True, slots=True)
+class CallerRecord:
+    caller_symbol: str
+    callsite: Address
+    callee_symbol: str
+    mode: str
+    direct: bool
+    confidence: EvidenceConfidence
+    evidence_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ConsumerRecord:
+    consumer_id: str
+    consumed_value: str
+    access_kind: str
+    address: Address | None
+    save_impact: bool
+    ui_impact: bool
+    confidence: EvidenceConfidence
+    evidence_ids: tuple[str, ...]
+```
+
+The replacement boundary cannot be approved until all material consumers are
+accounted for.
+
+
+16. REPLACEMENT BOUNDARY MODEL
+==============================
+
+```python
+from dataclasses import dataclass
+
+from fnr3_re.addresses import Address, AddressRange
+
+
+@dataclass(frozen=True, slots=True)
+class MemoryOwnership:
+    owner: str
+    allocation_site: Address | None
+    release_site: Address | None
+    lifetime_start: str
+    lifetime_end: str
+    persistent: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ReplacementBoundary:
+    subsystem_id: str
+    entry_points: tuple[Address, ...]
+    exit_points: tuple[Address, ...]
+    guarded_regions: tuple[AddressRange, ...]
+    callers: tuple[str, ...]
+    consumers: tuple[str, ...]
+    original_state_owner: MemoryOwnership
+    replacement_state_owner: MemoryOwnership | None
+    save_impact: str
+    ui_impact: str
+    migration_required: bool
+    fallback_behavior: str
+    failure_behavior: str
+    evidence_ids: tuple[str, ...]
+```
+
+Boundary approval requires:
+
+- Exact executable revision
+- Exact entry and exit points
+- Call convention
+- Register and stack expectations
+- Memory ownership
+- Lifecycle and reset behavior
+- All affected callers
+- All affected consumers
+- Save implications
+- UI implications
+- Scripted and alternate paths
+- Failure and rollback behavior
+- Binary guards
+
+
+17. BINARY AND INSTRUCTION GUARDS
+=================================
+
+File:
+src/fnr3_re/executable/instruction_guard.py
+
+```python
+from dataclasses import dataclass
+from hashlib import sha256
+
+from fnr3_re.errors import GuardMismatchError
+
+
+@dataclass(frozen=True, slots=True)
+class ByteGuard:
+    source_name: str
+    offset: int
+    expected_hex: str
+    expected_sha256: str | None = None
+
+    def validate(self, payload: bytes) -> None:
+        expected = bytes.fromhex(self.expected_hex)
+        actual = payload[self.offset:self.offset + len(expected)]
+
+        if actual != expected:
+            raise GuardMismatchError(
+                f"{self.source_name} guard mismatch at 0x{self.offset:X}"
+            )
+
+        if self.expected_sha256 is not None:
+            digest = sha256(actual).hexdigest()
+            if digest != self.expected_sha256:
+                raise GuardMismatchError(
+                    f"{self.source_name} hash mismatch at 0x{self.offset:X}"
+                )
+```
+
+Rules:
+
+- Every patch validates original bytes before changing them.
+- Every replacement validates source revision and module hash.
+- Instruction hashes supplement exact-byte guards.
+- Failed guards produce no partial output.
+- Rebuilders use transactional temporary files.
+
+
+18. EXACT REVISION CONFIGURATION
+================================
+
+File:
+config/revisions/ulus10066_v1_00.json
+
+```json
+{
+  "title": "EA SPORTS FIGHT NIGHT Round 3",
+  "disc_id": "ULUS10066",
+  "disc_version": "1.00",
+  "psp_system_version": "2.60",
+  "iso_size": 1137737728,
+  "iso_sha256": "b11da5afe208d9791eecd9f6a44d0f57946f7d9de165b7d8dd22f5ee740f4ee2",
+  "boot_bin_size": 7270664,
+  "boot_bin_sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+  "eboot_bin_size": 7271008,
+  "eboot_bin_sha256": "9298863eb475597c9c7ffe9fcc1e68fd55d3b173dc88b6e88cf8834bd7ce9b04"
+}
+```
+
+Do not accept alternate regions, patched images, renamed builds, or metadata
+matches with different hashes.
+
+
+19. RESOURCE CODEC INTERFACES
+=============================
+
+RefPack:
+
+```python
+from typing import Protocol
+
+
+class CompressionCodec(Protocol):
+    name: str
+
+    def recognizes(self, payload: bytes) -> bool:
+        ...
+
+    def decompress(self, payload: bytes) -> bytes:
+        ...
+
+    def compress(self, payload: bytes) -> bytes:
+        ...
+```
+
+EA BIG/VIV:
+
+```python
+@dataclass(frozen=True, slots=True)
+class ArchiveEntry:
+    name: str
+    offset: int
+    stored_size: int
+    payload_sha256: str
+    compressed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ArchiveManifest:
+    magic: str
+    archive_size: int
+    entry_count: int
+    directory_end: int
+    entries: tuple[ArchiveEntry, ...]
+```
+
+ADF initial raw interface:
+
+```python
+@dataclass(frozen=True, slots=True)
+class RawADF:
+    field_count: int
+    record_count: int
+    string_pool_offset: int
+    header_bytes: bytes
+    record_bytes: bytes
+    string_pool: bytes
+```
+
+Typed ADF records are introduced only after field semantics are confirmed.
+
+
+20. RUNTIME TRACE SCHEMA
+========================
+
+```python
+from dataclasses import dataclass
+from pathlib import Path
+
+from fnr3_re.addresses import Address
+
+
+@dataclass(frozen=True, slots=True)
+class RegisterSnapshot:
+    pc: int
+    sp: int
+    gp: int
+    ra: int
+    registers: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class MemoryCapture:
+    start: Address
+    size: int
+    sha256: str
+    local_path: Path
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeTrace:
+    experiment_id: str
+    emulator_name: str
+    emulator_version: str
+    executable_sha256: str
+    breakpoint: Address
+    registers_before: RegisterSnapshot
+    registers_after: RegisterSnapshot | None
+    memory_before: tuple[MemoryCapture, ...]
+    memory_after: tuple[MemoryCapture, ...]
+    user_action: str
+    expected_observation: str
+    observed_result: str
+```
+
+Raw RAM dumps, game images, saves, and screenshots remain local and ignored.
+Repository artifacts contain hashes, addresses, selected values, and
+conclusions.
+
+
+21. EXPERIMENT CONTRACT
+=======================
+
+```python
+from dataclasses import dataclass
+
+from fnr3_re.addresses import Address
+
+
+@dataclass(frozen=True, slots=True)
+class ExperimentPlan:
+    experiment_id: str
+    claim_under_test: str
+    clean_start_required: bool
+    required_save_description: str | None
+    breakpoint_sequence: tuple[Address, ...]
+    memory_ranges: tuple[tuple[Address, int], ...]
+    control_case: str
+    reverse_control_case: str | None
+    success_condition: str
+    rejection_condition: str
+    stop_boundary: str
+```
+
+Every runtime experiment defines:
+
+- One evidence question
+- Starting state
+- Positive case
+- Control case
+- Rejection condition
+- Strict stop boundary
+- Exact output artifact
+- Exact status update
+
+
+22. PPSSPP ADAPTER SHELL
+========================
+
+The shell must not pretend PPSSPP automation exists before its debugger
+transport is confirmed.
+
+```python
+from typing import Protocol
+
+from fnr3_re.addresses import Address
+from fnr3_re.runtime.trace import RegisterSnapshot
+
+
+class PSPDebugger(Protocol):
+    def pause(self) -> None:
+        ...
+
+    def resume(self) -> None:
+        ...
+
+    def set_breakpoint(self, address: Address) -> None:
+        ...
+
+    def clear_breakpoint(self, address: Address) -> None:
+        ...
+
+    def read_memory(self, address: Address, size: int) -> bytes:
+        ...
+
+    def write_memory(self, address: Address, payload: bytes) -> None:
+        ...
+
+    def read_registers(self) -> RegisterSnapshot:
+        ...
+```
+
+Concrete implementations follow only after the available PPSSPP interface is
+verified.
+
+
+23. SUBSYSTEM COMPLETION VALIDATOR
+==================================
+
+```python
+from dataclasses import dataclass
+
+from fnr3_re.errors import IncompleteSubsystemError
+
+
+@dataclass(frozen=True, slots=True)
+class CompletionCheck:
+    check_id: str
+    passed: bool
+    details: str
+
+
+@dataclass(frozen=True, slots=True)
+class CompletionReport:
+    subsystem_id: str
+    checks: tuple[CompletionCheck, ...]
+
+    @property
+    def passed(self) -> bool:
+        return all(check.passed for check in self.checks)
+
+    def require_pass(self) -> None:
+        if not self.passed:
+            failures = [
+                f"{check.check_id}: {check.details}"
+                for check in self.checks
+                if not check.passed
+            ]
+            raise IncompleteSubsystemError("\n".join(failures))
+```
+
+Required Class A checks:
+
+- exact_revision_confirmed
+- symbols_confirmed
+- structures_confirmed
+- callers_inventory_complete
+- consumers_inventory_complete
+- normal_paths_confirmed
+- alternate_paths_confirmed
+- reset_and_lifetime_confirmed
+- original_behavior_reconstructed
+- runtime_vectors_present
+- regression_tests_pass
+- save_impact_documented
+- ui_impact_documented
+- replacement_boundary_approved
+- memory_budget_approved
+- no_copyrighted_payloads_tracked
+
+
+24. PHASE I GLOBAL GATE
+======================
+
+```python
+from dataclasses import dataclass
+
+from fnr3_re.errors import IncompleteSubsystemError
+
+
+@dataclass(frozen=True, slots=True)
+class PhaseOneSubsystemResult:
+    subsystem_id: str
+    required: bool
+    complete: bool
+    report_path: str
+
+
+def require_phase_one_complete(
+    results: tuple[PhaseOneSubsystemResult, ...],
+) -> None:
+    failures = [
+        result
+        for result in results
+        if result.required and not result.complete
+    ]
+
+    if failures:
+        names = ", ".join(result.subsystem_id for result in failures)
+        raise IncompleteSubsystemError(
+            "Phase II is locked. Incomplete Class A subsystems: "
+            f"{names}"
+        )
+```
+
+Phase II remains locked until:
+
+- Every Class A subsystem passes.
+- Every Class B interface boundary passes.
+- Module memory budget is approved.
+- Save migration feasibility is approved.
+- UI feasibility is approved.
+- Performance risks are documented.
+- A decompilation-completeness review is approved.
+
+
+25. PHASE II AUTHORIZATION
+=========================
+
+```python
+@dataclass(frozen=True, slots=True)
+class PhaseTwoAuthorization:
+    phase_one_report_sha256: str
+    approved_by: tuple[str, ...]
+    approval_date: str
+    implementation_scope: tuple[str, ...]
+
+
+def require_phase_two_authorization(
+    authorization: PhaseTwoAuthorization | None,
+) -> PhaseTwoAuthorization:
+    if authorization is None:
+        raise IncompleteSubsystemError(
+            "Overhaul implementation is not authorized."
+        )
+    return authorization
+```
+
+Authorization is a reviewed artifact, not a bypass switch.
+
+
+26. MEMORY-BUDGET REPORT
+========================
+
+```python
+@dataclass(frozen=True, slots=True)
+class ModuleMemoryBudget:
+    module_name: str
+    original_text_size: int
+    original_data_size: int
+    original_bss_size: int
+    confirmed_free_regions: tuple[tuple[int, int], ...]
+    proposed_text_growth: int
+    proposed_data_growth: int
+    proposed_bss_growth: int
+    peak_runtime_allocation: int
+    evidence_ids: tuple[str, ...]
+```
+
+Rules:
+
+- Padding is not free space without evidence.
+- Original fields are not repurposed without a consumer audit.
+- New state requires explicit initialization and teardown.
+- Persistent state requires migration and versioning.
+
+
+27. SAVE-MIGRATION REPORT
+=========================
+
+```python
+@dataclass(frozen=True, slots=True)
+class SaveMigrationField:
+    field_name: str
+    old_offset: int | None
+    old_size: int | None
+    new_offset: int
+    new_size: int
+    default_value: int | str
+    migration_rule: str
+
+
+@dataclass(frozen=True, slots=True)
+class SaveMigrationReport:
+    original_version: str
+    target_version: str
+    original_size: int
+    target_size: int
+    checksum_strategy: str
+    backward_compatibility: str
+    rollback_behavior: str
+    fields: tuple[SaveMigrationField, ...]
+```
+
+No save-related feature proceeds until original read/write, integrity,
+allocation, corruption, migration, and rollback behavior are confirmed.
+
+
+28. CLI SHELL
+=============
+
+Recommended commands:
+
+```text
+fnr3-re validate-image IMAGE
+fnr3-re inspect-image IMAGE
+fnr3-re extract IMAGE WORKSPACE
+fnr3-re rebuild WORKSPACE OUTPUT
+fnr3-re inspect-archive ARCHIVE
+fnr3-re decode-refpack INPUT OUTPUT
+fnr3-re encode-refpack INPUT OUTPUT
+fnr3-re inspect-adf INPUT
+fnr3-re import-trace TRACE
+fnr3-re validate-evidence ARTIFACT
+fnr3-re validate-subsystem SUBSYSTEM_ID
+fnr3-re validate-phase-one
+fnr3-re report-memory-budget
+fnr3-re report-save-migration
+```
+
+Forbidden normal-workflow commands:
+
+```text
+fnr3-re force-phase-two
+fnr3-re ignore-guards
+fnr3-re assume-schema
+```
+
+
+29. SUBSYSTEM GENERATOR
+=======================
+
+Example:
+
+```bash
+python tools/generate_subsystem.py \
+    --id punch_pipeline \
+    --name "Punch Execution Pipeline" \
+    --class class_a
+```
+
+Generated package:
+
+```text
+src/fnr3_re/subsystems/punch_pipeline/__init__.py
+src/fnr3_re/subsystems/punch_pipeline/model.py
+src/fnr3_re/subsystems/punch_pipeline/symbols.py
+src/fnr3_re/subsystems/punch_pipeline/evidence.py
+src/fnr3_re/subsystems/punch_pipeline/original_behavior.py
+src/fnr3_re/subsystems/punch_pipeline/callers.py
+src/fnr3_re/subsystems/punch_pipeline/consumers.py
+src/fnr3_re/subsystems/punch_pipeline/replacement_boundary.py
+src/fnr3_re/subsystems/punch_pipeline/validation.py
+src/fnr3_re/subsystems/punch_pipeline/README.md
+src/fnr3_re/subsystems/punch_pipeline/status.json
+tests/unit/subsystems/punch_pipeline/
+tests/integration/subsystems/punch_pipeline/
+tests/runtime/subsystems/punch_pipeline/
+```
+
+The generated original_behavior.py raises EvidenceNotConfirmedError.
+
+
+30. CLASS A README TEMPLATE
+===========================
+
+```markdown
+# <Subsystem Name>
+
+## Classification
+
+Class A — functional reconstruction required.
+
+## Scope
+
+<Exact affected behavior>
+
+## Exclusions
+
+<Adjacent behavior not owned by this package>
+
+## Dependencies
+
+- <subsystem>
+
+## Owners
+
+- <runtime object, resource, or module>
+
+## Consumers
+
+- <system>
+
+## Confirmed Claims
+
+None.
+
+## Probable Claims
+
+None.
+
+## Candidate Claims
+
+None.
+
+## Rejected Claims
+
+None.
+
+## Required Runtime Experiments
+
+- <single evidence question>
+
+## Save Impact
+
+Unconfirmed.
+
+## UI Impact
+
+Unconfirmed.
+
+## Replacement Boundary
+
+Not approved.
+
+## Completion State
+
+Not started.
+```
+
+
+31. STATUS.JSON TEMPLATE
+========================
+
+```json
+{
+  "subsystem_id": "punch_pipeline",
+  "class": "class_a",
+  "stage": "not_started",
+  "confirmed_claims": [],
+  "probable_claims": [],
+  "candidate_claims": [],
+  "rejected_claims": [],
+  "unresolved_questions": [
+    "Identify punch request entry points",
+    "Identify stamina charge timing",
+    "Identify collision and hit-quality outputs",
+    "Identify damage consumers"
+  ],
+  "blockers": [],
+  "replacement_boundary_approved": false
+}
+```
+
+
+32. TESTING STRUCTURE
+=====================
+
+Unit tests
+----------
+
+Pure parsers, models, validators, address conversion, and reconstructed
+calculations.
+
+Integration tests
+-----------------
+
+Archive, image, extraction, rebuilding, and package flows.
+
+Reference tests
+---------------
+
+Run only when the exact user-provided ISO or extracted reference binaries are
+available locally.
+
+Regression tests
+----------------
+
+Preserve original-behavior vectors.
+
+Runtime tests
+-------------
+
+Validate imported PPSSPP traces and controlled experiments.
+
+Gate tests
+----------
+
+Ensure Phase I and Phase II cannot be bypassed.
+
+
+33. TEST EXAMPLES
+=================
+
+Evidence gate:
+
+```python
+import pytest
+
+from fnr3_re.evidence.confidence import EvidenceConfidence
+from fnr3_re.errors import EvidenceNotConfirmedError
+from fnr3_re.evidence.values import EvidenceBoundValue
+
+
+def test_candidate_value_cannot_be_consumed_as_confirmed() -> None:
+    value = EvidenceBoundValue(
+        value=121,
+        confidence=EvidenceConfidence.CANDIDATE,
+        claim_id="xdbboxr_field_count",
+    )
+
+    with pytest.raises(EvidenceNotConfirmedError):
+        value.require_confirmed()
+```
+
+Address safety:
+
+```python
+import pytest
+
+from fnr3_re.addresses import Address, AddressSpace
+
+
+def test_runtime_address_requires_module() -> None:
+    with pytest.raises(ValueError):
+        Address(
+            space=AddressSpace.PSP_RUNTIME,
+            value=0x08804000,
+        )
+```
+
+Phase gate:
+
+```python
+import pytest
+
+from fnr3_re.errors import IncompleteSubsystemError
+from fnr3_re.gates.phase_one import (
+    PhaseOneSubsystemResult,
+    require_phase_one_complete,
+)
+
+
+def test_phase_two_locked_when_class_a_incomplete() -> None:
+    results = (
+        PhaseOneSubsystemResult(
+            subsystem_id="punch_pipeline",
+            required=True,
+            complete=False,
+            report_path="analysis/reports/punch_pipeline.json",
+        ),
+    )
+
+    with pytest.raises(IncompleteSubsystemError):
+        require_phase_one_complete(results)
+```
+
+
+34. REFERENCE-ASSET POLICY
+==========================
+
+The repository must not track:
+
+- ISO files
+- BOOT.BIN
+- EBOOT.BIN
+- PRX files
+- Extracted copyrighted assets
+- Full decoded ADF databases
+- Full original tables
+- RAM dumps
+- Save files
+- Game screenshots
+
+The repository may track:
+
+- Hashes
+- File sizes
+- Paths
+- Offsets
+- Structure descriptions
+- Symbol names
+- Independently reconstructed behavior
+- Small byte guards needed to identify the exact revision
+- Non-expressive numerical test vectors
+- User-authored replacement data
+- Tools and schemas
+
+
+35. GITIGNORE BASELINE
+======================
+
+```gitignore
+*.iso
+*.cso
+BOOT.BIN
+EBOOT.BIN
+*.prx
+
+workspace/
+workspaces/
+reference/
+original/
+modified/
+rebuilt/
+
+*.viv.extracted/
+*.big.extracted/
+decoded/
+raw/
+
+*.ram
+*.sav
+*.ppst
+*.state
+*.dump
+screenshots/
+runtime-local/
+
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+
+dist/
+build/
+out/
+```
+
+
+36. CHECKPOINT POLICY
+=====================
+
+Each reverse-engineering checkpoint answers one evidence question only.
+
+A checkpoint ends after:
+
+1. Writing or updating one evidence artifact.
+2. Recording one bounded result or negative result.
+3. Running focused tests.
+4. Updating subsystem status.
+5. Committing the checkpoint.
+6. Reporting the result.
+
+Large disassembly and debugger logs remain local. Repository artifacts retain
+addresses, hashes, selected values, controls, conclusions, and confidence.
+
+
+37. BRANCH AND COMMIT POLICY
+============================
+
+Recommended branches:
+
+```text
+foundation/<task>
+re/<subsystem>/<checkpoint>
+normalize/<subsystem>
+gate/phase-one
+implementation/<feature>
+validation/<feature>
+```
+
+Recommended commits:
+
+```text
+test: add failing evidence-model coverage
+feat: add evidence reference model
+docs: record candidate punch entry point
+test: add runtime trace validation
+re: confirm punch-cost caller path
+normalize: complete punch-pipeline package
+```
+
+Each commit should be narrow, reversible, independently testable, and honest
+about evidence confidence.
+
+
+38. INITIAL SUBSYSTEM SHELLS
+============================
+
+Create Class A shells for:
+
+1. boxer_roster
+2. fight_session
+3. punch_pipeline
+4. stamina
+5. damage_stun_knockdown
+6. defense_movement_clinch
+7. cuts_referee_medical
+8. judging_statistics
+9. ai_styles_difficulty
+10. weight_classes
+11. career_core
+12. save_data
+13. world_simulation
+14. training_staff_economy
+15. amateur_career
+16. generated_boxers
+17. ui_localization_presentation
+
+Create Class B shells for:
+
+1. rendering_interface
+2. audio_commentary_interface
+3. movie_playback_interface
+4. networking_interface
+5. psp_os_interface
+6. middleware_interface
+7. venue_environment_interface
+
+Create Class C inventories after module mapping confirms their scope.
+
+
+39. INITIAL IMPLEMENTATION ORDER
+================================
+
+Task 1
+------
+
+Create the package, errors, paths, hashing, and test configuration.
+
+Task 2
+------
+
+Create address-space models and conversion guards.
+
+Task 3
+------
+
+Create evidence confidence, references, values, and validation.
+
+Task 4
+------
+
+Create subsystem registry and Class A/B/C definitions.
+
+Task 5
+------
+
+Create subsystem generator and templates.
+
+Task 6
+------
+
+Create byte guards, module hashes, and exact-revision validation.
+
+Task 7
+------
+
+Create runtime-trace and experiment schemas.
+
+Task 8
+------
+
+Create subsystem completion validation.
+
+Task 9
+------
+
+Create the Phase I global gate.
+
+Task 10
+-------
+
+Create memory-budget and save-migration schemas.
+
+Task 11
+-------
+
+Generate empty subsystem shells.
+
+Task 12
+-------
+
+Add CI for pytest, Ruff, strict mypy, compilation, JSON schema validation,
+copyright policy, and phase-gate tests.
+
+
+40. ACCEPTANCE CRITERIA
+=======================
+
+The infrastructure shell is complete when:
+
+- The package installs locally.
+- The CLI displays every shell command.
+- Address APIs are typed by address space.
+- Candidate evidence cannot be consumed as confirmed.
+- Every Class A subsystem has a generated package.
+- Generated original-behavior modules fail explicitly.
+- Every status file validates.
+- The Phase I gate rejects incomplete Class A packages.
+- The Phase II gate requires reviewed authorization.
+- Exact-build guards reject incorrect images and binaries.
+- Binary patch guards are transactional.
+- Runtime trace artifacts validate.
+- Memory-budget reports validate.
+- Save-migration reports validate.
+- Copyright checks reject tracked game payloads.
+- Unit tests, Ruff, strict mypy, compilation, and schemas pass.
+
+
+41. DELIBERATELY UNDECIDED
+==========================
+
+The shell does not decide:
+
+- Whether replacement code lives in BOOT.BIN, a PRX, or a new module.
+- Whether code uses caves, module growth, or hybrid resource loading.
+- The final language mix.
+- The xdbboxr field layout.
+- The maximum roster count.
+- The save expansion strategy.
+- The final combat-event API.
+- The final boxer object.
+- The final career object.
+- The final AI architecture.
+- The final UI framework.
+- The final memory allocation strategy.
+
+Those decisions follow evidence and memory-budget review.
+
+
+42. FINAL RULE
+==============
+
+The shell organizes reverse engineering. It must not predetermine its answers.
+
+Correct progression:
+
+```text
+Create infrastructure shell
+→ validate exact build
+→ extract and rebuild reproducibly
+→ map modules and resources
+→ create subsystem evidence packages
+→ perform static discovery
+→ perform controlled runtime validation
+→ reconstruct original behavior
+→ document replacement boundaries
+→ pass the global Phase I gate
+→ authorize Phase II
+→ implement the overhaul
+```
+
+Any code that attempts to skip from infrastructure directly into unverified
+gameplay implementation should fail loudly.
