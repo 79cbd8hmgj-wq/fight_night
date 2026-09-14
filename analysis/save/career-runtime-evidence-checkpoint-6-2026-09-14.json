@@ -157,9 +157,8 @@
     {"address": "0x08D9861C", "before_hex": "bf00", "after_hex": "5e01"}
   ],
   "next_experiments": [
-    "A loss is now the highest-value record experiment because wins and KO count are resolved; it may isolate loss and result-type fields nearby.",
-    "A draw, if obtainable, would similarly isolate draw handling.",
-    "A purchase or expense outside fight payout is useful to distinguish bank from the two additional money-related accumulators.",
-    "Continue capturing exact training result screens with diverse stat deltas to map every member of 0x08D9AABA-0x08D9AACA."
+    "Prioritize overhaul-relevant progression and system transitions rather than forcing losses/draws: first numeric ranking, amateur-to-pro transition, materially new rival/story events, or materially different contract types.",
+    "A purchase or expense outside fight payout remains useful if encountered naturally because it can distinguish bank from the two additional money-related accumulators.",
+    "Routine training deltas no longer need dedicated savestates; the visible eight-stat layout has been resolved by later checkpoints."
   ]
 }
