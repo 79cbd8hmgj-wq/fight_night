@@ -1,0 +1,454 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail",
+    "module": "BOOT.BIN"
+  },
+  "purpose": "Preserve controlled PPSSPP career-mode runtime observations and RAM correlations gathered from retail Fight Night Round 3 PSP savestates. No savestate, RAM dump, game binary, or copyrighted payload is committed by this artifact.",
+  "savestate_extraction": {
+    "format_revision": 5,
+    "compression": "zstd",
+    "header_bytes": 48,
+    "title_bytes": 128,
+    "observed_ram_offset_in_decompressed_state": "0x48",
+    "observed_ram_size": "0x02000000",
+    "psp_ram_base": "0x08000000",
+    "address_rule": "ram_file_offset = psp_address - 0x08000000",
+    "verification_note": "The 32 MiB region at decompressed offset 0x48 matched the previously extracted baseline RAM byte-for-byte at multiple nonzero offsets. This rule was then applied consistently to checkpoints 0-5."
+  },
+  "private_artifact_hashes": {
+    "policy": "Hashes only. The corresponding .ppst and extracted RAM files must remain outside Git.",
+    "savestates": [
+      {
+        "id": "checkpoint_0_late_career_historical",
+        "filename": "ULUS10066_1.00_0.ppst",
+        "ppsspp_version": "v1.19.3",
+        "sha256": "6094f589910221feb2eaaae90f414dfbf59b87c62e7b2bdcd81519de0e9af9df",
+        "ram_sha256": "0d97214e719f949bcba7bc1081fb88b121eadc6b7eb31aa327812f2852de7725"
+      },
+      {
+        "id": "checkpoint_1_new_career_baseline",
+        "filename": "ULUS10066_1.00_1.ppst",
+        "ppsspp_version": "v1.20.4",
+        "sha256": "364bd5bd4b52770c360e24287cd254d9fb4ead6e06633c8a4baa254fb4c8428c",
+        "ram_sha256": "d741b4ed8e7d39cd4477e33ec3561459933a93f85669b4e16b47fe7719c873fd"
+      },
+      {
+        "id": "checkpoint_2_first_contract_plus_training",
+        "filename": "ULUS10066_1.00_2.ppst",
+        "ppsspp_version": "v1.20.4",
+        "sha256": "143e8cd0d7f021bcb918e814c29d8c216278afc7ec4dd86821f61c5bc5a0b748",
+        "ram_sha256": "0ddd764088a8945a9da55a5a7866efe62792157e77128f3683d823b220535b8d"
+      },
+      {
+        "id": "checkpoint_3_first_fight_prefight",
+        "filename": "ULUS10066_1.00_3.ppst",
+        "ppsspp_version": "v1.20.4",
+        "sha256": "8e0089a0ec6de56c436f1c424bc6259ea54e0216d21e9fe6bcf79464df7a4278",
+        "ram_sha256": "be6d4923c7f61a6044e68fed08b1c748900c0f570fe9a2f547bc1b9fa3a904c9"
+      },
+      {
+        "id": "checkpoint_4_after_first_fight_career_update",
+        "filename": "ULUS10066_1.00_4.ppst",
+        "ppsspp_version": "v1.20.4",
+        "sha256": "590d9e8591697b8f7865587d763f8273ce79fc2d2189f2937bf9179c205db24b",
+        "ram_sha256": "d01566aff15307119b42829a8369938a3ff609700e1aefff6376d0f6ba377cf9"
+      },
+      {
+        "id": "checkpoint_5_second_training_result",
+        "filename": "ULUS10066_1.00_5.ppst",
+        "ppsspp_version": "v1.20.4",
+        "sha256": "2f3d3facd348f430a26fa6508c70a91d7742526ffac3f7d9cab47b65c6b811c7",
+        "ram_sha256": "ac46fde9c006d874ceea5e98ceee6e5c58e7205c32238c56d05666ee430ded70"
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "id": 0,
+      "description": "Historical late-career retail baseline created before the controlled RE session.",
+      "visible_state": {
+        "boxer": "Evan Lebrecht",
+        "date": "March 8, 2034",
+        "rank": 29,
+        "record": "20-0-0",
+        "kos": 20,
+        "rival": "Keiji Obayashi",
+        "bank": 67396
+      }
+    },
+    {
+      "id": 1,
+      "description": "Fresh controlled career immediately after boxer creation, before contract/training/fight progression.",
+      "visible_state": {
+        "boxer": "Jacob Morgan",
+        "weight_class": "AMATEUR MIDDLEWEIGHT",
+        "date": "February 4, 2026",
+        "rank": "UNRANKED",
+        "record": "0-0-0",
+        "kos": 0,
+        "rival": "N/A",
+        "bank": 0
+      },
+      "runtime_ui_string": {
+        "address": "0x093C0BA4",
+        "value": "strBoxerName=Jacob Morgan&strWeightClass=AMATEUR MIDDLEWEIGHT&strWinLossRecord=0-0-0, 0 KO&strRank=UNRANKED&strMoney=$$0&strRivalName=N/A&strCROBoxer=strCareerBoxer&strCROBoxer=strCareerCentralBoxer&strDate=FEBRUARY 4, 2026&iRetired=0"
+      }
+    },
+    {
+      "id": 2,
+      "description": "First contract and first training had both occurred. The only retained visible training delta was Power -4.",
+      "known_visible_training_delta": {
+        "Power": -4
+      },
+      "important_ram_deltas_from_checkpoint_1": [
+        {
+          "address": "0x08D9AABA",
+          "type": "u16",
+          "before": 46,
+          "after": 42,
+          "delta": -4
+        },
+        {
+          "address": "0x08D9AABC",
+          "type": "u16",
+          "before": 46,
+          "after": 42,
+          "delta": -4
+        },
+        {
+          "address": "0x08D9AAC2",
+          "type": "u16",
+          "before": 36,
+          "after": 34,
+          "delta": -2
+        },
+        {
+          "address": "0x08D9AAC8",
+          "type": "u16",
+          "before": 40,
+          "after": 38,
+          "delta": -2
+        },
+        {
+          "address": "0x08D9AACA",
+          "type": "u16",
+          "before": 33,
+          "after": 31,
+          "delta": -2
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "description": "Scheduled-fight screen immediately before the first amateur bout.",
+      "visible_fight_setup": {
+        "event": "SINGLE AMATEUR BOUT",
+        "player": "Jacob Morgan",
+        "opponent": "Blake Jacobs",
+        "venue": "65 LOWER FLUSHING",
+        "rounds": 4,
+        "round_minutes": 2,
+        "player_purse_cut": 300,
+        "player_purse_percentage": 40,
+        "rank_change": "N/A",
+        "bonus": "N/A",
+        "rules": [
+          "HEADGEAR REQUIRED",
+          "EXCESSIVE CUTS MAY STOP FIGHT",
+          "3 KNOCKDOWN RULE"
+        ]
+      },
+      "runtime_ui_string": {
+        "address": "0x093F88C0",
+        "value": "strEventName=SINGLE AMATEUR BOUT&strBoxerLeftFirstName=Jacob&strBoxerLeftLastName=Morgan&strBoxerRightFirstName=BLAKE&strBoxerRightLastName=JACOBS&strVenueName=VENUE: 65 LOWER FLUSHING&strRoundInfo=4,2 MINUTE ROUNDS&strCutPercentage=YOUR CUT OF THE PURSE: $300 (40%25)&strSideObjective=RANK CHANGE: N/A\nBONUS: N/A&strRules=HEADGEAR REQUIRED\nEXCESSIVE CUTS MAY STOP FIGHT\n3 KNOCKDOWN RULE"
+      },
+      "persistent_career_note": "The persistent career fields listed below were unchanged from checkpoint 2; this checkpoint primarily captured transient scheduled-fight/UI state."
+    },
+    {
+      "id": 4,
+      "description": "First fight completed and career progression applied.",
+      "visible_state": {
+        "boxer": "Jacob Morgan",
+        "weight_class": "AMATEUR MIDDLEWEIGHT",
+        "date": "June 17, 2026",
+        "rank": "UNRANKED",
+        "record": "1-0-0",
+        "kos": 1,
+        "rival": "Blake Jacobs",
+        "bank": 288
+      },
+      "visible_payout": {
+        "total_purse": 750,
+        "opponent_share": 450,
+        "opponent_percentage": 60,
+        "player_share": 300,
+        "player_percentage": 40,
+        "promoter_expense": 12,
+        "trainer_expense": 0,
+        "cutman_expense": 0,
+        "total_expenses": 12,
+        "net_pay": 288
+      },
+      "visible_fight_totals": {
+        "player_total_punches_thrown": 307,
+        "player_total_punches_hit": 191,
+        "player_total_accuracy_percent": 62,
+        "opponent_total_punches_thrown": 72,
+        "opponent_total_punches_hit": 41,
+        "opponent_total_accuracy_percent": 56,
+        "player_knockdowns": 6,
+        "opponent_knockdowns": 0,
+        "judges_score_player": 40,
+        "judges_score_opponent": 30,
+        "judges_count": 3
+      },
+      "visible_rival_event": "YOUR OPPONENT HAS VOWED REVENGE. BLAKE JACOBS IS NOW YOUR RIVAL. YOU WILL MEET AGAIN.",
+      "runtime_ui_string": {
+        "address": "0x09453DD4",
+        "value": "strBoxerName=Jacob Morgan&strWeightClass=AMATEUR MIDDLEWEIGHT&strWinLossRecord=1-0-0, 1 KO&strRank=UNRANKED&strMoney=$$288&strRivalName=BLAKE JACOBS&strCROBoxer=strCareerBoxer&strCROBoxer=strCareerCentralBoxer&strDate=JUNE 17, 2026&iRetired=0"
+      },
+      "rival_message_address": "0x094531AC"
+    },
+    {
+      "id": 5,
+      "description": "Second training result after checkpoint 4.",
+      "visible_training_delta": {
+        "Power": 3,
+        "Speed": 0,
+        "Agility": 0,
+        "Stamina": 1,
+        "Chin": 0,
+        "Body": 1,
+        "Heart": 0,
+        "Cuts": 1
+      },
+      "important_ram_deltas_from_checkpoint_4": [
+        {
+          "address": "0x08D9AABA",
+          "type": "u16",
+          "before": 42,
+          "after": 45,
+          "delta": 3
+        },
+        {
+          "address": "0x08D9AABC",
+          "type": "u16",
+          "before": 42,
+          "after": 45,
+          "delta": 3
+        },
+        {
+          "address": "0x08D9AAC2",
+          "type": "u16",
+          "before": 34,
+          "after": 35,
+          "delta": 1
+        },
+        {
+          "address": "0x08D9AAC8",
+          "type": "u16",
+          "before": 38,
+          "after": 39,
+          "delta": 1
+        },
+        {
+          "address": "0x08D9AACA",
+          "type": "u16",
+          "before": 31,
+          "after": 32,
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "field_evidence": [
+    {
+      "address": "0x08D98574",
+      "type": "u32",
+      "name": "career_bank",
+      "confidence": "confirmed",
+      "checkpoint_values": {
+        "0": 67396,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 288,
+        "5": 288
+      },
+      "evidence": "Matches the displayed bank exactly in three independently known states: $67,396, $0, and $288."
+    },
+    {
+      "address": "0x08D98504",
+      "type": "u16",
+      "name": "wins_or_ko_count_candidate_a",
+      "confidence": "strong_candidate",
+      "checkpoint_values": {
+        "0": 20,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 1,
+        "5": 1
+      },
+      "evidence": "Tracks a career where wins and KOs are equal in all observed samples. A decision win is required to distinguish semantics from 0x08D98506."
+    },
+    {
+      "address": "0x08D98506",
+      "type": "u16",
+      "name": "wins_or_ko_count_candidate_b",
+      "confidence": "strong_candidate",
+      "checkpoint_values": {
+        "0": 20,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 1,
+        "5": 1
+      },
+      "evidence": "Tracks a career where wins and KOs are equal in all observed samples. A decision win is required to distinguish semantics from 0x08D98504."
+    },
+    {
+      "address": "0x08D98568",
+      "type": "u32",
+      "name": "money_related_candidate_a",
+      "confidence": "candidate",
+      "checkpoint_values": {
+        "0": 12656,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 288,
+        "5": 288
+      },
+      "evidence": "Equals first-fight net pay at checkpoint 4 but diverges from bank in the historical late-career state. Exact meaning unresolved."
+    },
+    {
+      "address": "0x08D98578",
+      "type": "u32",
+      "name": "money_related_candidate_b",
+      "confidence": "candidate",
+      "checkpoint_values": {
+        "0": 174396,
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 288,
+        "5": 288
+      },
+      "evidence": "Equals first-fight net pay at checkpoint 4 but diverges from bank in the historical late-career state. Exact meaning unresolved."
+    },
+    {
+      "address": "0x08D98672",
+      "type": "char[]",
+      "name": "career_rival_last_name",
+      "confidence": "confirmed",
+      "checkpoint_values": {
+        "0": "OBAYASHI",
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "JACOBS",
+        "5": "JACOBS"
+      },
+      "evidence": "Matches the displayed rival in both the historical and controlled careers and is empty before the first rival is assigned."
+    },
+    {
+      "address": "0x08D98692",
+      "type": "char[]",
+      "name": "career_rival_first_name",
+      "confidence": "confirmed",
+      "checkpoint_values": {
+        "0": "KEIJI",
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "BLAKE",
+        "5": "BLAKE"
+      },
+      "evidence": "Matches the displayed rival in both the historical and controlled careers and is empty before the first rival is assigned."
+    },
+    {
+      "address": "0x08D9AA42",
+      "type": "char[]",
+      "name": "player_boxer_last_name",
+      "confidence": "confirmed",
+      "checkpoint_values": {
+        "0": "Lebrecht",
+        "1": "Morgan",
+        "2": "Morgan",
+        "3": "Morgan",
+        "4": "Morgan",
+        "5": "Morgan"
+      }
+    },
+    {
+      "address": "0x08D9AA62",
+      "type": "char[]",
+      "name": "player_boxer_first_name",
+      "confidence": "confirmed",
+      "checkpoint_values": {
+        "0": "Evan",
+        "1": "Jacob",
+        "2": "Jacob",
+        "3": "Jacob",
+        "4": "Jacob",
+        "5": "Jacob"
+      }
+    },
+    {
+      "range": "0x08D9AABA-0x08D9AACA",
+      "type": "u16 fields",
+      "name": "player_training_attribute_block",
+      "confidence": "strong",
+      "checkpoint_values": {
+        "1": [46, 46, 31, 26, 36, 38, 35, 40, 33],
+        "2": [42, 42, 31, 26, 34, 38, 35, 38, 31],
+        "4": [42, 42, 31, 26, 34, 38, 35, 38, 31],
+        "5": [45, 45, 31, 26, 35, 38, 35, 39, 32]
+      },
+      "field_addresses_in_order": [
+        "0x08D9AABA",
+        "0x08D9AABC",
+        "0x08D9AABE",
+        "0x08D9AAC0",
+        "0x08D9AAC2",
+        "0x08D9AAC4",
+        "0x08D9AAC6",
+        "0x08D9AAC8",
+        "0x08D9AACA"
+      ],
+      "evidence": "The first two fields track the known Power -4 and Power +3 deltas exactly. Three later fields each increase by +1 when the visible result reports Stamina +1, Body +1, and Cuts +1. Exact mapping of those three addresses remains unresolved because all three changed by the same amount in the same experiment. Four intermediate fields stayed fixed during the second training result where Speed, Agility, Chin, and Heart were all +0."
+    }
+  ],
+  "implementation_relevance": [
+    "The career bank, rival names, player boxer identity, wins/KO candidates, and training attribute block provide concrete runtime anchors for watchpoints and writer-function tracing.",
+    "The formatted Career Central and Scheduled Fight parameter strings expose game-facing semantic names such as strWinLossRecord, strRank, strMoney, strRivalName, strDate, strEventName, strRoundInfo, strCutPercentage, and strRules.",
+    "Checkpoint comparisons demonstrate that PPSSPP savestates can replace manual RAM dumps for controlled career reverse engineering."
+  ],
+  "unresolved_questions": [
+    "Distinguish 0x08D98504 from 0x08D98506 by recording a decision win where wins increase but KOs do not.",
+    "Resolve exact meanings of 0x08D98568 and 0x08D98578 using another payout and a later bank state.",
+    "Resolve the three +1 training fields at 0x08D9AAC2, 0x08D9AAC8, and 0x08D9AACA using training results where Stamina, Body, and Cuts change by different amounts.",
+    "Determine why two adjacent u16 fields at 0x08D9AABA and 0x08D9AABC mirror the visible Power delta; possibilities such as duplicated/current-base/left-right values remain unproven.",
+    "Trace reads/writes of confirmed runtime fields back to retail BOOT.BIN functions before assigning implementation hooks."
+  ],
+  "evidence_boundary": {
+    "confirmed": [
+      "career_bank at 0x08D98574",
+      "career rival first/last name buffers at 0x08D98692/0x08D98672",
+      "player boxer first/last name buffers at 0x08D9AA62/0x08D9AA42",
+      "a training-sensitive player attribute block around 0x08D9AABA-0x08D9AACA",
+      "runtime formatting strings for Career Central and the first scheduled-fight screen"
+    ],
+    "not_confirmed": [
+      "which of 0x08D98504/0x08D98506 is wins versus KOs",
+      "exact stat labels for 0x08D9AAC2/0x08D9AAC8/0x08D9AACA",
+      "the semantic reason for the duplicated Power-correlated fields",
+      "the meanings of 0x08D98568 and 0x08D98578",
+      "writer/reader function identities for these runtime fields"
+    ]
+  }
+}
