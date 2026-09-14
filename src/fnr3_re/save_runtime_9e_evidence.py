@@ -16,6 +16,7 @@ from .save_runtime_9e import (
     SaveMutation,
     Task9EPlan,
     Task9EPlanError,
+    Task9ERuntimeSource,
 )
 from .save_runtime_9e_capture import (
     RuntimeBreakpointObservation,
@@ -86,6 +87,7 @@ class Task9ERuntimeEvidence:
             "not_confirmed": list(self.not_confirmed),
             "revision_id": self.revision_id,
             "runtime_observed": list(self.runtime_observed),
+            "runtime_source": _runtime_source_mapping(self.successful.runtime_source),
             "schema_version": self.schema_version,
             "semantic_interpretation": list(self.semantic_interpretation),
             "state_sha256": self.state_sha256,
@@ -120,6 +122,21 @@ def _inventory_mapping(
         }
         for entry in inventory
     ]
+
+
+def _runtime_source_mapping(
+    source: Task9ERuntimeSource | None,
+) -> dict[str, object] | None:
+    if source is None:
+        return None
+    return {
+        "boot_sha256": source.boot_sha256,
+        "payload_manifest_sha256": source.payload_manifest_sha256,
+        "retail_iso_sha256": source.retail_iso_sha256,
+        "revision_id": source.revision_id,
+        "runtime_iso_sha256": source.runtime_iso_sha256,
+        "source_mode": source.source_mode,
+    }
 
 
 def _memory_mapping(observation: RuntimeMemoryObservation) -> dict[str, object]:
@@ -167,6 +184,7 @@ def _control_mapping(control: RuntimeControlCapture) -> dict[str, object]:
         "observations": [
             _breakpoint_mapping(observation) for observation in control.observations
         ],
+        "runtime_source": _runtime_source_mapping(control.runtime_source),
         "savedata_inventory": _inventory_mapping(control.savedata_inventory),
         "state_sha256": control.state_sha256,
         "valid": control.valid,
@@ -218,6 +236,16 @@ def _validate_control_pair(
         raise Task9EPlanError("corrupted control has the wrong control_id")
     if not success.valid or not corrupted.valid:
         raise Task9EPlanError("both Task 9E controls must be valid before comparison")
+    if success.runtime_source is None or corrupted.runtime_source is None:
+        raise Task9EPlanError("Task 9E controls are missing runtime provenance")
+    if success.runtime_source != corrupted.runtime_source:
+        raise Task9EPlanError("Task 9E controls use different runtime provenance")
+    for label, control in (("successful", success), ("corrupted", corrupted)):
+        source = control.runtime_source
+        if source.runtime_iso_sha256 != control.iso_sha256:
+            raise Task9EPlanError(f"{label} control runtime provenance does not match its ISO")
+        if source.revision_id != plan.revision_id or source.boot_sha256 != plan.boot_sha256:
+            raise Task9EPlanError(f"{label} control runtime provenance does not match the plan")
     if success.iso_sha256 != corrupted.iso_sha256:
         raise Task9EPlanError("Task 9E controls use different ISO identities")
     if success.state_sha256 != corrupted.state_sha256:
@@ -470,7 +498,10 @@ def compare_task9e_controls(
         static_correlated=(),
         semantic_interpretation=(),
         confirmed=(
-            "The compared controls share the locked ISO, state, and debugger bundle identities.",
+            (
+                "The compared controls share the same verified runtime source, state, "
+                "and debugger bundle identities."
+            ),
             "The corrupted control uses the recorded deterministic one-byte DATA.BIN mutation.",
         ),
         not_confirmed=(
@@ -501,6 +532,12 @@ def run_task9e_capture(
         raise Task9EPlanError("Task 9E control inputs must use the same capture plan")
     if success_inputs.payload_contract != corrupted_inputs.payload_contract:
         raise Task9EPlanError("Task 9E control inputs must use the same payload contract")
+    if success_inputs.runtime_source != corrupted_inputs.runtime_source:
+        raise Task9EPlanError("Task 9E control inputs must use the same runtime provenance")
+    if success_inputs.memstick_root is None or corrupted_inputs.memstick_root is None:
+        raise Task9EPlanError("Task 9E controls require explicit memstick roots")
+    if success_inputs.memstick_root.absolute() == corrupted_inputs.memstick_root.absolute():
+        raise Task9EPlanError("Task 9E controls must use different memstick roots")
 
     success = capture_task9e_control(
         success_inputs,

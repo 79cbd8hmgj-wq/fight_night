@@ -15,6 +15,22 @@ from typing import Any
 _GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 _PATH = "/debugger"
 _LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
+_PSP_BUTTONS = frozenset(
+    {
+        "up",
+        "down",
+        "left",
+        "right",
+        "cross",
+        "circle",
+        "square",
+        "triangle",
+        "start",
+        "select",
+        "l",
+        "r",
+    }
+)
 
 
 class PpssppDebuggerError(RuntimeError):
@@ -296,6 +312,37 @@ class PpssppDebuggerClient:
 
     def resume(self) -> int:
         return self.send("cpu.resume")
+
+    def game_status(self) -> dict[str, object]:
+        return self.request("game.status")
+
+    def run_until_time(self, relative_us: int) -> int:
+        if not isinstance(relative_us, int) or isinstance(relative_us, bool) or relative_us <= 0:
+            raise PpssppDebuggerError("relative execution time must be a positive integer")
+        return self.send("cpu.runUntilTime", relativeUs=relative_us)
+
+    def press_button(self, button: str, *, duration_frames: int = 1) -> None:
+        if button not in _PSP_BUTTONS:
+            raise PpssppDebuggerError(f"unsupported PSP button: {button!r}")
+        if (
+            not isinstance(duration_frames, int)
+            or isinstance(duration_frames, bool)
+            or duration_frames <= 0
+        ):
+            raise PpssppDebuggerError("button duration must be a positive frame count")
+        self.request("input.buttons.press", button=button, duration=duration_frames)
+
+    def set_analog(self, x: float, y: float) -> None:
+        if (
+            isinstance(x, bool)
+            or isinstance(y, bool)
+            or not isinstance(x, (int, float))
+            or not isinstance(y, (int, float))
+            or not -1.0 <= x <= 1.0
+            or not -1.0 <= y <= 1.0
+        ):
+            raise PpssppDebuggerError("analog values must be numeric values in [-1.0, 1.0]")
+        self.request("input.analog.send", x=float(x), y=float(y), stick="left")
 
     def backtrace(self) -> tuple[int, ...]:
         response = self.request("hle.backtrace")

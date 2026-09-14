@@ -1,0 +1,1449 @@
+{
+  "entries": [
+    {
+      "destination": "PSP_GAME/SYSDIR/BOOT.BIN",
+      "git_blob_sha1": "2a3ef2cc67fcfaa1fdb2cb57f7bff5da44a02ca0",
+      "role": "executable",
+      "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+      "size": 7270664,
+      "source": "BOOT.BIN"
+    },
+    {
+      "destination": "PSP_GAME/SYSDIR/EBOOT.BIN",
+      "git_blob_sha1": "6181b21c86752137fe5fc6c5ff37030e565e342f",
+      "role": "executable",
+      "size": 7271008,
+      "source": "EBOOT.BIN"
+    },
+    {
+      "destination": "PSP_GAME/SYSDIR/UPDATE/DATA.BIN",
+      "git_blob_sha1": "41b66d58d83240c510e88bd7c2b806004fbd9087",
+      "role": "metadata",
+      "size": 14809632,
+      "source": "UPDATE/DATA.BIN"
+    },
+    {
+      "destination": "PSP_GAME/SYSDIR/UPDATE/EBOOT.BIN",
+      "git_blob_sha1": "1316781d6583cc11f40b1e78609b5229789b3aba",
+      "role": "metadata",
+      "size": 3951712,
+      "source": "UPDATE/EBOOT.BIN"
+    },
+    {
+      "destination": "PSP_GAME/SYSDIR/UPDATE/PARAM.SFO",
+      "git_blob_sha1": "752a9684cb9172bb1972f9757dd61b56cea16fea",
+      "role": "metadata",
+      "size": 1772,
+      "source": "UPDATE/PARAM.SFO"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/beanim.viv",
+      "git_blob_sha1": "859198e25c7fb329cbc680a2c5f3a9dab85a2532",
+      "role": "game_data",
+      "size": 3899640,
+      "source": "beanim.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/beload.zlb",
+      "git_blob_sha1": "247c9bf95d2f8f7e642e44cd273d9fc22d2b9073",
+      "role": "game_data",
+      "size": 268298,
+      "source": "beload.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/bootfonts.txt",
+      "git_blob_sha1": "d4da1e82c64a80006924046a09a102dde0b5fa78",
+      "role": "game_data",
+      "size": 43,
+      "source": "bootfonts.txt"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/bootfonttable.txt",
+      "git_blob_sha1": "7d74b1fc18b288635451aeaabc2d25b38a646250",
+      "role": "game_data",
+      "size": 316,
+      "source": "bootfonttable.txt"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/empty.big",
+      "git_blob_sha1": "c05d8db2753fff2ae3d5298ef4f3c663b993dab0",
+      "role": "game_data",
+      "size": 208,
+      "source": "empty.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/feanim.viv",
+      "git_blob_sha1": "c015ced99ecef76cc6d8f2ca6e672c63c7017dfe",
+      "role": "game_data",
+      "size": 340236,
+      "source": "feanim.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/feload.zlb",
+      "git_blob_sha1": "851ae77a7cb5fabd534f2357e24e584604c72899",
+      "role": "game_data",
+      "size": 363289,
+      "source": "feload.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fonttable.txt",
+      "git_blob_sha1": "45b24edcdbed00eb1d4048fdf781e7f8a5350cdf",
+      "role": "game_data",
+      "size": 849,
+      "source": "fonttable.txt"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/main.big",
+      "git_blob_sha1": "4f6c4924d3b405ec3975ff9d63b320dc5c7c4e00",
+      "role": "game_data",
+      "size": 86807,
+      "source": "main.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/mainbe.big",
+      "git_blob_sha1": "9c34cad6a6660eed949743ddbdae6c3095473a1c",
+      "role": "game_data",
+      "size": 64535,
+      "source": "mainbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/mainsystem.big",
+      "git_blob_sha1": "7d0b7d9c4f919049090980db4cbcfdcc6b5b4807",
+      "role": "game_data",
+      "size": 10288,
+      "source": "mainsystem.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/pad1.pad",
+      "git_blob_sha1": "6c5d4031e03408e34ae476c5053ee497a91ac37b",
+      "role": "padding",
+      "size": 10485760,
+      "source": "pad1.pad"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/realfonts.txt",
+      "git_blob_sha1": "38cd7bce47a6dbd5556b32412cbb5e7082809025",
+      "role": "game_data",
+      "size": 177,
+      "source": "realfonts.txt"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/scranim.viv",
+      "git_blob_sha1": "241e7cba4d632166ca423a004d3b5b504211d4f5",
+      "role": "game_data",
+      "size": 12899664,
+      "source": "scranim.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodebe/earningdetails.big",
+      "git_blob_sha1": "89ae74fc7c0bdb7a8d446b5949f705bfff6b39d7",
+      "role": "game_data",
+      "size": 43136,
+      "source": "careermodebe/earningdetails.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodebe/paycheck.big",
+      "git_blob_sha1": "3381d20d3095f9df2456610f45af1326641301c1",
+      "role": "game_data",
+      "size": 37568,
+      "source": "careermodebe/paycheck.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe1/boxerbiooverlay.big",
+      "git_blob_sha1": "abb305513be419e4314438a2c66e2e054b60d7fc",
+      "role": "game_data",
+      "size": 9158,
+      "source": "careermodefe1/boxerbiooverlay.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe1/careerranks.big",
+      "git_blob_sha1": "4815617e4f2abe496b85c3f737e2e2f1bf48c78d",
+      "role": "game_data",
+      "size": 121472,
+      "source": "careermodefe1/careerranks.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe1/careertrophycase.big",
+      "git_blob_sha1": "8ce741f3711e10eee32234b47289c7fb5da438c2",
+      "role": "game_data",
+      "size": 62864,
+      "source": "careermodefe1/careertrophycase.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe1/fightstore.big",
+      "git_blob_sha1": "5e8e2c614cdaef39d0e16c71798cf56d3ae45925",
+      "role": "game_data",
+      "size": 99376,
+      "source": "careermodefe1/fightstore.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe1/mycareerstats.big",
+      "git_blob_sha1": "2a9b55f102aad133a5721b0d3513a881a0169b6a",
+      "role": "game_data",
+      "size": 20511,
+      "source": "careermodefe1/mycareerstats.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe1/viewaward.big",
+      "git_blob_sha1": "2f1be11b9fe73a5a93dff3310e6af84358627b48",
+      "role": "game_data",
+      "size": 91184,
+      "source": "careermodefe1/viewaward.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe1/viewmatchuprivals.big",
+      "git_blob_sha1": "2d81aace838301b5f2821f6845a015877d586dd4",
+      "role": "game_data",
+      "size": 97024,
+      "source": "careermodefe1/viewmatchuprivals.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/careerhalloffame.big",
+      "git_blob_sha1": "74558f172a081d941026efea4f7579504c1197d3",
+      "role": "game_data",
+      "size": 21296,
+      "source": "careermodefe2/careerhalloffame.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/careersummary.big",
+      "git_blob_sha1": "7103c4c54cb07fab65b517bff962d98d504dccbd",
+      "role": "game_data",
+      "size": 20800,
+      "source": "careermodefe2/careersummary.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/confirmcareer.big",
+      "git_blob_sha1": "6b1175d9d394b517df3e7c987304318cfca9f269",
+      "role": "game_data",
+      "size": 36336,
+      "source": "careermodefe2/confirmcareer.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/createchampbuild.big",
+      "git_blob_sha1": "543e2f34586df81ef035aa68a7b7bd5f8f2407c4",
+      "role": "game_data",
+      "size": 56640,
+      "source": "careermodefe2/createchampbuild.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/createchampheadfeatures.big",
+      "git_blob_sha1": "fd105b833ec06ffc2fef21b0c3a5849dfc369b05",
+      "role": "game_data",
+      "size": 58080,
+      "source": "careermodefe2/createchampheadfeatures.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/createchampheadshape.big",
+      "git_blob_sha1": "a1e046a61afc869fe5544cfe565e176511d005cb",
+      "role": "game_data",
+      "size": 71264,
+      "source": "careermodefe2/createchampheadshape.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/createchampinfo.big",
+      "git_blob_sha1": "9a50d6f7478cd8465b735182c639ab8e8d42ebce",
+      "role": "game_data",
+      "size": 59504,
+      "source": "careermodefe2/createchampinfo.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/createchampphysique.big",
+      "git_blob_sha1": "cb189b5223f94ce743e5dfa35d23517893276313",
+      "role": "game_data",
+      "size": 63808,
+      "source": "careermodefe2/createchampphysique.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/createchampratings.big",
+      "git_blob_sha1": "6185585a65a66f17b1df497c198e37c6de27c5fd",
+      "role": "game_data",
+      "size": 43920,
+      "source": "careermodefe2/createchampratings.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/fightinfo.big",
+      "git_blob_sha1": "1377c37f70db80025b1bddb8356d88b2d40197c4",
+      "role": "game_data",
+      "size": 48624,
+      "source": "careermodefe2/fightinfo.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/ringentrance.big",
+      "git_blob_sha1": "a853a8a7617dc4d8e8b4e47ef305f50ef7b82d0d",
+      "role": "game_data",
+      "size": 191104,
+      "source": "careermodefe2/ringentrance.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/selectalegend.big",
+      "git_blob_sha1": "a740811a4a14a02189d48f24fa7ffd61b495547a",
+      "role": "game_data",
+      "size": 66816,
+      "source": "careermodefe2/selectalegend.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/selectfightcontract.big",
+      "git_blob_sha1": "9ed9ed8e8e846f428a6f653d414ef0bfb0f78cb8",
+      "role": "game_data",
+      "size": 82240,
+      "source": "careermodefe2/selectfightcontract.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/selectmode.big",
+      "git_blob_sha1": "0e86c53fb05c7bf1ef3340f2dd59ddf1028b4617",
+      "role": "game_data",
+      "size": 47440,
+      "source": "careermodefe2/selectmode.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/signcontract.big",
+      "git_blob_sha1": "555a65e49771061f8dd4a08fd180716459c3de16",
+      "role": "game_data",
+      "size": 95312,
+      "source": "careermodefe2/signcontract.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/training.big",
+      "git_blob_sha1": "c8e9402523fc87a277e2abf03cad17c33b3ae4b6",
+      "role": "game_data",
+      "size": 126032,
+      "source": "careermodefe2/training.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/careermodefe2/trainingresults.big",
+      "git_blob_sha1": "c17805e6cbe93538b1ddf08ab3f515b6ea3bf288",
+      "role": "game_data",
+      "size": 46016,
+      "source": "careermodefe2/trainingresults.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/adhocInetGameInfoPopup.big",
+      "git_blob_sha1": "9bb1c1f399fef6fcaacbddf883820cbc9ba25d3e",
+      "role": "game_data",
+      "size": 26720,
+      "source": "components/adhocInetGameInfoPopup.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/alpha.big",
+      "git_blob_sha1": "54dd6efb503f85e2f3035b786481caa7441b70ed",
+      "role": "game_data",
+      "size": 4784,
+      "source": "components/alpha.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/bgGradient.big",
+      "git_blob_sha1": "f581312d95fceed1856a300491c9998dc4d42ced",
+      "role": "game_data",
+      "size": 3216,
+      "source": "components/bgGradient.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/footer.big",
+      "git_blob_sha1": "f9b387b2c5e72ae4f5d6dde75ad544f29a38fafd",
+      "role": "game_data",
+      "size": 633,
+      "source": "components/footer.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/footerbe.big",
+      "git_blob_sha1": "53aaee78577dc560f3c920ac9f2ab481f236a8b1",
+      "role": "game_data",
+      "size": 633,
+      "source": "components/footerbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/header.big",
+      "git_blob_sha1": "89e83bfbfee859404a7e2755234f99645715ac44",
+      "role": "game_data",
+      "size": 10896,
+      "source": "components/header.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/move.big",
+      "git_blob_sha1": "43a0c4996f0969d9def493730b8f1422fe4a933e",
+      "role": "game_data",
+      "size": 4352,
+      "source": "components/move.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspbgeditor.big",
+      "git_blob_sha1": "71039769734df6ea16eeda1aa6d863310936a20f",
+      "role": "game_data",
+      "size": 4608,
+      "source": "components/pspbgeditor.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspCreditsRoll.big",
+      "git_blob_sha1": "add3afd5632671484b18307f948c7325090fa1ad",
+      "role": "game_data",
+      "size": 11472,
+      "source": "components/pspCreditsRoll.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspcro.big",
+      "git_blob_sha1": "b47f62592f3fba517c0e7fe627fbf59737aef0de",
+      "role": "game_data",
+      "size": 2976,
+      "source": "components/pspcro.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspEATrax.big",
+      "git_blob_sha1": "db93b267974c6c2c6bbd85a75f2c3cfb9234bea2",
+      "role": "game_data",
+      "size": 76976,
+      "source": "components/pspEATrax.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspFastImageLoader.big",
+      "git_blob_sha1": "356c1c25754eb8e14a26a48349c85d6f8a738433",
+      "role": "game_data",
+      "size": 1498,
+      "source": "components/pspFastImageLoader.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/psphelp.big",
+      "git_blob_sha1": "e4de92a718673a7596131c22e56a1344c00ffb4b",
+      "role": "game_data",
+      "size": 13328,
+      "source": "components/psphelp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/psphighlight.big",
+      "git_blob_sha1": "ace44b7ea5717ec507005b88d2e09595f33bbb83",
+      "role": "game_data",
+      "size": 7269,
+      "source": "components/psphighlight.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/psphighlightbe.big",
+      "git_blob_sha1": "a0b10050bf87329201eff4c02e9f32e1c61d9c9a",
+      "role": "game_data",
+      "size": 6693,
+      "source": "components/psphighlightbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspIconListBox.big",
+      "git_blob_sha1": "507633adc556e0e64c4908858431264367d1f255",
+      "role": "game_data",
+      "size": 31984,
+      "source": "components/pspIconListBox.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspIconListBox2.big",
+      "git_blob_sha1": "607596629a7e9f9360278db2a1144a9cd6ee90af",
+      "role": "game_data",
+      "size": 53728,
+      "source": "components/pspIconListBox2.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspimageholder.big",
+      "git_blob_sha1": "d0dfad71be8e22f9ce6a12b2542a402b03119831",
+      "role": "game_data",
+      "size": 2405,
+      "source": "components/pspimageholder.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspItemScroller.big",
+      "git_blob_sha1": "744c722bd4fdb42387598f40749242f1918a695d",
+      "role": "game_data",
+      "size": 288,
+      "source": "components/pspItemScroller.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspMenuEditor.big",
+      "git_blob_sha1": "c840e159cafcf07c5f8ac97efadac731b151d7d5",
+      "role": "game_data",
+      "size": 5088,
+      "source": "components/pspMenuEditor.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspMiniSlider.big",
+      "git_blob_sha1": "135397eccd1d56df463a8ccf40b7473313ddb4f8",
+      "role": "game_data",
+      "size": 12432,
+      "source": "components/pspMiniSlider.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspMultiStatBar.big",
+      "git_blob_sha1": "1b93ac3dc5f9368af7eb91ede1c677916d1d7791",
+      "role": "game_data",
+      "size": 23344,
+      "source": "components/pspMultiStatBar.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspMultiStatBarToggle.big",
+      "git_blob_sha1": "362c3bcc0c9361c5ccd4f017b0879fabe84f289d",
+      "role": "game_data",
+      "size": 8704,
+      "source": "components/pspMultiStatBarToggle.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspOptionScroller.big",
+      "git_blob_sha1": "d55dcde0e971ca59fbe2532df66f7c0c1572f46c",
+      "role": "game_data",
+      "size": 4767,
+      "source": "components/pspOptionScroller.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspoverlay.big",
+      "git_blob_sha1": "35f3fa5c46030b2cc0e7a6b72d5298c829a24bb7",
+      "role": "game_data",
+      "size": 35808,
+      "source": "components/pspoverlay.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspoverlaybe.big",
+      "git_blob_sha1": "61cd54aa2378c09f8f4a8ef0b7def08daedb4d03",
+      "role": "game_data",
+      "size": 3520,
+      "source": "components/pspoverlaybe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspoverlayfe.big",
+      "git_blob_sha1": "f034e634f68cb3ef2bc6352fd5e48ee5747cc4f5",
+      "role": "game_data",
+      "size": 3520,
+      "source": "components/pspoverlayfe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/psppausewaittimer.big",
+      "git_blob_sha1": "60c1ed423aa7cc15162e3c557c2538ed70000240",
+      "role": "game_data",
+      "size": 23728,
+      "source": "components/psppausewaittimer.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspPopUpListBox.big",
+      "git_blob_sha1": "9deb54eb85150d0329d1a885df2d96cd22938d95",
+      "role": "game_data",
+      "size": 26368,
+      "source": "components/pspPopUpListBox.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspScrollbar.big",
+      "git_blob_sha1": "0a5b031f76f43bc3e535d04369c03373ea82fe04",
+      "role": "game_data",
+      "size": 20288,
+      "source": "components/pspScrollbar.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspShoulderToggle.big",
+      "git_blob_sha1": "22e8fb96360178adb0708bafcd3f1154f369f4ee",
+      "role": "game_data",
+      "size": 21520,
+      "source": "components/pspShoulderToggle.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStars.big",
+      "git_blob_sha1": "898bc956f5321a6125efcdc701255ff2d09e9512",
+      "role": "game_data",
+      "size": 38480,
+      "source": "components/pspStars.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStatBar.big",
+      "git_blob_sha1": "a25eca356b88a01bab11482ad7c43a3b6edad6c1",
+      "role": "game_data",
+      "size": 8176,
+      "source": "components/pspStatBar.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStdAnalogToggle.big",
+      "git_blob_sha1": "7db19cf3d31f57c903b92fc823f2b3a48b60f480",
+      "role": "game_data",
+      "size": 3232,
+      "source": "components/pspStdAnalogToggle.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdart.big",
+      "git_blob_sha1": "5acb8272842a27b5bde7ef11318bc972f6fa9bc6",
+      "role": "game_data",
+      "size": 305424,
+      "source": "components/pspstdart.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdart2.big",
+      "git_blob_sha1": "0784f94f1290a5810f4737cf12a3dd669f1a3c09",
+      "role": "game_data",
+      "size": 262720,
+      "source": "components/pspstdart2.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdart2be.big",
+      "git_blob_sha1": "342cceae46aa7d11b276ee3e63744a9c59074af6",
+      "role": "game_data",
+      "size": 133920,
+      "source": "components/pspstdart2be.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdart3.big",
+      "git_blob_sha1": "837e76697e5178fa0e90612104421752fa7bfad7",
+      "role": "game_data",
+      "size": 72240,
+      "source": "components/pspstdart3.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdartbe.big",
+      "git_blob_sha1": "6a084c57523ab1cc9fbfde703e4c7a7c375a3daa",
+      "role": "game_data",
+      "size": 161744,
+      "source": "components/pspstdartbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdbutton.big",
+      "git_blob_sha1": "10e2085b2e110e836bf705f3c2967b031bdbc0fa",
+      "role": "game_data",
+      "size": 4333,
+      "source": "components/pspstdbutton.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdbuttonbe.big",
+      "git_blob_sha1": "7e4cf3a5998f2776cd885af4075c05a5ca6ea655",
+      "role": "game_data",
+      "size": 4349,
+      "source": "components/pspstdbuttonbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdpopup.big",
+      "git_blob_sha1": "9e4a39ad7e6798e1fc51ad2450a64c71efb12e81",
+      "role": "game_data",
+      "size": 25152,
+      "source": "components/pspstdpopup.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspstdpopupbe.big",
+      "git_blob_sha1": "90b88f4bef2eaf3a37a05df18cadb9795eca34c4",
+      "role": "game_data",
+      "size": 25616,
+      "source": "components/pspstdpopupbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStdScrollbar.big",
+      "git_blob_sha1": "34c3d4ebb47f48e7a53cb4d97439cbf56a5e1300",
+      "role": "game_data",
+      "size": 23312,
+      "source": "components/pspStdScrollbar.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStdSlider.big",
+      "git_blob_sha1": "79646a96f728c2b5687227a4c83b8e23a84e4621",
+      "role": "game_data",
+      "size": 1632,
+      "source": "components/pspStdSlider.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStdSliderBE.big",
+      "git_blob_sha1": "a11f835d203886998ccb157e5ca26b346a8127cc",
+      "role": "game_data",
+      "size": 1632,
+      "source": "components/pspStdSliderBE.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStdToggle.big",
+      "git_blob_sha1": "3de97d7a1b6fd5299d57127640bfbc60fc970a2c",
+      "role": "game_data",
+      "size": 9294,
+      "source": "components/pspStdToggle.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStdToggleBE.big",
+      "git_blob_sha1": "7512497936b8e66db3317838a893d0fec69a9fbe",
+      "role": "game_data",
+      "size": 9326,
+      "source": "components/pspStdToggleBE.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStdToggleSlider.big",
+      "git_blob_sha1": "d2fe33460b6f35044b597bc72051352c2384be65",
+      "role": "game_data",
+      "size": 1856,
+      "source": "components/pspStdToggleSlider.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspStdToggleSliderBE.big",
+      "git_blob_sha1": "07384d7a5fd96b43f4d6a02c078747d6f1d73466",
+      "role": "game_data",
+      "size": 2496,
+      "source": "components/pspStdToggleSliderBE.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspsxb.big",
+      "git_blob_sha1": "ac684b57d24cc26ce607e6a019761b1c4526fc67",
+      "role": "game_data",
+      "size": 14544,
+      "source": "components/pspsxb.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspsxbbe.big",
+      "git_blob_sha1": "8abd2b1d8cea9168ad42faec5fe6191d486fb55e",
+      "role": "game_data",
+      "size": 14400,
+      "source": "components/pspsxbbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/pspTrophyCase.big",
+      "git_blob_sha1": "b4cfc2739705064e71a568845a222fe94ffef8d9",
+      "role": "game_data",
+      "size": 224544,
+      "source": "components/pspTrophyCase.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/components/scale.big",
+      "git_blob_sha1": "d631a45af138389af25472a7388750fd2fd976b2",
+      "role": "game_data",
+      "size": 10832,
+      "source": "components/scale.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/contract/contracts.viv",
+      "git_blob_sha1": "b95e916ff66b7e661d0e9b2ea13bf0f409cceac5",
+      "role": "game_data",
+      "size": 1520,
+      "source": "contract/contracts.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/data/fusion.bts",
+      "git_blob_sha1": "5aea60e9a52ac414f15036c4500bf875e2576bc1",
+      "role": "game_data",
+      "size": 130,
+      "source": "data/fusion.bts"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/atlntic.zlb",
+      "git_blob_sha1": "bf28413ad62368e2b947df40f75748150b538848",
+      "role": "game_data",
+      "size": 674985,
+      "source": "enviro/atlntic.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/atlntict.zlb",
+      "git_blob_sha1": "41111d33139d970dbe77c3bc86215baa25657f29",
+      "role": "game_data",
+      "size": 276558,
+      "source": "enviro/atlntict.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/cafrica.zlb",
+      "git_blob_sha1": "0640d647531750a3ff8691b340710e7e2c479211",
+      "role": "game_data",
+      "size": 716543,
+      "source": "enviro/cafrica.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/cafricat.zlb",
+      "git_blob_sha1": "7094a415ad2f5edf85461731f204aa572c563704",
+      "role": "game_data",
+      "size": 197866,
+      "source": "enviro/cafricat.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/countyf.zlb",
+      "git_blob_sha1": "794c3251dc38a265155dc4e2d57bfa7c49cb0842",
+      "role": "game_data",
+      "size": 676128,
+      "source": "enviro/countyf.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/countyft.zlb",
+      "git_blob_sha1": "d52c4c9b993bd14556998eba5129ad03e157e047",
+      "role": "game_data",
+      "size": 170483,
+      "source": "enviro/countyft.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/dodge.zlb",
+      "git_blob_sha1": "10bba8ffbbb1537dde74e20cfbed028ed59d6d58",
+      "role": "game_data",
+      "size": 690889,
+      "source": "enviro/dodge.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/dodget.zlb",
+      "git_blob_sha1": "b1c5fb6f35b89eee6a9af7a657080a0d35ad5260",
+      "role": "game_data",
+      "size": 276392,
+      "source": "enviro/dodget.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/elevese.zlb",
+      "git_blob_sha1": "ad62217a161f15f640334d998e8a830fc489f303",
+      "role": "game_data",
+      "size": 586918,
+      "source": "enviro/elevese.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/eleveset.zlb",
+      "git_blob_sha1": "f37662533dc575bcd2b8af029d9c3c1e076c7816",
+      "role": "game_data",
+      "size": 153794,
+      "source": "enviro/eleveset.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/hbtokyo.zlb",
+      "git_blob_sha1": "5af2193957067398bc0fa60752ce69a1ba506bfe",
+      "role": "game_data",
+      "size": 624255,
+      "source": "enviro/hbtokyo.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/hbtokyot.zlb",
+      "git_blob_sha1": "02f856e8896cfadf3e54d802c5be70d2d056edb2",
+      "role": "game_data",
+      "size": 177141,
+      "source": "enviro/hbtokyot.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/loflush.zlb",
+      "git_blob_sha1": "8ec229fb00d383984446c3d170c4265a9eb3865f",
+      "role": "game_data",
+      "size": 614054,
+      "source": "enviro/loflush.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/loflusht.zlb",
+      "git_blob_sha1": "92e0ecff19107dc248c4bed07236b13d0c21e5ea",
+      "role": "game_data",
+      "size": 104365,
+      "source": "enviro/loflusht.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/minick.zlb",
+      "git_blob_sha1": "99e1a2d7bebeb2f1e15c40053ac308d27f34cb01",
+      "role": "game_data",
+      "size": 706109,
+      "source": "enviro/minick.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/minickt.zlb",
+      "git_blob_sha1": "5aafdd6aba63d8e416247e6195308ae52fc27b2e",
+      "role": "game_data",
+      "size": 148198,
+      "source": "enviro/minickt.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/misc.bh",
+      "git_blob_sha1": "edefb2564f78c51fb9eed89c5c6886aebc4c56fb",
+      "role": "game_data",
+      "size": 892,
+      "source": "enviro/misc.bh"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/misc.viv",
+      "git_blob_sha1": "9447e7ed28ceaa4ee952338dec02a67fd5f7e7df",
+      "role": "game_data",
+      "size": 2014346,
+      "source": "enviro/misc.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/sparrin.zlb",
+      "git_blob_sha1": "4f7e45d24258c50bf7f7cfa332f07f6b25fde3ff",
+      "role": "game_data",
+      "size": 579397,
+      "source": "enviro/sparrin.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/sparrint.zlb",
+      "git_blob_sha1": "9f11f7579f679c4788a0e573ad1c456ffaa460de",
+      "role": "game_data",
+      "size": 8232,
+      "source": "enviro/sparrint.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/staples.zlb",
+      "git_blob_sha1": "af54a474a3d6470f0cd7fb505fc63073c442679b",
+      "role": "game_data",
+      "size": 710431,
+      "source": "enviro/staples.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/staplest.zlb",
+      "git_blob_sha1": "92eb22d550c6dcaefeea5fb5f2172be990a76281",
+      "role": "game_data",
+      "size": 212339,
+      "source": "enviro/staplest.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/trainin.zlb",
+      "git_blob_sha1": "0807506d64366ef8af9bcd9fd24c8d0001bc4637",
+      "role": "game_data",
+      "size": 25621,
+      "source": "enviro/trainin.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/trainint.zlb",
+      "git_blob_sha1": "6a5f37643da345fb2b58e243f3189a810aca4355",
+      "role": "game_data",
+      "size": 1860,
+      "source": "enviro/trainint.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/viceroy.zlb",
+      "git_blob_sha1": "08e7a29304f626bbac1863093175ac97b7cca14f",
+      "role": "game_data",
+      "size": 691172,
+      "source": "enviro/viceroy.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/enviro/viceroyt.zlb",
+      "git_blob_sha1": "a2d4babad4bf565e7e66cc7c0d07b4cfbb38a171",
+      "role": "game_data",
+      "size": 248291,
+      "source": "enviro/viceroyt.zlb"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype0.big",
+      "git_blob_sha1": "e21225dd38135ff54017611a2744e902637bdb6d",
+      "role": "game_data",
+      "size": 80256,
+      "source": "fighthype/fighthype0.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype1.big",
+      "git_blob_sha1": "e9068e06335dbee348a008e9dee75371435c8338",
+      "role": "game_data",
+      "size": 103968,
+      "source": "fighthype/fighthype1.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype10.big",
+      "git_blob_sha1": "f677e97966f5d0153e19898115b6e5694529b37f",
+      "role": "game_data",
+      "size": 60064,
+      "source": "fighthype/fighthype10.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype11.big",
+      "git_blob_sha1": "70ef70b3d7a06af098e49d330d3fafe3b2599d53",
+      "role": "game_data",
+      "size": 90960,
+      "source": "fighthype/fighthype11.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype2.big",
+      "git_blob_sha1": "93bdc24f7dd9c255bfe6e533a632932adb4119d5",
+      "role": "game_data",
+      "size": 83408,
+      "source": "fighthype/fighthype2.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype3.big",
+      "git_blob_sha1": "376930ce7f48d65fdd6ee83d2997e615d0fd4613",
+      "role": "game_data",
+      "size": 99888,
+      "source": "fighthype/fighthype3.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype4.big",
+      "git_blob_sha1": "2b69579beff9f4bb8b274f5c7369c70718571d17",
+      "role": "game_data",
+      "size": 65264,
+      "source": "fighthype/fighthype4.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype5.big",
+      "git_blob_sha1": "4baf2135157e6de63dd7e68bb9bb5ab5accedefa",
+      "role": "game_data",
+      "size": 67344,
+      "source": "fighthype/fighthype5.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype6.big",
+      "git_blob_sha1": "0277cc1b8dc989993162b808cdfdd70c9cb4998c",
+      "role": "game_data",
+      "size": 100000,
+      "source": "fighthype/fighthype6.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype7.big",
+      "git_blob_sha1": "67c29bdd75cb1d7d3def75e5975fef71a6c5bb56",
+      "role": "game_data",
+      "size": 77184,
+      "source": "fighthype/fighthype7.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype8.big",
+      "git_blob_sha1": "56428a25417d3667a661267f8fed8faadb328e48",
+      "role": "game_data",
+      "size": 33072,
+      "source": "fighthype/fighthype8.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/fighthype9.big",
+      "git_blob_sha1": "ae41dbcdf3666cd0f3ddd7551f304f56e0b591e8",
+      "role": "game_data",
+      "size": 114000,
+      "source": "fighthype/fighthype9.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/fighthype/retirehanggloves.big",
+      "git_blob_sha1": "298ed72e51ca8582829176c4f1f6a40221c6daf5",
+      "role": "game_data",
+      "size": 112560,
+      "source": "fighthype/retirehanggloves.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/framework/componentclasses.big",
+      "git_blob_sha1": "af7ed74130e8249a4bfd3c2bf9e94898bfc24f7e",
+      "role": "game_data",
+      "size": 63427,
+      "source": "framework/componentclasses.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/framework/componentclassesbe.big",
+      "git_blob_sha1": "1692d3b3d13334f603dadb50050d1579d3a13f32",
+      "role": "game_data",
+      "size": 36287,
+      "source": "framework/componentclassesbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/framework/screenconstants.big",
+      "git_blob_sha1": "902a1c8b8f56ff4141130bd01213e11cc790bdd1",
+      "role": "game_data",
+      "size": 7821,
+      "source": "framework/screenconstants.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/framework/screenconstantsbe.big",
+      "git_blob_sha1": "92d523cc0a00c119b0bcd657adac0dcd93179a2d",
+      "role": "game_data",
+      "size": 2205,
+      "source": "framework/screenconstantsbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/framework/transitionconstants.big",
+      "git_blob_sha1": "6b25699acabb5e59045c8c3c9af8fab1d1677f8f",
+      "role": "game_data",
+      "size": 1757,
+      "source": "framework/transitionconstants.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/framework/transitionconstantsbe.big",
+      "git_blob_sha1": "b9a1f4325de6cedb4f6a4686ce9448549079074b",
+      "role": "game_data",
+      "size": 1629,
+      "source": "framework/transitionconstantsbe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/gamemodesFE/hardHitsLoading.big",
+      "git_blob_sha1": "b412ae88a5dccfa34d2e809bfe38fee461e80317",
+      "role": "game_data",
+      "size": 121072,
+      "source": "gamemodesFE/hardHitsLoading.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/gamemodesFE/hardhitssettings.big",
+      "git_blob_sha1": "bc26ab04dda6b567c279f4edf66bea414fc86ac5",
+      "role": "game_data",
+      "size": 81680,
+      "source": "gamemodesFE/hardhitssettings.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/gamemodesbe/kdsscorecard.big",
+      "git_blob_sha1": "fadc91565f01e1a4d1ee22c30f450a00829abb28",
+      "role": "game_data",
+      "size": 56064,
+      "source": "gamemodesbe/kdsscorecard.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/gamemodesbe/pauseoptionsparring.big",
+      "git_blob_sha1": "378056428033a4fa1687df24151129b458c319d7",
+      "role": "game_data",
+      "size": 65808,
+      "source": "gamemodesbe/pauseoptionsparring.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/hud/fnhud.hud",
+      "git_blob_sha1": "4b28a282c620953c4d29d711cfa3b6d39d751f31",
+      "role": "game_data",
+      "size": 33528,
+      "source": "hud/fnhud.hud"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/analog_psp.big",
+      "git_blob_sha1": "991b400febb36e9893dfa5443c9f12898ef94671",
+      "role": "game_data",
+      "size": 3248,
+      "source": "icons/analog_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/c_psp.big",
+      "git_blob_sha1": "52f960fbab04b20c80beb2eed2a8f7549f841bcc",
+      "role": "game_data",
+      "size": 3232,
+      "source": "icons/c_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/dlr_psp.big",
+      "git_blob_sha1": "5a55bd6393f69013be671d09efba7a4334c6b6b9",
+      "role": "game_data",
+      "size": 4736,
+      "source": "icons/dlr_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/dud_psp.big",
+      "git_blob_sha1": "d87fc8e45413ab57b2ec1fbcb2779f238b12d4b2",
+      "role": "game_data",
+      "size": 4736,
+      "source": "icons/dud_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/l1_psp.big",
+      "git_blob_sha1": "08293b4df2892abfe70c8c85b90ff64f411221e7",
+      "role": "game_data",
+      "size": 3392,
+      "source": "icons/l1_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/lan_psp.big",
+      "git_blob_sha1": "05aa19b87c192bdb0d38f881398a09de9c99b012",
+      "role": "game_data",
+      "size": 3776,
+      "source": "icons/lan_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/r1_psp.big",
+      "git_blob_sha1": "3e7dfa88850f824c60f830a0e9839626fed4ff0f",
+      "role": "game_data",
+      "size": 3392,
+      "source": "icons/r1_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/r2_psp.big",
+      "git_blob_sha1": "dbfded9807ba6ed1ebd9c09a6dd42a661512e601",
+      "role": "game_data",
+      "size": 5828,
+      "source": "icons/r2_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/r_psp.big",
+      "git_blob_sha1": "9cb2cfa017ca3e2a4ac9de6e5afbdb5718458c73",
+      "role": "game_data",
+      "size": 5764,
+      "source": "icons/r_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/s_psp.big",
+      "git_blob_sha1": "adab289cebe9d8a8fd0118a96c8055c63f78a66c",
+      "role": "game_data",
+      "size": 3232,
+      "source": "icons/s_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/sel_psp.big",
+      "git_blob_sha1": "5bbcb8b66d0931f00f67f070e879697bef5a466a",
+      "role": "game_data",
+      "size": 3552,
+      "source": "icons/sel_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/str_psp.big",
+      "git_blob_sha1": "c39278e0a6f43d188a633b7aa8ae5e7cc3f880f0",
+      "role": "game_data",
+      "size": 3552,
+      "source": "icons/str_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/t_psp.big",
+      "git_blob_sha1": "50507b35b20d8e11912259d44af6d82a73217591",
+      "role": "game_data",
+      "size": 3232,
+      "source": "icons/t_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/icons/x_psp.big",
+      "git_blob_sha1": "6644790a9080661ca84b0e2404642d4138157113",
+      "role": "game_data",
+      "size": 3232,
+      "source": "icons/x_psp.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/menu/debugmenu.big",
+      "git_blob_sha1": "359d3d5fe2834cf3747f1d8f521c5b1a2d1aa497",
+      "role": "game_data",
+      "size": 32393,
+      "source": "menu/debugmenu.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/menu/genericbackground.big",
+      "git_blob_sha1": "ff93aa11985d8c75034bbc79a5e3e1b2f1e3a3a1",
+      "role": "game_data",
+      "size": 68832,
+      "source": "menu/genericbackground.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/menu/internetmainmenu.big",
+      "git_blob_sha1": "f79e8052961e62274a35f2561f8b0f8878592516",
+      "role": "game_data",
+      "size": 6299,
+      "source": "menu/internetmainmenu.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/menu/mainmenu.big",
+      "git_blob_sha1": "26d67476afa1f00479b80707aab4adebe673f919",
+      "role": "game_data",
+      "size": 271024,
+      "source": "menu/mainmenu.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/menu/tutorialoverlay.big",
+      "git_blob_sha1": "fa1027624ef344fddc84638aef7397ad295955d3",
+      "role": "game_data",
+      "size": 135984,
+      "source": "menu/tutorialoverlay.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/mycornerfe/adhocrivals.big",
+      "git_blob_sha1": "5c1f37e5cc623cd13cd91d57108dc8a07767222a",
+      "role": "game_data",
+      "size": 17353,
+      "source": "mycornerfe/adhocrivals.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/mycornerfe/careerfighthistory.big",
+      "git_blob_sha1": "a67368f2e502a1367c16eef130e6f7074fc1ec4b",
+      "role": "game_data",
+      "size": 13997,
+      "source": "mycornerfe/careerfighthistory.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/mycornerfe/recordbooks.big",
+      "git_blob_sha1": "dbaad0089a324ba06c1664ad5a1dee67a23e516f",
+      "role": "game_data",
+      "size": 14237,
+      "source": "mycornerfe/recordbooks.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/pausemenu/pausemenu.big",
+      "git_blob_sha1": "b89dd2759256527e58825e6719bef3db11011784",
+      "role": "game_data",
+      "size": 10343,
+      "source": "pausemenu/pausemenu.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/pausemenu/pausemenump.big",
+      "git_blob_sha1": "c46dc45703d20caccd84fab150ee906adc957f0d",
+      "role": "game_data",
+      "size": 7851,
+      "source": "pausemenu/pausemenump.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playNowBE/befeLoadScreen.big",
+      "git_blob_sha1": "931efffebae2676590ea3f7c3fe9d9c3f564d6af",
+      "role": "game_data",
+      "size": 67632,
+      "source": "playNowBE/befeLoadScreen.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playNowBE/fighttotals.big",
+      "git_blob_sha1": "f8b814d1ccfc2c50e49b782372ed3238fb327b09",
+      "role": "game_data",
+      "size": 164928,
+      "source": "playNowBE/fighttotals.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playNowBE/judgesscores.big",
+      "git_blob_sha1": "b00fb20f5eaee1debcc9a7880697e169c1e01e06",
+      "role": "game_data",
+      "size": 77616,
+      "source": "playNowBE/judgesscores.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playNowBE/minigamepopup.big",
+      "git_blob_sha1": "f0342d8ae3126a998b411a1d4a7bdfac8a747f51",
+      "role": "game_data",
+      "size": 49104,
+      "source": "playNowBE/minigamepopup.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playNowBE/pauseoptionsettings.big",
+      "git_blob_sha1": "70eea94bccb6c0ae63da2f9ae14b63c5e9e0e590",
+      "role": "game_data",
+      "size": 78336,
+      "source": "playNowBE/pauseoptionsettings.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playnowfe/controllerconfig.big",
+      "git_blob_sha1": "b5c76e8734911aba8c72e0bbdd8734b0f3a6c1d1",
+      "role": "game_data",
+      "size": 70352,
+      "source": "playnowfe/controllerconfig.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playnowfe/febedodgeloadscreen.big",
+      "git_blob_sha1": "2e19b68951950698a4f3327b3307f10375b4c147",
+      "role": "game_data",
+      "size": 68048,
+      "source": "playnowfe/febedodgeloadscreen.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playnowfe/febeloadscreen.big",
+      "git_blob_sha1": "5d01aa8a85dbc25c9c039209593ecdbb8cc574e7",
+      "role": "game_data",
+      "size": 262864,
+      "source": "playnowfe/febeloadscreen.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playnowfe/optionsettings.big",
+      "git_blob_sha1": "b8de2a6e2e6af83fc2bbe8e87efe167bba2927d7",
+      "role": "game_data",
+      "size": 88064,
+      "source": "playnowfe/optionsettings.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playnowfe/selectboxer.big",
+      "git_blob_sha1": "963dac9eb071b30b65d31e4bf4602bd2c51cd592",
+      "role": "game_data",
+      "size": 99360,
+      "source": "playnowfe/selectboxer.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playnowfe/selectcorner.big",
+      "git_blob_sha1": "cf1e2cf2096aa36a5fdcc978b3789c94821841b9",
+      "role": "game_data",
+      "size": 81376,
+      "source": "playnowfe/selectcorner.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/playnowfe/selectvenue.big",
+      "git_blob_sha1": "6ab9fc427cd5b0eb6fdcaa26f3946f46edf58f88",
+      "role": "game_data",
+      "size": 17728,
+      "source": "playnowfe/selectvenue.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/preload/bootpreloads.viv",
+      "git_blob_sha1": "95342d27836955618670c173a2f52b6a1d1eef86",
+      "role": "game_data",
+      "size": 62466,
+      "source": "preload/bootpreloads.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/preload/boxerpre.viv",
+      "git_blob_sha1": "fce3a576ade379ef1979938ab402d44b40349337",
+      "role": "game_data",
+      "size": 167402,
+      "source": "preload/boxerpre.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/preload/db.viv",
+      "git_blob_sha1": "84809b4bc7bc27e78cf81f27dcdccef8b8391230",
+      "role": "game_data",
+      "size": 21854,
+      "source": "preload/db.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/preload/tables.viv",
+      "git_blob_sha1": "1610c39f647707a7f4fb3c7863ae5f7810b1b4c1",
+      "role": "game_data",
+      "size": 44668,
+      "source": "preload/tables.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/profilemanager/profileselect.big",
+      "git_blob_sha1": "28c63419267c90944f077bea40e76272f51c5144",
+      "role": "game_data",
+      "size": 32960,
+      "source": "profilemanager/profileselect.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallenge/faqloadscreen.big",
+      "git_blob_sha1": "07500815bde5e60c6dc0e0aa25c40097ed5b3b92",
+      "role": "game_data",
+      "size": 228720,
+      "source": "rivalChallenge/faqloadscreen.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallenge/febeloadscreen.big",
+      "git_blob_sha1": "7788b2efa34834a2ac72398811c1e182695bcec0",
+      "role": "game_data",
+      "size": 176272,
+      "source": "rivalChallenge/febeloadscreen.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallenge/rivalchallengefe.big",
+      "git_blob_sha1": "fc805c0b01821cc7be779760637d31eb4aadbb18",
+      "role": "game_data",
+      "size": 82912,
+      "source": "rivalChallenge/rivalchallengefe.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallengeBE/awards.big",
+      "git_blob_sha1": "f1627a6868fc7fe557dcc68987151fe4de708919",
+      "role": "game_data",
+      "size": 60832,
+      "source": "rivalChallengeBE/awards.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallengeBE/challengedescription.big",
+      "git_blob_sha1": "3349a59213263cd42896dffdf94a90ac1d27a5e0",
+      "role": "game_data",
+      "size": 84928,
+      "source": "rivalChallengeBE/challengedescription.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallengeBE/challengeScorecard.big",
+      "git_blob_sha1": "a492b3a00e39a799d465f6fb7f7f3cdf886288d1",
+      "role": "game_data",
+      "size": 140464,
+      "source": "rivalChallengeBE/challengeScorecard.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallengeBE/challengeScorecard2.big",
+      "git_blob_sha1": "172c1d30f710382015b2a2459375b1f5f4f77834",
+      "role": "game_data",
+      "size": 117280,
+      "source": "rivalChallengeBE/challengeScorecard2.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallengeBE/finalResults.big",
+      "git_blob_sha1": "9296788a2db87d28d97af5b62447448a2c818dc5",
+      "role": "game_data",
+      "size": 87552,
+      "source": "rivalChallengeBE/finalResults.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/rivalChallengeBE/unlocked.big",
+      "git_blob_sha1": "309c3f3c3b5e920e93b28a078e7c5d605e17cb6a",
+      "role": "game_data",
+      "size": 1117,
+      "source": "rivalChallengeBE/unlocked.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/scripts/scripts.viv",
+      "git_blob_sha1": "9aa5a4aa775e007f6e5de8e6072d876a58bc8d04",
+      "role": "game_data",
+      "size": 153110,
+      "source": "scripts/scripts.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/scripts/scrptpal.viv",
+      "git_blob_sha1": "d7fbff718cd1fde7d9a2f31f823ef090db9a9b7c",
+      "role": "game_data",
+      "size": 539540,
+      "source": "scripts/scrptpal.viv"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/system/autosaveicon.big",
+      "git_blob_sha1": "0a0cdda9336d34ea85aaa2a5c4b8a11f3faef131",
+      "role": "game_data",
+      "size": 46656,
+      "source": "system/autosaveicon.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/system/psptrcpopup.big",
+      "git_blob_sha1": "a52d0a851dfd1e1cb6868369a4ed9eb9c60a3653",
+      "role": "game_data",
+      "size": 60992,
+      "source": "system/psptrcpopup.big"
+    },
+    {
+      "destination": "PSP_GAME/USRDIR/system/systemdebugscreen.big",
+      "git_blob_sha1": "24707fd86df4a332221e8c74a39fd8df889f3e38",
+      "role": "game_data",
+      "size": 2566,
+      "source": "system/systemdebugscreen.big"
+    }
+  ],
+  "revision_id": "ULUS10066-v1.00",
+  "schema_version": 1
+}

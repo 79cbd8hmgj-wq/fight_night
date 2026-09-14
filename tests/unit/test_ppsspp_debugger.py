@@ -247,3 +247,81 @@ def test_convenience_operations_decode_confirmed_response_shapes(
     resume_ticket = client.resume()
     assert resume_ticket == 7
     assert client.backtrace() == (0x08B44FC0, 0x08B488DC)
+
+
+def test_input_and_timed_execution_helpers_send_locked_requests(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, fake_socket = _client(
+        monkeypatch,
+        [
+            _server_text({"event": "version", "ticket": 1}),
+            _server_text({"event": "client.config.set", "ticket": 2}),
+            _server_text({"event": "game.status", "ticket": 3, "game": "running"}),
+            _server_text({"event": "input.buttons.press", "ticket": 4}),
+            _server_text({"event": "input.analog.send", "ticket": 5}),
+        ],
+    )
+
+    assert client.game_status()["game"] == "running"
+    client.press_button("cross", duration_frames=2)
+    client.set_analog(0.5, -0.25)
+    run_ticket = client.run_until_time(500_000)
+    assert run_ticket == 6
+
+    decoded = [json.loads(_decode_client_frame(frame)[1]) for frame in fake_socket.sent[1:]]
+    assert {"event": "game.status", "ticket": 3} in decoded
+    assert {
+        "event": "input.buttons.press",
+        "ticket": 4,
+        "button": "cross",
+        "duration": 2,
+    } in decoded
+    assert {
+        "event": "input.analog.send",
+        "ticket": 5,
+        "x": 0.5,
+        "y": -0.25,
+        "stick": "left",
+    } in decoded
+    assert {
+        "event": "cpu.runUntilTime",
+        "ticket": 6,
+        "relativeUs": 500_000,
+    } in decoded
+
+
+@pytest.mark.parametrize("button", ["", "fire", "cross "])
+def test_press_button_rejects_unsupported_names(
+    monkeypatch: pytest.MonkeyPatch,
+    button: str,
+) -> None:
+    client, _fake_socket = _client(
+        monkeypatch,
+        [
+            _server_text({"event": "version", "ticket": 1}),
+            _server_text({"event": "client.config.set", "ticket": 2}),
+        ],
+    )
+
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="button"):
+        client.press_button(button)
+
+
+def test_input_helpers_reject_invalid_ranges(monkeypatch: pytest.MonkeyPatch) -> None:
+    client, _fake_socket = _client(
+        monkeypatch,
+        [
+            _server_text({"event": "version", "ticket": 1}),
+            _server_text({"event": "client.config.set", "ticket": 2}),
+        ],
+    )
+
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="duration"):
+        client.press_button("cross", duration_frames=0)
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="analog"):
+        client.set_analog(1.01, 0.0)
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="analog"):
+        client.set_analog(0.0, -1.01)
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="relative"):
+        client.run_until_time(0)

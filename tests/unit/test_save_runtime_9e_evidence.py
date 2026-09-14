@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
+
+import pytest
 
 from fnr3_re.evidence import Address, AddressType
 from fnr3_re.ppsspp_bundle import DebuggerBundleIdentity
@@ -15,12 +18,16 @@ from fnr3_re.save_runtime_9e import (
     Task9EBreakpoint,
     Task9ELiveGlobal,
     Task9EPlan,
+    Task9EPlanError,
     Task9ERuntimeEvidence,
+    Task9ERuntimeSource,
     compare_task9e_controls,
 )
 
 _BOOT_SHA256 = "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+_RETAIL_ISO_SHA256 = "9" * 64
 _ISO_SHA256 = "a" * 64
+_MANIFEST_SHA256 = "8" * 64
 _STATE_SHA256 = "b" * 64
 _SOURCE_DATA_SHA256 = "c" * 64
 _MUTATED_DATA_SHA256 = "d" * 64
@@ -30,6 +37,16 @@ _MEMORY_B_SHA256 = "f" * 64
 
 def _runtime(value: int) -> Address:
     return Address(AddressType.RUNTIME, value)
+
+
+def _runtime_source() -> Task9ERuntimeSource:
+    return Task9ERuntimeSource.repository_image(
+        revision_id="ULUS10066-v1.00",
+        retail_iso_sha256=_RETAIL_ISO_SHA256,
+        runtime_iso_sha256=_ISO_SHA256,
+        payload_manifest_sha256=_MANIFEST_SHA256,
+        boot_sha256=_BOOT_SHA256,
+    )
 
 
 def _bundle(tmp_path: Path) -> DebuggerBundleIdentity:
@@ -164,6 +181,7 @@ def _capture(
             registers=(("pc", callback_target), ("a0", 1)),
             backtrace=(_runtime(callback_target), _runtime(0x1038)),
         ),
+        runtime_source=_runtime_source(),
     )
 
 
@@ -215,6 +233,15 @@ def test_comparison_serialization_is_deterministic_and_repository_safe(tmp_path:
     assert decoded["successful"]["valid"] is True
     assert decoded["corrupted"]["control_id"] == "corrupted_copy_control"
     assert decoded["corrupted"]["valid"] is True
+    assert decoded["successful"]["runtime_source"] == {
+        "boot_sha256": _BOOT_SHA256,
+        "payload_manifest_sha256": _MANIFEST_SHA256,
+        "retail_iso_sha256": _RETAIL_ISO_SHA256,
+        "revision_id": "ULUS10066-v1.00",
+        "runtime_iso_sha256": _ISO_SHA256,
+        "source_mode": "repository_runtime_image",
+    }
+    assert decoded["corrupted"]["runtime_source"] == decoded["successful"]["runtime_source"]
     assert decoded["successful"]["savedata_inventory"][0]["sha256"] == _SOURCE_DATA_SHA256
     assert decoded["corrupted"]["savedata_inventory"][0]["sha256"] == _MUTATED_DATA_SHA256
 
@@ -263,9 +290,36 @@ def test_comparison_serialization_is_deterministic_and_repository_safe(tmp_path:
         "assembly_body",
         "raw_memory",
         "raw_save",
+        "memstick",
     ):
         assert forbidden not in lowered
     assert str(tmp_path) not in encoded
+
+
+def test_runtime_source_mismatch_is_rejected_before_comparison(tmp_path: Path) -> None:
+    success = _capture(tmp_path, "successful_load")
+    corrupted = _capture(tmp_path, "corrupted_copy_control")
+    assert corrupted.runtime_source is not None
+    mismatched_source = Task9ERuntimeSource.repository_image(
+        revision_id="ULUS10066-v1.00",
+        retail_iso_sha256=_RETAIL_ISO_SHA256,
+        runtime_iso_sha256="7" * 64,
+        payload_manifest_sha256=_MANIFEST_SHA256,
+        boot_sha256=_BOOT_SHA256,
+    )
+    corrupted = replace(
+        corrupted,
+        iso_sha256="7" * 64,
+        runtime_source=mismatched_source,
+    )
+
+    with pytest.raises(Task9EPlanError, match="runtime provenance"):
+        compare_task9e_controls(
+            success,
+            corrupted,
+            plan=_plan(),
+            mutation=_mutation(),
+        )
 
 
 def test_first_divergence_precedence_prefers_callback_before_registers(tmp_path: Path) -> None:

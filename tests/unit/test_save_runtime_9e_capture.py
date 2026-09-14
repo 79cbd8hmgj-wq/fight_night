@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,7 @@ from fnr3_re.save_runtime_9e import (
     Task9ELiveGlobal,
     Task9EPlan,
     Task9EPlanError,
+    Task9ERuntimeSource,
     capture_task9e_control,
 )
 
@@ -262,11 +264,17 @@ def _inputs(tmp_path: Path) -> tuple[Task9ECaptureInputs, DebuggerBundleProfile]
     _write_workspace(workspace, revision)
     state = tmp_path / "capture.ppst"
     state.write_bytes(b"synthetic state")
-    slot = tmp_path / "savedata-slot"
-    slot.mkdir()
+    memstick_root = tmp_path / "memstick"
+    slot = memstick_root / "PSP" / "SAVEDATA" / "ULUS10066TEST"
+    slot.mkdir(parents=True)
     (slot / "DATA.BIN").write_bytes(b"savedata")
     bundle_root = tmp_path / "bundle"
     profile = _write_bundle(bundle_root)
+    runtime_source = Task9ERuntimeSource.retail_iso(
+        revision_id=revision.revision_id,
+        retail_iso_sha256=revision.iso_sha256,
+        boot_sha256=_BOOT_SHA256,
+    )
     return (
         Task9ECaptureInputs(
             workspace=workspace,
@@ -279,6 +287,8 @@ def _inputs(tmp_path: Path) -> tuple[Task9ECaptureInputs, DebuggerBundleProfile]
             revision=revision,
             control_id="successful_load",
             bundle_profile=profile,
+            runtime_source=runtime_source,
+            memstick_root=memstick_root,
             timeout_seconds=1.0,
         ),
         profile,
@@ -317,6 +327,7 @@ def test_capture_runs_locked_breakpoint_and_dynamic_callback_sequence(
     assert capture.control_id == "successful_load"
     assert capture.valid
     assert capture.iso_sha256 == inputs.revision.iso_sha256
+    assert capture.runtime_source == inputs.runtime_source
     assert capture.state_sha256 == _sha256(b"synthetic state")
     assert [item.breakpoint_id for item in capture.observations] == [
         "load_commit_entry",
@@ -333,6 +344,8 @@ def test_capture_runs_locked_breakpoint_and_dynamic_callback_sequence(
         [
             str(capture.bundle.launcher_path),
             str(inputs.iso),
+            "--memstick",
+            str(inputs.memstick_root),
             "--state",
             str(inputs.state),
             "--port",
@@ -355,6 +368,34 @@ def test_capture_runs_locked_breakpoint_and_dynamic_callback_sequence(
     assert (0x2100, inputs.payload_contract.envelope_header_size) in debugger.memory_reads
 
 
+def test_repository_runtime_source_uses_actual_runtime_iso_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inputs, _profile = _inputs(tmp_path)
+    runtime_payload = b"repository runtime image"
+    inputs.iso.write_bytes(runtime_payload)
+    runtime_source = Task9ERuntimeSource.repository_image(
+        revision_id=inputs.revision.revision_id,
+        retail_iso_sha256=inputs.revision.iso_sha256,
+        runtime_iso_sha256=_sha256(runtime_payload),
+        payload_manifest_sha256="2" * 64,
+        boot_sha256=_BOOT_SHA256,
+    )
+    inputs = replace(inputs, runtime_source=runtime_source)
+    _process, launches = _install_fake_process(monkeypatch)
+    debugger = ScriptedDebugger([0x1000, 0x1010, 0x1020, 0x1030, 0x3000, 0x1040])
+
+    capture = capture_task9e_control(
+        inputs,
+        client_factory=lambda *args, **kwargs: debugger,
+    )
+
+    assert launches
+    assert capture.iso_sha256 == _sha256(runtime_payload)
+    assert capture.runtime_source == runtime_source
+
+
 def test_iso_hash_mismatch_aborts_before_launcher(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -364,6 +405,22 @@ def test_iso_hash_mismatch_aborts_before_launcher(
     _process, launches = _install_fake_process(monkeypatch)
 
     with pytest.raises(Task9EPlanError, match="ISO"):
+        capture_task9e_control(inputs, client_factory=lambda *args, **kwargs: ScriptedDebugger([]))
+
+    assert launches == []
+
+
+def test_memstick_slot_mismatch_aborts_before_launcher(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    inputs, _profile = _inputs(tmp_path)
+    unrelated = tmp_path / "unrelated-memstick"
+    unrelated.mkdir()
+    inputs = replace(inputs, memstick_root=unrelated)
+    _process, launches = _install_fake_process(monkeypatch)
+
+    with pytest.raises(Task9EPlanError, match="savedata slot"):
         capture_task9e_control(inputs, client_factory=lambda *args, **kwargs: ScriptedDebugger([]))
 
     assert launches == []
