@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source": {
+    "build": "FNR3_PSP_Debug",
+    "game_id_observed_by_ppsspp": "ULES00270",
+    "module_name": "FightNight",
+    "boot_path": "disc0:/PSP_GAME/SYSDIR/BOOT.BIN",
+    "log_sha256": "cbcbbae25ce016776906d9012e2b20df5c405177e33d3ac8cc3a30eaefe42f61"
+  },
+  "loader_observations": {
+    "elf_kind": "relocatable_module",
+    "text": {
+      "address": "0x08804000",
+      "size": "0x004F64A4"
+    },
+    "rodata": {
+      "address": "0x08CFB4C0",
+      "size": "0x00036870"
+    },
+    "data": {
+      "address": "0x08D31D40",
+      "size": "0x0005C760"
+    },
+    "bss": {
+      "address": "0x08D963C0",
+      "size": "0x000355A4"
+    },
+    "text_relocations": 152464,
+    "module_entry": "0x08B51F24"
+  },
+  "debug_related_imports": [
+    {
+      "name": "sceKernelGetGPI",
+      "stub_address": "0x08CFA8DC",
+      "module": "UtilsForUser",
+      "significance": "Confirms that the prototype executable links the PSP GPI API used by PPSSPP's emulated GPI switches."
+    },
+    {
+      "name": "sceKernelPrintf",
+      "stub_address": "0x08CFA9F4",
+      "module": "SysMemUserForUser",
+      "significance": "Confirms that kernel printf support is imported by the executable."
+    }
+  ],
+  "negative_runtime_observations": [
+    "The captured log showed import registration for sceKernelGetGPI but no observed runtime sceKernelGetGPI invocation.",
+    "The captured log showed import registration for sceKernelPrintf but no game-generated printf output attributable to Fight Night.",
+    "Toggling individual PPSSPP GPI switches and restarting did not visibly alter the tested menus/gameplay during this session."
+  ],
+  "emulator_noise_observed": [
+    "Repeated UNKNOWN_SEMID sceKernelWaitSema/sceKernelSignalSema messages involving semaphore id 289 were visible in PPSSPP's log view.",
+    "Render-loop lifecycle messages such as 'Render loop already exited' and 'runVulkanRenderLoop: Already running' were also observed and should not be treated as Fight Night semantic evidence without further proof."
+  ],
+  "recommended_use": [
+    "Use the debug prototype as a secondary comparison binary rather than the primary overhaul target.",
+    "If GPI behavior is revisited, trace callers/xrefs to the sceKernelGetGPI import stub instead of brute-forcing all switch combinations.",
+    "Compare prototype-only branches, strings, assertions, and structures against retail only where they can clarify retail semantics."
+  ],
+  "evidence_boundary": {
+    "confirmed": [
+      "The prototype BOOT.BIN is a relocatable FightNight module loaded by PPSSPP.",
+      "The executable imports sceKernelGetGPI and sceKernelPrintf at the recorded runtime stub addresses."
+    ],
+    "not_confirmed": [
+      "Any specific GPI switch mask or combination.",
+      "Any hidden debug menu or overlay activated by GPI in the tested path.",
+      "Any direct function-name or source-symbol recovery from the prototype."
+    ]
+  }
+}
