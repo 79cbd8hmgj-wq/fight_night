@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00",
+  "purpose": "Section L evidence discipline for Overhaul Alpha 1 (Core Boxer + Fight Systems). Every entry records: original owner, source function/data, reconstructed behavior, confidence, replacement/hook boundary, patch location, expected original bytes, new behavior, and affected Programs/features. Confidence is never upgraded because the overhaul rule-engine code built on top of a finding happens to work -- see each entry's own confidence field, unchanged from what the disassembly alone supports.",
+  "source_module": {
+    "path": "BOOT.BIN",
+    "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
+  },
+  "entries": [
+    {
+      "id": "alpha1-01",
+      "title": "Fight/match-context global singleton (accessor + constructor + partial field layout)",
+      "original_owner": "BOOT.BIN, program-05 (Fight)",
+      "source_function_or_data": "func_001B3EA8 (accessor), func_001AF768 (constructor)",
+      "reconstructed_behavior": "func_001B3EA8 is a lazily-initialized singleton accessor: tests a flag word at ELF virtual 0x000081F0, and on first call sets the flag and calls func_001AF768(0x000081F8) to construct the singleton object, then always returns 0x000081F8. func_001AF768 -- previously misread by an earlier pass as a 'UI/menu-construction routine' -- is this singleton's lazy constructor, confirmed this pass by 3 independent call sites (T_001F2E00 fight-totals, T_001F7248 judging scorecard, and the prior pass's T_001D9A08 options-bitfield decoder) all reaching it through func_001B3EA8, none of which are the boxer-select screen.",
+      "confidence": "PROBABLE",
+      "replacement_hook_boundary": "None established this pass. func_001B3EA8's return address (a fixed pointer, not the flag test itself) is the most plausible future hook point for reading fight-session state, but was not proven safe to patch.",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "None implemented as a binary patch. fnr3_re.overhaul.fight_session.PROVEN_LAYOUT documents these addresses/offsets as a reference for future patch work.",
+      "affected_programs_features": ["program-05", "combat", "career-2"]
+    },
+    {
+      "id": "alpha1-02",
+      "title": "Fight-session singleton: two consecutive per-corner boxer-object pointer fields",
+      "original_owner": "BOOT.BIN, program-05 (Fight) / program-04 (Boxers)",
+      "source_function_or_data": "singleton + 0x19B0, singleton + 0x19B4; read by T_001F2E00 and T_001F7248",
+      "reconstructed_behavior": "Both T_001F2E00 (fight totals) and T_001F7248 (judging scorecard) read singleton+0x19B0 and singleton+0x19B4 as two consecutive word fields, each immediately passed to func_186284 (a 'resolve boxer display info from pointer' callback observed identically at both sites). Interpreted as the left/right (or boxer-A/boxer-B) corner's boxer-object pointer.",
+      "confidence": "PROBABLE",
+      "replacement_hook_boundary": "None established. Reading these fields would require either runtime access (out of scope for this pass) or locating the write site (inside func_001AF768's still-undisassembled 9-subsystem-init chain).",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "None. Documented as fnr3_re.overhaul.fight_session.OFFSET_BOXER_PTR_LEFT/RIGHT.",
+      "affected_programs_features": ["program-05", "program-04", "combat"]
+    },
+    {
+      "id": "alpha1-03",
+      "title": "func_00186464's linked-list index: table-instance registry, not a boxer-record index (previously STATICALLY_AMBIGUOUS, resolved this pass)",
+      "original_owner": "BOOT.BIN, program-04 (Boxers)",
+      "source_function_or_data": "func_0018654C (caller/user of func_00186464), func_00186464",
+      "reconstructed_behavior": "func_0018654C walks func_186464(0), func_186464(1), ... (the proven 8-bit-masked index) until it returns null, and for each non-null node calls an INDIRECT FUNCTION POINTER read from a per-node vtable-like sub-table (node+0x30+0x18, shape {i16 @ +0, funcptr @ +4} -- the same vtable shape already proven for the generic per-table resource loader), accumulating a total. After the loop, it appends its own caller-supplied object onto the end of the list by writing the found node's +0x10 'next' field: `node->0x10 = new_object; new_object->0xC = node`. This is a table-instance REGISTRY append/measure pattern (heterogeneous nodes, each queried via its own function pointer), not a homogeneous boxer-record array -- boxer records are proven (separately, program-04-02) to be indexed via xdbboxr.adf's own header word0 through func_001AD268, an entirely different mechanism. This directly resolves the previously-open question of what func_00186464's list represents.",
+      "confidence": "PROBABLE",
+      "replacement_hook_boundary": "None needed for Alpha 1 -- this finding rules out a boxer-record interpretation, it does not itself require a patch.",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "None (a corrected understanding, not new behavior). Recorded to update analysis/reports/static-re-ceiling.json's program-04-04 entry.",
+      "affected_programs_features": ["program-04", "roster"]
+    },
+    {
+      "id": "alpha1-04",
+      "title": "Generic fight-statistics accessor with 3 proven stat IDs",
+      "original_owner": "BOOT.BIN, program-06 (Punches) / program-08 (Damage)",
+      "source_function_or_data": "func_0BA748, called from T_001F2E00 (the real GetFightTotalsInfo implementation)",
+      "reconstructed_behavior": "T_001F2E00 (proven real by its 716-instruction size, vs. ~11-30 instruction registration trampolines seen everywhere else) reads per-boxer fight statistics through func_0BA748(context, boxer_slot, subcontext, stat_id) -> int, called identically for both corners by varying boxer_slot. Three stat_id values are proven by direct disassembly of the call-site argument immediates: 0 = punches thrown, 1 = punches hit, 0xE (14) = knockdowns. Two further IDs (0x10, 0x11) are called in the same loop body but not connected to any displayed UI field -- recorded as unresolved, not guessed.",
+      "confidence": "PROBABLE for the 3 named stat IDs and call shape (direct disassembly); func_0BA748's own body was not disassembled, so its full generality is CANDIDATE.",
+      "replacement_hook_boundary": "None established. func_0BA748 is the most promising future hook point for reading (and eventually writing) live fight statistics once its own body is disassembled.",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "None. Documented as fnr3_re.overhaul.fight_stats.STAT_PUNCHES_THROWN/STAT_PUNCHES_HIT/STAT_KNOCKDOWNS.",
+      "affected_programs_features": ["program-06", "program-08", "combat"]
+    },
+    {
+      "id": "alpha1-05",
+      "title": "Punch-accuracy percentage formula, fully reconstructed",
+      "original_owner": "BOOT.BIN, program-06 (Punches)",
+      "source_function_or_data": "T_001F2E00, address range ~0x1F2FB8-0x1F3040",
+      "reconstructed_behavior": "trunc((hit / thrown) * 100) as IEEE-754 single-precision float math (div.s then mul.s by a loaded 100.0 constant, then trunc.w.s -- truncation, not rounding), guarded by a beqz on the thrown-count that produces a hard 0.0 sentinel instead of dividing by zero (proven: the branch target loads integer 0 into the same float register via mtc1/cvt.s.w, never executing the division).",
+      "confidence": "CONFIRMED (full instruction-level trace of the formula and its sentinel branch).",
+      "replacement_hook_boundary": "The 100.0 IEEE-754 constant (0x42C80000) at the lui/mtc1 pair is a theoretically patchable literal, but this pass did not identify any gameplay reason to change a display-only accuracy percentage, so no patch was authored.",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "fnr3_re.overhaul.fight_stats.punch_accuracy_percent() reproduces this formula exactly, including the truncation and zero-sentinel behavior, with unit tests covering both.",
+      "affected_programs_features": ["program-06", "combat"]
+    },
+    {
+      "id": "alpha1-06",
+      "title": "Judging call-site treats all 3 judges identically (previously STATICALLY_AMBIGUOUS, partially resolved this pass)",
+      "original_owner": "BOOT.BIN, program-11 (Judging)",
+      "source_function_or_data": "T_001F7248, the real GetJudgesScoreInfo implementation (proven real by its 216-instruction size)",
+      "reconstructed_behavior": "T_001F7248 fetches three judge-object handles via func_01ED5C(context, judge_index) for judge_index in {0, 1, 2} (independently proving TOTAL_JUDGES == 3, matching judgesscores.big's own UI constant of the same name), then applies an IDENTICAL call shape to each of the three handles (same func_08A02C/func_08A00C calls, same argument pattern, no per-judge multiplier, offset, or branch observed). This proves there is no differential weighting IN THIS CALLING CODE. It does not prove the absence of a per-judge bias baked into each judge object's own internal state, since func_08A02C's own body was not disassembled this pass -- that sub-question remains explicitly open, not silently assumed resolved.",
+      "confidence": "CONFIRMED for 'no differential weighting at the call site'; the deeper 'do per-judge-object internal biases exist' question remains CANDIDATE/open.",
+      "replacement_hook_boundary": "None established for Alpha 1 -- this finding informs the overhaul's own new judging formula's default (apply identical scoring across judges), it does not itself patch anything.",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "fnr3_re.overhaul.judging implements a new (not retail-reconstructed) 10-point-must scoring formula, applied identically per judge by default, with an explicit optional per-judge bias parameter left at 0.0 pending the still-open func_08A02C sub-question.",
+      "affected_programs_features": ["program-11", "combat", "career-2", "amateur"]
+    },
+    {
+      "id": "alpha1-07",
+      "title": "Shared native-function registration registry (deeper trace of func_0CDAC0/func_0CDA70)",
+      "original_owner": "BOOT.BIN, program-03 (Modules) / program-28 (UI)",
+      "source_function_or_data": "func_0CDAC0 -> func_0CFE08, func_0CDA70 -> func_0CF9C4; both read a shared global registry pointer at ELF virtual 0x005436D8",
+      "reconstructed_behavior": "Both previously-known registration trampolines (func_0CDAC0, func_0CDA70) reduce to two distinct 122-instruction registration entry points (func_0CFE08, func_0CF9C4) that share one global registry object pointer, loaded from a fixed address (0x005436D8). This confirms a single, shared 'native symbol registry' rather than two unrelated mechanisms, and narrows -- but does not yet close -- the remaining gap: the call-by-name DISPATCH side (the APT bytecode interpreter's 'invoke native function by name' opcode handler) was not located this pass. This is why GetSelectBoxerInfo's real implementation (needed for program-04's roster-count and boxer-ID-mapping questions) remains unreached.",
+      "confidence": "PROBABLE for the shared-registry structure; the dispatch/lookup side remains CANDIDATE/unresolved.",
+      "replacement_hook_boundary": "None established -- this is exactly the blocker Section B asked to resolve 'far enough to reach the actual native implementations'; it was resolved one level further (registration is now fully understood) but not all the way to dispatch.",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "None yet. This is the single most valuable remaining static-RE target for a future pass -- see docs/overhaul/alpha1/README.md's blockers list.",
+      "affected_programs_features": ["program-03", "program-04", "program-28", "roster"]
+    },
+    {
+      "id": "alpha1-08",
+      "title": "Boxer 9-stat rating schema tied to a single confirmed owning function pair; T_001D54A0/T_001E83E0 corrected to UI-only (not the in-fight stamina formula)",
+      "original_owner": "BOOT.BIN, program-04 (Boxers) / program-07 (Stamina)",
+      "source_function_or_data": "T_001D54A0, T_001E83E0 (both proven UI native-function registration trampolines, not readers)",
+      "reconstructed_behavior": "All 9 proven boxer rating-stat field name strings (iPower, iSpeed, iAgility, iStamina, iChin, iBody, iHeart, iCuts, iOverall -- selectboxer.big!selectBoxer.const, NUM_STATS-bounded) exist as BOOT.BIN strings, each appearing twice, both instances owned by the same function pair. This pass's disassembly of func_001D537C/func_001D5438 (the GetSelectBoxerInfo registration functions, immediately adjacent to T_001D54A0 in the address space) confirms the shared 'register native function under this name for this screen class' pattern (see alpha1-07) -- T_001D54A0/T_001E83E0 are this same pattern applied to the 9 stat names, i.e. UI property registration, not a reader of xdbboxr.adf's payload bytes. This corrects the prior pass's more cautious framing into an explicit finding: the in-fight stamina cost/regeneration formula is NOT in these two functions and must be sought elsewhere.",
+      "confidence": "PROBABLE",
+      "replacement_hook_boundary": "None for the original per-record storage (still unresolved, see alpha1-09). A neutral replacement boundary (an ID-keyed override table) is implemented instead -- see fnr3_re.overhaul.boxer_model.",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "fnr3_re.overhaul.boxer_model.BoxerRatings (9 fields, proven order) plus fnr3_re.overhaul.boxer_model.BoxerRatingOverrideTable (the replacement boundary).",
+      "affected_programs_features": ["program-04", "program-07", "roster", "generated-boxers"]
+    },
+    {
+      "id": "alpha1-09",
+      "title": "xdbboxr.adf per-record boxer stat byte layout: attempted this pass, remains genuinely unresolved",
+      "original_owner": "BOOT.BIN + preload/db.viv!xdbboxr.adf",
+      "source_function_or_data": "xdbboxr.adf decoded payload, offset ~0x37 onward (past the proven +0x18 flags array)",
+      "reconstructed_behavior": "A direct structural read of the decoded payload past the flags array shows a run of plausible-looking 16-bit little-endian values, but NO consumer function was located this pass that reads these bytes and correlates them with the 9 proven stat names. Per this project's discipline, plausible-looking bytes are not asserted to be a boxer stat record without a code-level proof.",
+      "confidence": "CANDIDATE (weak) for 'some structured per-record data exists here'; NONE for any specific byte-to-field mapping.",
+      "replacement_hook_boundary": "Deliberately not established. See alpha1-08's override table for how this Alpha ships boxer-rating modding without touching these bytes.",
+      "patch_location": null,
+      "expected_original_bytes": null,
+      "new_behavior": "None -- blocked. Listed explicitly in docs/overhaul/alpha1/README.md and analysis/resources/static-re-backlog.json.",
+      "affected_programs_features": ["program-04", "roster", "generated-boxers"]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "max_loser_points": 9,
+  "per_judge_bias": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "points_deducted_per_knockdown": 1,
+  "winner_points": 10
+}
