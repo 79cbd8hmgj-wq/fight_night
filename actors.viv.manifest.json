@@ -1,0 +1,28 @@
+{
+  "original_file": "actors.viv",
+  "original_size": 68821920,
+  "original_sha256": "04dabd8aca4113cd1489097a9deaf8deb9ae30468246487e5745df6a00f92803",
+  "chunk_size_bytes": 20971520,
+  "parts": [
+    {
+      "file": "actors.viv.part01",
+      "size": 20971520,
+      "sha256": "ae3895e6699f178c0383b2fe2ec3f896aa408f4640d6469f4008184f288efc1b"
+    },
+    {
+      "file": "actors.viv.part02",
+      "size": 20971520,
+      "sha256": "44f46097b1e26854a79fb9922ff3e94d7949d874a60d2ba8428f6f762ff1527c"
+    },
+    {
+      "file": "actors.viv.part03",
+      "size": 20971520,
+      "sha256": "54a61f322c5d1896a9375f666f18e8be8baba995e023d167a1d8af53feacd0f8"
+    },
+    {
+      "file": "actors.viv.part04",
+      "size": 5907360,
+      "sha256": "51b6fc855b997a08b73379e3ea18161a7a5f69808ef9901262855cd5be6a062f"
+    }
+  ]
+}
