@@ -61,7 +61,7 @@
         "T_0018E4F4 (0x0018E4F4)",
         "func_001AF768 (0x001AF768)"
       ],
-      "role": "construct larger objects (a UI/menu-adjacent object for func_001AF768, given writes up to +0x7084 and 9 chained subsystem-init calls afterward) that embed a sub-object populated via the singleton accessor plus func_001AD268"
+      "role": "T_0018E4F4 constructs a smaller XDB-derived object; func_001AF768 is the proven fight-session singleton constructor and embeds two XDB schema/classification sub-objects before the rest of session initialization."
     }
   ],
   "header_word0_proof": {
@@ -152,13 +152,13 @@
         "function": "func_001AF768",
         "address": "0x001AF768",
         "size": "0x260",
-        "proven_behavior": "Constructs a much larger object (writes observed up to offset +0x7084 of $a0), with two internal sub-objects at +0x19F4 and +0x1A08. For EACH sub-object, it calls the boxer singleton accessor and then func_001AD268(dest=sub-object, singleton, stride) with two DIFFERENT stride/category values -- 5 for the +0x19F4 sub-object, 0x28 (40) for the +0x1A08 sub-object -- storing each call's 16-bit follow-up result (via func_0018654C) at +0x198C and +0x198E respectively. Immediately after, it calls 9 further functions (func_00186954, func_001B9B58, func_001850C0, func_001A1D1C, func_001A90D8, func_001B8F08, func_001AC34C, func_001B6338, and one more not fully captured in this pass) each with a zero argument, then passes $a0 itself into the last one.",
-        "confidence": "CANDIDATE",
-        "significance": "Two independent calls into the boxer table with different output strides, followed by a cascade of 9 unrelated-looking subsystem initializations, is the strongest evidence found connecting boxer data ownership to a larger screen/menu-construction routine -- exactly the kind of 'selection-screen consumer' Task 11's static portion was asked to find.",
-        "unresolved": "Which screen this constructs (roster-select, career boxer list, exhibition setup, or something else) was not determined; the 9 chained subsystem-init calls were not disassembled; the meaning of stride values 5 and 0x28 was not resolved."
+        "proven_behavior": "Proven fight-session singleton constructor. It initializes internal XDB-derived sub-objects at +0x19F4 and +0x1A08, calls the boxer singleton accessor and func_001AD268 for each using caller-selected output strides 5 and 0x28, stores 16-bit follow-up results at +0x198C/+0x198E, and then initializes the remaining fight-session subsystems.",
+        "confidence": "PROBABLE",
+        "significance": "This embeds boxer/XDB-derived classification state directly in the fight-session object, alongside the now-mapped session mode, venue and per-corner boxer selection fields.",
+        "unresolved": "Exact semantic role of the two classification outputs at +0x198C/+0x198E and the remaining constructor substructure."
       }
     ],
-    "notes": "These 6 functions (including the loader trampoline func_001863B4 itself) are exactly the complete set of direct callers of func_00186408 found by a whole-binary text search across all 24,576 disassembled functions in BOOT.BIN. All 6 have now been disassembled and interpreted in this pass (5 in the prior pass plus T_0018E4F4/func_001AF768 newly this pass -- 6 total across both passes, with func_00186464/func_001863E4/func_00185114 carried over unchanged from PR #31's first commit). No other function in BOOT.BIN references the boxer table singleton accessor by name; a caller could in principle still reach the singleton indirectly, or the singleton's raw address (0x80B4) could be hardcoded elsewhere without going through the accessor -- a direct-address search found zero such references, but that does not rule out access via a relocated pointer computed at runtime."
+    "notes": "These 6 functions (including the loader trampoline func_001863B4 itself) are exactly the complete set of direct callers of func_00186408 found by a whole-binary text search across all 24,576 disassembled functions in BOOT.BIN. All 6 have now been disassembled and interpreted in this pass (5 in the prior pass plus T_0018E4F4/func_001AF768 newly this pass -- 6 total across both passes, with func_00186464/func_001863E4/func_00185114 carried over from the earlier pass). No other function in BOOT.BIN references the boxer table singleton accessor by name; a caller could in principle still reach the singleton indirectly, or the singleton's raw address (0x80B4) could be hardcoded elsewhere without going through the accessor -- a direct-address search found zero such references, but that does not rule out access via a relocated pointer computed at runtime."
   },
   "fixed_counts_and_limits": [
     {
