@@ -36,7 +36,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Resolved: name/resource fields 0x00-0x03, availability 0x04, field 0x05 runtime behavior as a boxer-specific speech/audio event identity selector (exact authored label still open), hometown 0x06, nickname 0x07, weight 0x09, career timing 0x0D, packed 0x0E extraction, rating-mode behavior 0x0F, ratings 0x10-0x18, stance 0x19, style 0x1A, skin tone 0x34, eyebrow/eye/facial-hair/hair-colour fields 0x35-0x39, and hair-style resource token 0x71. Next: physical/biographical 0x08/0x0A-0x0C, exact 0x0E trait labels, remaining handedness/equipment, career/store and created-boxer semantics, plus the exact authored label/event-family name for 0x05.",
+      "remaining_static_work": "Resolved: name/resource fields 0x00-0x03, availability 0x04, field 0x05 as the source selector for normalized boxer codes carried by the named Replay event, hometown 0x06, nickname 0x07, weight 0x09, career timing 0x0D, packed 0x0E extraction, rating-mode 0x0F, ratings 0x10-0x18, stance 0x19, style 0x1A, skin tone/head-appearance 0x34-0x39 and hair-style resource token 0x71. Next: physical/biographical 0x08/0x0A-0x0C, exact 0x0E trait labels, remaining handedness/equipment, career/store and created-boxer semantics. Field 0x05 must not be treated as a commentary/audio ID without new evidence.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -75,14 +75,16 @@
           "func_0010BB58",
           "func_0010C9C8",
           "func_003E5860",
-          "func_003E4A94"
+          "func_003E4A94",
+          "func_00185B30"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
         ],
         "evidence": [
           "analysis/resources/xdbboxr-schema.json",
-          "analysis/resources/xdb-schema-evidence.json"
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       }
     },
@@ -478,7 +480,7 @@
       "subsystem": "UI/commentary",
       "status": "STATICALLY_AMBIGUOUS",
       "question": "Is commentary lookup/ID data (audio triggers tied to fight events) statically evidenced?",
-      "remaining_static_work": "Disassemble T_001D9A08/T_001DC5DC/T_001FB69C fully (partial disassembly this pass only reached the bitfield-decode prologue) and separately locate and disassemble the function referencing 'Decision Announcement Script' before concluding whether commentary AUDIO selection (not just the on/off toggle) is statically reconstructable.",
+      "remaining_static_work": "`Decision Announcement Script` has now been traced to func_000B065C and is a fight-presentation script-name entry, not a commentary-ID table. xdbboxr field 0x05 has likewise been traced into the named Replay event and is not proven audio/commentary data. Trace actual AuSpeechManager/PocketDJ/audio-bank consumers and use the iDisplayCommentaryOption functions only to establish how the toggle gates those audio paths.",
       "affected_features": [
         "career-2",
         "roster"
@@ -486,12 +488,19 @@
       "sources": {
         "strings": [
           "Decision Announcement Script@0x4fa4e8",
-          "iDisplayCommentaryOption@0x50b330"
+          "iDisplayCommentaryOption@0x50b330",
+          "PocketDJFightNight.cpp@0x51b0bc"
         ],
         "functions": [
+          "func_000B065C",
           "T_001D9A08",
           "T_001DC5DC",
-          "T_001FB69C"
+          "T_001FB69C",
+          "func_0010BB58",
+          "func_003E5860"
+        ],
+        "evidence": [
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       }
     },
@@ -516,11 +525,24 @@
       "subsystem": "Audio",
       "status": "STATICALLY_SOLVABLE",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
-      "remaining_static_work": "Trace the DRONE_ tag consumer functions and the Decision Announcement Script reference toward their audio-triggering call sites.",
+      "remaining_static_work": "Generic named fight-event dispatch is now proven through the Replay path, but the audio/commentary ABI is not. Trace AuSpeechManager/PocketDJ/audio-bank consumers to determine which event/boxer identifiers they consume and how they attach to the generic event layer. Do not use the Decision Announcement presentation-script name or Replay boxer codes as substitutes for that evidence.",
       "affected_features": [
         "roster"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "func_0010BB58",
+          "func_003E5860",
+          "func_003E4A94",
+          "func_000B065C",
+          "func_00295738",
+          "func_00295DD4",
+          "func_00295EA0"
+        ],
+        "evidence": [
+          "analysis/resources/fight-event-dispatch-evidence.json"
+        ]
+      }
     },
     {
       "id": "interface-renderer-01",
