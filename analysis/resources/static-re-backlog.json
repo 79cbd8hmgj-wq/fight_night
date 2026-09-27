@@ -454,23 +454,26 @@
       "subsystem": "AI",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the AI decision-update loop and action-selection logic?",
-      "remaining_static_work": "The debug build now provides a bounded per-fighter action-state architecture. Trace selection/transitions into DRONE_ATTACKING/COUNTER/DEFENDING/FEINTING and correlate those decision callers with func_00093C5C/func_00091D24 attack-power consumers to identify the AI decision-update loop.",
+      "remaining_static_work": "Debug ULES00270 corrects the old attack-power lead: 0x00093C5C constructs the 0xD4-byte AI modifier object stored at high-level boxer +0x2BC, and 0x00091D24 is its destructor/free path. The real modifier consumers are the small access/scaling helpers 0x00091E04 and 0x00091E58. Trace their combat-region callers (especially 0x00079D50, 0x0007D284, 0x0007ECE0, 0x0007F034/0x0007F1B4, and 0x00082620) and correlate index arguments with the six named ai/mods categories to recover the decision/update logic.",
       "affected_features": [
         "combat"
       ],
       "sources": {
         "functions": [
-          "0x00034458",
-          "0x00034C08",
-          "0x0005B58C",
-          "0x0005CD54",
-          "0x0005F41C",
-          "0x0005C878",
-          "func_00093C5C",
-          "func_00091D24"
+          "0x00093C5C",
+          "0x00091D24",
+          "0x00091E04",
+          "0x00091E58",
+          "0x00079D50",
+          "0x0007D284",
+          "0x0007ECE0",
+          "0x0007F034",
+          "0x0007F1B4",
+          "0x00082620"
         ],
         "evidence": [
-          "analysis/resources/debug-fight-state-machine.json"
+          "analysis/resources/debug-fight-state-machine.json",
+          "docs/decomp/packages/fight-state-machine/README.md"
         ]
       }
     },
