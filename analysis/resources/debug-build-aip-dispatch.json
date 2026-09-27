@@ -169,5 +169,65 @@
     "Static disassembly of the user-provided ULES00270 debug/review BOOT.BIN.",
     "Cross-checked against the existing ULUS10066-v1.00 retail address/evidence map in this repository.",
     "No copyrighted executable bytes are stored in this artifact."
-  ]
+  ],
+  "fight_session_quick_fight_chain": {
+    "confidence": "PROBABLE",
+    "entry_handler": "0x001CF1A0 (DEBUG_OnAdvance)",
+    "parsed_fields": [
+      "iBox0",
+      "iBox1",
+      "iBox2"
+    ],
+    "sequence": [
+      "func_001B3EA8() -> fight-session singleton",
+      "func_001B00B4(session, 0, iBox0) -> set corner-0 boxer numeric ID/index",
+      "func_001B00B4(session, 1, iBox1) -> set corner-1 boxer numeric ID/index",
+      "func_001B00A0(session, iBox2) -> set venue ID/index",
+      "func_001B01BC(session, 0, 0, 1) -> additional per-corner/control assignment; exact semantics not yet proven",
+      "func_001AFFDC(session, 1) -> set fight/session mode",
+      "func_000D7FB0(); func_000D8028() -> subsequent front-end/fight transition path"
+    ],
+    "setters": {
+      "func_001B00B4": {
+        "signature": "(session, corner, boxer_id)",
+        "valid_corner_range": "0..1",
+        "writes": [
+          "+0x19B0 + corner*4",
+          "+0x19B8 + corner*4"
+        ],
+        "semantics": "numeric boxer selection ID/index; NOT a boxer-object pointer",
+        "corroboration": "func_00186284 consumes the stored value as an index while resolving boxer-table entries"
+      },
+      "func_001B00A0": {
+        "signature": "(session, venue_id)",
+        "validation": "signed venue_id < 12",
+        "writes": [
+          "+0x19AC"
+        ],
+        "semantics": "venue selection ID/index"
+      },
+      "func_001AFFDC": {
+        "signature": "(session, mode)",
+        "validation": "signed mode < 9; otherwise stores -1",
+        "writes": [
+          "+0x19A8"
+        ],
+        "semantics": "fight/session mode enum",
+        "observed_modes": {
+          "1": "developer debug quick-fight path",
+          "4": "career-adjacent call site (strong context, exact enum label not yet promoted)",
+          "6": "multiplayer/network call sites",
+          "7": "alternate shared-network setup path; exact distinction from mode 6 unresolved",
+          "8": "sparring-adjacent call site (strong context, exact enum label not yet promoted)"
+        }
+      }
+    },
+    "additional_fields": {
+      "+0x19B8/+0x19BC": "mirrored per-corner boxer IDs; distinction from +0x19B0/+0x19B4 unresolved",
+      "+0x19C0/+0x19C4": "written by func_001B01BC; likely per-corner assignment/control state, exact semantics unresolved",
+      "+0x19C8/+0x19CC": "nibble-packed per-corner values written by func_001B0180; exact semantics unresolved",
+      "+0x19E0": "participates in func_001B01BC assignment tracking; exact semantics unresolved"
+    },
+    "correction": "Existing project evidence that described +0x19B0/+0x19B4 as boxer-object pointers is superseded by the setter+resolver chain above."
+  }
 }
