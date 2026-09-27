@@ -1524,11 +1524,11 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The generic fight-event layer is now relocation-resolved rather than inferred: func_003E4A94 binds an 8-byte event handle to a {name-pointer,32-bit-hash} descriptor and func_003E5860 dispatches caller payloads through that handle. A contiguous named registry is recovered, including NISAdvice, OnplayAdvice, TCC, StartOfRound, BoxerDamage, LackOfAction, PunchCombos, PunchLanded, Replay, BoxerFatigue, Knockdown and others. AuSpeechManager is also statically split into three request categories/banks: category 0 -> comdat/comevt/comhdr, 1 -> ancdat/ancevt/anchdr, 2 -> trndat/trnevt/trnhdr. Important correction: 0x0013DDC4 contains TCC-labelled condition diagnostics but dispatches NISAdvice through relocated handle 0x005AB858; the actual TCC event uses handle 0x005AB868 and is emitted separately at 0x0013BBE0 from the main speech-manager update path. PocketDJ lifecycle/source attribution remains independently recovered. Together this establishes a concrete speech-bank + named-event architecture, but the final ABI mapping specific boxer/event identifiers into com*/anc*/trn event records is not yet fully decoded.",
+      "evidence": "The speech playback ABI is now bounded across the AEMS producer and AuSpeechManager consumer. AuSpeechManager registers callback 0x00137888 through 0x00498260; generic decoder 0x0049A5C0 builds a 0x20-byte request and invokes it. Request +0x00 is the speech event ID, +0x04 is a relative byte offset, +0x08 is byte length/span, +0x10 selects 0=com / 1=anc / 2=trn, with additional subtype/source fields at +0x0C/+0x0E/+0x14/+0x18/+0x1C. 0x0049B480 is a scaled byte-range decoder, not a sample-index mapper. Speech-bank records are 16 bytes: +0x00 interned event token, +0x04 base byte offset of the canonicalized per-event .dat entry, +0x08 parsed event-key pointer, +0x0C a name-derived 1/2 flag. Final playback computes record.base_offset + request.relative_offset and passes the selected comdat.big/ancdat.big/trndat.big path plus final byte offset down through 0x00483AAC -> 0x004837A4 -> 0x004C242C/0x004C254C. Named generic fight-event registration/dispatch and NISAdvice/TCC are independently resolved. This closes the low-level bank/range side; the remaining interface question is the higher-level mapping from gameplay/named-event payloads and boxer context into AEMS event IDs/variants.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Decode the com*/anc*/trn event/header record structures and trace the request-router fields (+0x00/+0x04/+0x0C/+0x10) into actual event-record selection. For NISAdvice/TCC, finish the payload-field semantics and identify which downstream speech-bank lookup consumes those named events. The architecture is now bounded enough that this should be targeted static work rather than a whole-binary search.",
+      "remaining_static_work": "Trace the producer chain that converts fight-state/named-event payloads (NISAdvice, TCC, BoxerDamage, Knockdown, etc.) into AEMS event IDs and request variant fields. Prioritize call/dataflow edges into the AEMS decoder/interner and any AuSpeechManager methods that enqueue or transform named-event payloads. The bank format and final file-offset playback path are no longer the blocker.",
       "sources": {
         "functions": [
           "func_0010BB58",
@@ -1553,7 +1553,16 @@
           "0x0013AC78",
           "0x0013CCA4",
           "0x0013DDC4",
-          "0x0013B410"
+          "0x0013B410",
+          "0x00498260",
+          "0x0049A5C0",
+          "0x0049B480",
+          "0x00137888",
+          "0x001379B0",
+          "0x00483AAC",
+          "0x004837A4",
+          "0x004C242C",
+          "0x004C254C"
         ],
         "strings": [
           "PocketDJFightNight.cpp@0x51b0bc",
@@ -1592,7 +1601,7 @@
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "confidence": "CONFIRMED for speech-bank categories, named-event registration/dispatch, NISAdvice/TCC identity split, and PocketDJ suspend/resume lifecycle; the final commentary/audio selection ABI remains STATICALLY_SOLVABLE.",
+      "confidence": "CONFIRMED for AEMS request ABI, three speech-bank routing, event-record lookup, byte-range decoding, final bank-byte addressing, named-event registration/dispatch, NISAdvice/TCC identity split, and PocketDJ lifecycle; higher-level gameplay/boxer-context -> AEMS event-ID selection remains STATICALLY_SOLVABLE.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
