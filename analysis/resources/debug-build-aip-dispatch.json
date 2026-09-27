@@ -84,7 +84,86 @@
       "debugMenu.apt",
       "debugMenu.const"
     ],
-    "implication": "The debug-menu APT can retrieve menu data through DEBUG_GetDebugMenuData and invoke action callbacks through DEBUG_OnAdvance / DEBUG_OnRealFE. The exact APT bytecode call sites remain to be decoded."
+    "implication": "The debug-menu APT can retrieve menu data through DEBUG_GetDebugMenuData and invoke action callbacks through DEBUG_OnAdvance / DEBUG_OnRealFE. The exact APT bytecode call sites remain to be decoded.",
+    "handler_descriptors": {
+      "initialization_range": "0x001CF2D8-0x001CF39C",
+      "global_slots": {
+        "0x0055F3CC": {
+          "name": "GetStartScreenFromMain",
+          "descriptor": "0x00581D54",
+          "implementation": "0x001CED00"
+        },
+        "0x0055F3C0": {
+          "name": "DEBUG_GetDebugMenuData",
+          "descriptor": "0x00581D64",
+          "implementation": "0x001CED2C"
+        },
+        "0x0055F3C4": {
+          "name": "DEBUG_OnAdvance",
+          "descriptor": "0x00581D74",
+          "implementation": "0x001CF1A0"
+        },
+        "0x0055F3C8": {
+          "name": "DEBUG_OnRealFE",
+          "descriptor": "0x00581D84",
+          "implementation": "0x001CF2A0"
+        }
+      },
+      "note": "The static initializer stores descriptor addresses into the globals consumed by the registration glue; each descriptor's +0x0C function pointer identifies the concrete handler implementation."
+    },
+    "data_producer": {
+      "function": "0x001CED2C",
+      "confidence": "PROBABLE",
+      "outputs": {
+        "iNumElements": 3,
+        "aBoxNames": [
+          "TL_Select_Boxer",
+          "TL_Select_Boxer",
+          "TL_Select_Venue"
+        ],
+        "selectable_arrays": [
+          "aBoxStrings0 / aBoxIDs0",
+          "aBoxStrings1 / aBoxIDs1",
+          "aBoxStrings2 / aBoxIDs2"
+        ],
+        "aDefaultIDs": [
+          25,
+          17,
+          9
+        ]
+      },
+      "behavior": [
+        "Enumerates boxer candidates for the first two selectors and builds paired display-string / numeric-ID arrays.",
+        "Enumerates venue candidates for the third selector using Venue_%d-style keys.",
+        "Publishes three default numeric IDs."
+      ]
+    },
+    "on_advance": {
+      "function": "0x001CF1A0",
+      "confidence": "PROBABLE",
+      "parsed_fields": [
+        "iBox0",
+        "iBox1",
+        "iBox2"
+      ],
+      "behavior": [
+        "Reads the three selected IDs from the AIP request.",
+        "Obtains the fight-session singleton through func_001B3EA8.",
+        "Applies the first two values through the two-corner boxer-selection path.",
+        "Applies the third value through a separate fight-session selection path consistent with the venue selector.",
+        "Runs the subsequent fight/front-end transition sequence."
+      ]
+    },
+    "on_real_fe": {
+      "function": "0x001CF2A0",
+      "confidence": "PROBABLE",
+      "arguments": {
+        "command": "ChangeScreen",
+        "target": "_root",
+        "screen": "MAINMENU"
+      },
+      "behavior": "Routes back to the normal front end/main menu."
+    }
   },
   "provenance": [
     "Static disassembly of the user-provided ULES00270 debug/review BOOT.BIN.",
