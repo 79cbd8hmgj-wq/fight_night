@@ -510,5 +510,27 @@
       "Thus the speech .evt files themselves define named gameplay-event subscriptions that enter AEMS and eventually reach the speech callback pipeline."
     ],
     "implication": "The generic gameplay-event -> speech path is statically continuous from event subscription through AEMS. The remaining missing semantics are individual .evt event names/payload schemas and the downstream transformation into the already-known AuSpeechManager request fields."
+  },
+  "aems_active_state_to_speech_callback": {
+    "confidence": "CONFIRMED",
+    "auspeech_callback_registration": {
+      "site": "0x0013ADD0-0x0013ADDC",
+      "callback": "0x00137888",
+      "registrar": "0x00498260"
+    },
+    "auspeech_category_service_sites": [
+      "0x0013BCFC -> 0x00497EE8(category 0)",
+      "0x0013BD04 -> 0x00497EE8(category 1)",
+      "0x0013BD0C -> 0x00497EE8(category 2)"
+    ],
+    "processing_chain": [
+      "0x00497EE8 processes/selects ready state for one AEMS category.",
+      "Ready state reaches 0x00499E64.",
+      "0x00499E64 prepares the current mapping key/state and calls 0x0049A5C0.",
+      "0x0049A5C0 decodes per-entry byte ranges with 0x0049B480, builds the 0x20-byte AEMS request, and indirect-calls the callback stored by 0x00498260.",
+      "At 0x0049A7FC the callback pointer is loaded from raw global 0x0004CE20; AuSpeechManager initialization stored 0x00137888 there.",
+      "0x00137888 routes the resulting request into the com/anc/trn AuSpeechManager bank path."
+    ],
+    "implication": "The named gameplay-event -> generic event bus -> AEMS packet -> active AEMS state -> AuSpeechManager request chain is now continuous in static code. Exact spoken-line enumeration now depends mainly on the external .evt/.hdr/.big content rather than an unidentified executable bridge."
   }
 }
