@@ -3,7 +3,7 @@
   "revision": "ULUS10066-v1.00",
   "purpose": "Every STATICALLY_SOLVABLE and STATICALLY_AMBIGUOUS evidence question from analysis/reports/static-re-ceiling.json, each carrying a concrete named static avenue. Regenerated after Overhaul Alpha 1's targeted static RE (PR: Overhaul Alpha 1 -- Core Boxer + Fight Systems), which resolved program-04-04 (func_00186464's linked list) and partially advanced program-11-03 (judge weighting) as a direct byproduct of the minimum focused RE that milestone's own implementation work required -- not a renewed broad assessment pass. This file supersedes the narrower Task 10/11 analysis/resources/static-discovery-backlog.json for corpus-wide planning purposes; static-discovery-backlog.json is preserved unmodified. Per task policy, none of these may be moved to runtime-minimum-backlog.json until every named avenue below is exhausted.",
   "related_backlog": "analysis/resources/static-discovery-backlog.json (Task 10/11-scoped predecessor, still valid)",
-  "entry_count": 29,
+  "entry_count": 28,
   "entries": [
     {
       "id": "program-01-02",
@@ -435,19 +435,6 @@
       "affected_features": [
         "career-2",
         "amateur"
-      ],
-      "sources": {}
-    },
-    {
-      "id": "program-28-02",
-      "program_id": "program-28",
-      "subsystem": "UI/commentary",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "Are the division-name UI strings (INFO_Division_N) served through the same localization indirection, or hardcoded per-screen?",
-      "remaining_static_work": "Disassemble T_000CE8A0 and the 5 division-string referencing functions to determine whether they share a call path.",
-      "affected_features": [
-        "divisions",
-        "roster"
       ],
       "sources": {}
     },
