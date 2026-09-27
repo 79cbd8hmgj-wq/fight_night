@@ -310,22 +310,22 @@ The recovered registry includes:
 | `0x005AB8A8` | `0x0055AB20` | MissedPunch | `0x09A46F4F` |
 | `0x005AB8B0` | `0x0055AB28` | PunchCombos | `0x0E526F4F` |
 | `0x005AB8B8` | `0x0055AB30` | PunchLanded | `0x324F6F4F` |
-| `0x005AB8C0` | `0x0055AB38` | Replay | `0x28D86F4F` |
-| `0x005AB8C8` | `0x0055AB40` | UpdateStatus | `0x1FD36F4F` |
-| `0x005AB8D0` | `0x0055AB48` | BoxerFatigue | `0x49406F4F` |
-| `0x005AB8D8` | `0x0055AB50` | TauntingResult | `0x59AB6F4F` |
-| `0x005AB8E0` | `0x0055AB58` | FeintingResult | `0x70046F4F` |
-| `0x005AB8E8` | `0x0055AB60` | ClinchingResult | `0x13716F4F` |
-| `0x005AB8F0` | `0x0055AB68` | Trapped | `0x32496F4F` |
-| `0x005AB8F8` | `0x0055AB70` | BoxerRoundHistory | `0x1ED36F4F` |
-| `0x005AB900` | `0x0055AB78` | CareerMode | `0x185A6F4F` |
-| `0x005AB908` | `0x0055AB80` | Knockdown | `0x69746F4F` |
-| `0x005AB910` | `0x0055AB88` | IllegalBlows | `0x738A6F4F` |
-| `0x005AB918` | `0x0055AB90` | RAFightIntroFlyIn | `0x2F7621D9` |
-| `0x005AB920` | `0x0055AB98` | RAFightIntroSegment4 | `0x1EA821D9` |
-| `0x005AB928` | `0x0055ABA0` | RAFightIntroSegment5 | `0x05EA21D9` |
-| `0x005AB930` | `0x0055ABA8` | RAFightResultSegment1 | `0x1B8521D9` |
-| `0x005AB938` | `0x0055ABB0` | RAFightResultSegment2 | `0x324C21D9` |
+| `0x005AB848` | `0x0055AB38` | Replay | `0x28D86F4F` |
+| `0x005AB8C0` | `0x0055AB40` | UpdateStatus | `0x1FD36F4F` |
+| `0x005AB8C8` | `0x0055AB48` | BoxerFatigue | `0x49406F4F` |
+| `0x005AB8D0` | `0x0055AB50` | TauntingResult | `0x59AB6F4F` |
+| `0x005AB8D8` | `0x0055AB58` | FeintingResult | `0x70046F4F` |
+| `0x005AB8E0` | `0x0055AB60` | ClinchingResult | `0x13716F4F` |
+| `0x005AB8E8` | `0x0055AB68` | Trapped | `0x32496F4F` |
+| `0x005AB8F0` | `0x0055AB70` | BoxerRoundHistory | `0x1ED36F4F` |
+| `0x005AB8F8` | `0x0055AB78` | CareerMode | `0x185A6F4F` |
+| `0x005AB900` | `0x0055AB80` | Knockdown | `0x69746F4F` |
+| `0x005AB908` | `0x0055AB88` | IllegalBlows | `0x738A6F4F` |
+| `0x005AB910` | `0x0055AB90` | RAFightIntroFlyIn | `0x2F7621D9` |
+| `0x005AB918` | `0x0055AB98` | RAFightIntroSegment4 | `0x1EA821D9` |
+| `0x005AB920` | `0x0055ABA0` | RAFightIntroSegment5 | `0x05EA21D9` |
+| `0x005AB928` | `0x0055ABA8` | RAFightResultSegment1 | `0x1B8521D9` |
+| `0x005AB930` | `0x0055ABB0` | RAFightResultSegment2 | `0x324C21D9` |
 
 ### NISAdvice vs TCC correction
 
@@ -426,3 +426,15 @@ The lower file/audio layer copies the pathname into its resource object and
 stores the offset at object `+0x118`; the alternate path adjusts the same
 offset while walking segmented file extents. This independently confirms the
 byte-offset interpretation.
+
+
+### Replay-handle ordering correction
+
+The event initializer at `0x001106CC` is authoritative. It deliberately
+registers `Replay` at raw handle `0x20FA0` / runtime `0x005AB848`,
+*before* `RefCountDown` at raw `0x20FA8`. The normal increasing sequence
+continues through `PunchLanded` at `0x21010`, then resumes with
+`UpdateStatus` at `0x21018`.
+
+Therefore event handles must be taken from the initializer's actual
+handle/descriptor pairs, not computed by descriptor-table index alone.
