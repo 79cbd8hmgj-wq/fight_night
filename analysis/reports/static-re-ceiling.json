@@ -1596,8 +1596,8 @@
   ],
   "counts_overall": {
     "STATICALLY_RESOLVED": 32,
-    "STATICALLY_SOLVABLE": 28,
-    "STATICALLY_AMBIGUOUS": 3,
+    "STATICALLY_SOLVABLE": 29,
+    "STATICALLY_AMBIGUOUS": 2,
     "RUNTIME_ESSENTIAL": 0
   },
   "counts_by_program": {
@@ -1687,8 +1687,8 @@
     },
     "program-28": {
       "STATICALLY_RESOLVED": 2,
-      "STATICALLY_SOLVABLE": 1,
-      "STATICALLY_AMBIGUOUS": 1,
+      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "program-29": {
@@ -1713,8 +1713,8 @@
   "counts_by_feature": {
     "career-2": {
       "STATICALLY_RESOLVED": 15,
-      "STATICALLY_SOLVABLE": 8,
-      "STATICALLY_AMBIGUOUS": 2,
+      "STATICALLY_SOLVABLE": 9,
+      "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "amateur": {
@@ -1725,8 +1725,8 @@
     },
     "roster": {
       "STATICALLY_RESOLVED": 14,
-      "STATICALLY_SOLVABLE": 7,
-      "STATICALLY_AMBIGUOUS": 2,
+      "STATICALLY_SOLVABLE": 8,
+      "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "divisions": {
@@ -1762,13 +1762,13 @@
   },
   "static_ceiling": {
     "definition": "Count-based projection = STATICALLY_RESOLVED + STATICALLY_SOLVABLE, i.e. every question with either evidence already in hand or a concrete named static avenue remaining. STATICALLY_AMBIGUOUS questions are excluded from the ceiling because they are not proven closeable by static work alone yet (their alternatives may or may not collapse to one answer statically).",
-    "statically_resolved": 29,
-    "statically_solvable": 30,
-    "ceiling_count": 59,
+    "statically_resolved": 32,
+    "statically_solvable": 29,
+    "ceiling_count": 61,
     "total_bounded_questions": 63,
-    "ceiling_fraction_of_total": 0.9365,
+    "ceiling_fraction_of_total": 0.9683,
     "excluded_pending_further_static_work": {
-      "STATICALLY_AMBIGUOUS": 4,
+      "STATICALLY_AMBIGUOUS": 2,
       "RUNTIME_ESSENTIAL": 0
     }
   },
