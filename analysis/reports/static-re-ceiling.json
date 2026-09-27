@@ -1525,17 +1525,21 @@
       "program_id": "program-29",
       "subsystem": "Budgets",
       "question": "Is there identifiable free/padding space in BOOT.BIN or its BSS that could host new code/data without growing the module?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "Section boundaries are exactly known (this pass); whether any inter-section gaps or over-aligned padding regions are large enough to be useful was not analyzed.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "Exact ELF section/segment gap analysis proves there is no substantial inter-section code/data cave. File-backed mapped zero padding exists only at 0x004F748C-0x004F74BF (52 bytes, between .rodata.sceNid and .rodata), 0x0052DD30-0x0052DD3F (16 bytes, between .rodata and .data), and 0x0058A8A4-0x0058A8A7 (4 bytes between LOAD segments). A separate 36-byte zero-fill range 0x0059239C-0x005923BF precedes .bss inside RW LOAD[1] but is not file-backed. Direct aligned-address scanning found no gameplay/code references into the two usable file-backed padding ranges. The 52-byte executable-segment gap could host only a tiny trampoline/stub; meaningful overhaul code/data requires a different injection/rebuild strategy.",
       "affected_features": [
         "combat",
         "career-2",
         "roster",
         "divisions"
       ],
-      "remaining_static_work": "Compute inter-section gaps from the now-exact section offset/size table and cross-reference against alignment requirements.",
-      "sources": {},
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "sources": {
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
+        ]
+      },
+      "confidence": "CONFIRMED",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-29-04"
@@ -1680,8 +1684,8 @@
     }
   ],
   "counts_overall": {
-    "STATICALLY_RESOLVED": 33,
-    "STATICALLY_SOLVABLE": 28,
+    "STATICALLY_RESOLVED": 34,
+    "STATICALLY_SOLVABLE": 27,
     "STATICALLY_AMBIGUOUS": 2,
     "RUNTIME_ESSENTIAL": 0
   },
@@ -1777,8 +1781,8 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "program-29": {
-      "STATICALLY_RESOLVED": 3,
-      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_RESOLVED": 4,
+      "STATICALLY_SOLVABLE": 0,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
@@ -1797,8 +1801,8 @@
   },
   "counts_by_feature": {
     "career-2": {
-      "STATICALLY_RESOLVED": 15,
-      "STATICALLY_SOLVABLE": 9,
+      "STATICALLY_RESOLVED": 16,
+      "STATICALLY_SOLVABLE": 8,
       "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
@@ -1809,14 +1813,14 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "roster": {
-      "STATICALLY_RESOLVED": 14,
-      "STATICALLY_SOLVABLE": 8,
+      "STATICALLY_RESOLVED": 15,
+      "STATICALLY_SOLVABLE": 7,
       "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "divisions": {
-      "STATICALLY_RESOLVED": 12,
-      "STATICALLY_SOLVABLE": 4,
+      "STATICALLY_RESOLVED": 13,
+      "STATICALLY_SOLVABLE": 3,
       "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
@@ -1839,16 +1843,16 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "combat": {
-      "STATICALLY_RESOLVED": 11,
-      "STATICALLY_SOLVABLE": 16,
+      "STATICALLY_RESOLVED": 12,
+      "STATICALLY_SOLVABLE": 15,
       "STATICALLY_AMBIGUOUS": 2,
       "RUNTIME_ESSENTIAL": 0
     }
   },
   "static_ceiling": {
     "definition": "Count-based projection = STATICALLY_RESOLVED + STATICALLY_SOLVABLE, i.e. every question with either evidence already in hand or a concrete named static avenue remaining. STATICALLY_AMBIGUOUS questions are excluded from the ceiling because they are not proven closeable by static work alone yet (their alternatives may or may not collapse to one answer statically).",
-    "statically_resolved": 33,
-    "statically_solvable": 28,
+    "statically_resolved": 34,
+    "statically_solvable": 27,
     "ceiling_count": 61,
     "total_bounded_questions": 63,
     "ceiling_fraction_of_total": 0.9683,
