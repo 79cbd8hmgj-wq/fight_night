@@ -1331,5 +1331,135 @@
       "evidence": "Formats/logs the current speech object's +0x10 ID before forwarding the generated text through the adjacent display/UI object path.",
       "confidence": "CONFIRMED diagnostic anchor; exact subtitle UI method names unresolved"
     }
+  },
+  "speech_bank_architecture": {
+    "confidence": "CONFIRMED for bank/category routing; filename semantic expansions use the literal prefixes",
+    "manager_region": {
+      "singleton_or_factory": "0x00137B34",
+      "constructor": "0x0013AA94",
+      "init_stream": "0x00137BA0",
+      "initialization_or_bank_setup": "0x0013AC78",
+      "request_dispatch_wrapper": "0x00137888",
+      "request_router": "0x0013CCA4",
+      "tcc_selection_routine": "0x0013DDC4"
+    },
+    "stream_init": {
+      "function": "0x00137BA0",
+      "evidence": "Direct xref to literal 'AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !' at 0x00506AC8.",
+      "behavior": "Allocates/stores the speech stream buffer; failure path emits the named AuSpeechManager diagnostic."
+    },
+    "bank_setup": {
+      "function": "0x0013AC78",
+      "evidence": [
+        "Calls 0x00137BA0 before configuring the speech-bank structures.",
+        "Builds and passes three distinct filename triples through helper 0x0013A6D0.",
+        "The three helpers are stored in separate manager substructures at +0x188, +0x19C, and +0x1B0."
+      ],
+      "banks": [
+        {
+          "category_id": 2,
+          "structure_offset": "+0x1B0",
+          "data": "trndat.big",
+          "events": "trnevt.evt",
+          "header": "trnhdr.big",
+          "semantic_label": "training speech",
+          "confidence": "PROBABLE semantic expansion of literal trn prefix; routing itself CONFIRMED"
+        },
+        {
+          "category_id": 1,
+          "structure_offset": "+0x188",
+          "data": "ancdat.big",
+          "events": "ancevt.evt",
+          "header": "anchdr.big",
+          "semantic_label": "announcer speech",
+          "confidence": "PROBABLE semantic expansion of literal anc prefix; routing itself CONFIRMED"
+        },
+        {
+          "category_id": 0,
+          "structure_offset": "+0x19C",
+          "data": "comdat.big",
+          "events": "comevt.evt",
+          "header": "comhdr.big",
+          "semantic_label": "commentary speech",
+          "confidence": "PROBABLE semantic expansion of literal com prefix; routing itself CONFIRMED"
+        }
+      ],
+      "shared_loader": {
+        "function": "0x0013A6D0",
+        "confidence": "PROBABLE",
+        "behavior": "Initializes one speech-bank substructure from the event/header filenames plus a composed data-file path and category parameter."
+      }
+    },
+    "request_routing": {
+      "wrapper": "0x00137888",
+      "router": "0x0013CCA4",
+      "category_field": "request +0x10",
+      "category_mapping": {
+        "0": {
+          "bank": "com*",
+          "data_path_xref": "0x0013D0DC -> comdat.big",
+          "structure": "manager +0x19C"
+        },
+        "1": {
+          "bank": "anc*",
+          "data_path_xref": "0x0013CEA4 -> ancdat.big",
+          "structure": "manager +0x188"
+        },
+        "2": {
+          "bank": "trn*",
+          "data_path_xref": "0x0013D4C0 -> trndat.big",
+          "structure": "manager +0x1B0"
+        }
+      },
+      "invalid_categories": "Values >= 3 fall out without selecting one of the three speech banks.",
+      "additional_request_fields": {
+        "+0x00": "used as an event/index-like value inside the selected bank; exact semantic name not yet promoted",
+        "+0x04": "used as an additive offset/index after bank lookup; exact semantic name not yet promoted",
+        "+0x0C": "16-bit subtype/flag compared against special constants in routing paths",
+        "+0x10": "CONFIRMED speech category selector 0/1/2"
+      }
+    },
+    "tcc_selection": {
+      "function": "0x0013DDC4",
+      "proposed_name": "AuSpeechManager_EvaluateTCC",
+      "confidence": "PROBABLE name; CONFIRMED role as TCC condition/event selection",
+      "evidence": [
+        "Called from the AuSpeechManager update path at 0x0013BCBC.",
+        "Reads boxer/fight state and rating-like values through existing boxer/session accessors.",
+        "Contains direct debug-label xrefs for multiple TCC decision branches.",
+        "Builds a compact event payload and eventually submits it through the generic event dispatch layer."
+      ],
+      "debug_labels": [
+        {
+          "address": "0x00506BD0",
+          "text": "TCC = MULTI KD",
+          "xref": "0x0013E730"
+        },
+        {
+          "address": "0x00506BE0",
+          "text": "TCC = POOR PERFORMANCE",
+          "xref": "0x0013E7FC"
+        },
+        {
+          "address": "0x00506BF8",
+          "text": "TCC = WASTED ENERGY",
+          "xrefs": [
+            "0x0013E8C4",
+            "0x0013E9F4"
+          ]
+        },
+        {
+          "address": "0x00506C0C",
+          "text": "TCC = BOXER DAMAGE",
+          "xref": "0x0013EB08"
+        },
+        {
+          "address": "0x00506C20",
+          "text": "TCC = BOXER RATING/STYLE",
+          "xref": "0x0013F130"
+        }
+      ],
+      "implication": "The debug build exposes concrete commentary-condition families rather than only a generic on/off toggle. These labels provide direct static anchors for how gameplay state is converted into speech/commentary event selection."
+    }
   }
 }
