@@ -36,7 +36,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Identity fields 0-4, the exact row layout, rating fields 0x10-0x18, weight/division field 0x09 plus its classifier, and bonus rows 35-36 are resolved. Trace concrete readers for stance/handedness, appearance/equipment, hometown, career/store, rivals/training, and remaining created-boxer semantics.",
+      "remaining_static_work": "Identity fields 0-3, stock-roster availability field 0x04, weight field 0x09/division thresholds, rating fields 0x10-0x18, and bonus rows 35-36 are resolved. Trace concrete readers for stance/handedness, appearance/equipment, hometown/nationality, career/store state and remaining created-boxer semantics. Locate any separate bonus-row unlock path for Fabolous/Little Mac.",
       "affected_features": [
         "career-2",
         "amateur",
