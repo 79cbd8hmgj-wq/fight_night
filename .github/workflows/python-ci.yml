@@ -52,6 +52,8 @@ jobs:
           PY
       - name: Dump boxer RE cluster
         run: python tools/re_dump_boxer_cluster.py
+      - name: Trace stock roster flags
+        run: python tools/re_trace_roster_flags.py
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
