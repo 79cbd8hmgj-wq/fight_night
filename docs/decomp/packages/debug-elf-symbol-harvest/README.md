@@ -507,3 +507,60 @@ diagnostics:
 
 It loads/obtains the underlying bank, registers it with the lower AEMS module
 bank API, and stores the resulting module handle at `+0x04`.
+
+
+## Context-dependent AEMS banks
+
+The post-core loader at `0x00132F90` is now bounded as a probable
+`AuAemsManager_LoadVenueBanks`. It reads the numeric venue selection from the
+fight-session object at `+0x19AC` and chooses literal AEMS banks by venue ID.
+
+Only numeric IDs are assigned here; no human-readable venue names are inferred.
+
+| Venue ID(s) | Bank(s) |
+| --- | --- |
+| 0, 1 | `trng.abk` |
+| 2 | `cvsmall.abk`, `cflust.abk` |
+| 3 | `csmall.abk`, `cfairst.abk` |
+| 4 | `csmall.abk`, `cvicest.abk` |
+| 5 | `cmed.abk`, `cminist.abk` |
+| 6 | `cmed.abk`, `celest.abk` |
+| 7 | `cmed.abk`, `csakost.abk` |
+| 8, 9 | `clarge.abk`, `clst.abk` |
+| 10, 11 | `clarge.abk`, `clst.abk`; an additional `rplysfx.abk`-related flow is present but is not yet semantically promoted |
+
+The first bank in the two-bank cases is stored through manager wrapper
+`+0xA0`; the second through `+0xAC`.
+
+### Boxer-specific chant banks
+
+`0x00133884` is a probable `AuAemsManager_LoadBoxerChants`.
+
+It loads `chants.viv`, resolves each active boxer's normalized code through
+the existing `func_0010C9C8` path, applies the chant-ID normalizer
+`0x001278C0`, and selects:
+
+```text
+ID < 500   -> chant_PSP_Lic%03d.abk
+ID >= 500  -> chant_PSP_CaB%03d.abk
+missing    -> Chant_PSP_Gen%03d.abk
+              with fallback ID 100..107
+```
+
+This is an important cross-system result: the value derived from
+`xdbboxr` field `0x05`, already seen in Replay boxer payloads, also drives
+boxer-specific chant-bank selection. Field `0x05` can therefore be described
+as part of the boxer's **audio/presentation identity**. It is still **not**
+claimed to be a raw commentary-line ID.
+
+### Weight-class-scaled G banks
+
+`0x00133B9C` reads the selected boxer's existing six-class weight enum and
+loads one of three literal banks:
+
+- Heavyweight -> `Glarge.abk`
+- Light Heavyweight / Middleweight -> `Gmed.abk`
+- Welterweight / Lightweight / Featherweight -> `Gsmall.abk`
+
+The `Gsmall/Gmed/Glarge` filenames and routing are directly proven. The
+meaning of the letter `G` is deliberately left unresolved.
