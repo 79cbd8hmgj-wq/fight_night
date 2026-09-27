@@ -36,7 +36,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Identity fields 0-3, stock-roster availability field 0x04, weight field 0x09/division thresholds, rating fields 0x10-0x18, and bonus rows 35-36 are resolved. Trace concrete readers for stance/handedness, appearance/equipment, hometown/nationality, career/store state and remaining created-boxer semantics. Locate any separate bonus-row unlock path for Fabolous/Little Mac.",
+      "remaining_static_work": "Resolved: names (fields 1-3), base/default availability (field 4), hometown reference (field 6), nickname/alias reference (field 7), weight/division (field 9), ratings (0x10-0x18), XDB row layout, and bonus physical rows 35-36. Corrected: field 0 is not the cumulative boxer selector; func_00186284 uses record position across registered tables. Next trace field 0's secondary/resource-ID consumer, field 5's 76-entry index/dispatch space, physical/biographical fields, packed 0x0D/0x0E, stance/handedness, appearance/equipment, career/store and remaining created-boxer semantics.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -57,7 +57,13 @@
           "func_0018600C",
           "func_00278768",
           "func_002787A0",
-          "T_00278ABC"
+          "T_00278ABC",
+          "func_00186284",
+          "func_001B0FE8",
+          "T_00185FA0",
+          "T_001860A0",
+          "func_00185F34",
+          "T_00186108"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
@@ -96,7 +102,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
-      "remaining_static_work": "The two base rows outside stock IDs 0-34 are now identified as boxer ID 74 Fabolous and boxer ID 75 Little Mac; field 0 proves global boxer IDs need not equal physical row indices. Trace created/custom-boxer storage and any independent allocation/serialization consumer that could impose a fixed cap across the cumulative table-instance ID space.",
+      "remaining_static_work": "121 is field_count, 37 is the dynamic base record_count, and func_00186284 resolves boxer selectors by cumulative record position across registered tables. Rows 35/36 are Fabolous/Little Mac and are addressed by selector indices 35/36 despite field-0 values 74/75. Trace custom/generated boxer storage plus any independent allocation/save/UI consumer that could impose a total cumulative-selector cap; treat field 0 as a separate unresolved identity/resource key.",
       "affected_features": [
         "roster",
         "generated-boxers"
