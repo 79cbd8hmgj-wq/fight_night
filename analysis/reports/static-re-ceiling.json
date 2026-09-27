@@ -370,7 +370,7 @@
       "subsystem": "Boxers",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
       "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "xdbboxr.adf's header word0=121 is proven to be consumed as a count by real code, but whether 121 is a hard compiled maximum (vs. simply 'however many rows this specific database currently has') was not established -- no bounds-check or fixed-size array declaration referencing 121 as a compile-time constant was located. This delta pass inspected selectboxer.big!selectBoxer.const (397 named constants) specifically for a UI-authored boxer-count cap: none was found -- no MAX_BOXER/MAX_ROSTER-style constant exists in this file (a full MAX_/NUM_ scan across all 10 newly-added .const pools found only MAX_WEIGHTCLASS/NUM_STATS in selectboxer.big and generic display-pagination constants MAX_VISIBLE_ROWS/MAX_NUM_GROUPS/MAX_NUM_COLUMNS elsewhere, none of which bound the boxer roster itself). This is a genuine negative result, not just an absence of a positive one: it rules out one of the four originally-listed interpretations ('a UI-authored maximum') as unsupported by this file, though it cannot rule out an executable-side or save-format-side cap. selectBoxer.const does confirm the UI receives an explicit 'iListLength'/'iEndList' pair alongside 'objBoxerIDs' and a distinct 'bHasCustom' flag, consistent with the boxer list being handed to the UI as a native-supplied, already-counted array rather than a UI-enumerated fixed-size table.",
+      "evidence": "xdbboxr.adf's header word0=121 is proven to be consumed as a count by real code, but whether 121 is a hard compiled maximum (vs. simply 'however many rows this specific database currently has') was not established -- no bounds-check or fixed-size array declaration referencing 121 as a compile-time constant was located. This delta pass inspected selectboxer.big!selectBoxer.const (397 named constants) specifically for a UI-authored boxer-count cap: none was found -- no MAX_BOXER/MAX_ROSTER-style constant exists in this file (a full MAX_/NUM_ scan across all 10 newly-added .const pools found only MAX_WEIGHTCLASS/NUM_STATS in selectboxer.big and generic display-pagination constants MAX_VISIBLE_ROWS/MAX_NUM_GROUPS/MAX_NUM_COLUMNS elsewhere, none of which bound the boxer roster itself). This is a genuine negative result, not just an absence of a positive one: it rules out one of the four originally-listed interpretations ('a UI-authored maximum') as unsupported by this file, though it cannot rule out an executable-side or save-format-side cap. selectBoxer.const does confirm the UI receives an explicit 'iListLength'/'iEndList' pair alongside 'objBoxerIDs' and a distinct 'bHasCustom' flag, consistent with the boxer list being handed to the UI as a native-supplied, already-counted array rather than a UI-enumerated fixed-size table. Follow-up analysis reaches GetSelectBoxerInfo at 0x001D77C8. It does not compare against 121; it builds six boxer-ID lists from per-division start/end globals. The initial six ranges cover IDs 0-34. This rules out a 121 cap in this handler itself but not elsewhere.",
       "affected_features": [
         "roster",
         "generated-boxers"
@@ -378,9 +378,15 @@
       "sources": {
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
+        ],
+        "functions": [
+          "0x001D77C8"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Search for a literal immediate 121 (0x79) used as an array-size bound or allocation size elsewhere in BOOT.BIN, independent of the header value itself. Also: reach GetSelectBoxerInfo's real implementation (see the func_00186464 entry above for the same registration-mechanism blocker) to observe what count value it actually computes and hands to iListLength.",
+      "remaining_static_work": "Trace the remaining literal-121 executable sites and determine whether any are connected to xdbboxr.adf allocation/indexing or save serialization. Inspect created/custom-boxer storage separately.",
       "confidence": "CANDIDATE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -1015,18 +1021,28 @@
       "program_id": "program-13",
       "subsystem": "Weights",
       "question": "Is the division count (6) a fixed compile-time constant with identifiable consumers that would need updating for new divisions (e.g. Bantamweight, Cruiserweight)?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "6 divisions plus an 'Unknown' fallback is strong, repeated evidence of a fixed enum; whether the number 6 (or 7 counting Unknown) appears as a literal array-size/loop-bound immediate in the 5 referencing functions was not checked. NEW this delta pass: selectboxer.big!selectBoxer.const independently corroborates the count of 6 from a completely different resource (a UI screen, not BOOT.BIN's own INFO_Division_N localization keys) -- it names exactly 6 selectable weight-class toggle values, in order, as literal string constants: $O_Featherweight, $O_Lightweight, $O_Welterweight, $O_Middleweight, $O_Light_Heavy, $O_Heavyweight, alongside a companion MAX_WEIGHTCLASS constant and 6 matching per-division ID array names (m_aFeatherWeightID, m_aLightWeightID, m_aWelterWeightID, m_aMiddleWeightID, m_aLightHeavyWeightID, m_aHeavyWeightID). Two independent resources (BOOT.BIN's own INFO_Division_1..6 localization keys, and this UI screen's named division-toggle list) now agree exactly on 6 divisions with no Bantamweight/Cruiserweight among them -- this substantially strengthens (but, per this project's discipline, does not by itself prove) that 6 is a genuine fixed design maximum in the retail game, not an artifact of the current xdbboxr.adf population.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "The real GetSelectBoxerInfo handler at 0x001D77C8 contains explicit six-way weight-class control flow: literal unsigned bounds of 6 at 0x001D7D58 and 0x001D8170, plus global 0x005608D0 initialized to 6. It populates exactly six named per-division boxer-ID arrays. The initial range table is Featherweight IDs 0-6, Lightweight 7-10, Welterweight 11-17, Middleweight 18-24, Light Heavyweight 25-30, and Heavyweight 31-34. Six is therefore an executable-level bound in this SelectBoxer path.",
       "affected_features": [
         "divisions"
       ],
       "sources": {
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
+        ],
+        "functions": [
+          "0x001D77C8"
+        ],
+        "globals": [
+          "0x005608D0",
+          "0x0056090C-0x00560950"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Disassemble the 5 referencing functions specifically looking for a literal 6 or 7 used as an array bound -- this would directly answer whether adding a division requires an executable patch versus only a data change.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-13-03"
@@ -1424,8 +1440,8 @@
     }
   ],
   "counts_overall": {
-    "STATICALLY_RESOLVED": 30,
-    "STATICALLY_SOLVABLE": 29,
+    "STATICALLY_RESOLVED": 31,
+    "STATICALLY_SOLVABLE": 28,
     "STATICALLY_AMBIGUOUS": 4,
     "RUNTIME_ESSENTIAL": 0
   },
@@ -1503,8 +1519,8 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "program-13": {
-      "STATICALLY_RESOLVED": 1,
-      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_RESOLVED": 2,
+      "STATICALLY_SOLVABLE": 1,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
@@ -1559,8 +1575,8 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "divisions": {
-      "STATICALLY_RESOLVED": 10,
-      "STATICALLY_SOLVABLE": 6,
+      "STATICALLY_RESOLVED": 11,
+      "STATICALLY_SOLVABLE": 5,
       "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
