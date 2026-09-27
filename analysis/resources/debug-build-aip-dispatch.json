@@ -384,6 +384,32 @@
         "Featherweight"
       ],
       "random_selection_corroboration": "SetSelectBoxerInfo at 0x001D87E0 uses the same enum order and chooses random IDs as start + (rng % count), directly confirming the start/count table semantics."
+    },
+    "update_select_boxer_info": {
+      "implementation": "0x001D53F0",
+      "parsed_inputs": [
+        "iBoxerID",
+        "iCorner"
+      ],
+      "behavior": "When a concrete boxer ID is supplied, builds/resolves that boxer and publishes the nine SelectBoxer rating properties. When iBoxerID == -1 it follows the current-corner/current-boxer path instead.",
+      "rating_outputs": {
+        "iPower": "rating accessor slot 10; average of slots 0 and 1, which resolve schema field IDs 0x10 and 0x11",
+        "iSpeed": "rating accessor slot 2 -> schema field ID 0x12",
+        "iAgility": "rating accessor slot 3 -> schema field ID 0x13",
+        "iStamina": "rating accessor slot 4 -> schema field ID 0x14",
+        "iChin": "rating accessor slot 5 -> schema field ID 0x15",
+        "iBody": "rating accessor slot 6 -> schema field ID 0x18",
+        "iHeart": "rating accessor slot 7 -> schema field ID 0x16",
+        "iCuts": "rating accessor slot 8 -> schema field ID 0x17",
+        "iOverall": "computed by func_001D50F4 from expanded boxer data and weight class; not emitted as a direct raw schema field in this handler"
+      },
+      "helper_chain": [
+        "func_00185114 initializes the temporary boxer/data accessor",
+        "func_0018553C resolves rating slots",
+        "func_001ACD40 binds an internal schema field ID to the accessor",
+        "func_001D50F4 computes iOverall"
+      ],
+      "function_boundary_correction": "0x001D54A0 is an instruction inside UpdateSelectBoxerInfo, not a standalone native-registration function. The registration glue is 0x001D52CC-0x001D5384."
     }
   }
 }
