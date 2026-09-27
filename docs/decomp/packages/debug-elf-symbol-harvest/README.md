@@ -249,8 +249,7 @@ unnamed:
 
 ### TCC condition families
 
-The large selector at `0x0013DDC4` has direct debug-string xrefs that name
-five decision families:
+`0x0013DDC4` has direct debug-string xrefs that name five decision families:
 
 - `TCC = MULTI KD`
 - `TCC = POOR PERFORMANCE`
@@ -258,13 +257,86 @@ five decision families:
 - `TCC = BOXER DAMAGE`
 - `TCC = BOXER RATING/STYLE`
 
-The routine reads boxer/fight state and rating/stat values, derives event flags,
-builds an event payload, and sends that payload through the generic event
-dispatch layer. The exact expansion of the acronym `TCC` is not promoted
-without further evidence, but its role as commentary/speech condition
-selection is now directly bounded by the surrounding AuSpeechManager bank
-architecture.
+Relocation-aware follow-up corrects the event identity: this routine does **not**
+dispatch the generic event named `TCC`. It builds and dispatches the named
+`NISAdvice` event. The `TCC = ...` strings are condition labels used while
+constructing that advice payload. The exact expansion of the acronym `TCC`
+remains unproven.
+
+The actual named `TCC` event is emitted separately by the main AuSpeechManager
+update routine at `0x0013B410`, with its dispatch site at `0x0013BBE0`.
 
 This materially changes the audio RE picture: FNR3 PSP does not expose only a
-commentary enable/disable toggle. The debug executable preserves the bank
-routing and multiple gameplay-context selectors that feed speech events.
+commentary enable/disable toggle. The debug executable preserves explicit bank
+routing plus separate `NISAdvice` and `TCC` event paths.
+
+
+## Named event registry
+
+The same relocation-aware pass resolves a contiguous event registry initialized
+by `0x001106CC`.
+
+Each static descriptor is an 8-byte pair:
+
+`{ name pointer, 32-bit name hash }`
+
+and is bound through `func_003E4A94` to an 8-byte event-handle object.
+`func_003E5860` then dispatches a caller payload through that resolved handle.
+
+The apparent pre-relocation handle addresses such as `0x00020FB0` are **not
+literal code addresses**. Their PSP HI16/LO16 relocation records use program
+segment 1 as the target base. With segment-1 vaddr `0x0058A8A8`, the NISAdvice
+handle resolves to:
+
+`0x0058A8A8 + 0x00020FB0 = 0x005AB858`
+
+which lies in BSS.
+
+The recovered registry includes:
+
+| Runtime handle | Descriptor | Name | Hash |
+| --- | --- | --- | --- |
+| `0x005AB850` | `0x0055AAC8` | RefCountDown | `0x761C4C54` |
+| `0x005AB858` | `0x0055AAD0` | **NISAdvice** | `0x08654C54` |
+| `0x005AB860` | `0x0055AAD8` | OnplayAdvice | `0x38FE4C54` |
+| `0x005AB868` | `0x0055AAE0` | **TCC** | `0x74184C54` |
+| `0x005AB870` | `0x0055AAE8` | StartOfRound | `0x7A4F4C54` |
+| `0x005AB878` | `0x0055AAF0` | RefClinch | `0x1DD04C54` |
+| `0x005AB880` | `0x0055AAF8` | RefStoppage | `0x089E4C54` |
+| `0x005AB888` | `0x0055AB00` | BlockedPunch | `0x20216F4F` |
+| `0x005AB890` | `0x0055AB08` | BoxerDamage | `0x5EFA6F4F` |
+| `0x005AB898` | `0x0055AB10` | CelebrationSequence | `0x39806F4F` |
+| `0x005AB8A0` | `0x0055AB18` | LackOfAction | `0x36F06F4F` |
+| `0x005AB8A8` | `0x0055AB20` | MissedPunch | `0x09A46F4F` |
+| `0x005AB8B0` | `0x0055AB28` | PunchCombos | `0x0E526F4F` |
+| `0x005AB8B8` | `0x0055AB30` | PunchLanded | `0x324F6F4F` |
+| `0x005AB8C0` | `0x0055AB38` | Replay | `0x28D86F4F` |
+| `0x005AB8C8` | `0x0055AB40` | UpdateStatus | `0x1FD36F4F` |
+| `0x005AB8D0` | `0x0055AB48` | BoxerFatigue | `0x49406F4F` |
+| `0x005AB8D8` | `0x0055AB50` | TauntingResult | `0x59AB6F4F` |
+| `0x005AB8E0` | `0x0055AB58` | FeintingResult | `0x70046F4F` |
+| `0x005AB8E8` | `0x0055AB60` | ClinchingResult | `0x13716F4F` |
+| `0x005AB8F0` | `0x0055AB68` | Trapped | `0x32496F4F` |
+| `0x005AB8F8` | `0x0055AB70` | BoxerRoundHistory | `0x1ED36F4F` |
+| `0x005AB900` | `0x0055AB78` | CareerMode | `0x185A6F4F` |
+| `0x005AB908` | `0x0055AB80` | Knockdown | `0x69746F4F` |
+| `0x005AB910` | `0x0055AB88` | IllegalBlows | `0x738A6F4F` |
+| `0x005AB918` | `0x0055AB90` | RAFightIntroFlyIn | `0x2F7621D9` |
+| `0x005AB920` | `0x0055AB98` | RAFightIntroSegment4 | `0x1EA821D9` |
+| `0x005AB928` | `0x0055ABA0` | RAFightIntroSegment5 | `0x05EA21D9` |
+| `0x005AB930` | `0x0055ABA8` | RAFightResultSegment1 | `0x1B8521D9` |
+| `0x005AB938` | `0x0055ABB0` | RAFightResultSegment2 | `0x324C21D9` |
+
+### NISAdvice vs TCC correction
+
+`0x0013DDC4` dispatches through the relocated `NISAdvice` handle
+`0x005AB858`, with fallback registration using descriptor `0x0055AAD0`.
+Its `TCC = MULTI KD`, `POOR PERFORMANCE`, `WASTED ENERGY`,
+`BOXER DAMAGE`, and `BOXER RATING/STYLE` diagnostics therefore describe
+conditions used to produce **NISAdvice**, not proof that this function is the
+TCC-event producer.
+
+The actual `TCC` event uses handle `0x005AB868`. The main AuSpeechManager
+update path beginning at `0x0013B410` builds a three-word payload at
+`sp+0xAC` and dispatches it at `0x0013BBE0`. The three words are directly
+observed, but their semantic field names remain intentionally unresolved.
