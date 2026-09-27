@@ -2841,5 +2841,367 @@
       ],
       "implication": "The retail records/Hall-of-Fame UI is a six-page native-backed system and each requested page emits at most exactly 10 rows. This resolves the previous question of whether 'Top 10' was merely a label or an executable hard bound."
     }
+  },
+  "drone_fight_state_tables": {
+    "confidence": "CONFIRMED for state-name getters, table addresses and function-pointer contents; exact original class/method names beyond the retained DRONE strings are not claimed",
+    "discovery": [
+      "Each retained DRONE_* state name is returned by a tiny dedicated code function.",
+      "Each name-getter appears in a repeated .data function-pointer table with a destructor/cleanup-like entry immediately before it and state-specific/shared methods after it.",
+      "The tables share stable common method slots, establishing a common polymorphic fight-state interface rather than unrelated string helpers."
+    ],
+    "states": [
+      {
+        "name": "DRONE_ATTACKING",
+        "name_getter": "0x004D2E7C",
+        "table": "0x0057BC78",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2E48",
+          "0x004D2E7C",
+          "0x0005B58C",
+          "0x00058904",
+          "0x00058A34",
+          "0x00058988",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x000588AC",
+          "0x000588B4",
+          "0x00058840",
+          "0x000589BC"
+        ]
+      },
+      {
+        "name": "DRONE_TAUNTING",
+        "name_getter": "0x004D2EBC",
+        "table": "0x0057BD00",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2E88",
+          "0x004D2EBC",
+          "0x00059230",
+          "0x00059200",
+          "0x004D2EC8",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x000591BC",
+          "0x000592B0"
+        ]
+      },
+      {
+        "name": "DRONE_ILLEGAL_PUNCH",
+        "name_getter": "0x004D2F04",
+        "table": "0x0057BD88",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2ED0",
+          "0x004D2F04",
+          "0x000593B0",
+          "0x00059380",
+          "0x004D2F10",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x000592D0",
+          "0x00059430"
+        ]
+      },
+      {
+        "name": "DRONE_SIGNATURE_PUNCH",
+        "name_getter": "0x004D2F4C",
+        "table": "0x0057BE10",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2F18",
+          "0x004D2F4C",
+          "0x000594E4",
+          "0x00059564",
+          "0x004D2F58",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x00059438",
+          "0x00059594"
+        ]
+      },
+      {
+        "name": "DRONE_FEINTING",
+        "name_getter": "0x004D2F94",
+        "table": "0x0057BE98",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2F60",
+          "0x004D2F94",
+          "0x0005C878",
+          "0x0005969C",
+          "0x004D2FA0",
+          "0x004D2FA8",
+          "0x000597A8",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x000588AC",
+          "0x000588B4",
+          "0x000595B4",
+          "0x0005974C"
+        ]
+      },
+      {
+        "name": "DRONE_COUNTER_PUNCH",
+        "name_getter": "0x004D2FB0",
+        "table": "0x0057BF20",
+        "slot_count": 19,
+        "methods": [
+          "0x0005CC84",
+          "0x004D2FB0",
+          "0x0005CD54",
+          "0x0005CF30",
+          "0x004D2FBC",
+          "0x004D1A14",
+          "0x0005D05C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005CD04",
+          "0x0005D014",
+          "0x0005D0BC",
+          "0x0005D14C",
+          "0x0005D294"
+        ]
+      },
+      {
+        "name": "DRONE_DEFENDING",
+        "name_getter": "0x004D302C",
+        "table": "0x0057C050",
+        "slot_count": 17,
+        "methods": [
+          "0x004D2FF8",
+          "0x004D302C",
+          "0x0005F41C",
+          "0x0005F650",
+          "0x004D1A0C",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005F6C0",
+          "0x0005F788",
+          "0x0005F724"
+        ]
+      },
+      {
+        "name": "DRONE_DEFEND_PREPARE",
+        "name_getter": "0x004D306C",
+        "table": "0x0057C0E0",
+        "slot_count": 16,
+        "methods": [
+          "0x004D3038",
+          "0x004D306C",
+          "0x0005F9F0",
+          "0x0005F9A4",
+          "0x004D1A0C",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005F898",
+          "0x0005FA00"
+        ]
+      },
+      {
+        "name": "DRONE_BREAKCLINCH",
+        "name_getter": "0x004D30AC",
+        "table": "0x0057C168",
+        "slot_count": 16,
+        "methods": [
+          "0x004D3078",
+          "0x004D30AC",
+          "0x0005FA18",
+          "0x004D30B8",
+          "0x004D30C8",
+          "0x004D30C0",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005FA08",
+          "0x0005FA64"
+        ]
+      },
+      {
+        "name": "DRONE_CLINCH",
+        "name_getter": "0x004D3104",
+        "table": "0x0057C1F0",
+        "slot_count": 16,
+        "methods": [
+          "0x004D30D0",
+          "0x004D3104",
+          "0x0005FBB4",
+          "0x0005FB08",
+          "0x004D3118",
+          "0x004D3110",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005FA84",
+          "0x0005FC58"
+        ]
+      },
+      {
+        "name": "DRONE_STATE_IDLE",
+        "name_getter": "0x004D3154",
+        "table": "0x0057C278",
+        "slot_count": 16,
+        "methods": [
+          "0x004D3120",
+          "0x004D3154",
+          "0x00061B50",
+          "0x004D3168",
+          "0x004D1A0C",
+          "0x004D3170",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D3160",
+          "0x004D3178",
+          "0x00061B0C",
+          "0x00061B58"
+        ]
+      },
+      {
+        "name": "DRONE_KNOCKDOWN_ATTACK",
+        "name_getter": "0x004D3180",
+        "table": "0x0057C300",
+        "slot_count": 16,
+        "methods": [
+          "0x00061CA0",
+          "0x004D3180",
+          "0x00061E08",
+          "0x00061D0C",
+          "0x004D319C",
+          "0x004D31A4",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D318C",
+          "0x004D3194",
+          "0x00061CD4",
+          "0x00062184"
+        ]
+      },
+      {
+        "name": "DRONE_MOVEMENT",
+        "name_getter": "0x004D31AC",
+        "table": "0x0057C388",
+        "slot_count": 16,
+        "methods": [
+          "0x000641D4",
+          "0x004D31AC",
+          "0x00064220",
+          "0x00064218",
+          "0x004D1A0C",
+          "0x004D1A14",
+          "0x00064394",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x00064338",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x00064208",
+          "0x00064210"
+        ]
+      }
+    ],
+    "shared_interface_observations": {
+      "name_getter_slot": 1,
+      "broadly_shared_slots": {
+        "7": "0x0004257C",
+        "8": "0x000425E0",
+        "9": "0x00042694",
+        "10": "0x000426C4"
+      },
+      "common_base_methods": [
+        "0x004D1A0C",
+        "0x004D1A14",
+        "0x004D1A1C",
+        "0x004D1A24",
+        "0x004D1A2C",
+        "0x004D1A34"
+      ],
+      "implication": "The DRONE names correspond to a polymorphic fight-state family with a stable shared interface and state-specific method slots. Transition/update semantics can now be recovered by comparing the state-specific functions rather than searching the entire executable."
+    },
+    "clinch_example": {
+      "table": "0x0057C1F0",
+      "state_specific_methods": [
+        "0x0005FBB4",
+        "0x0005FB08",
+        "0x0005FA84",
+        "0x0005FC58"
+      ],
+      "observed_state_fields": {
+        "+0x18": "owned/linked fighter-state object used by func_03EC10",
+        "+0x1C": "object whose +0x128 field feeds func_028D78",
+        "+0x28": "byte/counter state used by clinch/defend-prep helpers",
+        "+0x2C": "stored comparison threshold/value",
+        "+0x30": "one-shot/state flag",
+        "+0x34": "countdown/state counter"
+      },
+      "note": "Field semantics are observations from the state-specific methods and are not yet promoted to gameplay-facing names."
+    }
   }
 }
