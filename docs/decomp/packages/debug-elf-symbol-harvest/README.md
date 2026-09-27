@@ -438,3 +438,72 @@ continues through `PunchLanded` at `0x21010`, then resumes with
 
 Therefore event handles must be taken from the initializer's actual
 handle/descriptor pairs, not computed by descriptor-table index alone.
+
+
+## AuAemsManager core
+
+The generic AEMS manager is now bounded directly from its named diagnostics and
+its singleton construction chain.
+
+| Address | Evidence-backed role |
+| --- | --- |
+| `0x00126D3C` | probable `AuAemsManager_GetOrCreate`; returns/allocates the singleton |
+| `0x00128C1C` | probable AuAemsManager constructor |
+| `0x00128EB4` | **AuAemsManager::Init** |
+| `0x00126A18` | probable AuAemsManager AEM-bank load helper |
+| `0x00126AD4` | attach/register an already loaded bank |
+| `0x001269A4` | initialize a 0x0C-byte bank wrapper |
+| `0x001269BC` | release/destruct a bank wrapper |
+
+The singleton is stored at `0x0055A990` and is allocated as a **0x350-byte**
+object before construction.
+
+### Core AEMS resource
+
+`AuAemsManager::Init` constructs:
+
+```text
+<audio base path> + "/" + "coreaems.viv"
+```
+
+and stores the loaded core resource at manager `+0x28`.
+
+It then resolves and registers fixed AEMS banks from that core resource:
+
+| Filename | Manager bank-wrapper offset |
+| --- | --- |
+| `cctrl.abk` | `+0xC4` |
+| `pmenu.abk` | `+0xE8` |
+| `steps.abk` | `+0x100` |
+| `bell.abk` | `+0xDC` |
+| `GSfx.abk` | `+0xD0` |
+| `Punches.abk` | `+0x154` |
+| `falls.abk` | `+0x178` |
+| `Blocks.abk` | `+0x184` |
+| `cmomets.abk` | `+0xB8` |
+| `rplyst.abk` | `+0x19C` |
+| `rplysfx.abk` | `+0x190` |
+| `replay.abk` | `+0xF4` |
+
+After the fixed-bank setup, the initializer calls `0x00132F90`, which loads
+additional venue/context-dependent AEMS banks based on current game/fight
+state.
+
+### AEMS bank-wrapper layout
+
+The repeated bank members are 0x0C bytes:
+
+```text
++0x00  loaded bank/resource pointer
++0x04  SNDAEMS module-bank handle (initialized to -1)
++0x08  byte ownership/loaded flag
+```
+
+`0x00126A18` is the reusable loader associated with the two retained named
+diagnostics:
+
+- `AuAemsManager::Init() -- Failed AEM Bank Load!`
+- `AuAemsManager::Init() -- Failed SNDAEMS_addmodulebank!`
+
+It loads/obtains the underlying bank, registers it with the lower AEMS module
+bank API, and stores the resulting module handle at `+0x04`.
