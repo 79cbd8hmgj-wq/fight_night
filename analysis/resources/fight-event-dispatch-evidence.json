@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "revision": "ULUS10066-v1.00 / ULES00270 cross-build static reference",
+  "title": "Fight event dispatch and Replay boxer-identity bridge",
+  "confidence": "PROBABLE overall; individual facts noted below are direct static observations",
+  "generic_event_dispatch": {
+    "dispatcher": "func_003E5860",
+    "registration_fallback": "func_003E4A94",
+    "descriptor_behavior": "Named event descriptors are resolved/registered by name+hash and dispatched with a caller-built payload."
+  },
+  "replay_event": {
+    "producer": "func_0010BB58",
+    "descriptor_address": "0x0055AB38",
+    "descriptor_name": "Replay",
+    "descriptor_hash": "0x28D86F4F",
+    "boxer_code_mapper": "func_0010C9C8",
+    "boxer_field_reader": "func_00185B30",
+    "boxer_field_id": "0x05",
+    "payload": {
+      "first_boxer_code_offset": "+0x14",
+      "second_boxer_code_offset": "+0x18"
+    },
+    "dataflow": [
+      "func_0010BB58 resolves each participating boxer and calls func_0010C9C8 once per boxer.",
+      "func_0010C9C8 consumes xdbboxr field 0x05 as a bounded 76-entry selector and returns a normalized code; unmapped cases can fall back through field 0x07's alias-linked path.",
+      "func_0010BB58 writes the two normalized results into the Replay payload and calls func_003E5860.",
+      "If the dispatcher is not initialized for the event, func_0010BB58 calls func_003E4A94 with descriptor D_0055AB38 and retries.",
+      "D_0055AB38 resolves to the literal event name Replay."
+    ],
+    "semantic_boundary": "Field 0x05 is proven to feed boxer identity/profile codes in the Replay event payload. This does not prove that the field or normalized code is a commentary/speech/audio ID."
+  },
+  "neighboring_named_event_descriptors": [
+    "RefClinch",
+    "RefStoppage",
+    "BlockedPunch",
+    "BoxerDamage",
+    "CelebrationSequence",
+    "LackOfAction",
+    "MissedPunch",
+    "PunchCombos",
+    "Replay",
+    "UpdateStatus",
+    "BoxerFatigue",
+    "TauntingResult",
+    "FeintingResult",
+    "ClinchingResult",
+    "Trapped",
+    "BoxerRoundHistory"
+  ],
+  "decision_announcement_correction": {
+    "owner": "func_000B065C",
+    "finding": "Decision Announcement Script is one entry in a fight-presentation script-name initializer, not by itself evidence of commentary-audio lookup.",
+    "neighboring_script_names": [
+      "Venue Script",
+      "Entrance Box1 Script",
+      "Entrance Box2 Script",
+      "Faceoff Script",
+      "Decision Announcement Script",
+      "Winner Celebration Script",
+      "Explanation Script",
+      "Round Replay 1",
+      "Round Replay 2",
+      "Round Replay 3",
+      "Corner Script 1",
+      "Corner Script 2"
+    ]
+  },
+  "provenance": [
+    "Derived from static disassembly of the user-provided debug/review BOOT.BIN and cross-checked against the matching retail address family.",
+    "No executable or resource bytes are committed."
+  ]
+}
