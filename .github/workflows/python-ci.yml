@@ -50,24 +50,8 @@ jobs:
           assert info.revision_locked
           print(info.package_version, info.observed_revision)
           PY
-      - name: Trace boxer field helpers
-        run: python tools/re_trace_boxer_field_helpers.py
-      - name: Trace boxer field-5 switch
-        run: python tools/re_trace_field5_switch.py
-      - name: Trace boxer field callers
-        run: python tools/re_trace_boxer_field_callers.py
-      - name: Trace boxer rating mode
-        run: python tools/re_trace_rating_mode.py
-      - name: Trace boxer field context
-        run: python tools/re_trace_boxer_field_context.py
-      - name: Trace boxer context callers
-        run: python tools/re_trace_boxer_context_callers.py
-      - name: Trace secondary boxer XDB accessors
-        run: python tools/re_trace_secondary_xdb.py
-      - name: Trace boxer speech mapper
-        run: python tools/re_trace_speech_mapper.py
-      - name: Trace boxer audio event bridge
-        run: python tools/re_trace_audio_event_bridge.py
+      - name: Trace field-5 audio bridge
+        run: python tools/re_trace_field5_audio_bridge_compact.py
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
