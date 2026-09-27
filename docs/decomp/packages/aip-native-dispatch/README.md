@@ -143,3 +143,47 @@ path rather than merely an orphaned UI asset.
 `0x001CF2A0` calls the front-end command path with the strings
 `ChangeScreen`, `_root`, and `MAINMENU`, providing the route back to the
 normal front end.
+
+
+## Fight-session quick-fight setter chain
+
+`DEBUG_OnAdvance` (`0x001CF1A0`) now provides a direct write-side map for
+the developer quick-fight setup:
+
+```text
+iBox0 -> func_001B00B4(session, 0, id)
+iBox1 -> func_001B00B4(session, 1, id)
+iBox2 -> func_001B00A0(session, venue_id)
+        func_001B01BC(session, 0, 0, 1)
+        func_001AFFDC(session, 1)
+        func_000D7FB0()
+        func_000D8028()
+```
+
+### Boxer selection fields
+
+`func_001B00B4(session, corner, boxer_id)` proves that
+`session+0x19B0/+0x19B4` are **numeric boxer IDs/indices**, not object
+pointers. The setter writes the ID to `+0x19B0 + corner*4` and mirrors it
+at `+0x19B8 + corner*4`. Retail readers `T_001F2E00` and `T_001F7248`
+then pass the value to `func_00186284`; that resolver consumes its second
+argument as an index while traversing boxer-table instance/count space.
+
+This supersedes the older `boxer-object pointer` interpretation in the Alpha 1
+documentation.
+
+### Venue and session mode
+
+- `func_001B00A0(session, venue_id)` validates signed `venue_id < 12` and
+  stores it at `session+0x19AC`.
+- `func_001AFFDC(session, mode)` stores a bounded mode value at
+  `session+0x19A8` (signed values below 9; otherwise `-1`). The debug
+  quick-fight route writes mode `1`.
+
+The latter also corrects an older options-analysis note: `+0x19A8` is a
+fight/session mode gate, **not** another packed options bitfield. The packed
+gameplay settings word remains at `+0x15C`.
+
+`func_001B01BC` writes `+0x19C0/+0x19C4` and tracks state through
+`+0x19E0`; `func_001B0180` writes nibble-packed per-corner values at
+`+0x19C8/+0x19CC`. Their exact semantics are intentionally left unresolved.
