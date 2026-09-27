@@ -36,7 +36,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Resolved: identity 0x00-0x03, stock-roster gate 0x04, hometown link 0x06, nickname/alias link 0x07, weight 0x09/division thresholds, ratings 0x10-0x18, bonus rows 35-36. Next trace field 0x05, packed physical/appearance fields 0x0D/0x0E, equipment/appearance, career/store, and remaining created-boxer semantics.",
+      "remaining_static_work": "Resolved: name/resource fields 0x00-0x03, availability 0x04, hometown 0x06, nickname 0x07, weight 0x09, career timing 0x0D, packed 0x0E extraction, rating-mode behavior 0x0F and ratings 0x10-0x18. Next: field 0x05, physical/biographical 0x08/0x0A-0x0C, exact 0x0E trait labels, stance/handedness, appearance/equipment, career/store and created-boxer semantics.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -63,7 +63,10 @@
           "T_00185FA0",
           "T_001860A0",
           "func_00185F34",
-          "T_00186108"
+          "T_00186108",
+          "func_001857E4",
+          "T_00187434",
+          "func_00187548"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
