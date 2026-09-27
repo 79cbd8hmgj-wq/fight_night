@@ -3,7 +3,7 @@
   "revision": "ULUS10066-v1.00",
   "purpose": "Every STATICALLY_SOLVABLE and STATICALLY_AMBIGUOUS evidence question from analysis/reports/static-re-ceiling.json, each carrying a concrete named static avenue. Regenerated after Overhaul Alpha 1's targeted static RE (PR: Overhaul Alpha 1 -- Core Boxer + Fight Systems), which resolved program-04-04 (func_00186464's linked list) and partially advanced program-11-03 (judge weighting) as a direct byproduct of the minimum focused RE that milestone's own implementation work required -- not a renewed broad assessment pass. This file supersedes the narrower Task 10/11 analysis/resources/static-discovery-backlog.json for corpus-wide planning purposes; static-discovery-backlog.json is preserved unmodified. Per task policy, none of these may be moved to runtime-minimum-backlog.json until every named avenue below is exhausted.",
   "related_backlog": "analysis/resources/static-discovery-backlog.json (Task 10/11-scoped predecessor, still valid)",
-  "entry_count": 32,
+  "entry_count": 31,
   "entries": [
     {
       "id": "program-01-02",
@@ -360,19 +360,6 @@
       "remaining_static_work": "Disassemble func_00093C5C/func_00091D24 (the 'attack power' consumers) and trace outward to the decision loop.",
       "affected_features": [
         "combat"
-      ],
-      "sources": {}
-    },
-    {
-      "id": "program-13-02",
-      "program_id": "program-13",
-      "subsystem": "Weights",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "What are the exact weight-limit values (in-game units) for each of the 6 divisions?",
-      "remaining_static_work": "Disassemble func_0019527C/func_001B798C/T_001E9A58/T_00202170/T_00201BB4 to find where each maps a division index to a numeric weight boundary.",
-      "affected_features": [
-        "divisions",
-        "roster"
       ],
       "sources": {}
     },
