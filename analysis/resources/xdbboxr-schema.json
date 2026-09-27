@@ -173,7 +173,7 @@
     "hard_maximum": "No hard total roster maximum is established. Base record_count is dynamic and func_00186284 can span multiple registered boxer-table instances."
   },
   "unresolved": [
-    "Exact authored label and downstream interpretation of the normalized Replay boxer codes derived from field 0x05; Replay-event dataflow itself is resolved, but commentary/audio semantics are explicitly not claimed.",
+    "Exact original authored label and full downstream interpretation of xdbboxr field 0x05. It is now proven to feed a normalized boxer audio/presentation identity used both in Replay payloads and boxer-specific chant-bank selection, but a direct raw commentary-line identity is explicitly not claimed.",
     "What boxer/category source sets field 0x0F nonzero; its effect is proven as alternate/raw versus weight-class-adjusted rating mode, but the owning semantic category is unresolved.",
     "Exact semantic names of the three packed 0x0E nibble traits.",
     "Exact semantic role of field 0x00's secondary/resource identity number (74/75 for the two bonus records).",
@@ -364,9 +364,19 @@
     },
     "field_0x05": {
       "storage": "inline signed int16",
-      "confidence": "CONFIRMED read boundary; semantic unresolved",
+      "confidence": "CONFIRMED read/dataflow boundary; PROBABLE higher-level semantic label",
       "helper": "func_00185B30 returns field 5 directly",
-      "note": "Callers treat it as a bounded/index-like value; one caller dispatches only when it is <76. Do not assign a presentation/animation semantic until that dispatch table is mapped."
+      "note": "func_00185B30 returns field 0x05 directly. func_0010C9C8 maps it through a bounded 76-entry boxer-code namespace used by Replay payloads. New debug-build cross-evidence proves the same normalized boxer code is consumed by AuAemsManager boxer-chant selection: after 0x001278C0 normalization, IDs <500 format as chant_PSP_Lic%03d.abk and IDs >=500 as chant_PSP_CaB%03d.abk, with generic fallback Chant_PSP_Gen%03d.abk. This establishes a boxer-specific audio/presentation identity role, but does NOT prove field 0x05 is a raw commentary line ID or exact original authored label.",
+      "semantic": "boxer audio/presentation identity selector feeding a normalized boxer code",
+      "evidence": [
+        "func_00185B30 -> raw xdbboxr field 0x05",
+        "func_0010C9C8 -> bounded normalized boxer code",
+        "func_0010BB58 -> Replay payload boxer codes",
+        "0x00133884 -> boxer chant-bank loader",
+        "0x001278C0 -> chant-ID normalization/remapping",
+        "analysis/resources/debug-build-aip-dispatch.json",
+        "analysis/resources/fight-event-dispatch-evidence.json"
+      ]
     },
     "fields_0x73_to_0x78": {
       "storage": "inline signed int16",
