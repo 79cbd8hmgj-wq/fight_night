@@ -218,7 +218,7 @@ commentary/announcer/training speech assets.
 | `0x0013AC78` | main speech-bank initialization/setup path |
 | `0x00137888` | public/request dispatch wrapper |
 | `0x0013CCA4` | three-way speech-bank request router |
-| `0x0013DDC4` | probable `AuSpeechManager_EvaluateTCC`; TCC gameplay-condition selector |
+| `0x0013DDC4` | **NISAdvice condition/event producer**; contains TCC-labelled condition diagnostics but dispatches `NISAdvice`, not the named `TCC` event |
 
 ### Bank triples and category IDs
 
@@ -564,3 +564,104 @@ loads one of three literal banks:
 
 The `Gsmall/Gmed/Glarge` filenames and routing are directly proven. The
 meaning of the letter `G` is deliberately left unresolved.
+
+
+## AEMS event-code registry and dispatchers
+
+The debug build retains a contiguous family of original AEMS descriptor names.
+Each descriptor is an 8-byte structure:
+
+```text
++0x00  name pointer
++0x04  32-bit hash
+```
+
+Across the recovered registry, all **193** descriptors use hashes whose low
+16 bits are `0x48DF`. The event code consumed by AuAemsManager is the
+**upper 16 bits of that hash**:
+
+```text
+event_code = hash >> 16
+```
+
+Example:
+
+```text
+C_KnockOut_cheer
+hash  = 0x1CCE48DF
+code  = 0x1CCE
+```
+
+and `0x00129844` contains the direct `0x1CCE` case leading to handler
+`0x0012AECC`.
+
+The complete 193-entry registry, including all recovered hashes/codes and the
+131 directly matched central-dispatch handler targets, is stored in:
+
+`analysis/resources/aems-event-code-registry.json`
+
+### Central positional dispatcher
+
+`0x00129844` is now bounded as a probable
+`AuAemsManager_DispatchEvent`.
+
+It accepts a signed 16-bit event code, a position/vector pointer, and additional
+event parameters. Its top-level switch directly handles **131** of the 193
+recovered descriptor codes.
+
+Recovered families include:
+
+- crowd / chant / fight-decision events
+- punches and blocks
+- exertion / boxer vocalization
+- mat, falls, and footwork
+- ring contacts
+- environment and venue effects
+- entrance effects
+- character actions
+- training/minigame effects
+- NIS/scene/replay events
+- replay-menu and menu effects
+
+### Actor/entity bridge
+
+`0x00329614` is an actor/entity-side AEMS callback. Its surrounding allocation
+region uses the retained tag string `actor`.
+
+The callback reads:
+
+```text
+event +0x00  signed 16-bit AEMS event code
+event +0x08  parameter
+event +0x0C  parameter
+event +0x10  parameter
+event +0x18  world X
+event +0x1C  world Y
+event +0x20  world Z
+```
+
+It forwards those values through `0x00108158`, which obtains the
+AuAemsManager singleton and calls `0x00129844`.
+
+The actor callback retains the diagnostic:
+
+`Unsupported AEMS Event`
+
+for a negative bridge result. In this debug build, however, the central
+dispatcher itself was observed returning only 0 on normal completion and 1 on
+the early disabled/uninitialized path, so the negative check is treated as a
+defensive boundary rather than proof of a normally reachable unsupported case.
+
+### Secondary non-positional/simple dispatcher
+
+`0x00131374` is a distinct smaller AuAemsManager event-dispatch overload.
+It has **30 direct cases**, all drawn from physical/gameplay SFX already present
+in the main registry: punch impacts, exertion, falls, ring contacts, and camera
+flash.
+
+Unlike `0x00129844`, this overload does not receive the world-position vector.
+The descriptive name `AuAemsManager_DispatchSimpleEvent` is therefore used
+only as an inferred label; the original C++ symbol is not claimed.
+
+The exact 30-case mapping is also stored in
+`analysis/resources/aems-event-code-registry.json`.
