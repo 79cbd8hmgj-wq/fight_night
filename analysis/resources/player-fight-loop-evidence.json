@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "revision": "ULES00270-debug-prototype",
+  "source_binary": {
+    "file": "BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4"
+  },
+  "purpose": "Static evidence for the Player object, its update path, and the correction of two false AI-decision-loop leads. This package is intended to guide retail ULUS10066 symbol transfer and overhaul hook recovery; addresses here are debug-prototype ELF virtual addresses unless stated otherwise.",
+  "findings": [
+    {
+      "id": "player-constructor",
+      "address": "0x000A01EC",
+      "proposed_name": "Player::Player",
+      "confidence": "PROBABLE",
+      "evidence": [
+        "Fight-player setup at 0x000859B4 allocates 0x2D0-byte objects and calls 0x000A01EC.",
+        "The one-player/special path calls it at 0x00085A98 with the literal 'Player 2'.",
+        "The multi-player path formats the literal 'Player %d' and calls it at 0x00085B58.",
+        "The constructor stores the class virtual-table/interface pointer 0x0057D03C at object+0x18 and creates multiple owned subobjects."
+      ],
+      "implication": "This is the strongest current static anchor for the in-fight Player/boxer simulation object."
+    },
+    {
+      "id": "player-array-setup",
+      "address": "0x000859B4",
+      "proposed_name": "FightPlayers_Init",
+      "confidence": "PROBABLE",
+      "evidence": [
+        "Allocates an object-pointer array sized from owner+0x48.",
+        "Reads fight-session player selectors from the session area around +0x19B0/+0x19C0.",
+        "Creates each 0x2D0 Player object with 0x000A01EC and stores it in owner+0x24.",
+        "Called from three higher-level initialization paths at 0x0001EB54, 0x000B4C3C and 0x000C8B3C."
+      ]
+    },
+    {
+      "id": "player-array-accessor",
+      "address": "0x0008552C",
+      "proposed_name": "FightPlayers_GetPlayer",
+      "confidence": "PROBABLE",
+      "evidence": [
+        "Reads player count from owner+0x48 and player-pointer array from owner+0x24.",
+        "For a single-player count returns the first entry; otherwise indexes the array by caller-supplied index."
+      ]
+    },
+    {
+      "id": "player-destructor",
+      "address": "0x000A0668",
+      "proposed_name": "Player::~Player",
+      "confidence": "PROBABLE",
+      "evidence": [
+        "Paired object teardown for the structure built by 0x000A01EC.",
+        "Walks and destroys the same owned subobjects created by the constructor.",
+        "Destroys the object stored at player+0x2BC by calling 0x00091D24 with deletion flag 3."
+      ]
+    },
+    {
+      "id": "ai-modifier-config-constructor",
+      "address": "0x00093C5C",
+      "proposed_name": "PlayerAIModifierConfig::PlayerAIModifierConfig",
+      "confidence": "PROBABLE",
+      "correction": "This function is not the AI decision-update loop.",
+      "evidence": [
+        "Player constructor 0x000A01EC allocates exactly 0xD4 bytes, calls 0x00093C5C, then stores the resulting object at player+0x2BC.",
+        "The function formats the six known per-player AI modifier paths using the supplied player index and initializes a compact configuration/state object.",
+        "Its counterpart 0x00091D24 is called only from Player teardown for the same player+0x2BC object."
+      ]
+    },
+    {
+      "id": "ai-modifier-config-destructor",
+      "address": "0x00091D24",
+      "proposed_name": "PlayerAIModifierConfig::~PlayerAIModifierConfig",
+      "confidence": "PROBABLE",
+      "correction": "This function is not the AI decision-update loop.",
+      "evidence": [
+        "Called from 0x000A0668 for player+0x2BC with deletion flag 3.",
+        "Reconstructs the same six ai/mods/p%d/... path strings from object+0xD0 before cleanup.",
+        "Optionally frees the 0xD4 object when the destructor flag requests it."
+      ]
+    },
+    {
+      "id": "player-update-virtual",
+      "address": "0x000A0894",
+      "proposed_name": "Player::Update",
+      "confidence": "PROBABLE",
+      "evidence": [
+        "0x000A0894 is present in the Player virtual-table/interface block rooted at 0x0057D03C, in the virtual slot descriptor beginning at +0x28.",
+        "It operates directly on the 0x2D0 Player object created by 0x000A01EC.",
+        "It updates multiple countdown/state fields, evaluates collision/action predicates, modifies movement/action flags, drives owned subsystems, and invokes 0x000A1100.",
+        "The routine is large and stateful and has no direct JAL callers, consistent with virtual per-frame dispatch."
+      ],
+      "implication": "This replaces the previous ai/mod string consumers as the highest-value static entry point for tracing the actual in-fight Player update loop."
+    },
+    {
+      "id": "player-event-action-handler",
+      "address": "0x000A1100",
+      "proposed_name": "Player_HandleActionEvent",
+      "confidence": "CANDIDATE",
+      "evidence": [
+        "Called from Player::Update at 0x000A0FA0.",
+        "Also called from two punch/collision-region paths at 0x0002EB60 and 0x0002F14C, plus 0x0009D9BC.",
+        "Takes a Player pointer, a small event/action selector and a 16-bit code/value, then enters a very large branch/state calculation."
+      ],
+      "implication": "This is a strong candidate for the player/AI combat-convergence boundary and should be traced before unrelated subsystems."
+    }
+  ],
+  "next_static_steps": [
+    "Trace callers/owners that invoke the Player virtual slot at +0x28 to recover the enclosing fight tick/update loop.",
+    "Trace 0x000A1100's callers and dominant callees to separate input/action events, hit resolution and damage/stun handling.",
+    "Find writes/consumers of Player fields modified by 0x000A0894 and 0x000A1100 that correlate with energy/health, stun, knockdown and attack state.",
+    "Transfer the recovered Player constructor/vtable/update signatures to retail ULUS10066 before declaring any executable hook safe."
+  ]
+}
