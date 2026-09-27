@@ -277,7 +277,7 @@
       "subsystem": "Boxers",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The generic XDB layout and SelectBoxer rating block are now partially resolved. xdbboxr.adf has a 24-byte header, 121 fields, 37 base records, a 31-byte 2-bit-per-field type map at +0x18, and a row-major descriptor matrix beginning at +0x38 with 0xF2-byte rows. Generic accessors prove type 0=inline signed int16, type 1=string/byte pool, type 2=int32 pool, type 3=float pool. UpdateSelectBoxerInfo at 0x001D53F0 maps the rating fields: Power uses field IDs 0x10/0x11 and averages them; Speed=0x12; Agility=0x13; Stamina=0x14; Chin=0x15; Heart=0x16; Cuts=0x17; Body=0x18. These rating fields resolve as inline int16 tokens at exact per-row offsets 0x20-0x30. iOverall is computed by func_001D50F4 rather than read as one direct raw XDB field. Non-rating semantic field IDs remain open. Direct decoding of the tracked retail xdbboxr.adf plus the native name-composition path resolves the leading identity fields: field 0 is the explicit global boxer ID; field 1 is surname/family display name; field 2 is first/given name; field 3 is the short CRO/resource stem. func_001851CC directly reads field 2 then field 1 while composing the boxer name. The two base rows outside normal SelectBoxer IDs 0-34 are now identified: row 35 has global ID 74, FABOLOUS, stem fabo; row 36 has global ID 75, LITTLE MAC, stem spun. The custom-created-boxer SelectBoxer path is separate, so these rows are bonus/hidden roster records rather than custom slots. Field 4 is additionally narrowed to a standard-roster/selectability-style boolean: it is 1 for all normal IDs 0-34 and 0 for the two bonus rows; func_00185D84 reads field 4 and returns whether it is positive, while a caller at 0x00278B0C applies that predicate across 35 stock boxer IDs. Field 0x04 is now resolved beyond the prior generic 'selectability-style' label. func_00185D84 reads field 4 and returns whether it is positive. T_00278ABC iterates exactly 35 ordered stock boxer IDs from D_005646F0, resolves each boxer, applies func_00185D84, and writes a parallel enable flag into D_0056477C. func_00278768 counts the enabled slots, and func_002787A0 walks the two arrays in parallel and copies only enabled boxer IDs into the destination list. Therefore xdbboxr field 0x04 is the stock SelectBoxer roster-inclusion/availability gate for this path. It is 1 for stock rows/IDs 0-34 and 0 for bonus rows Fabolous/Little Mac.",
+      "evidence": "The generic XDB layout is resolved far enough to map concrete boxer fields. xdbboxr.adf has a 24-byte header, 121 fields, 37 base records, a 31-byte 2-bit-per-field type map at +0x18, and a row-major token matrix at +0x38 with 0xF2-byte rows. Generic accessors prove type 0=inline signed int16, type 1=string/byte pool, type 2=int32 pool, type 3=float pool. UpdateSelectBoxerInfo at 0x001D53F0 maps Power fields 0x10/0x11, Speed 0x12, Agility 0x13, Stamina 0x14, Chin 0x15, Heart 0x16, Cuts 0x17 and Body 0x18; iOverall is computed by func_001D50F4. Name composition resolves field 1=surname/family name and field 2=first/given name; field 3 is a short CRO/resource stem. CORRECTION: field 0 is not the global SelectBoxer/fight-session boxer selector. func_00186284 proves that selector is a cumulative record-position index across registered boxer tables and never consults field 0; rows 35/36 are selected as indices 35/36 even though their field-0 values are 74/75. Field 0 is therefore a secondary/resource identity number with exact role still unresolved. Field 4 is the base/default availability flag: func_00185D84 returns field4>0, the 35-entry stock-list builder consumes that predicate, and func_001B0FE8 falls back to a +0x1C4 unlock bitset for selector 35 when field4 is zero. Field 6 is a confirmed hometown foreign-key into xdbhmtwn.adf; field 7 is a confirmed nickname/alias foreign-key into xdbalias.adf; field 9 is the confirmed boxer-weight field used by the exact six-division classifier. Compact helpers also expose field 0x0D as high-byte+1900 plus low-byte components and field 0x0E as three nibble components, but those packed semantics are not yet named.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -298,7 +298,22 @@
           "0x00278B0C",
           "T_00278ABC",
           "func_00278768",
-          "func_002787A0"
+          "func_002787A0",
+          "func_00186284",
+          "func_001B0FE8",
+          "T_001B2648",
+          "func_001AF728",
+          "T_00185FA0",
+          "T_001860A0",
+          "func_001A9020",
+          "func_00185F34",
+          "T_00186108",
+          "func_00185008",
+          "func_001853F0",
+          "func_00185434",
+          "func_00185468",
+          "func_0018549C",
+          "func_001854DC"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
@@ -308,7 +323,7 @@
           "analysis/resources/xdb-schema-evidence.json"
         ]
       },
-      "remaining_static_work": "Continue mapping non-rating fields from concrete readers: weight/division is resolved, field 0x04 is resolved as the stock SelectBoxer inclusion gate, and identity/rating fields are already mapped. Next targets are stance/handedness, appearance/equipment, hometown/nationality, career/store state and remaining created-boxer semantics. Separately locate any bonus-row unlock path for Fabolous/Little Mac rather than conflating it with field 0x04.",
+      "remaining_static_work": "Resolve field 0's secondary/resource-ID consumer, field 5's 76-entry index/dispatch space, the physical/biographical fields (including likely age/height/reach candidates), packed fields 0x0D/0x0E, stance/handedness, appearance/equipment, career/store state and remaining created-boxer semantics. Hometown (field 6), nickname/alias (field 7), weight (field 9), availability (field 4), names and ratings no longer need re-derivation.",
       "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -394,7 +409,7 @@
       "subsystem": "Boxers",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The former 121-entry roster-cap hypothesis is disproven: 121 is xdbboxr.adf's field_count, while word1=37 is its base record_count and is read dynamically by func_001AD21C/func_001AD180. The base SelectBoxer range table exposes IDs 0-34 across six divisions, leaving base rows 35-36 semantically unresolved. func_00186284 resolves boxer IDs through a chain of registered table instances by subtracting each table's dynamic record_count, so the boxer-ID space is not inherently limited to one 37-row table. No fixed total roster maximum is established yet. The two extra base rows are now identified rather than unknown: row 35 is boxer ID 74 (Fabolous) and row 36 is boxer ID 75 (Little Mac). Because field 0 stores explicit global IDs that can differ from physical row index, base record_count and global boxer-ID range are distinct concepts.",
+      "evidence": "The former 121-entry roster-cap hypothesis is disproven: 121 is xdbboxr.adf's field_count, while word1=37 is its base record_count and is read dynamically by func_001AD21C/func_001AD180. func_00186284 proves the boxer selector used by fight/session/UI code is a cumulative record-position index across registered boxer table instances: it subtracts each table's dynamic record_count and passes the residual index to func_001AD180. It does not lookup xdbboxr field 0. Normal stock SelectBoxer ranges cover selector indices 0-34; physical base rows 35 and 36 are Fabolous and Little Mac. Their field-0 values are 74/75, proving only that field 0 is a separate secondary identity/resource key, not that their selector indices are 74/75. No fixed total roster maximum is established.",
       "affected_features": [
         "roster",
         "generated-boxers"
@@ -405,7 +420,8 @@
           "func_001AD180",
           "func_00186284",
           "0x001D77C8 (GetSelectBoxerInfo)",
-          "func_001851CC"
+          "func_001851CC",
+          "func_001B0FE8"
         ],
         "evidence": [
           "analysis/resources/xdbboxr-schema.json",
@@ -413,8 +429,8 @@
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Trace the created/custom-boxer table/save path and any independent allocation/serialization consumer that could impose a fixed cap across the cumulative boxer-ID space. The former rows-35/36 ambiguity is resolved.",
-      "confidence": "PROBABLE for dynamic base-table count and cumulative resolver; fixed total maximum remains open.",
+      "remaining_static_work": "Trace the created/custom-boxer table/save path and any independent allocation/serialization consumer that could impose a fixed cap across the cumulative registered-table selector space. Determine field 0's secondary/resource-ID role separately; do not use it as the roster selector.",
+      "confidence": "CONFIRMED for dynamic cumulative selector mechanics; fixed total maximum remains open.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-07"
