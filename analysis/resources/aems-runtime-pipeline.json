@@ -164,5 +164,108 @@
   "provenance": [
     "Derived from static disassembly and PSP relocation records in the user-provided ULES00270 debug/review BOOT.BIN.",
     "No executable or commercial resource bytes are committed."
-  ]
+  ],
+  "parsed_evt_object": {
+    "confidence": "CONFIRMED for field offsets and observed uses; semantic labels are conservative",
+    "header_validation": {
+      "+0x00": "must equal 0x03",
+      "+0x01": "must equal 0x12",
+      "validator": "0x0049AD50"
+    },
+    "fields": {
+      "+0x02": "packed count/format byte used by parsed sub-object traversal; exact aggregate semantic unresolved",
+      "+0x04": "relative offset from EVT object base to 0x20-byte generic-event subscription table",
+      "+0x08": "selector byte A; paired with +0x09 to identify one of 8 registered AEMS groups",
+      "+0x09": "selector byte B; 0x00497190 also exposes this byte as group-associated context",
+      "+0x0B": "subscription-installed flag; 0x0049B61C exits when nonzero and sets it to 1 after attaching all listeners",
+      "+0x10": "u16 generic-event subscription count",
+      "+0x12": "u8 count of a secondary per-EVT state-byte array",
+      "+0x18": "start of u16 subscription-to-mapping index list"
+    },
+    "subscription_table": {
+      "base_formula": "evt + *(u32 *)(evt+0x04)",
+      "entry_size": "0x20",
+      "count": "*(u16 *)(evt+0x10)",
+      "string_rebase": "entry+0x00 initially contains a relative name offset; 0x0049B61C adds end_of_subscription_table and writes the absolute pointer back in place",
+      "mapping_token_resolution": [
+        "for subscription i, read u16 index = *(evt+0x18+i*2)",
+        "mapping_record_offset = index * 4",
+        "read u16 mapping token from evt + mapping_record_offset",
+        "pack that token with evt selector bytes +0x08/+0x09 through 0x0049702C"
+      ]
+    },
+    "secondary_state_array": {
+      "location": "evt +0x18 + align4(subscription_count*2)",
+      "count": "evt+0x12",
+      "reset_function": "0x0049ACC0",
+      "reset_value": "0xFF",
+      "note": "0x0049ACC0 resets this byte array for every registered EVT object in the selected AEMS group/category. Exact state semantics remain unresolved."
+    },
+    "group_registry": {
+      "pre_relocation": "0x0003CE38",
+      "runtime_vaddr": "0x005C76E0",
+      "entry_count": 8,
+      "entry_size": 8,
+      "fields": {
+        "+0x00": "parsed EVT object pointer",
+        "+0x04": "AEMS group/category index"
+      },
+      "register_function": "0x0049AD50",
+      "lookup_by_selectors": "0x00497090",
+      "category_lookup": "0x00497140",
+      "duplicate_rule": "0x0049AD50 rejects registration when another installed object has the same +0x08/+0x09 selector-byte pair",
+      "speech_groups": {
+        "0": "commentary EVT/bank",
+        "1": "announcer EVT/bank",
+        "2": "training EVT/bank"
+      }
+    }
+  },
+  "mapping_record_model": {
+    "confidence": "CONFIRMED for byte/field uses; probability interpretation at +0x09 is PROBABLE",
+    "lookup": {
+      "function": "0x004970EC",
+      "algorithm": [
+        "unpack the 4-byte mapping key",
+        "select the registered EVT object by selector bytes",
+        "scan the EVT object's +0x18 u16 index list",
+        "for each index, address evt + index*4 and compare the record's first u16 against the requested mapping token",
+        "return the matching mapping-record pointer"
+      ]
+    },
+    "fields": {
+      "+0x00": "u16 mapping token/key (CONFIRMED)",
+      "+0x02": "u16 admitted-packet lifetime/expiry window in the scheduler's time units (CONFIRMED arithmetic; exact time unit unresolved)",
+      "+0x04": "u16 admission priority/rank used when all 16 scheduler slots are occupied (CONFIRMED ordering behavior)",
+      "+0x06": "count controlling a leading u16 variable table before the condition-clause region; exact semantic label unresolved",
+      "+0x07": "count of 3-byte condition clauses evaluated by 0x0049B108 (CONFIRMED)",
+      "+0x08": "field not yet semantically bounded",
+      "+0x09": "signed acceptance threshold compared against 0x0049AB4C(100,-1); probability/chance interpretation is PROBABLE",
+      "+0x0A": "flags; bit 0 affects evaluator behavior and bit 5 forces immediate scheduler processing (CONFIRMED)",
+      "+0x0B": "number of 32-bit words copied from the generic gameplay-event payload into the AEMS packet (CONFIRMED)",
+      "+0x0C...": "variable tables/condition data"
+    },
+    "condition_region": {
+      "evaluator": "0x0049B108",
+      "start_formula": "mapping + 0x0C + align4((mapping+0x06)*2)",
+      "clause_size": 3,
+      "clause_count": "mapping+0x07",
+      "observed_clause_fields": {
+        "byte +0": "condition opcode/value passed as callback argument 1",
+        "byte +1": "payload-word selector; 0 means no payload word, nonzero selects a 32-bit word from the copied gameplay payload",
+        "byte +2": "present in each 3-byte clause; exact consumer meaning not yet proven"
+      },
+      "condition_callback": {
+        "registration": "0x004981C4",
+        "fight_night_callback": "0x00137824",
+        "companion_callback": "0x00137874",
+        "note": "0x0049B108 calls the registered +0x04 callback and records positive vs negative results into separate bitmasks. The exact original semantic names of these two callbacks remain unproven."
+      }
+    },
+    "scheduler_use": {
+      "expiry": "0x00497364 compares current_scheduler_time - slot_time against existing mapping +0x02 and releases expired slots",
+      "priority": "when no free/expired slot exists, 0x00497364 compares the new mapping +0x04 priority with existing slots in the same group to choose an eviction candidate",
+      "threshold": "0x004974CC compares signed mapping +0x09 to the bounded result of 0x0049AB4C(100,-1) before admission"
+    }
+  }
 }
