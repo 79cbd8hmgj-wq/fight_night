@@ -50,6 +50,8 @@ jobs:
           assert info.revision_locked
           print(info.package_version, info.observed_revision)
           PY
+      - name: Dump boxer RE cluster
+        run: python tools/re_dump_boxer_cluster.py
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
