@@ -245,10 +245,10 @@
     {
       "program_id": "program-04",
       "subsystem": "Boxers",
-      "question": "Is xdbboxr.adf's header word0 genuinely a per-entry count consumed by executable code?",
+      "question": "What do xdbboxr.adf header word0/word1 count, and what is the +0x18 packed array?",
       "status": "STATICALLY_RESOLVED",
       "confidence": "PROBABLE",
-      "evidence": "func_001AD268 reads word0 from the singleton's payload and uses it directly as a scanning-loop bound.",
+      "evidence": "Follow-up cross-build static RE resolves the generic XDB ABI. func_001ACCAC bounds field_id against header word0 and reads a packed 2-bit storage-class code at payload+0x18+(field_id>>2), proving word0 is field_count. func_001AD180 bounds record_index against header word1 and selects one row from the signed-int16 descriptor matrix, proving word1 is record_count. For xdbboxr: field_count=121, record_count=37. The +0x18 array is per-field type metadata, not per-boxer status flags. Type codes are 0=inline int16, 1=string, 2=int32, 3=float32.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -257,7 +257,15 @@
       ],
       "sources": {
         "functions": [
+          "func_001ACCAC",
+          "func_001AD180",
+          "func_001ACD40",
+          "func_001ACE20",
           "func_001AD268"
+        ],
+        "evidence": [
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/xdbboxr-schema.json"
         ]
       },
       "remaining_static_work": null,
@@ -270,7 +278,7 @@
       "subsystem": "Boxers",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The xdbboxr payload still has a proven count of 121 and a packed 2-bit-per-entry flags array at +0x18; raw record-byte offsets past that header/flags region are not yet fully decoded. Follow-up PR #37 resolves the real SelectBoxer rating reader: UpdateSelectBoxerInfo begins at 0x001D53F0 (so the older T_001D54A0 function-boundary interpretation was wrong). It parses iBoxerID/iCorner and publishes the nine UI ratings. Through func_0018553C -> func_001ACD40, the internal schema-field mapping is now: Power = average of schema IDs 0x10/0x11; Speed=0x12; Agility=0x13; Stamina=0x14; Chin=0x15; Body=0x18; Heart=0x16; Cuts=0x17. iOverall is computed by func_001D50F4 instead of being read as one direct raw field. This establishes real executable consumers and internal field IDs, but not yet the physical byte offsets/encoding of those schema IDs in xdbboxr.adf.",
+      "evidence": "The generic XDB record layout is now resolved. xdbboxr has 121 fields x 37 records. The packed field-type table begins at +0x18 (31 bytes), and the row-major signed-int16 descriptor matrix starts at +0x38 with record stride 0xF2; matrix offset is `0x38 + record_index*0xF2 + field_id*2`. UpdateSelectBoxerInfo at 0x001D53F0 maps the rating outputs through func_0018553C -> func_001ACD40. Fields 0x10-0x18 all have type code 0 because raw header word7 is zero, so these are direct signed-int16 record fields. Power averages fields 0x10/0x11 (record-relative +0x20/+0x22); Speed=0x12 (+0x24); Agility=0x13 (+0x26); Stamina=0x14 (+0x28); Chin=0x15 (+0x2A); Heart=0x16 (+0x2C); Cuts=0x17 (+0x2E); Body=0x18 (+0x30). iOverall is computed by func_001D50F4. Thus the rating block's exact byte offsets/width/signedness are resolved, while the many non-rating field IDs remain semantically unmapped.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -283,16 +291,20 @@
           "0x001D53F0 (UpdateSelectBoxerInfo)",
           "func_0018553C",
           "func_001ACD40",
+          "func_001ACCAC",
+          "func_001AD180",
           "func_001D50F4"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
         ],
         "evidence": [
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/xdbboxr-schema.json",
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Trace func_001ACD40/func_001ACC54/func_001ACCAC back through the xdb schema descriptors to convert internal field IDs 0x10-0x18 into exact xdbboxr.adf byte offsets/types. Then extend the same method to identity, division, stance/handedness, appearance, hometown, career/store and created-boxer fields. Independently bound the second stat-name copy near 0x001E83E0 before assigning it semantics.",
+      "remaining_static_work": "Use the recovered generic field binder/accessor pattern to map the remaining xdbboxr field IDs to identity/name, weight/division, stance/handedness, appearance/equipment, hometown, career/store and created-boxer semantics. Bound the second stat-name copy near 0x001E83E0 independently. The generic record boundary and rating byte layout no longer require further decoding.",
       "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -374,7 +386,7 @@
       "subsystem": "Boxers",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
       "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "xdbboxr.adf's header word0=121 is proven to be consumed as a count by real code, but whether 121 is a hard compiled maximum (vs. simply 'however many rows this specific database currently has') was not established -- no bounds-check or fixed-size array declaration referencing 121 as a compile-time constant was located. This delta pass inspected selectboxer.big!selectBoxer.const (397 named constants) specifically for a UI-authored boxer-count cap: none was found -- no MAX_BOXER/MAX_ROSTER-style constant exists in this file (a full MAX_/NUM_ scan across all 10 newly-added .const pools found only MAX_WEIGHTCLASS/NUM_STATS in selectboxer.big and generic display-pagination constants MAX_VISIBLE_ROWS/MAX_NUM_GROUPS/MAX_NUM_COLUMNS elsewhere, none of which bound the boxer roster itself). This is a genuine negative result, not just an absence of a positive one: it rules out one of the four originally-listed interpretations ('a UI-authored maximum') as unsupported by this file, though it cannot rule out an executable-side or save-format-side cap. selectBoxer.const does confirm the UI receives an explicit 'iListLength'/'iEndList' pair alongside 'objBoxerIDs' and a distinct 'bHasCustom' flag, consistent with the boxer list being handed to the UI as a native-supplied, already-counted array rather than a UI-enumerated fixed-size table. Follow-up analysis reaches GetSelectBoxerInfo at 0x001D77C8. It does not compare against 121; it builds six boxer-ID lists from per-division start/end globals. The initial six ranges cover IDs 0-34. This rules out a 121 cap in this handler itself but not elsewhere.",
+      "evidence": "The earlier 121-roster interpretation is disproven. Generic XDB accessors prove xdbboxr word0=121 is field_count and word1=37 is the current record_count. Record selection in func_001AD180 is bounded dynamically against header.word1 rather than a compiled 37 or 121. GetSelectBoxerInfo exposes 35 stock IDs (0-34) across six divisions and contains no 121-row cap; two additional xdbboxr rows exist but their semantics are not yet assigned. No MAX_BOXER/MAX_ROSTER UI constant was found. These facts eliminate 121 as a roster maximum and show the core XDB accessor is dynamically record-counted, but they do not rule out a separate save/custom-boxer or gameplay-side maximum.",
       "affected_features": [
         "roster",
         "generated-boxers"
@@ -384,14 +396,17 @@
           "selectboxer.big!selectBoxer.const"
         ],
         "functions": [
-          "0x001D77C8"
+          "func_001AD180",
+          "0x001D77C8 (GetSelectBoxerInfo)"
         ],
         "evidence": [
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/xdbboxr-schema.json",
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Trace the remaining literal-121 executable sites and determine whether any are connected to xdbboxr.adf allocation/indexing or save serialization. Inspect created/custom-boxer storage separately.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Trace the two xdbboxr rows outside the stock SelectBoxer ranges and the created/custom-boxer save path. Search for consumers that allocate or serialize boxer arrays independently of header.word1; only such a consumer could establish a hard maximum distinct from the dynamic XDB record count.",
+      "confidence": "PROBABLE for the 121 correction and dynamic XDB count; CANDIDATE/open for any separate hard maximum",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-07"
