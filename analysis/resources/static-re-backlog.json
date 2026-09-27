@@ -66,8 +66,8 @@
       "program_id": "program-04",
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
-      "question": "Which UI/menu screen(s) construct boxer-table queries, and what does func_001AF768's dual query (strides 5 and 0x28) feed?",
-      "remaining_static_work": "Search for callers of func_001AF768/T_0018E4F4; disassemble the 9 chained subsystem-init calls.",
+      "question": "What do func_001AF768's dual XDB field-classification queries (strides 5 and 0x28) feed inside the fight-session constructor?",
+      "remaining_static_work": "Disassemble the consumers of the fight-session +0x198C/+0x198E outputs and the remaining constructor init chain to identify what the stride-5 and stride-0x28 classifications represent.",
       "affected_features": [
         "roster",
         "career-2"
@@ -75,7 +75,11 @@
       "sources": {
         "functions": [
           "func_001AF768",
-          "T_0018E4F4"
+          "func_001AD268"
+        ],
+        "evidence": [
+          "analysis/resources/overhaul-alpha1-evidence.json",
+          "analysis/resources/xdb-schema-evidence.json"
         ]
       }
     },
@@ -83,24 +87,24 @@
       "id": "program-04-07",
       "program_id": "program-04",
       "subsystem": "Boxers",
-      "status": "STATICALLY_AMBIGUOUS",
+      "status": "STATICALLY_SOLVABLE",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
-      "remaining_static_work": "121 is now disproven as a roster count: it is xdbboxr's field_count; the current record_count is 37 and the core accessor reads it dynamically from header.word1. Trace the two records outside the 35 stock SelectBoxer IDs and the created/custom-boxer save path, and locate any consumer that allocates or serializes boxer arrays independently of the dynamic XDB record_count.",
+      "remaining_static_work": "121 is now disproven as a roster count: it is xdbboxr's field_count. The base record_count is 37 and is read dynamically; func_00186284 can span multiple table instances. Trace base rows 35-36, the created/custom-boxer save path, and any independent array/allocation/serialization consumer that could impose a fixed cap across the cumulative boxer-ID space.",
       "affected_features": [
         "roster",
         "generated-boxers"
       ],
       "sources": {
-        "ui_resource": [
-          "selectboxer.big!selectBoxer.const"
-        ],
         "functions": [
+          "func_001AD21C",
           "func_001AD180",
+          "func_00186284",
           "0x001D77C8"
         ],
         "evidence": [
           "analysis/resources/xdbboxr-schema.json",
-          "analysis/resources/xdb-schema-evidence.json"
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       }
     },
