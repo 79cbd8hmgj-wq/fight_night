@@ -1690,7 +1690,7 @@
     ]
   },
   "speech_bank_record_model": {
-    "confidence": "CONFIRMED for bank/record layout, interned event IDs, base speech indices, and request routing; only record+0x0C remains semantically unresolved",
+    "confidence": "CONFIRMED for bank/record layout, interned event IDs, base data-file byte offsets, AEMS relative byte ranges, and request routing; record+0x0C consumer meaning remains unresolved",
     "initializer": "0x0013A6D0",
     "lookup_by_event_id": "0x001379B0",
     "alternate_record_accessor": "0x001379F4",
@@ -1708,7 +1708,7 @@
       "size": "0x10",
       "fields": {
         "+0x00": "interned/registered event-key ID returned by 0x00496F20 (CONFIRMED)",
-        "+0x04": "base speech asset/sample index used by the playback path (CONFIRMED)",
+        "+0x04": "base byte offset of the canonicalized per-event .dat entry within the selected speech data bank, returned by 0x0033AAEC (CONFIRMED by downstream file-offset storage)",
         "+0x08": "pointer to the source parsed event-key object returned by 0x003609D8 (CONFIRMED)",
         "+0x0C": "1 when the canonicalized record name contains '001', otherwise 2; exact consumer meaning unresolved (CONFIRMED construction, UNKNOWN semantics)"
       }
@@ -1764,7 +1764,7 @@
         "0x00360C2C copies the per-record parsed string into a local buffer using the confirmed strcpy helper.",
         "If strstr(name, '_Clone') succeeds, the loader truncates the string at the start of '_Clone'.",
         "It appends '.dat'.",
-        "It passes that canonicalized .dat name through 0x0033AAEC against the loaded speech-data resource and stores the returned value at record+0x04.",
+        "It passes that canonicalized .dat name through 0x0033AAEC against the loaded speech-data resource and stores the returned base byte offset at record+0x04.",
         "It separately checks strstr(name, '001') and writes record+0x0C = 1 when present, otherwise 2."
       ],
       "implication": "Speech event records resolve canonical data-entry names to base indices during initialization instead of resolving filenames from scratch on every playback request."
@@ -1776,14 +1776,17 @@
         "1": "ancdat.big",
         "2": "trndat.big"
       },
-      "final_index": "record.base_index (+0x04) + request.variant_offset (+0x04)",
+      "final_byte_offset": "record.base_data_offset (+0x04) + request.relative_byte_offset (+0x04)",
       "playback_wrapper": "0x00483AAC",
       "playback_core": "0x004837A4",
-      "confidence": "CONFIRMED argument dataflow",
+      "lower_file_open_path": "0x004C242C / 0x004C254C",
+      "confidence": "CONFIRMED",
       "evidence": [
-        "All four bank playback branches call 0x001379B0 with request+0x00, add request+0x04 to the returned base index, then call 0x00483AAC.",
-        "0x00483AAC forwards to 0x004837A4 with the bank path and final index.",
-        "0x004837A4 passes that path/index into its lower-level resource/audio open/start path."
+        "Each bank branch calls 0x001379B0 with request+0x00, adds request+0x04 to the returned record+0x04 value, then calls 0x00483AAC.",
+        "0x00483AAC forwards to 0x004837A4 with the selected bank pathname and the resulting value.",
+        "0x004837A4 passes pathname + resulting value to 0x004C242C/0x004C254C.",
+        "0x004C242C copies the pathname into its file/resource object and stores the resulting value at object+0x118, where the adjacent code treats it as a file position/offset.",
+        "The alternate 0x004C254C path walks linked file extents to adjust the same offset across segmented storage."
       ]
     },
     "subtitle_debug_field": {
@@ -1821,16 +1824,16 @@
         "confidence": "CONFIRMED"
       },
       "+0x04": {
-        "construction": "first numeric output from 0x0049B480, with optional adjustment from source halfword +0x06",
-        "downstream_use": "added to the bank record's base speech/sample index before playback",
-        "semantic": "variant/sub-index offset",
-        "confidence": "CONFIRMED downstream arithmetic; exact AEMS source-field name unresolved"
+        "construction": "byte start output from 0x0049B480 plus optional source halfword +0x06 * block_scale",
+        "downstream_use": "added to the speech event record's base .dat byte offset before playback",
+        "semantic": "relative byte offset",
+        "confidence": "CONFIRMED"
       },
       "+0x08": {
-        "construction": "second numeric output from 0x0049B480",
-        "downstream_use": "not consumed by the currently mapped AuSpeechManager router branches",
-        "semantic": "secondary AEMS-derived numeric field",
-        "confidence": "CONFIRMED construction; semantic role unresolved"
+        "construction": "byte-length output from 0x0049B480",
+        "downstream_use": "accumulated by the generic AEMS producer; not directly consumed by the currently mapped AuSpeechManager playback branches",
+        "semantic": "byte length/span",
+        "confidence": "CONFIRMED"
       },
       "+0x0C": {
         "construction": "16-bit value copied from the source packet/object",
@@ -1877,12 +1880,28 @@
     },
     "variant_decoder": {
       "function": "0x0049B480",
-      "confidence": "CONFIRMED as the producer of request+0x04/+0x08; exact semantic names unresolved",
-      "outputs": {
-        "first": "request+0x04, later used as the additive speech variant/sub-index",
-        "second": "request+0x08, currently unused by the mapped AuSpeechManager bank-selection paths"
+      "proposed_name": "DecodeAemsByteRange",
+      "confidence": "PROBABLE name; CONFIRMED range arithmetic",
+      "input_shape": {
+        "+0x04 low 7 bits": "extra bytes per entry; entry stride is (value & 0x7F) + 2",
+        "+0x05": "entry count",
+        "+0x07": "block-scale byte; byte scale = (value + 1) << 8",
+        "+0x08": "final/end position in scale units used for the last entry",
+        "+0x0C...": "variable-size entries beginning with a big-endian 16-bit position value"
       },
-      "evidence": "The function derives both outputs from parsed event-object fields and per-entry bytes; naming the internal fields more specifically awaits further structure recovery."
+      "outputs": {
+        "first": "byte start offset = entry_position_units * ((byte_7 + 1) << 8)",
+        "second": "byte length = next_entry_position_bytes - start; for the last entry, object+0x08 supplies the end position"
+      },
+      "producer_adjustment": "0x0049A5C0 optionally adds source halfword +0x06 * block_scale to the first output before storing request+0x04.",
+      "request_fields": {
+        "+0x04": "relative byte offset within the canonical speech event .dat entry",
+        "+0x08": "byte length/span of the selected AEMS range"
+      },
+      "corroboration": [
+        "0x0049A5C0 accumulates the second output across emitted requests before passing the total to 0x00498CC0.",
+        "AuSpeechManager adds request+0x04 to the event record's base .dat byte offset before the lower audio/file layer stores the final offset."
+      ]
     },
     "generic_aems_registration": {
       "function": "0x00498260",
