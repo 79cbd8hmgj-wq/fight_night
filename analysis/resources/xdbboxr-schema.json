@@ -5,7 +5,7 @@
   "resource": "preload/db.viv!xdbboxr.adf",
   "status": "record_layout_and_rating_fields_mapped",
   "confidence": "PROBABLE",
-  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. UpdateSelectBoxerInfo plus the generic XDB accessors map the core rating fields to exact inline signed-int16 tokens. Field 0x04 is now proven to gate inclusion in the 35-entry active stock SelectBoxer roster. Many other non-rating field identities remain unresolved.",
+  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. The cumulative boxer selector used by func_00186284 is a record-position index across registered boxer tables and is distinct from xdbboxr field 0. Identity/name, stock availability, hometown, nickname, weight/division and SelectBoxer rating fields are now mapped.",
   "container": {
     "compressed_size": 3117,
     "decoded_size": 9704,
@@ -167,25 +167,29 @@
   },
   "roster_count_correction": {
     "finding": "121 is the XDB field/column count, not the boxer-record count. xdbboxr.adf contains 37 base rows/records in the tracked retail resource.",
-    "select_boxer_context": "The normal stock SelectBoxer range table exposes IDs 0-34 across six divisions. Base rows 35 and 36 are now identified as bonus/hidden boxer records: Fabolous (global ID 74) and Little Mac (global ID 75).",
-    "global_indexing": "func_00186284 resolves a numeric boxer ID through the registered table-instance chain and subtracts each table's dynamic record_count until the owning table is found.",
-    "hard_maximum": "No hard total roster maximum is established. The base XDB record count is dynamic, boxer IDs are explicit data (field 0) rather than row indices, and the global resolver can span multiple table instances."
+    "selector_model": "func_00186284 resolves the boxer selector/index by cumulative registered-table record counts. It never consults xdbboxr field 0: it subtracts each table's dynamic record_count and passes the residual record index to func_001AD180.",
+    "select_boxer_context": "The normal stock SelectBoxer range table exposes selector indices 0-34 across six divisions. Base rows/indexes 35 and 36 are bonus/hidden records for Fabolous and Little Mac.",
+    "field0_correction": "xdbboxr field 0 happens to equal row index for rows 0-34 but contains 74 and 75 in rows 35 and 36. Because the actual selector resolver reaches those records by cumulative indices 35 and 36 without reading field 0, field 0 is NOT the global SelectBoxer/fight-session boxer index. Its exact secondary/resource-ID role remains unresolved.",
+    "hard_maximum": "No hard total roster maximum is established. Base record_count is dynamic and func_00186284 can span multiple registered boxer-table instances."
   },
   "unresolved": [
-    "Whether bonus/hidden rows outside the 35-entry stock SelectBoxer list use a separate unlock policy; field 0x04 is only proven as the stock-list inclusion gate.",
-    "Semantic identities and storage types for non-rating field IDs outside the recovered rating block.",
-    "Any independent save/UI limit on total boxer IDs across all registered table instances.",
+    "Exact semantic role of field 0x00's secondary/resource identity number (74/75 for the two bonus records).",
+    "Exact semantic label for field 0x05 and its 76-entry consumer/dispatch space.",
+    "Semantic identities for remaining physical/biographical fields including likely age/height/reach and the packed 0x0D/0x0E metadata.",
+    "Stance/handedness and appearance/equipment references.",
+    "Career/store/generated-boxer fields and any independent save/UI maximum on the cumulative boxer selector space.",
     "Exact original iOverall formula internals beyond the recovered helper boundary."
   ],
   "identity_fields": {
-    "confidence": "CONFIRMED for fields 0-2; PROBABLE for field 3's CRO/resource-stem role",
+    "confidence": "CONFIRMED for name fields 1-2; PROBABLE for field 3; field 0 is explicitly unresolved after correcting the earlier global-ID interpretation",
     "fields": [
       {
         "field_id": "0x00",
         "row_offset": "0x00",
         "storage": "inline signed int16",
-        "semantic": "global boxer ID",
-        "evidence": "Rows 0-34 contain IDs 0-34 exactly; rows 35-36 contain 74 and 75 rather than their physical row indices. The global boxer resolver consumes numeric boxer IDs through the table-instance chain."
+        "semantic": "secondary boxer/resource identity key; exact role unresolved",
+        "confidence": "CANDIDATE",
+        "evidence": "Rows 0-34 contain values 0-34, while bonus rows 35-36 contain 74 and 75. func_00186284 proves the game's cumulative boxer selector/index is instead derived entirely from registered-table record counts and residual row position, so the previous 'global boxer ID' label for field 0 is superseded."
       },
       {
         "field_id": "0x01",
@@ -211,24 +215,26 @@
     ]
   },
   "base_records_outside_stock_ranges": {
-    "confidence": "CONFIRMED for identities/IDs; selection/unlock policy remains separate",
+    "confidence": "CONFIRMED for physical record identity; field-0 secondary IDs remain semantically unresolved",
     "records": [
       {
         "row_index": 35,
-        "boxer_id": 74,
+        "selector_index": 35,
+        "field0_secondary_id": 74,
         "last_or_display_name": "FABOLOUS",
         "first_name": "",
         "cro_stem": "fabo"
       },
       {
         "row_index": 36,
-        "boxer_id": 75,
+        "selector_index": 36,
+        "field0_secondary_id": 75,
         "last_or_display_name": "MAC",
         "first_name": "LITTLE",
         "cro_stem": "spun"
       }
     ],
-    "finding": "The two base-table rows outside the normal SelectBoxer ID ranges 0-34 are real bonus/hidden boxer records, not empty/template/custom-created slots.",
+    "finding": "The two base-table rows outside the normal stock SelectBoxer ranges are real bonus/hidden boxer records. The cumulative resolver reaches them as selector indices 35 and 36; their field-0 values 74/75 are separate secondary IDs/keys.",
     "custom_boxer_separation": "GetSelectBoxerInfo has a separate created/custom-boxer path that emits iCustomBoxerID, strCustomBoxerName and iCustomBoxerWeightClass from session/custom state, independently of base rows 35-36."
   },
   "weight_and_division": {
@@ -297,15 +303,74 @@
     "field_id": "0x04",
     "row_offset": "0x08",
     "storage": "inline signed int16",
-    "semantic": "stock SelectBoxer roster inclusion/availability flag",
-    "confidence": "CONFIRMED",
-    "observed_values": "1 for every normal stock SelectBoxer record 0-34; 0 for bonus rows 35-36.",
+    "semantic": "base/default boxer availability flag",
+    "confidence": "CONFIRMED for executable behavior; PROBABLE user-facing 'unlocked/selectable' wording",
+    "observed_values": "1 for normal stock rows 0-34; 0 for bonus rows 35-36.",
     "executable_evidence": [
-      "func_00185D84 reads XDB field 4 through func_001ACD40 and returns whether the signed int16 value is >0.",
-      "T_00278ABC iterates exactly 0x23 (35) entries from D_005646F0, resolves each boxer with func_00185114, calls func_00185D84, and writes 1 into the parallel D_0056477C slot when the predicate is true.",
-      "func_00278768 scans exactly 35 D_0056477C slots and returns the count whose value equals 1.",
-      "func_002787A0 uses that count, walks D_0056477C and D_005646F0 in parallel, skips zero-flag entries, and copies only enabled boxer IDs into the caller's output list."
+      "func_00185D84 reads field 4 through func_001ACD40 and returns (field4 > 0).",
+      "T_00278ABC applies that predicate across exactly 35 stock selector indices and writes the result into the parallel D_0056477C availability array.",
+      "func_00278768 counts enabled entries and func_002787A0 copies only enabled stock indices.",
+      "func_001B0FE8 returns true immediately when field4 > 0. When field4 == 0, selector index 35 is conditionally accepted through a per-boxer bit in the session/object bitset beginning at +0x1C4; indices >=36 are rejected in that predicate.",
+      "T_001B2648 can set the corresponding +0x1C4 availability bit using func_001AF728, which splits a selector index into word=index/32 and bit=index%32."
     ],
-    "conclusion": "Field 0x04 directly gates membership in the active 35-entry stock SelectBoxer list. This proves stock-roster availability/selectability semantics for this consumer path; it does not by itself define the separate unlock policy for bonus/hidden rows."
+    "conclusion": "Field 0x04 is the default/base availability flag. Normal stock boxers pass directly; at least bonus selector index 35 can be promoted to available by a separate runtime/session unlock bit. This is stronger than the earlier stock-list-only interpretation."
+  },
+  "reference_fields": {
+    "hometown": {
+      "field_id": "0x06",
+      "row_offset": "0x0C",
+      "storage": "inline signed int16 foreign-key token",
+      "semantic": "xdbhmtwn.adf hometown key/reference",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "T_00185FA0 reads boxer field 6, resolves it through func_001A9020, then reads hometown-table field 1.",
+        "T_001860A0 reads boxer field 6, resolves it through func_001A9020, then reads hometown-table field 4.",
+        "Direct decode of xdbhmtwn.adf proves a 63-record keyed table whose field 4 contains O_Home_* localization keys; boxer field-6 values fall in that key space."
+      ]
+    },
+    "nickname_alias": {
+      "field_id": "0x07",
+      "row_offset": "0x0E",
+      "storage": "inline signed int16 foreign-key token",
+      "semantic": "xdbalias.adf nickname/alias key/reference",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "func_00185F34 reads boxer field 7, resolves it through func_00185008, then reads alias-table field 1.",
+        "T_00186108 reads boxer field 7, resolves it through func_00185008, then reads alias-table field 3.",
+        "Direct decode of xdbalias.adf proves a 76-record keyed table whose field 3 contains ST_Nick_* localization keys; boxer field-7 values occupy that key space."
+      ]
+    }
+  },
+  "partially_decoded_compact_fields": {
+    "field_0x0D": {
+      "storage": "inline signed int16 packed value",
+      "confidence": "CONFIRMED for bit extraction; semantic labels not yet promoted",
+      "helpers": {
+        "func_001853F0": "returns ((field_0x0D >> 8) & 0xFF) + 1900",
+        "func_00185434": "returns field_0x0D & 0xFF"
+      },
+      "note": "The resulting high-byte-plus-1900 / low-byte pairs strongly resemble year plus age/event metadata in the decoded retail rows, but the owning semantic consumer has not yet been proven."
+    },
+    "field_0x0E": {
+      "storage": "inline signed int16 packed value",
+      "confidence": "CONFIRMED for bit extraction; semantics unresolved",
+      "helpers": {
+        "func_00185468": "returns field_0x0E & 0xF",
+        "func_0018549C": "returns (field_0x0E >> 4) & 0xF",
+        "func_001854DC": "returns ((field_0x0E >> 8) & 0xF) - 5"
+      }
+    },
+    "field_0x05": {
+      "storage": "inline signed int16",
+      "confidence": "CONFIRMED read boundary; semantic unresolved",
+      "helper": "func_00185B30 returns field 5 directly",
+      "note": "Callers treat it as a bounded/index-like value; one caller dispatches only when it is <76. Do not assign a presentation/animation semantic until that dispatch table is mapped."
+    },
+    "fields_0x73_to_0x78": {
+      "storage": "inline signed int16",
+      "confidence": "CONFIRMED access pattern; semantics unresolved",
+      "helper": "func_00185B60(accessor, n) reads field 0x73+n for n<6 and clamps the result to 0..100",
+      "note": "Six 0-100 fields heavily consumed by gameplay/AI-adjacent functions; exact labels remain open."
+    }
   }
 }
