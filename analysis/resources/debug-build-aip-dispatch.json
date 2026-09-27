@@ -2679,5 +2679,85 @@
       "lookup_connection": "0x00497090 searches this same up-to-eight-entry mapping table by two key bytes; the matched entry's object/category data is then used by 0x004970EC and downstream AEMS request processing."
     },
     "architectural_implication": "The remaining commentary problem is no longer identifying which AEMS objects can feed speech. The three speech .evt objects are explicitly registered as AEMS event sources/subscribers with category 0/1/2. Remaining work is to map individual .evt subscriptions and payload schemas through the AEMS active-state processor to the already-recovered AuSpeechManager byte-range request."
+  },
+  "aems_to_auspeech_active_state_bridge": {
+    "confidence": "CONFIRMED for call chain and category values; proposed helper names are descriptive, not original symbols",
+    "speech_callback_registration": {
+      "site": "0x0013ADD0-0x0013ADDC",
+      "registered_callback": "0x00137888",
+      "manager_context": "manager+0x148",
+      "constant": "0x00008CA0",
+      "registrar": "0x00498260",
+      "registrar_storage": {
+        "0x0004CE20": "callback pointer (raw/pre-relocation data address family)",
+        "0x0004CE18": "manager/context pointer",
+        "0x0004CE34": "constant/config value"
+      }
+    },
+    "auspeech_update_calls": {
+      "region": "0x0013BCFC-0x0013BD10",
+      "calls": [
+        {
+          "site": "0x0013BCFC",
+          "function": "0x00497EE8",
+          "category": 0
+        },
+        {
+          "site": "0x0013BD04",
+          "function": "0x00497EE8",
+          "category": 1
+        },
+        {
+          "site": "0x0013BD0C",
+          "function": "0x00497EE8",
+          "category": 2
+        }
+      ],
+      "interpretation": "AuSpeechManager explicitly services the three already-proven speech categories every update when its gating conditions allow."
+    },
+    "processing_chain": [
+      {
+        "function": "0x00497EE8",
+        "proposed_name": "AEMS_ProcessCategory",
+        "confidence": "PROBABLE name; CONFIRMED category-processing role",
+        "behavior": "Accepts category 0..7, checks whether that category has immediately processable or selectable active state, and reaches 0x00499E64 for the category when a request is ready."
+      },
+      {
+        "function": "0x00499E64",
+        "proposed_name": "AEMS_ProcessReadyCategory",
+        "confidence": "PROBABLE name; CONFIRMED downstream call chain",
+        "behavior": [
+          "Requires a live per-category state at the 0xA0-byte category-state block family rooted at raw 0x000180A8.",
+          "Copies the active packet's first packed mapping key into a local 4-byte key.",
+          "Runs mapping/state preparation through 0x0049AFB4 and 0x004999EC.",
+          "Calls 0x0049A5C0(active_object_0, active_object_4, &mapping_key).",
+          "Updates per-category bookkeeping and then clears/resets the processed category state through 0x00499BD0."
+        ]
+      },
+      {
+        "function": "0x0049A5C0",
+        "proposed_name": "AEMS_BuildAndDispatchRequests",
+        "confidence": "PROBABLE name; CONFIRMED request construction and callback invocation",
+        "behavior": [
+          "Resolves the mapping key with 0x00497090 and derives the selected mapping object/category.",
+          "Walks the decoded AEMS range entries for the active packet.",
+          "For each emitted entry calls 0x0049B480 to compute relative byte start and byte length.",
+          "Builds the already-recovered 0x20-byte request at sp+0x10.",
+          "Loads the globally registered callback from raw 0x0004CE20 and jalr-calls it at 0x0049A7FC with a0=sp+0x10.",
+          "The callback stored there by AuSpeechManager is exactly 0x00137888."
+        ]
+      }
+    ],
+    "continuous_path": [
+      "Fight Night named gameplay event fires via func_003E5860.",
+      "AEMS listener 0x0049B564 receives (gameplay payload, AEMS mapping context).",
+      "0x0049B564 builds a mapping-key + payload packet and submits it via 0x004974CC.",
+      "Accepted packet becomes AEMS active-state data.",
+      "AuSpeechManager update explicitly services AEMS categories 0, 1 and 2 through 0x00497EE8.",
+      "Ready category processing reaches 0x00499E64 -> 0x0049A5C0.",
+      "0x0049A5C0 turns decoded AEMS ranges into the 0x20-byte request ABI and invokes the registered AuSpeechManager callback 0x00137888.",
+      "0x00137888 forwards that request into the already-recovered AuSpeechManager bank router, which maps category 0/1/2 to com/anc/trn and final speech-bank byte ranges."
+    ],
+    "architectural_implication": "The runtime architecture from named gameplay event to AuSpeechManager request is now statically continuous. What BOOT.BIN alone still does not reveal is the full content of the external comevt.evt/ancevt.evt/trnevt.evt mappings needed to enumerate each event's exact speech IDs/variants."
   }
 }
