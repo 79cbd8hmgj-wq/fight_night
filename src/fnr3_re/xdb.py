@@ -188,7 +188,7 @@ def xdb_field_token(
     data = bytes(decoded)
     header = parse_xdb_header(data)
     offset = header.field_token_offset(record_index, field_index)
-    return struct.unpack_from("<h", data, offset)[0]
+    return int(struct.unpack_from("<h", data, offset)[0])
 
 
 def xdb_field_value(
@@ -234,7 +234,7 @@ def xdb_field_value(
             raise XdbFormatError(
                 f"int32-pool token is outside pool: field {field_index}, token {token}"
             )
-        return struct.unpack_from("<i", data, offset)[0]
+        return int(struct.unpack_from("<i", data, offset)[0])
 
     if field_type == 3:
         offset = header.float_pool_offset + token * 4
@@ -242,6 +242,6 @@ def xdb_field_value(
             raise XdbFormatError(
                 f"float-pool token is outside pool: field {field_index}, token {token}"
             )
-        return struct.unpack_from("<f", data, offset)[0]
+        return float(struct.unpack_from("<f", data, offset)[0])
 
     raise AssertionError(f"unreachable XDB field type: {field_type}")
