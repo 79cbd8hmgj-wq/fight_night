@@ -288,11 +288,93 @@ class PpssppDebuggerClient:
             )
         return data
 
-    def add_exec_breakpoint(self, address: int) -> None:
-        self.request("cpu.breakpoint.add", address=address, enabled=True, log=False)
+    def add_exec_breakpoint(
+        self,
+        address: int,
+        *,
+        pause: bool = True,
+        log: bool = False,
+        condition: str | None = None,
+        log_format: str | None = None,
+    ) -> None:
+        if address < 0:
+            raise PpssppDebuggerError("execution breakpoint address must be non-negative")
+        params: dict[str, object] = {
+            "address": address,
+            "enabled": pause,
+            "log": log,
+        }
+        if condition is not None:
+            params["condition"] = condition
+        if log_format is not None:
+            params["logFormat"] = log_format
+        self.request("cpu.breakpoint.add", **params)
+
+    def update_exec_breakpoint(
+        self,
+        address: int,
+        *,
+        pause: bool | None = None,
+        log: bool | None = None,
+        condition: str | None = None,
+        log_format: str | None = None,
+    ) -> None:
+        if address < 0:
+            raise PpssppDebuggerError("execution breakpoint address must be non-negative")
+        params: dict[str, object] = {"address": address}
+        if pause is not None:
+            params["enabled"] = pause
+        if log is not None:
+            params["log"] = log
+        if condition is not None:
+            params["condition"] = condition
+        if log_format is not None:
+            params["logFormat"] = log_format
+        self.request("cpu.breakpoint.update", **params)
 
     def remove_exec_breakpoint(self, address: int) -> None:
         self.request("cpu.breakpoint.remove", address=address)
+
+    def add_memory_breakpoint(
+        self,
+        address: int,
+        size: int,
+        *,
+        pause: bool = True,
+        log: bool = False,
+        read: bool = False,
+        write: bool = True,
+        change: bool = True,
+        condition: str | None = None,
+        log_format: str | None = None,
+    ) -> None:
+        if address < 0 or size <= 0:
+            raise PpssppDebuggerError(
+                "memory breakpoint requires non-negative address and positive size"
+            )
+        if not (read or write or change):
+            raise PpssppDebuggerError("memory breakpoint must watch read, write, or change")
+        params: dict[str, object] = {
+            "address": address,
+            "size": size,
+            "enabled": pause,
+            "log": log,
+            "read": read,
+            "write": write,
+            "change": change,
+        }
+        if condition is not None:
+            params["condition"] = condition
+        if log_format is not None:
+            params["logFormat"] = log_format
+        self.request("memory.breakpoint.add", **params)
+
+    def remove_memory_breakpoint(self, address: int, size: int) -> None:
+        if address < 0 or size <= 0:
+            raise PpssppDebuggerError(
+                "memory breakpoint requires non-negative address and positive size"
+            )
+        self.request("memory.breakpoint.remove", address=address, size=size)
 
     def resume(self) -> int:
         return self.send("cpu.resume")
