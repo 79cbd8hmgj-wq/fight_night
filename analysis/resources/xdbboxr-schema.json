@@ -178,7 +178,7 @@
     "Exact semantic role of field 0x00's secondary/resource identity number (74/75 for the two bonus records).",
     "Exact semantic label for field 0x05 and its 76-entry consumer/dispatch space.",
     "Semantic identities for remaining physical/biographical fields including likely age/height/reach and the packed 0x0D/0x0E metadata.",
-    "Stance/handedness and appearance/equipment references.",
+    "Remaining handedness/equipment and deeper appearance-resource semantics; stance, style, skin tone, eyebrow, eye colour, facial hair, facial-hair colour, hair colour, and the hair-style resource token are now mapped.",
     "Career/store/generated-boxer fields and any independent save/UI maximum on the cumulative boxer selector space.",
     "Exact original iOverall formula internals beyond the recovered helper boundary."
   ],
@@ -481,5 +481,109 @@
       "func_00187548 takes the complementary path: when field 0x0F != 0 it fills the nine-rating output with the unscaled/base accessor func_0018553C and marks output +0x78 = 0."
     ],
     "conclusion": "Field 0x0F selects between the game's weight-class-adjusted rating path and an alternate/raw rating mode. The underlying boxer category that sets the flag is not yet proven, so it is intentionally not named 'created', 'career', or similar."
+  },
+  "presentation_and_appearance_fields": {
+    "confidence": "CONFIRMED for stance/style/skin-tone and the listed head-appearance bridge fields; hair-style field 0x71 is confirmed as an internal resource token rather than the UI index",
+    "bridge": {
+      "function": "func_0018A110",
+      "role": "Copies/normalizes xdbboxr fields into the boxer presentation scratch structure consumed by front-end handlers.",
+      "ui_consumers": [
+        "T_001E3434 emits iStance and iStyle from scratch offsets +0x8C/+0x8E.",
+        "T_001E62BC emits iStyle directly and remaps scratch +0xC2 into iSkinTone.",
+        "T_001E76C4 randomizes iHairStyle/iHairColour/iEyeColour/iEyebrow/iFacialHair/iFacialHairColour, writes the corresponding scratch fields, then commits them through func_0018ADCC."
+      ]
+    },
+    "fields": [
+      {
+        "field_id": "0x19",
+        "row_offset": "0x32",
+        "storage": "inline signed int16",
+        "semantic": "stance flag / iStance",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0x8C",
+        "normalization": "func_0018A110 stores 1 when field 0x19 > 0, otherwise 0.",
+        "evidence": "T_001E3434 reads scratch +0x8C and publishes it under the literal iStance."
+      },
+      {
+        "field_id": "0x1A",
+        "row_offset": "0x34",
+        "storage": "inline signed int16",
+        "semantic": "style enum / iStyle",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0x8E",
+        "evidence": "func_0018A110 copies field 0x1A directly to scratch +0x8E; T_001E3434 and T_001E62BC publish that value under iStyle."
+      },
+      {
+        "field_id": "0x34",
+        "row_offset": "0x68",
+        "storage": "inline signed int16",
+        "semantic": "skin-tone internal enum",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xC2",
+        "ui_mapping": {
+          "1": 3,
+          "2": 4,
+          "3": 0,
+          "4": 1,
+          "5": 2
+        },
+        "evidence": "func_0018A110 copies field 0x34 to scratch +0xC2. T_001E62BC reads that slot and publishes iSkinTone through the exact five-value remap shown here."
+      },
+      {
+        "field_id": "0x35",
+        "row_offset": "0x6A",
+        "storage": "inline signed int16",
+        "semantic": "eyebrow selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xC4",
+        "evidence": "T_001E76C4 publishes iEyebrow and writes the same generated selection to scratch +0xC4 before func_0018ADCC commits it; func_0018A110 maps field 0x35 to +0xC4."
+      },
+      {
+        "field_id": "0x36",
+        "row_offset": "0x6C",
+        "storage": "inline signed int16",
+        "semantic": "eye-colour selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xC6",
+        "evidence": "T_001E76C4 publishes iEyeColour and writes the same generated selection to scratch +0xC6; func_0018A110 maps field 0x36 to +0xC6."
+      },
+      {
+        "field_id": "0x37",
+        "row_offset": "0x6E",
+        "storage": "inline signed int16",
+        "semantic": "facial-hair selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xC8",
+        "evidence": "T_001E76C4 publishes iFacialHair and writes the same generated selection to scratch +0xC8; func_0018A110 maps field 0x37 to +0xC8."
+      },
+      {
+        "field_id": "0x38",
+        "row_offset": "0x70",
+        "storage": "inline signed int16",
+        "semantic": "facial-hair-colour internal selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xCA",
+        "ui_note": "The randomizer stores the internal value in scratch +0xCA and publishes iFacialHairColour as internal_value - 1.",
+        "evidence": "func_0018A110 maps field 0x38 to +0xCA; T_001E76C4 writes s2 to +0xCA and emits s2-1 as iFacialHairColour."
+      },
+      {
+        "field_id": "0x39",
+        "row_offset": "0x72",
+        "storage": "inline signed int16",
+        "semantic": "hair-colour selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xCC",
+        "evidence": "T_001E76C4 publishes iHairColour and writes the same generated selection to scratch +0xCC; func_0018A110 maps field 0x39 to +0xCC."
+      },
+      {
+        "field_id": "0x71",
+        "row_offset": "0xE2",
+        "storage": "inline signed int16",
+        "semantic": "hair-style resource token",
+        "confidence": "CONFIRMED for resource-token role; user-facing style index is indirect",
+        "scratch_offset": "0x13C",
+        "evidence": "func_0018A110 maps field 0x71 to scratch +0x13C. T_001E76C4 publishes the UI iHairStyle index separately, then stores D_0055F9A8[iHairStyle] into +0x13C before committing."
+      }
+    ]
   }
 }
