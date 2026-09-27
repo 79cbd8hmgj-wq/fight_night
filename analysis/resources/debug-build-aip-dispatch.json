@@ -3260,5 +3260,55 @@
     },
     "reference_check": "A direct aligned-address scan found no code/data references to addresses inside the two usable file-backed padding ranges. The only literal occurrence for 0x0058A8A4 is ELF program-header metadata, not a gameplay reference.",
     "conclusion": "BOOT.BIN has no substantial inter-section free region. The largest directly patchable mapped padding is 52 bytes, followed by 16 bytes. Larger overhaul code/data will require repurposing proven-dead content, extending/rebuilding the module, or an explicit injected allocation/overlay strategy rather than relying on linker padding."
+  },
+  "localization_paths": {
+    "confidence": "CONFIRMED",
+    "aip_callback_path": {
+      "wrapper": "0x000CE8A0",
+      "source": "boxing/AIP/aip.cpp line 1492",
+      "callback_global": "0x005436D4",
+      "retained_assert_name": "s_pfnGetLocalizedString",
+      "behavior": "Asserts the callback pointer is present, then indirect-calls it with the requested key. This is an AIP-specific swappable localization callback."
+    },
+    "shared_game_localization_path": {
+      "formatter": "0x00206F90",
+      "chain": [
+        "0x00206F90 -> 0x00206EB0",
+        "0x00206EB0 -> 0x002071B4",
+        "0x002071B4 -> 0x00206BA8",
+        "0x00206BA8 -> 0x002069DC"
+      ],
+      "key_hash": "0x0020692C",
+      "hashed_index_lookup": "0x00206980",
+      "localized_string_resolver": "0x00206A74 -> 0x00366750 against global localization object 0x005604A0",
+      "debug_key_display_flag": "0x005604A8",
+      "behavior": "Hashes a localization key, binary-searches the shared localization index, resolves the localized string from the global localization resource, then formats/copies it for the caller. A debug flag can instead expose the key text."
+    },
+    "division_name_proof": {
+      "keys": [
+        "INFO_Division_1",
+        "INFO_Division_2",
+        "INFO_Division_3",
+        "INFO_Division_4",
+        "INFO_Division_5",
+        "INFO_Division_6",
+        "INFO_Division_Unknown"
+      ],
+      "key_families_observed_at": [
+        "0x00507D90 family",
+        "0x00509270 family",
+        "0x0050C804 family",
+        "0x0050DB18 family"
+      ],
+      "representative_code_regions": [
+        "0x00195310-0x0019539C",
+        "0x001B7BC4-0x001B7CCC",
+        "0x001E9A98-family",
+        "0x00202378-0x00202630"
+      ],
+      "final_key_consumer": "0x00206F90",
+      "conclusion": "Division labels are not hardcoded final display text. They are localization keys fed through the shared game-wide localization subsystem. They do not route through the AIP-specific s_pfnGetLocalizedString callback at 0x000CE8A0."
+    },
+    "architectural_implication": "FNR3 PSP exposes at least two distinct localization entry paths: an AIP callback indirection and a shared global localization database/formatter. UI reverse-engineering should not conflate them."
   }
 }
