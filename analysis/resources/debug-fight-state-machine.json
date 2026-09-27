@@ -191,5 +191,86 @@
       "Trace DRONE_COUNTER_PUNCH / DEFENDING / FEINTING for AI/action-selection boundaries."
     ],
     "hook_boundary_status": "0x00041450 is now a strong debug-build fighter-update boundary, but it is NOT yet a retail-safe hook. It must be transferred/matched to ULUS10066 and original instructions/ABI verified before patching."
+  },
+  "fighter_virtual_update_invoker": {
+    "function": "0x000352F4",
+    "wrapper": "0x000350B4",
+    "confidence": "CONFIRMED",
+    "evidence": [
+      "0x000352F4 loads fighter+0x64, selects the 8-byte member-function entry at table+0x100, and jalr-invokes its function pointer at entry+0x04.",
+      "For the recovered fighter class tables, that table+0x104 function pointer is 0x00041450.",
+      "After the virtual fighter update, 0x000352F4 updates bitfield history in the fighter-owned object at +0x38.",
+      "0x000350B4 is a thin direct wrapper around 0x000352F4."
+    ],
+    "implication": "The per-fighter tick is now connected to a concrete caller layer rather than only inferred from its vtable placement."
+  },
+  "high_level_fighter_owner": {
+    "constructor": "0x000A01EC",
+    "update_method": "0x000A0894",
+    "member_function_table": "0x0057D03C",
+    "update_method_table_entry": "+0x28 (function pointer at +0x2C)",
+    "fighter_runtime_field": "+0x2A0",
+    "fighter_runtime_initializer": "0x0009D084",
+    "fighter_runtime_factory": "0x00054608",
+    "confidence": "CONFIRMED structure; PROBABLE semantic owner label",
+    "constructor_evidence": [
+      "0x000A01EC calls base constructor 0x00099184 then installs member-function table 0x0057D03C at object+0x18.",
+      "It initializes object+0x2A0 to null along with neighboring runtime-owned subsystem pointers.",
+      "The only raw 0x000A0894 pointer in the ELF is at 0x0057D068, i.e. member-function table 0x0057D03C + 0x2C."
+    ],
+    "update_evidence": [
+      "0x000A0894 is a large virtual update method.",
+      "At 0x000A0E80 it calls 0x000350B4 with object+0x2A0.",
+      "The call is gated by high-level state fields (+0xA8, +0x230 and surrounding flags), so the fighter update is part of the larger object's active update path rather than an isolated helper."
+    ],
+    "fighter_assignment": {
+      "function": "0x0009D084",
+      "site": "0x0009D22C-0x0009D23C",
+      "behavior": "Calls 0x00054608(selected resources/boxer data, owner) and stores the returned fighter runtime pointer at owner+0x2A0.",
+      "supporting_context": [
+        "0x0009D084 first returns early if owner+0x2A0 is already non-null.",
+        "It consults the fight-session singleton and selector/session state before building XDB/boxer data.",
+        "It uses XDB field accessors before invoking 0x00054608, tying fighter runtime creation to selected boxer data."
+      ]
+    },
+    "call_chain": [
+      "0x000A0894 high-level virtual update",
+      "owner+0x2A0 fighter runtime",
+      "0x000350B4 wrapper",
+      "0x000352F4 fighter virtual update invoker",
+      "fighter table entry +0x100 / function pointer +0x104",
+      "0x00041450 per-fighter update",
+      "current combat-state update + movement-state update"
+    ]
+  },
+  "fight_object_construction": {
+    "function": "0x000859B4",
+    "confidence": "CONFIRMED as fighter-owner population/setup routine; exact original class/function name unknown",
+    "evidence": [
+      "Called by constructors/initializers including 0x0001EAAC, 0x000B4BB4 and 0x000C8A4C.",
+      "Reads fight-session singleton 0x001B3EA8 and selected boxer IDs around session+0x19B0.",
+      "Allocates 0x2D0-byte objects and calls 0x000A01EC to construct them.",
+      "Stores resulting high-level boxer-owner objects through the caller-owned pointer array, then calls 0x0009D084 to populate each object's fighter runtime at +0x2A0."
+    ],
+    "implication": "This bridges fight-session boxer selection to the high-level boxer owner and then into the recovered per-fighter runtime state machine."
+  },
+  "false_gameplay_leads": {
+    "confidence": "CONFIRMED string-owner/context corrections",
+    "aiPunchesThrown": {
+      "prior_lead": "T_001E2084 / aiPunchesThrown",
+      "corrected_context": "GetMyCareerStatsInfo front-end data builder",
+      "evidence": "The string sits in the MyCareerStats output-key cluster with aiPunchesLanded/aiPunchAccuracy/rank/career record fields and is resolved by presentation data-builder code.",
+      "consequence": "Do not use this string xref as a hit-resolution or player/AI convergence anchor."
+    },
+    "astrTKOTime": {
+      "corrected_context": "GetCareerHistoryInfo/list data",
+      "evidence": "The string is clustered with astrOpponentName, astrFightResult, aRoundsLasted and other Career History list output keys.",
+      "consequence": "Do not use this xref as the KO/TKO decision owner."
+    },
+    "iStamina": {
+      "corrected_context": "SelectBoxer/GetCreateRatingsInfo rating presentation",
+      "evidence": "Both iStamina strings sit in nine-rating UI key blocks alongside iPower/iSpeed/iAgility/iChin/iBody/iHeart/iCuts/iOverall.",
+      "consequence": "Direct iStamina string xrefs do not identify the in-fight stamina storage/formula."
+    }
   }
 }
