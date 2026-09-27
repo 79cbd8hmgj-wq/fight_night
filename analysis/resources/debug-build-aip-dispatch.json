@@ -659,5 +659,34 @@
       "Containing function starts marked PROBABLE were bounded by the nearest standard negative stack-frame prologue and checked against surrounding return/prologue structure.",
       "Assert line numbers and expressions were recovered from the argument setup at each source-path xref."
     ]
+  },
+  "pocketdj_function_boundary_corrections": {
+    "confidence": "CONFIRMED",
+    "reason": "Direct Allegrex disassembly shows the previously cited addresses are interior instructions, not function entries.",
+    "corrections": [
+      {
+        "stale_reference": "func_00295738",
+        "actual_instruction": "0x00295738: lw $s1, 0x24($sp)",
+        "containing_function_start": "0x00295448",
+        "note": "0x00295738 is in the epilogue of the function that starts at 0x00295448; it cannot be a function entry."
+      },
+      {
+        "stale_reference": "func_00295DD4",
+        "actual_instruction": "0x00295DD4: xor $a3, $s1, $v1",
+        "containing_function_start": "0x00295CD0",
+        "note": "0x00295DD4 is in a live basic block after a call and before the function epilogue."
+      },
+      {
+        "stale_reference": "func_00295EA0",
+        "actual_instruction": "0x00295EA0: sb $v0, 0x7111($a1)",
+        "containing_function_start": "0x00295E24",
+        "note": "0x00295EA0 is inside the source-attributed PocketDJFightNight.cpp routine starting at 0x00295E24."
+      }
+    ],
+    "replacement_audio_source_anchors": [
+      "func_00295788 -> PocketDJFightNight.cpp line 3, assert !\"pocketdj not inited!\"",
+      "func_00295E24 -> PocketDJFightNight.cpp line 182, assert player",
+      "func_00295EF0 -> PocketDJFightNight.cpp line 225, assert player"
+    ]
   }
 }
