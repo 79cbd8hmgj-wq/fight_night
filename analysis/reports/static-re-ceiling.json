@@ -277,7 +277,7 @@
       "subsystem": "Boxers",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The generic XDB layout and SelectBoxer rating block are now partially resolved. xdbboxr.adf has a 24-byte header, 121 fields, 37 base records, a 31-byte 2-bit-per-field type map at +0x18, and a row-major descriptor matrix beginning at +0x38 with 0xF2-byte rows. Generic accessors prove type 0=inline signed int16, type 1=string/byte pool, type 2=int32 pool, type 3=float pool. UpdateSelectBoxerInfo at 0x001D53F0 maps the rating fields: Power uses field IDs 0x10/0x11 and averages them; Speed=0x12; Agility=0x13; Stamina=0x14; Chin=0x15; Heart=0x16; Cuts=0x17; Body=0x18. These rating fields resolve as inline int16 tokens at exact per-row offsets 0x20-0x30. iOverall is computed by func_001D50F4 rather than read as one direct raw XDB field. Non-rating semantic field IDs remain open.",
+      "evidence": "The generic XDB layout and SelectBoxer rating block are now partially resolved. xdbboxr.adf has a 24-byte header, 121 fields, 37 base records, a 31-byte 2-bit-per-field type map at +0x18, and a row-major descriptor matrix beginning at +0x38 with 0xF2-byte rows. Generic accessors prove type 0=inline signed int16, type 1=string/byte pool, type 2=int32 pool, type 3=float pool. UpdateSelectBoxerInfo at 0x001D53F0 maps the rating fields: Power uses field IDs 0x10/0x11 and averages them; Speed=0x12; Agility=0x13; Stamina=0x14; Chin=0x15; Heart=0x16; Cuts=0x17; Body=0x18. These rating fields resolve as inline int16 tokens at exact per-row offsets 0x20-0x30. iOverall is computed by func_001D50F4 rather than read as one direct raw XDB field. Non-rating semantic field IDs remain open. Direct decoding of the tracked retail xdbboxr.adf plus the native name-composition path resolves the leading identity fields: field 0 is the explicit global boxer ID; field 1 is surname/family display name; field 2 is first/given name; field 3 is the short CRO/resource stem. func_001851CC directly reads field 2 then field 1 while composing the boxer name. The two base rows outside normal SelectBoxer IDs 0-34 are now identified: row 35 has global ID 74, FABOLOUS, stem fabo; row 36 has global ID 75, LITTLE MAC, stem spun. The custom-created-boxer SelectBoxer path is separate, so these rows are bonus/hidden roster records rather than custom slots. Field 4 is additionally narrowed to a standard-roster/selectability-style boolean: it is 1 for all normal IDs 0-34 and 0 for the two bonus rows; func_00185D84 reads field 4 and returns whether it is positive, while a caller at 0x00278B0C applies that predicate across 35 stock boxer IDs.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -292,7 +292,10 @@
           "func_001ACD40",
           "func_001ACCAC",
           "func_001AD180",
-          "func_001D50F4"
+          "func_001D50F4",
+          "func_001851CC",
+          "func_00185D84",
+          "0x00278B0C"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
@@ -302,7 +305,7 @@
           "analysis/resources/xdb-schema-evidence.json"
         ]
       },
-      "remaining_static_work": "Use the recovered generic accessor chain (func_001AD180/func_001ACCAC/func_001ACD40) to map remaining xdbboxr field IDs to identity/name, weight/division, stance/handedness, appearance/equipment, hometown, career/store and created-boxer semantics. Independently bound the second stat-string copy near 0x001E83E0.",
+      "remaining_static_work": "Continue mapping non-rating fields from concrete readers: resolve the exact engine label for field 4 (visible/selectable/unlocked/eligible), then weight/division, stance/handedness, appearance/equipment, hometown, career/store and remaining created-boxer-related semantics. Identity fields 0-3, the rating block 0x10-0x18, and bonus rows 35-36 no longer need re-derivation.",
       "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -388,7 +391,7 @@
       "subsystem": "Boxers",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The former 121-entry roster-cap hypothesis is disproven: 121 is xdbboxr.adf's field_count, while word1=37 is its base record_count and is read dynamically by func_001AD21C/func_001AD180. The base SelectBoxer range table exposes IDs 0-34 across six divisions, leaving base rows 35-36 semantically unresolved. func_00186284 resolves boxer IDs through a chain of registered table instances by subtracting each table's dynamic record_count, so the boxer-ID space is not inherently limited to one 37-row table. No fixed total roster maximum is established yet.",
+      "evidence": "The former 121-entry roster-cap hypothesis is disproven: 121 is xdbboxr.adf's field_count, while word1=37 is its base record_count and is read dynamically by func_001AD21C/func_001AD180. The base SelectBoxer range table exposes IDs 0-34 across six divisions, leaving base rows 35-36 semantically unresolved. func_00186284 resolves boxer IDs through a chain of registered table instances by subtracting each table's dynamic record_count, so the boxer-ID space is not inherently limited to one 37-row table. No fixed total roster maximum is established yet. The two extra base rows are now identified rather than unknown: row 35 is boxer ID 74 (Fabolous) and row 36 is boxer ID 75 (Little Mac). Because field 0 stores explicit global IDs that can differ from physical row index, base record_count and global boxer-ID range are distinct concepts.",
       "affected_features": [
         "roster",
         "generated-boxers"
@@ -398,7 +401,8 @@
           "func_001AD21C",
           "func_001AD180",
           "func_00186284",
-          "0x001D77C8 (GetSelectBoxerInfo)"
+          "0x001D77C8 (GetSelectBoxerInfo)",
+          "func_001851CC"
         ],
         "evidence": [
           "analysis/resources/xdbboxr-schema.json",
@@ -406,7 +410,7 @@
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Trace the meaning of base rows 35-36, the created/custom-boxer save path, and any independent array/allocation/serialization consumer that could impose a fixed cap across the cumulative table-instance ID space.",
+      "remaining_static_work": "Trace the created/custom-boxer table/save path and any independent allocation/serialization consumer that could impose a fixed cap across the cumulative boxer-ID space. The former rows-35/36 ambiguity is resolved.",
       "confidence": "PROBABLE for dynamic base-table count and cumulative resolver; fixed total maximum remains open.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
