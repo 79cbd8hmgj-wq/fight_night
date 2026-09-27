@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "confidence_policy": "CONFIRMED means direct instruction/data evidence in the debug ELF. PROBABLE labels semantic names inferred from structure/call behavior rather than retained source symbols.",
+  "fighter_runtime_controller": {
+    "constructor": "0x000409FC",
+    "confidence": "CONFIRMED structure; PROBABLE semantic class label",
+    "observations": [
+      "Constructs a large boxer/fighter runtime object.",
+      "Allocates a 0x7C-byte movement state object, constructs it with 0x00064158(owner), and stores it at owner+0x1F4.",
+      "Allocates a 0x74-byte combat/action state controller, constructs it with 0x00034458(controller, 14), and stores it at owner+0x21C.",
+      "Creates and registers 12 concrete combat states through 0x00034C98."
+    ],
+    "movement_state_offset": "+0x1F4",
+    "combat_state_controller_offset": "+0x21C"
+  },
+  "combat_state_controller": {
+    "constructor": "0x00034458",
+    "register_state": "0x00034C98",
+    "current_state_check_or_transition": "0x00034C08",
+    "clear_current_state": "0x00034BB0",
+    "capacity": 14,
+    "fields": {
+      "+0x54": "current state pointer",
+      "+0x58": "state-id/current-previous bookkeeping initialized to -1",
+      "+0x64": "state array capacity",
+      "+0x68": "byte gate/flag initialized to 1",
+      "+0x70": "controller member-function table pointer"
+    },
+    "state_registration": "0x00034C98 reads state+0x08 and stores the state pointer into controller[state_id].",
+    "state_ids": {
+      "0": "DRONE_STATE_IDLE",
+      "3": "DRONE_DEFEND_PREPARE",
+      "4": "DRONE_DEFENDING",
+      "5": "DRONE_ATTACKING",
+      "6": "DRONE_KNOCKDOWN_ATTACK",
+      "7": "DRONE_FEINTING",
+      "8": "DRONE_TAUNTING",
+      "9": "DRONE_ILLEGAL_PUNCH",
+      "10": "DRONE_SIGNATURE_PUNCH",
+      "11": "DRONE_COUNTER_PUNCH",
+      "12": "DRONE_BREAKCLINCH",
+      "13": "DRONE_CLINCH"
+    },
+    "unresolved_state_ids": [
+      1,
+      2
+    ],
+    "note": "IDs 1 and 2 are not instantiated by 0x000409FC; no names are assigned."
+  },
+  "state_object_layout": {
+    "fields": {
+      "+0x00/+0x04": "transition/internal state",
+      "+0x08": "state ID (CONFIRMED by 0x00034C98)",
+      "+0x0C/+0x10": "initialized to -1 in common constructors",
+      "+0x14": "member-function table pointer",
+      "+0x18": "owning fighter/runtime-controller pointer",
+      "+0x1C/+0x20/+0x24": "copies of owner +0x28/+0x2C/+0x30"
+    },
+    "member_function_entry": "8 bytes: signed 16-bit this-adjust at +0x00 and function pointer at +0x04",
+    "important_slots": {
+      "+0x18": "per-state tick/update callback (CONFIRMED structurally by central fighter update and state-specific large routines)",
+      "+0x28": "state predicate/action callback used by combat controller before update",
+      "+0x78": "+0x78 transition callback; enter/activate semantics PROBABLE",
+      "+0x80": "+0x80 transition callback; exit/deactivate semantics PROBABLE"
+    },
+    "transition_helpers": {
+      "0x0004257C": "stores transition arguments/flag and invokes a table callback",
+      "0x000425E0": "transition completion/dispatch helper",
+      "0x00042694": "clears object+0x04 then invokes table +0x80",
+      "0x000426C4": "sets object+0x04 to 1 then invokes table +0x78"
+    }
+  },
+  "named_state_tables": [
+    {
+      "name": "DRONE_ATTACKING",
+      "name_getter": "0x004D2E7C",
+      "table_pointer": "0x0057BC6C",
+      "update": "0x0005B58C"
+    },
+    {
+      "name": "DRONE_TAUNTING",
+      "name_getter": "0x004D2EBC",
+      "table_pointer": "0x0057BCF4",
+      "update": "0x00059230"
+    },
+    {
+      "name": "DRONE_ILLEGAL_PUNCH",
+      "name_getter": "0x004D2F04",
+      "table_pointer": "0x0057BD7C"
+    },
+    {
+      "name": "DRONE_SIGNATURE_PUNCH",
+      "name_getter": "0x004D2F4C",
+      "table_pointer": "0x0057BE04"
+    },
+    {
+      "name": "DRONE_FEINTING",
+      "name_getter": "0x004D2F94",
+      "table_pointer": "0x0057BE8C",
+      "update": "0x0005C878"
+    },
+    {
+      "name": "DRONE_COUNTER_PUNCH",
+      "name_getter": "0x004D2FB0",
+      "table_pointer": "0x0057BF14",
+      "update": "0x0005CD54"
+    },
+    {
+      "name": "DRONE_DEFENDING",
+      "name_getter": "0x004D302C",
+      "table_pointer": "0x0057C044",
+      "update": "0x0005F41C"
+    },
+    {
+      "name": "DRONE_DEFEND_PREPARE",
+      "name_getter": "0x004D306C",
+      "table_pointer": "0x0057C0D4"
+    },
+    {
+      "name": "DRONE_BREAKCLINCH",
+      "name_getter": "0x004D30AC",
+      "table_pointer": "0x0057C15C"
+    },
+    {
+      "name": "DRONE_CLINCH",
+      "name_getter": "0x004D3104",
+      "table_pointer": "0x0057C1E4",
+      "update": "0x0005FBB4"
+    },
+    {
+      "name": "DRONE_STATE_IDLE",
+      "name_getter": "0x004D3154",
+      "table_pointer": "0x0057C26C",
+      "update": "0x00061B50"
+    },
+    {
+      "name": "DRONE_KNOCKDOWN_ATTACK",
+      "name_getter": "0x004D3180",
+      "table_pointer": "0x0057C2F4",
+      "update": "0x00061E08"
+    },
+    {
+      "name": "DRONE_MOVEMENT",
+      "name_getter": "0x004D31AC",
+      "table_pointer": "0x0057C37C",
+      "update": "0x00064220"
+    }
+  ],
+  "fighter_tick": {
+    "function": "0x00041450",
+    "proposed_name": "FighterRuntime_Update",
+    "confidence": "CONFIRMED update boundary; PROBABLE semantic name",
+    "evidence": [
+      "At 0x000417B0 it follows owner+0x21C -> controller+0x54 -> state+0x14 and invokes member-function slot +0x18, advancing the current combat state.",
+      "At 0x000417D0 it follows owner+0x1F4 -> movement object+0x14 and invokes slot +0x18, advancing movement in the same tick.",
+      "It subsequently calls 0x003D9A4(owner), clears owner+0x8C, follows owner+0x24, and calls 0x003A444(..., 0x16)."
+    ],
+    "virtual_interface": {
+      "method_slot": "+0x104",
+      "evidence": [
+        "The raw pointer 0x00041450 occurs in multiple fighter-class member-function tables.",
+        "At table base 0x0057B4EC, slot +0x104 is 0x00041450.",
+        "At table base 0x0057B6CC, slot +0x104 is 0x00041450.",
+        "At table base 0x0057B8AC, slot +0x104 is 0x00041450.",
+        "At table base 0x0057BA8C, slot +0x104 is 0x00041450."
+      ],
+      "implication": "0x00041450 is a shared virtual fighter update method across multiple fighter-derived classes, explaining the absence of a direct JAL caller."
+    }
+  },
+  "movement_state_machine": {
+    "constructor": "0x00064158",
+    "table_pointer": "0x0057C37C",
+    "update": "0x00064220",
+    "confidence": "CONFIRMED",
+    "observations": [
+      "0x00064220 switches on movement-object +0x38 over values 0..8.",
+      "It dispatches to distinct movement handlers including 0x00066DFC, 0x00064634, 0x000649A0, 0x00064B18, 0x00064B9C, 0x00064D40, 0x00064E70 and 0x00064E78.",
+      "The movement state machine is distinct from, but advanced in the same 0x00041450 fighter tick as, the combat-action state machine."
+    ]
+  },
+  "overhaul_relevance": {
+    "immediate_targets": [
+      "Trace the object/container that invokes fighter virtual slot +0x104 to recover the outer fight loop.",
+      "Trace DRONE_ATTACKING update 0x0005B58C for punch execution, stamina consumption and hit-resolution convergence.",
+      "Trace DRONE_KNOCKDOWN_ATTACK update 0x00061E08 toward knockdown/KO/TKO state changes.",
+      "Trace DRONE_COUNTER_PUNCH / DEFENDING / FEINTING for AI/action-selection boundaries."
+    ],
+    "hook_boundary_status": "0x00041450 is now a strong debug-build fighter-update boundary, but it is NOT yet a retail-safe hook. It must be transferred/matched to ULUS10066 and original instructions/ABI verified before patching."
+  }
+}
