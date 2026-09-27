@@ -735,7 +735,7 @@
       "subsystem": "Damage",
       "question": "Beyond the already-proven '3-knockdown rule', does the retail options menu expose other named, distinct damage/stoppage rule toggles (auto-recovery, KO moment/highlight, fight stoppage, illegal blows, saved-by-the-bell)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "optionsettings.big!optionSettings.const names a full 17-entry gameplay-rules toggle list, including cpToggleIllegalBlows, cpToggleSavedByBell, cpToggleAutoRecovery, cpToggleKOMoment, cpToggleFightStoppage and the previously-known knockdown/cutman/commentary/round toggles. The underlying native accessor family is GetOptionsSettings/SetOptionsSettings. T_001D9A08/T_001DC5DC/T_001FB69C decode a packed 32-bit settings word at fight-session offset +0x15C. FOLLOW-UP cross-build RE corrects an earlier interpretation: +0x19A8 is not another options bitfield. func_001AFFDC writes it as a bounded fight/session mode enum (valid signed values <9, otherwise -1), and the debug quick-fight path writes mode 1. T_001D9A08 uses +0x19A8 as a mode gate while decoding/serving options. Offset +0x1955 remains a separate byte flag/gate. Thus the retail options storage remains bit-packed at +0x15C, while +0x19A8 selects context/mode-dependent behavior.",
+      "evidence": "optionsettings.big!optionSettings.const names a full 17-entry gameplay-rules toggle list, including cpToggleIllegalBlows, cpToggleSavedByBell, cpToggleAutoRecovery, cpToggleKOMoment, cpToggleFightStoppage and the previously-known knockdown/cutman/commentary/round toggles. The underlying native accessor family is GetOptionsSettings/SetOptionsSettings. func_001D9958/func_001DC52C/func_001FB6B8 decode a packed 32-bit settings word at fight-session offset +0x15C. FOLLOW-UP cross-build RE corrects an earlier interpretation: +0x19A8 is not another options bitfield. func_001AFFDC writes it as a bounded fight/session mode enum (valid signed values <9, otherwise -1), and the debug quick-fight path writes mode 1. func_001D9958 uses +0x19A8 as a mode gate while decoding/serving options. Offset +0x1955 remains a separate byte flag/gate. Thus the retail options storage remains bit-packed at +0x15C, while +0x19A8 selects context/mode-dependent behavior.",
       "affected_features": [
         "combat",
         "career-health"
@@ -745,9 +745,9 @@
           "optionsettings.big!optionSettings.const"
         ],
         "functions": [
-          "T_001D9A08",
-          "T_001DC5DC",
-          "T_001FB69C",
+          "func_001D9958",
+          "func_001DC52C",
+          "func_001FB6B8",
           "func_001D9870",
           "func_001D98E4",
           "func_001AFFDC"
@@ -756,7 +756,7 @@
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Complete the bit-field decode of the +0x15C packed settings word in T_001D9A08/T_001DC5DC/T_001FB69C and correlate each extracted bit-range against optionSettings.const's toggle-declaration order. Treat +0x19A8 only as the now-resolved session-mode gate; separately determine the role of byte +0x1955.",
+      "remaining_static_work": "Complete the bit-field decode of the +0x15C packed settings word in func_001D9958/func_001DC52C/func_001FB6B8 and correlate each extracted bit-range against optionSettings.const's toggle-declaration order. Treat +0x19A8 only as the now-resolved session-mode gate; separately determine the role of byte +0x1955.",
       "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -1351,9 +1351,9 @@
         ],
         "functions": [
           "func_000B065C",
-          "T_001D9A08",
-          "T_001DC5DC",
-          "T_001FB69C",
+          "func_001D9958",
+          "func_001DC52C",
+          "func_001FB6B8",
           "func_0010BB58",
           "func_003E5860"
         ],
@@ -1361,7 +1361,7 @@
           "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       },
-      "remaining_static_work": "Stop using `Decision Announcement Script` or xdbboxr field 0x05 as direct commentary-ID leads. Trace the real AuSpeechManager/PocketDJ/audio-bank consumers and their callers, and complete the commentary-toggle consumers T_001D9A08/T_001DC5DC/T_001FB69C only as needed to establish how the toggle gates those audio paths.",
+      "remaining_static_work": "Stop using `Decision Announcement Script` or xdbboxr field 0x05 as direct commentary-ID leads. Trace the real AuSpeechManager/PocketDJ/audio-bank consumers and their callers, and complete the commentary-toggle consumers func_001D9958/func_001DC52C/func_001FB6B8 only as needed to establish how the toggle gates those audio paths.",
       "confidence": "CANDIDATE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
