@@ -1194,5 +1194,142 @@
       }
     ],
     "note": "Entries are source/diagnostic attribution anchors. A diagnostic containing Class::Method is strong naming evidence for the containing routine, but exact C++ method promotion remains conservative where one routine contains diagnostics for multiple named methods."
+  },
+  "speech_dataset_architecture": {
+    "confidence": "CONFIRMED for file names, object offsets, loader/record layout, and commentary-dataset use; trainer/announcer labels are PROBABLE expansions of trn/anc",
+    "datasets": [
+      {
+        "manager_offset": "+0x1B0",
+        "kind": 2,
+        "inferred_role": "trainer speech (PROBABLE)",
+        "data_big": "trndat.big",
+        "event_file": "trnevt.evt",
+        "header_big": "trnhdr.big",
+        "init_call": "0x0013AEAC-0x0013AEC4"
+      },
+      {
+        "manager_offset": "+0x188",
+        "kind": 1,
+        "inferred_role": "announcer speech (PROBABLE)",
+        "data_big": "ancdat.big",
+        "event_file": "ancevt.evt",
+        "header_big": "anchdr.big",
+        "init_call": "0x0013AF04-0x0013AF1C"
+      },
+      {
+        "manager_offset": "+0x19C",
+        "kind": 0,
+        "inferred_role": "commentary speech",
+        "confidence": "CONFIRMED by use on the commentary/language-gated speech-event branch",
+        "data_big": "comdat.big",
+        "event_file": "comevt.evt",
+        "header_big": "comhdr.big",
+        "init_call": "0x0013AF5C-0x0013AF74",
+        "live_lookup_use": "func_0013CCA4 @ 0x0013D0E0-0x0013D104"
+      }
+    ],
+    "common_loader": {
+      "function": "func_0013A6D0",
+      "calling_convention_observed": {
+        "a0": "pointer to 0x14-byte dataset descriptor",
+        "a1": "dataset kind (0/1/2 in the three AuSpeechManager calls)",
+        "a2": ".evt filename",
+        "a3": "header .big filename",
+        "t0": "built data-big path",
+        "t1": "load/ownership flag (1 in these initializers)"
+      },
+      "descriptor_layout": {
+        "+0x00": "loaded event/resource handle; passed with dataset kind to func_0049AE38",
+        "+0x04": "record count, obtained from func_00360B38(header_handle)",
+        "+0x08": "allocated record array; record stride 0x10",
+        "+0x0C": "loaded header resource/handle",
+        "+0x10": "load/ownership flag copied from t1"
+      },
+      "record_layout": {
+        "+0x00": "record/event key ID from func_00496F20(header_entry)",
+        "+0x04": "resolved data-big entry handle/offset from func_0033AAEC(data_big_handle, derived_path)",
+        "+0x08": "header entry pointer/object from func_003609D8(header_handle,index)",
+        "+0x0C": "variant/class value: 1 when derived path contains `001`, otherwise 2"
+      },
+      "path_logic": [
+        "func_00360C2C extracts a record path/name from the header.",
+        "The `_Clone` suffix is recognized/stripped when present.",
+        "`.dat` is appended before looking the entry up in the data-big resource.",
+        "The literal substring `001` selects variant/class 1; otherwise the record receives 2."
+      ]
+    },
+    "lookup_helpers": {
+      "func_001379B0": {
+        "semantic": "dataset ID -> record +0x04 data handle/offset",
+        "behavior": [
+          "Uses record[0].key as the base ID and normally computes index = requested_id - base_id.",
+          "When debug flag 0x0055A693 is nonzero it uses the requested ID directly as the index.",
+          "Rejects negative/out-of-range indexes with -1.",
+          "Uses 0x10-byte record stride and returns record +0x04."
+        ]
+      },
+      "func_001379F4": {
+        "semantic": "dataset ID -> record +0x0C variant/class",
+        "behavior": [
+          "Computes requested_id - first_record_key.",
+          "Rejects negative/out-of-range indexes with -1.",
+          "Uses 0x10-byte record stride and returns record +0x0C."
+        ]
+      }
+    },
+    "commentary_event_resolution": {
+      "function": "func_0013CCA4",
+      "range": "0x0013D024-0x0013D104",
+      "evidence": [
+        "The function enters a speech-processing branch after the French-only func_001B1CFC gate.",
+        "At 0x0013D0E0 it loads the incoming event ID from event+0x00.",
+        "At 0x0013D0E8 it calls func_001379B0 with AuSpeechManager +0x19C, the comdat/comevt/comhdr dataset.",
+        "It loads event+0x04, adds that value to the resolved record +0x04 result, and passes the resulting address/offset to func_00483AAC."
+      ],
+      "implication": "The com* dataset is a concrete commentary speech database, and incoming speech event IDs are resolved through its 16-byte record table before audio dispatch."
+    },
+    "tcc_commentary_selector": {
+      "function": "func_0013DDC4",
+      "semantic": "large commentary/TCC condition classifier/selector",
+      "confidence": "PROBABLE semantic; CONFIRMED diagnostic strings and fight-stat dependencies",
+      "diagnostics": [
+        {
+          "string": "TCC = MULTI KD",
+          "xref": "0x0013E724-0x0013E730"
+        },
+        {
+          "string": "TCC = POOR PERFORMANCE",
+          "xref": "0x0013E7EC-0x0013E7FC"
+        },
+        {
+          "string": "TCC = WASTED ENERGY",
+          "xrefs": [
+            "0x0013E8B4-0x0013E8C4",
+            "0x0013E9E4-0x0013E9F4"
+          ]
+        },
+        {
+          "string": "TCC = BOXER DAMAGE",
+          "xref": "0x0013EAFC-0x0013EB08"
+        },
+        {
+          "string": "TCC = BOXER RATING/STYLE",
+          "xref": "0x0013F124-0x0013F130"
+        }
+      ],
+      "evidence": [
+        "The routine consumes fight/player state and statistics from multiple objects.",
+        "It selects bitmask/category values under the named TCC diagnostics.",
+        "The BOXER RATING/STYLE branch directly constructs boxer accessors through func_00185114 using current fight-session corner boxer IDs."
+      ],
+      "next_step": "Trace the selected TCC category/mask through the remainder of func_0013DDC4 into the event ID ultimately consumed by func_0013CCA4."
+    },
+    "subtitle_anchor": {
+      "function": "func_0013B410",
+      "diagnostic": "SUBTITLE ID = %d",
+      "xref": "0x0013B878-0x0013B888",
+      "evidence": "Formats/logs the current speech object's +0x10 ID before forwarding the generated text through the adjacent display/UI object path.",
+      "confidence": "CONFIRMED diagnostic anchor; exact subtitle UI method names unresolved"
+    }
   }
 }
