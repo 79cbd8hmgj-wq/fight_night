@@ -725,3 +725,54 @@ The remaining work is no longer discovering this bridge. It is recovering the
 individual speech-event subscription descriptors/payload schemas and tracing
 accepted AEMS packets through the active-state updater into the already-known
 AuSpeechManager 0x20-byte request ABI.
+
+## Continuous gameplay-event to speech path
+
+The BOOT.BIN control-flow gap between Fight Night gameplay events and
+AuSpeechManager is now closed.
+
+AuSpeechManager initialization at 0x0013ADD0-0x0013ADDC registers callback
+0x00137888 through 0x00498260. The registrar stores that callback in the
+AEMS global callback slot consumed by 0x0049A5C0.
+
+AuSpeechManager's update routine explicitly services all three speech
+categories:
+
+- 0x0013BCFC -> 0x00497EE8(category 0)
+- 0x0013BD04 -> 0x00497EE8(category 1)
+- 0x0013BD0C -> 0x00497EE8(category 2)
+
+Ready category state follows:
+
+    0x00497EE8
+      -> 0x00499E64
+      -> 0x0049A5C0
+      -> indirect callback at 0x0049A7FC
+      -> 0x00137888
+
+0x0049A5C0 uses 0x0049B480 to decode the AEMS relative byte start/length,
+constructs the recovered 0x20-byte request, and invokes the callback that
+AuSpeechManager registered.
+
+Combined with the already-proven speech EVT subscription path, the complete
+executable-side chain is now:
+
+    named gameplay event
+      -> generic event bus
+      -> AEMS listener 0x0049B564
+      -> mapping-key + gameplay-payload packet
+      -> 0x004974CC active AEMS state
+      -> 0x00497EE8 category processing
+      -> 0x00499E64
+      -> 0x0049A5C0 request builder
+      -> AuSpeechManager callback 0x00137888
+      -> category 0/1/2 bank router
+      -> com / anc / trn event record
+      -> final speech-bank byte range
+
+### Current boundary
+
+BOOT.BIN no longer contains an unidentified control-flow gap for commentary.
+The remaining work is data-oriented: enumerate the external comevt.evt,
+ancevt.evt and trnevt.evt subscription records and map their payload schemas
+to exact speech event IDs, variants, and byte ranges.
