@@ -2542,5 +2542,91 @@
       }
     ],
     "registry_artifact": "analysis/resources/aems-event-code-registry.json"
+  },
+  "generic_event_to_aems_bridge": {
+    "confidence": "CONFIRMED for subscription layout, callback signature, payload copy, and submit ownership behavior; exact original symbol names are unknown",
+    "bank_subscription_builder": {
+      "function": "0x0049B61C",
+      "proposed_name": "AEMS_RegisterGenericEventSubscriptions",
+      "source_object_requirements": [
+        "input object != NULL",
+        "input+0x04 points/offsets to its parsed event-entry block",
+        "input+0x0B is a one-byte already-registered flag",
+        "input+0x10 is the subscription/event count",
+        "input+0x18 contains per-entry 16-bit context-key selectors"
+      ],
+      "per_event_entry_size": "0x20",
+      "per_event_entry_layout": {
+        "+0x00": "generic-event descriptor name pointer; rebased in-place against the parsed string/base area",
+        "+0x04": "descriptor hash/second descriptor word",
+        "+0x08..+0x0F": "8-byte generic-event handle storage",
+        "+0x10..+0x1F": "generic-event listener node",
+        "+0x18": "listener callback pointer = 0x0049B564",
+        "+0x1C": "listener context = packed 32-bit mapping key from 0x0049702C"
+      },
+      "registration_sequence": [
+        "For each 0x20-byte event entry, descriptor name pointer at +0x00 is rebased in-place.",
+        "func_003E4A94(entry+0x08, entry+0x00) resolves/registers the generic named event.",
+        "Listener callback 0x0049B564 is stored at listener+0x08 (entry+0x18).",
+        "0x0049702C packs the source object's two category bytes plus a per-entry 16-bit selector into a 32-bit mapping key stored at listener+0x0C (entry+0x1C).",
+        "func_003E5938(entry+0x08, entry+0x10) inserts the listener into that generic event handle.",
+        "After all entries are subscribed, input+0x0B is set to 1."
+      ]
+    },
+    "generic_event_listener_abi": {
+      "registration_wrapper": "func_003E5938",
+      "insertion_core": "0x003E5980",
+      "dispatcher_wrapper": "func_003E5860",
+      "dispatch_core": "0x003E58A8",
+      "listener_node_layout": {
+        "+0x00": "next listener",
+        "+0x04": "previous/backlink used by insertion",
+        "+0x08": "callback function",
+        "+0x0C": "callback context"
+      },
+      "callback_signature": "callback(event_payload, listener_context)",
+      "evidence": "0x003E58A8 walks the event listener list, loads callback from +0x08 and context from +0x0C, then jalr callback with a0=caller payload and a1=context."
+    },
+    "aems_event_callback": {
+      "function": "0x0049B564",
+      "proposed_name": "AEMS_GenericEventCallback",
+      "inputs": {
+        "a0": "generic event payload",
+        "a1": "32-bit listener mapping key/context"
+      },
+      "mapping_resolution": {
+        "function": "0x004970EC",
+        "behavior": [
+          "Treats the 32-bit listener key as packed {u16 selector, u8 category-B, u8 category-A}.",
+          "0x00497090 matches the two category bytes against one of up to eight registered AEMS mapping descriptors.",
+          "0x00497048 then searches the matched descriptor's indexed 16-bit selector table.",
+          "Returns the matched AEMS record/object or NULL."
+        ]
+      },
+      "packet_construction": [
+        "Copies the 4-byte listener mapping key into a local canonical key.",
+        "Resolves that key through 0x004970EC.",
+        "Reads byte +0x0B from the resolved record and allocates (record+0x0B)*4 + 4 bytes through the AEMS allocation adapter 0x004980D8.",
+        "Writes the 4-byte mapping key as packet word 0.",
+        "Copies the generic event payload into packet+0x04 for exactly (record+0x0B)*4 bytes.",
+        "Submits the allocated packet through 0x004974CC.",
+        "If 0x004974CC returns false, frees the packet immediately through 0x00498104; on success ownership transfers to the AEMS processing state."
+      ],
+      "implication": "This is the direct static bridge from Fight Night's named gameplay-event bus into the AEMS event engine. AEMS banks subscribe by generic event name, then the listener callback converts each fired gameplay payload into an AEMS command packet keyed by the parsed AEMS mapping context."
+    },
+    "aems_packet_submitter": {
+      "function": "0x004974CC",
+      "proposed_name": "AEMS_SubmitEventPacket",
+      "confidence": "PROBABLE name; CONFIRMED acceptance/ownership behavior",
+      "observations": [
+        "Uses the packet's first packed key to resolve an AEMS record through 0x004970EC.",
+        "Rejects NULL/unresolvable packets and clears its reentrancy guard before returning false.",
+        "On success assigns the packet into one of sixteen internal 0x10-byte active slots rooted at 0x0004CE78 before returning true.",
+        "Stores the resolved record and packet pointer into the selected active slot.",
+        "The caller 0x0049B564 only frees the packet when this function returns false, proving successful submission transfers packet ownership."
+      ],
+      "note": "The exact scheduler/voice semantics of the sixteen active slots remain unresolved; do not call them voices/channels until their consumers are traced."
+    },
+    "architectural_implication": "The previously separate generic named-event registry and AEMS descriptor registry are now proven to be connected at runtime. The remaining speech problem is downstream mapping/content: identify which subscribed gameplay events and AEMS mapping records eventually generate category 0/1/2 AuSpeechManager requests and which comevt/ancevt/trnevt records they select."
   }
 }
