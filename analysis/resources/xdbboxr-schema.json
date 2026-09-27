@@ -5,7 +5,7 @@
   "resource": "preload/db.viv!xdbboxr.adf",
   "status": "record_layout_and_rating_fields_mapped",
   "confidence": "PROBABLE",
-  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. The cumulative boxer selector used by func_00186284 is a record-position index across registered boxer tables and is distinct from xdbboxr field 0. Identity/name, stock availability, hometown, nickname, weight/division and SelectBoxer rating fields are now mapped.",
+  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. Identity, stock-roster availability, hometown, nickname/alias, weight/division, and the core rating block are now mapped. Many appearance/equipment/career fields remain unresolved.",
   "container": {
     "compressed_size": 3117,
     "decoded_size": 9704,
@@ -372,5 +372,38 @@
       "helper": "func_00185B60(accessor, n) reads field 0x73+n for n<6 and clamps the result to 0..100",
       "note": "Six 0-100 fields heavily consumed by gameplay/AI-adjacent functions; exact labels remain open."
     }
+  },
+  "cross_table_fields": {
+    "confidence": "CONFIRMED",
+    "fields": [
+      {
+        "field_id": "0x06",
+        "row_offset": "0x0C",
+        "storage": "inline signed int16",
+        "semantic": "hometown-table record ID",
+        "target_table": "xdbhmtwn.adf",
+        "target_record_count": 63,
+        "evidence": [
+          "T_00185FA0 reads boxer field 0x06, rejects negative values, enters the hometown-table accessor path at func_001A9020, selects that record, then reads hometown field 0x01.",
+          "T_001860A0 follows the same boxer field 0x06 -> func_001A9020 path and reads hometown field 0x04 as a pooled string/key.",
+          "Decoded boxer values are all valid xdbhmtwn record indices (0..62), and duplicate boxer variants retain the same hometown ID.",
+          "Direct xdbhmtwn decoding shows the referenced rows contain localization-style data such as field-4 keys O_Home_1, O_Home_30, O_Home_42, etc."
+        ]
+      },
+      {
+        "field_id": "0x07",
+        "row_offset": "0x0E",
+        "storage": "inline signed int16",
+        "semantic": "alias/nickname-table record ID",
+        "target_table": "xdbalias.adf",
+        "target_record_count": 76,
+        "evidence": [
+          "func_00185F34 reads boxer field 0x07, rejects negative values, enters the alias-table accessor path at func_00185008, selects that record, then reads alias field 0x01.",
+          "T_00186108 follows the same boxer field 0x07 -> func_00185008 path and reads alias field 0x03 as a pooled string/key.",
+          "Decoded boxer values are all valid xdbalias record indices (0..75), and duplicate boxer variants retain the same alias ID.",
+          "Direct xdbalias decoding shows the referenced rows contain nickname localization keys such as ST_Nick_41, ST_Nick_43, ST_Nick_44, with T_NA used by one terminal record."
+        ]
+      }
+    ]
   }
 }
