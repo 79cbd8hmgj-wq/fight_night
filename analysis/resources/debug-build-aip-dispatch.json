@@ -229,5 +229,152 @@
       "+0x19E0": "participates in func_001B01BC assignment tracking; exact semantics unresolved"
     },
     "correction": "Existing project evidence that described +0x19B0/+0x19B4 as boxer-object pointers is superseded by the setter+resolver chain above."
+  },
+  "select_boxer_native_map": {
+    "confidence": "PROBABLE",
+    "registration_glue_range": "0x001D52CC-0x001D5384",
+    "unregister_glue_range": "0x001D5388-0x001D53EC",
+    "initializer_range": "0x001D92FC-0x001D934C",
+    "handlers": {
+      "GetSelectBoxerInfo": {
+        "channel": "LoadVariables",
+        "global": "0x0055F5E0",
+        "descriptor": "0x00581EB4",
+        "implementation": "0x001D77C8"
+      },
+      "UpdateSelectBoxerInfo": {
+        "channel": "LoadVariables",
+        "global": "0x0055F5E4",
+        "descriptor": "0x00581EC4",
+        "implementation": "0x001D53F0"
+      },
+      "LoadSelectBoxer": {
+        "channel": "FSCommand",
+        "global": "0x0055F5E8",
+        "descriptor": "0x00581ED4",
+        "implementation": "0x001D56AC"
+      },
+      "GetCornerInfo": {
+        "channel": "LoadVariables",
+        "global": "0x0055F5F4",
+        "descriptor": "0x00581EE4",
+        "implementation": "0x001D8CE8"
+      },
+      "SetCornerSide": {
+        "channel": "FSCommand",
+        "global": "0x0055F5F8",
+        "descriptor": "0x00581F14",
+        "implementation": "0x001D5974"
+      },
+      "SetSelectBoxerInfo": {
+        "channel": "FSCommand",
+        "global": "0x0055F5EC",
+        "descriptor": "0x00581EF4",
+        "implementation": "0x001D87E0"
+      },
+      "UpdateRandomBoxerInfo": {
+        "channel": "FSCommand",
+        "global": "0x0055F5F0",
+        "descriptor": "0x00581F04",
+        "implementation": "0x001D57FC"
+      }
+    },
+    "get_select_boxer_info": {
+      "implementation": "0x001D77C8",
+      "fixed_weight_class_count": 6,
+      "fixed_count_evidence": [
+        "literal sltiu < 6 switch at 0x001D7D58",
+        "literal sltiu < 6 switch at 0x001D8170",
+        "global 0x005608D0 initialized to 6",
+        "six explicitly-named AIP arrays are populated"
+      ],
+      "division_arrays": [
+        {
+          "index": 0,
+          "name": "aFeatherWeightID",
+          "start_global": "0x0056090C",
+          "end_global": "0x00560910",
+          "count_global": "0x00560914",
+          "initial_range": [
+            0,
+            6
+          ],
+          "initial_count": 7
+        },
+        {
+          "index": 1,
+          "name": "aLightWeightID",
+          "start_global": "0x00560918",
+          "end_global": "0x0056091C",
+          "count_global": "0x00560920",
+          "initial_range": [
+            7,
+            10
+          ],
+          "initial_count": 4
+        },
+        {
+          "index": 2,
+          "name": "aWelterWeightID",
+          "start_global": "0x00560924",
+          "end_global": "0x00560928",
+          "count_global": "0x0056092C",
+          "initial_range": [
+            11,
+            17
+          ],
+          "initial_count": 7
+        },
+        {
+          "index": 3,
+          "name": "aMiddleWeightID",
+          "start_global": "0x00560930",
+          "end_global": "0x00560934",
+          "count_global": "0x00560938",
+          "initial_range": [
+            18,
+            24
+          ],
+          "initial_count": 7
+        },
+        {
+          "index": 4,
+          "name": "aLightHeavyWeightID",
+          "start_global": "0x0056093C",
+          "end_global": "0x00560940",
+          "count_global": "0x00560944",
+          "initial_range": [
+            25,
+            30
+          ],
+          "initial_count": 6
+        },
+        {
+          "index": 5,
+          "name": "aHeavyWeightID",
+          "start_global": "0x00560948",
+          "end_global": "0x0056094C",
+          "count_global": "0x00560950",
+          "initial_range": [
+            31,
+            34
+          ],
+          "initial_count": 4
+        }
+      ],
+      "stock_selectable_ids": "0..34 inclusive across six divisions (35 entries in the initial range table)",
+      "output_names": [
+        "aDefaultRightBoxer",
+        "aDefaultLeftBoxer",
+        "iDefaultLeftWeightClass",
+        "iDefaultRightWeightClass",
+        "iCurrentRightDefault",
+        "iCurrentLeftDefault",
+        "iCustomBoxerID",
+        "strCustomBoxerName",
+        "iCustomBoxerWeightClass"
+      ],
+      "roster_cap_note": "The handler contains no 121-entry roster cap. It builds six lists from per-division start/end globals. This does not by itself prove that the database/save architecture can exceed 121 records."
+    }
   }
 }
