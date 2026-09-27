@@ -392,5 +392,100 @@
       "note": "0x00497090 selects one of up to eight mapping descriptors by the two category bytes; 0x00497048 resolves the 16-bit selector within that descriptor."
     },
     "implication": "Named gameplay events are not merely parallel to AEMS. Parsed AEMS bank entries actively subscribe to Fight Night's generic event bus, and fired gameplay-event payloads are converted into AEMS command packets. This closes the high-level generic-event -> AEMS boundary."
+  },
+  "training_game_bridge": {
+    "confidence": "CONFIRMED for descriptor/handle identity, dispatch sites and payload construction; PROBABLE for the semantic label of AuSpeechManager 0x001387F8",
+    "relocation_base": {
+      "program_segment": 1,
+      "vaddr": "0x0058A8A8",
+      "evidence": "All cited training-event handle address constructions carry PSP HI16/LO16 relocation records with target program segment 1."
+    },
+    "events": {
+      "TGIntro": {
+        "descriptor": "0x0055AAA8",
+        "hash": "0x3E500A75",
+        "handle_pre_relocation": "0x00020F98",
+        "handle_runtime_vaddr": "0x005AB840",
+        "producer_function": "0x00108504",
+        "dispatch_site": "0x00108644",
+        "fallback_registration": "0x0010865C -> func_003E4A94(descriptor 0x0055AAA8)",
+        "payload": {
+          "address": "sp+0x10",
+          "words": [
+            "result of func_001086B0(training/game context, selected side/context)",
+            "one of {0,1,2,4,8,16} derived from the producer's state switch"
+          ],
+          "note": "The two payload values are directly observed; exact public field names remain unresolved."
+        },
+        "post_dispatch": [
+          "sets producer object +0x58 = 1",
+          "calls AuSpeechManager singleton 0x00137B34 then 0x001387F8(manager, 1)"
+        ]
+      },
+      "TGProgressUpdate": {
+        "descriptor": "0x0055AAB0",
+        "hash": "0x4D170A75",
+        "handle_pre_relocation": "0x000210B0",
+        "handle_runtime_vaddr": "0x005AB958",
+        "generic_dispatch_wrapper": "0x00128BB4",
+        "wrapper_payload": "three 32-bit caller arguments copied verbatim to a 12-byte stack payload",
+        "aems_bridge": {
+          "source_aems_event": "Trnrsfx_Bonus",
+          "aems_event_code": "0x6E2E",
+          "central_dispatch_handler": "0x001303E4",
+          "behavior": [
+            "checks the fight-session mode at +0x19A8",
+            "if mode == 4, calls 0x001387F8(manager, 0) and does not emit this TGProgressUpdate path",
+            "otherwise calls 0x001387F8(manager, 1)",
+            "computes func_001086B0(func_00107988(), 0)",
+            "builds TGProgressUpdate payload {1, 1, computed_value}",
+            "dispatches via func_003E5860, registering descriptor 0x0055AAB0 on first-use failure"
+          ],
+          "implication": "This is a direct proven bridge from a named AEMS training SFX event into both AuSpeechManager state and the generic training-game event system."
+        }
+      },
+      "TGSummary": {
+        "descriptor": "0x0055AAB8",
+        "hash": "0x5DA60A75",
+        "handle_pre_relocation": "0x00021090",
+        "handle_runtime_vaddr": "0x005AB938",
+        "producer_function": "0x00113EA0",
+        "dispatch_site": "0x00114000",
+        "fallback_registration": "0x00114014 -> func_003E4A94(descriptor 0x0055AAB8)",
+        "payload": {
+          "address": "sp+0x40",
+          "words": [
+            1,
+            "result of func_001086B0(training/game context, 0)"
+          ]
+        },
+        "post_dispatch": "calls AuSpeechManager singleton 0x00137B34 then 0x001387F8(manager, 0)"
+      },
+      "TGCount": {
+        "descriptor": "0x0055AAC0",
+        "hash": "0x21680A75",
+        "handle_pre_relocation": "0x000210A8",
+        "handle_runtime_vaddr": "0x005AB950",
+        "producer_function": "0x0011B0B0",
+        "behavior": "dispatches repeated 8-byte TGCount payloads whose first word is a bit/value class selected from the training state and whose second word is a value produced by func_001086B0; exact public field names remain unresolved"
+      }
+    },
+    "speech_training_lifecycle_toggle": {
+      "function": "0x001387F8",
+      "proposed_name": "AuSpeechManager_SetTrainingGameActive",
+      "confidence": "PROBABLE",
+      "direct_behavior": [
+        "guards on manager+0x144 and two global disable/state bytes",
+        "stores the boolean argument at manager+0x50",
+        "snapshots the current global game/time-state value at manager+0x4C"
+      ],
+      "lifecycle_evidence": [
+        "TGIntro producer calls it with 1 immediately after the intro event is dispatched.",
+        "TGSummary producer calls it with 0 immediately after the summary event is dispatched.",
+        "Trnrsfx_Bonus calls it with 1 on the normal training path and 0 for fight-session mode 4.",
+        "Additional paired call sites at 0x001204F0 (1) and 0x001206E8 (0) reinforce start/end-style use."
+      ],
+      "boundary": "The training-lifecycle interpretation is strongly supported, but the exact original C++ method name is not present and is therefore not claimed as exact."
+    }
   }
 }
