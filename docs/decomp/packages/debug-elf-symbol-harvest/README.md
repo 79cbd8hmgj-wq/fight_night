@@ -665,3 +665,63 @@ only as an inferred label; the original C++ symbol is not claimed.
 
 The exact 30-case mapping is also stored in
 `analysis/resources/aems-event-code-registry.json`.
+
+## Generic gameplay-event to AEMS bridge
+
+The high-level event boundary is now directly recovered.
+
+### AEMS subscriptions
+
+Function 0x0049B61C walks parsed AEMS event entries and subscribes each one to
+Fight Night's generic named-event system. Each subscription entry is 0x20 bytes:
+
+- +0x00..+0x07: generic event descriptor (name pointer + 32-bit hash)
+- +0x08..+0x0F: 8-byte generic event handle storage
+- +0x10..+0x1F: generic event listener node
+- +0x18: listener callback = 0x0049B564
+- +0x1C: packed AEMS mapping context
+
+For each entry it rebases the event name, resolves/registers the generic event
+through func_003E4A94, stores callback 0x0049B564, constructs the mapping
+context through 0x0049702C, and attaches the listener with func_003E5938.
+
+func_003E5860 / 0x003E58A8 later walks that event's listeners and invokes:
+
+    callback(event_payload, listener_context)
+
+0x0049B564 resolves the context through 0x004970EC, allocates a packet
+containing the four-byte mapping key followed by the required number of words
+copied from the generic gameplay-event payload, and submits it through
+0x004974CC. A failed submission is freed immediately; a successful submission
+transfers packet ownership into the AEMS active-state machinery.
+
+### Speech EVT files use this bridge directly
+
+This is not limited to generic SFX banks. The AuSpeechManager bank loader
+0x0013A6D0 loads/parses each speech .evt object and calls
+0x0049AE38(parsed_evt_object, category). 0x0049AE38 registers that object
+through 0x0049AD50 and then unconditionally invokes 0x0049B61C to subscribe
+its named event entries.
+
+The three direct calls prove:
+
+- 0x0013AF70: category 0 -> comevt.evt / comhdr.big / comdat.big
+- 0x0013AF18: category 1 -> ancevt.evt / anchdr.big / ancdat.big
+- 0x0013AEC0: category 2 -> trnevt.evt / trnhdr.big / trndat.big
+
+Therefore commentary, announcer and training event files themselves subscribe
+directly to Fight Night's named gameplay-event bus. The architectural path is:
+
+    named gameplay event
+        -> generic event listener
+        -> 0x0049B564 AEMS callback
+        -> AEMS mapping packet
+        -> 0x004974CC active-state processing
+        -> AuSpeechManager request
+        -> com / anc / trn event record
+        -> speech-bank byte range
+
+The remaining work is no longer discovering this bridge. It is recovering the
+individual speech-event subscription descriptors/payload schemas and tracing
+accepted AEMS packets through the active-state updater into the already-known
+AuSpeechManager 0x20-byte request ABI.
