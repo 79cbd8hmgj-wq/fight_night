@@ -414,17 +414,22 @@
   },
   "boxer_identity_followup": {
     "confidence": "PROBABLE/CONFIRMED as noted",
+    "selector_model": "func_00186284 proves the boxer value used by SelectBoxer/fight-session code is a cumulative record-position selector across registered boxer-table instances. It does not use xdbboxr field 0.",
     "xdbboxr": {
-      "field_0": "global boxer ID (CONFIRMED from rows 0-34 == IDs 0-34 and bonus rows carrying IDs 74/75)",
+      "field_0": "secondary boxer/resource identity key; exact role unresolved. Prior 'global boxer ID' interpretation is superseded.",
       "field_1": "last/surname/display family name (CONFIRMED; func_001851CC name composer)",
       "field_2": "first/given name (CONFIRMED; func_001851CC name composer)",
       "field_3": "short CRO/resource stem (PROBABLE)",
-      "field_4": "standard-roster/selectability/eligibility boolean candidate (PROBABLE)"
+      "field_4": "base/default availability predicate (CONFIRMED behavior; bonus unlock semantics PROBABLE)",
+      "field_6": "xdbhmtwn hometown key/reference (CONFIRMED)",
+      "field_7": "xdbalias nickname/alias key/reference (CONFIRMED)",
+      "field_9": "boxer weight used by exact six-division classifier (CONFIRMED)"
     },
     "bonus_records": [
-      "row 35 -> boxer ID 74 -> FABOLOUS -> CRO stem fabo",
-      "row 36 -> boxer ID 75 -> LITTLE MAC -> CRO stem spun"
+      "cumulative selector/index 35 -> physical row 35 -> FABOLOUS -> field0 secondary ID 74 -> CRO stem fabo",
+      "cumulative selector/index 36 -> physical row 36 -> LITTLE MAC -> field0 secondary ID 75 -> CRO stem spun"
     ],
+    "availability": "func_001B0FE8 accepts field4>0 directly; when field4==0 it special-cases selector 35 through a session/object unlock bitset at +0x1C4. T_001B2648 sets bits in that same bitset.",
     "custom_created_boxer_note": "The SelectBoxer custom-created-boxer output path is separate and emits iCustomBoxerID/strCustomBoxerName/iCustomBoxerWeightClass from session/custom state, so rows 35/36 are not created-boxer placeholders."
   }
 }
