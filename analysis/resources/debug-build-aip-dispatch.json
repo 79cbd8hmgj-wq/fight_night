@@ -411,5 +411,20 @@
       ],
       "function_boundary_correction": "0x001D54A0 is an instruction inside UpdateSelectBoxerInfo, not a standalone native-registration function. The registration glue is 0x001D52CC-0x001D5384."
     }
+  },
+  "boxer_identity_followup": {
+    "confidence": "PROBABLE/CONFIRMED as noted",
+    "xdbboxr": {
+      "field_0": "global boxer ID (CONFIRMED from rows 0-34 == IDs 0-34 and bonus rows carrying IDs 74/75)",
+      "field_1": "last/surname/display family name (CONFIRMED; func_001851CC name composer)",
+      "field_2": "first/given name (CONFIRMED; func_001851CC name composer)",
+      "field_3": "short CRO/resource stem (PROBABLE)",
+      "field_4": "standard-roster/selectability/eligibility boolean candidate (PROBABLE)"
+    },
+    "bonus_records": [
+      "row 35 -> boxer ID 74 -> FABOLOUS -> CRO stem fabo",
+      "row 36 -> boxer ID 75 -> LITTLE MAC -> CRO stem spun"
+    ],
+    "custom_created_boxer_note": "The SelectBoxer custom-created-boxer output path is separate and emits iCustomBoxerID/strCustomBoxerName/iCustomBoxerWeightClass from session/custom state, so rows 35/36 are not created-boxer placeholders."
   }
 }
