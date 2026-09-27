@@ -2759,5 +2759,87 @@
       "0x00137888 forwards that request into the already-recovered AuSpeechManager bank router, which maps category 0/1/2 to com/anc/trn and final speech-bank byte ranges."
     ],
     "architectural_implication": "The runtime architecture from named gameplay event to AuSpeechManager request is now statically continuous. What BOOT.BIN alone still does not reveal is the full content of the external comevt.evt/ancevt.evt/trnevt.evt mappings needed to enumerate each event's exact speech IDs/variants."
+  },
+  "career_history_recordbooks_handlers": {
+    "confidence": "CONFIRMED for registration order, concrete handler addresses, output keys, page bound and 10-entry loop; individual record-page semantic labels inherit the decoded UI localization keys",
+    "registration": {
+      "function": "0x001EE168",
+      "channel": "LoadVariables via func_000CDAC0",
+      "unregister": "0x001EE1DC",
+      "handlers": [
+        {
+          "name": "GetCareerHistoryInfo",
+          "global": "0x0055FF78",
+          "implementation": "0x001EE220"
+        },
+        {
+          "name": "GetAdhocRivalsUserInfo",
+          "global": "0x0055FF7C",
+          "implementation": "0x001EE558"
+        },
+        {
+          "name": "GetAdhocRivalsInfo",
+          "global": "0x0055FF80",
+          "implementation": "0x001EE808"
+        },
+        {
+          "name": "GetRecordBooksInfo",
+          "global": "0x0055FF84",
+          "implementation": "0x001EEA3C"
+        }
+      ],
+      "descriptor_function_pointers": [
+        "0x001EE220",
+        "0x001EE558",
+        "0x001EE808",
+        "0x001EEA3C"
+      ]
+    },
+    "career_history": {
+      "implementation": "0x001EE220",
+      "output_keys": [
+        "iClass",
+        "iCurrentClass",
+        "aFightNumber",
+        "astrOpponentName",
+        "astrFightResult",
+        "aRoundsLasted",
+        "astrTKOTime"
+      ],
+      "correction": "The BOOT.BIN xref to astrTKOTime is inside GetCareerHistoryInfo. It is a UI/output property for stored fight history, not evidence of the underlying KO/TKO/referee-stoppage decision routine."
+    },
+    "record_books": {
+      "implementation": "0x001EEA3C",
+      "input_key": "iPage",
+      "output_keys": [
+        "astrNames",
+        "astrStatColumn1",
+        "astrStatColumn2"
+      ],
+      "page_count": 6,
+      "page_selector_range": "0..5",
+      "page_bound_instruction": "0x001EEC58: sltiu < 6",
+      "hard_output_entry_cap": 10,
+      "loop_bound_instruction": "0x001EEDE4: slti < 0x0A; 0x001EEDE8 loops while true",
+      "ui_localization_categories": [
+        "$TL_Boxing_Hall_Of_Fame",
+        "$TL_Most_Career_Earnings",
+        "$TL_Most_Wins",
+        "$TL_Fastest_KOs",
+        "$TL_Most_KOs",
+        "$TL_Top_10"
+      ],
+      "ui_column_keys": [
+        "$T_Record",
+        "$T_Boxer",
+        "$T_KOs",
+        "$T_KO_Time",
+        "$T_Wins",
+        "$T_Earnings",
+        "$T_Career",
+        "$T_Rank"
+      ],
+      "implication": "The retail records/Hall-of-Fame UI is a six-page native-backed system and each requested page emits at most exactly 10 rows. This resolves the previous question of whether 'Top 10' was merely a label or an executable hard bound."
+    }
   }
 }
