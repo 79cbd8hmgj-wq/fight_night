@@ -260,7 +260,7 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "Beyond the already-proven '3-knockdown rule', does the retail options menu expose other named, distinct damage/stoppage rule toggles (auto-recovery, KO moment/highlight, fight stoppage, illegal blows, saved-by-the-bell)?",
-      "remaining_static_work": "Complete the bit-field decode of the +0x15C packed settings word in T_001D9A08/T_001DC5DC/T_001FB69C and correlate each extracted bit-range against optionSettings.const's toggle-declaration order. +0x19A8 is now resolved as a fight/session-mode field written by func_001AFFDC, not an options bitfield; separately resolve the byte flag/gate at +0x1955.",
+      "remaining_static_work": "Complete the bit-field decode of the +0x15C packed settings word in func_001D9958/func_001DC52C/func_001FB6B8 and correlate each extracted bit-range against optionSettings.const's toggle-declaration order. +0x19A8 is now resolved as a fight/session-mode field written by func_001AFFDC, not an options bitfield; separately resolve the byte flag/gate at +0x1955.",
       "affected_features": [
         "combat",
         "career-health"
@@ -270,9 +270,9 @@
           "optionsettings.big!optionSettings.const"
         ],
         "functions": [
-          "T_001D9A08",
-          "T_001DC5DC",
-          "T_001FB69C",
+          "func_001D9958",
+          "func_001DC52C",
+          "func_001FB6B8",
           "func_001D9870",
           "func_001D98E4",
           "func_001AFFDC"
@@ -493,9 +493,9 @@
         ],
         "functions": [
           "func_000B065C",
-          "T_001D9A08",
-          "T_001DC5DC",
-          "T_001FB69C",
+          "func_001D9958",
+          "func_001DC52C",
+          "func_001FB6B8",
           "func_0010BB58",
           "func_003E5860"
         ],
