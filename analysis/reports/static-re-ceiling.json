@@ -245,10 +245,10 @@
     {
       "program_id": "program-04",
       "subsystem": "Boxers",
-      "question": "What do xdbboxr.adf header word0/word1 count, and what is the +0x18 packed array?",
+      "question": "What do xdbboxr.adf header words 0 and 1 represent, and are they consumed by executable code?",
       "status": "STATICALLY_RESOLVED",
-      "confidence": "PROBABLE",
-      "evidence": "Follow-up cross-build static RE resolves the generic XDB ABI. func_001ACCAC bounds field_id against header word0 and reads a packed 2-bit storage-class code at payload+0x18+(field_id>>2), proving word0 is field_count. func_001AD180 bounds record_index against header word1 and selects one row from the signed-int16 descriptor matrix, proving word1 is record_count. For xdbboxr: field_count=121, record_count=37. The +0x18 array is per-field type metadata, not per-boxer status flags. Type codes are 0=inline int16, 1=string, 2=int32, 3=float32.",
+      "confidence": "CONFIRMED",
+      "evidence": "CORRECTED by follow-up static RE. word0=121 is the field/column count, not the boxer-record count. func_001ACCAC bounds field_id against word0 and func_001AD268 scans exactly word0 packed 2-bit field-type entries. word1=37 is the base-table record count: func_001AD21C returns word1 and func_001AD180 bounds record_index against it, then computes the selected row using stride word0*2. The old interpretation of 121 as a per-boxer record count is superseded.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -258,10 +258,9 @@
       "sources": {
         "functions": [
           "func_001ACCAC",
-          "func_001AD180",
-          "func_001ACD40",
-          "func_001ACE20",
-          "func_001AD268"
+          "func_001AD268",
+          "func_001AD21C",
+          "func_001AD180"
         ],
         "evidence": [
           "analysis/resources/xdb-schema-evidence.json",
@@ -278,7 +277,7 @@
       "subsystem": "Boxers",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The generic XDB record layout is now resolved. xdbboxr has 121 fields x 37 records. The packed field-type table begins at +0x18 (31 bytes), and the row-major signed-int16 descriptor matrix starts at +0x38 with record stride 0xF2; matrix offset is `0x38 + record_index*0xF2 + field_id*2`. UpdateSelectBoxerInfo at 0x001D53F0 maps the rating outputs through func_0018553C -> func_001ACD40. Fields 0x10-0x18 all have type code 0 because raw header word7 is zero, so these are direct signed-int16 record fields. Power averages fields 0x10/0x11 (record-relative +0x20/+0x22); Speed=0x12 (+0x24); Agility=0x13 (+0x26); Stamina=0x14 (+0x28); Chin=0x15 (+0x2A); Heart=0x16 (+0x2C); Cuts=0x17 (+0x2E); Body=0x18 (+0x30). iOverall is computed by func_001D50F4. Thus the rating block's exact byte offsets/width/signedness are resolved, while the many non-rating field IDs remain semantically unmapped.",
+      "evidence": "The generic XDB layout and SelectBoxer rating block are now partially resolved. xdbboxr.adf has a 24-byte header, 121 fields, 37 base records, a 31-byte 2-bit-per-field type map at +0x18, and a row-major descriptor matrix beginning at +0x38 with 0xF2-byte rows. Generic accessors prove type 0=inline signed int16, type 1=string/byte pool, type 2=int32 pool, type 3=float pool. UpdateSelectBoxerInfo at 0x001D53F0 maps the rating fields: Power uses field IDs 0x10/0x11 and averages them; Speed=0x12; Agility=0x13; Stamina=0x14; Chin=0x15; Heart=0x16; Cuts=0x17; Body=0x18. These rating fields resolve as inline int16 tokens at exact per-row offsets 0x20-0x30. iOverall is computed by func_001D50F4 rather than read as one direct raw XDB field. Non-rating semantic field IDs remain open.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -299,12 +298,11 @@
           "selectboxer.big!selectBoxer.const"
         ],
         "evidence": [
-          "analysis/resources/xdb-schema-evidence.json",
           "analysis/resources/xdbboxr-schema.json",
-          "analysis/resources/debug-build-aip-dispatch.json"
+          "analysis/resources/xdb-schema-evidence.json"
         ]
       },
-      "remaining_static_work": "Use the recovered generic field binder/accessor pattern to map the remaining xdbboxr field IDs to identity/name, weight/division, stance/handedness, appearance/equipment, hometown, career/store and created-boxer semantics. Bound the second stat-name copy near 0x001E83E0 independently. The generic record boundary and rating byte layout no longer require further decoding.",
+      "remaining_static_work": "Use the recovered generic accessor chain (func_001AD180/func_001ACCAC/func_001ACD40) to map remaining xdbboxr field IDs to identity/name, weight/division, stance/handedness, appearance/equipment, hometown, career/store and created-boxer semantics. Independently bound the second stat-string copy near 0x001E83E0.",
       "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -362,9 +360,9 @@
     {
       "program_id": "program-04",
       "subsystem": "Boxers",
-      "question": "Which UI/menu screen(s) construct boxer-table queries, and what does func_001AF768's dual query (strides 5 and 0x28) feed?",
+      "question": "What do func_001AF768's dual XDB field-classification queries (strides 5 and 0x28) feed inside the fight-session constructor?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "func_001AF768 queries the boxer singleton twice via func_001AD268 with two different output strides, then chains 9 further subsystem-init calls.",
+      "evidence": "func_001AF768 is now proven to be the fight-session singleton constructor, not a UI/menu-construction routine. It calls func_001AD268 twice with caller-chosen output strides 5 and 0x28 and stores the resulting classifier/output state in the session near +0x198C/+0x198E before chaining further subsystem initialization.",
       "affected_features": [
         "roster",
         "career-2"
@@ -372,11 +370,15 @@
       "sources": {
         "functions": [
           "func_001AF768",
-          "T_0018E4F4"
+          "func_001AD268"
+        ],
+        "evidence": [
+          "analysis/resources/overhaul-alpha1-evidence.json",
+          "analysis/resources/xdb-schema-evidence.json"
         ]
       },
-      "remaining_static_work": "Search for callers of func_001AF768/T_0018E4F4; disassemble the 9 chained subsystem-init calls.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Disassemble the consumers of the +0x198C/+0x198E outputs and the remaining constructor init chain to identify what the stride-5 and stride-0x28 classifications represent.",
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-06"
@@ -385,28 +387,27 @@
       "program_id": "program-04",
       "subsystem": "Boxers",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
-      "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "The earlier 121-roster interpretation is disproven. Generic XDB accessors prove xdbboxr word0=121 is field_count and word1=37 is the current record_count. Record selection in func_001AD180 is bounded dynamically against header.word1 rather than a compiled 37 or 121. GetSelectBoxerInfo exposes 35 stock IDs (0-34) across six divisions and contains no 121-row cap; two additional xdbboxr rows exist but their semantics are not yet assigned. No MAX_BOXER/MAX_ROSTER UI constant was found. These facts eliminate 121 as a roster maximum and show the core XDB accessor is dynamically record-counted, but they do not rule out a separate save/custom-boxer or gameplay-side maximum.",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "The former 121-entry roster-cap hypothesis is disproven: 121 is xdbboxr.adf's field_count, while word1=37 is its base record_count and is read dynamically by func_001AD21C/func_001AD180. The base SelectBoxer range table exposes IDs 0-34 across six divisions, leaving base rows 35-36 semantically unresolved. func_00186284 resolves boxer IDs through a chain of registered table instances by subtracting each table's dynamic record_count, so the boxer-ID space is not inherently limited to one 37-row table. No fixed total roster maximum is established yet.",
       "affected_features": [
         "roster",
         "generated-boxers"
       ],
       "sources": {
-        "ui_resource": [
-          "selectboxer.big!selectBoxer.const"
-        ],
         "functions": [
+          "func_001AD21C",
           "func_001AD180",
+          "func_00186284",
           "0x001D77C8 (GetSelectBoxerInfo)"
         ],
         "evidence": [
-          "analysis/resources/xdb-schema-evidence.json",
           "analysis/resources/xdbboxr-schema.json",
+          "analysis/resources/xdb-schema-evidence.json",
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Trace the two xdbboxr rows outside the stock SelectBoxer ranges and the created/custom-boxer save path. Search for consumers that allocate or serialize boxer arrays independently of header.word1; only such a consumer could establish a hard maximum distinct from the dynamic XDB record count.",
-      "confidence": "PROBABLE for the 121 correction and dynamic XDB count; CANDIDATE/open for any separate hard maximum",
+      "remaining_static_work": "Trace the meaning of base rows 35-36, the created/custom-boxer save path, and any independent array/allocation/serialization consumer that could impose a fixed cap across the cumulative table-instance ID space.",
+      "confidence": "PROBABLE for dynamic base-table count and cumulative resolver; fixed total maximum remains open.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-07"
@@ -1461,8 +1462,8 @@
   ],
   "counts_overall": {
     "STATICALLY_RESOLVED": 31,
-    "STATICALLY_SOLVABLE": 28,
-    "STATICALLY_AMBIGUOUS": 4,
+    "STATICALLY_SOLVABLE": 29,
+    "STATICALLY_AMBIGUOUS": 3,
     "RUNTIME_ESSENTIAL": 0
   },
   "counts_by_program": {
@@ -1486,8 +1487,8 @@
     },
     "program-04": {
       "STATICALLY_RESOLVED": 4,
-      "STATICALLY_SOLVABLE": 2,
-      "STATICALLY_AMBIGUOUS": 1,
+      "STATICALLY_SOLVABLE": 3,
+      "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "program-05": {
@@ -1590,8 +1591,8 @@
     },
     "roster": {
       "STATICALLY_RESOLVED": 13,
-      "STATICALLY_SOLVABLE": 7,
-      "STATICALLY_AMBIGUOUS": 3,
+      "STATICALLY_SOLVABLE": 8,
+      "STATICALLY_AMBIGUOUS": 2,
       "RUNTIME_ESSENTIAL": 0
     },
     "divisions": {
@@ -1602,8 +1603,8 @@
     },
     "generated-boxers": {
       "STATICALLY_RESOLVED": 11,
-      "STATICALLY_SOLVABLE": 2,
-      "STATICALLY_AMBIGUOUS": 2,
+      "STATICALLY_SOLVABLE": 3,
+      "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "career-health": {
