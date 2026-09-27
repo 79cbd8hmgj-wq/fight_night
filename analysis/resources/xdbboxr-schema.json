@@ -176,7 +176,7 @@
     "What boxer/category source sets field 0x0F nonzero; its effect is proven as alternate/raw versus weight-class-adjusted rating mode, but the owning semantic category is unresolved.",
     "Exact semantic names of the three packed 0x0E nibble traits.",
     "Exact semantic role of field 0x00's secondary/resource identity number (74/75 for the two bonus records).",
-    "Exact semantic label for field 0x05 and its 76-entry consumer/dispatch space.",
+    "Exact authored label and event-family name for field 0x05; runtime behavior is now confirmed as a boxer-specific speech/audio event identity selector feeding event 0x00020FA0.",
     "Semantic identities for remaining physical/biographical fields including likely age/height/reach and the packed 0x0D/0x0E metadata.",
     "Remaining handedness/equipment and deeper appearance-resource semantics; stance, style, skin tone, eyebrow, eye colour, facial hair, facial-hair colour, hair colour, and the hair-style resource token are now mapped.",
     "Career/store/generated-boxer fields and any independent save/UI maximum on the cumulative boxer selector space.",
@@ -459,7 +459,15 @@
     "0x05": {
       "function": "func_00185B30",
       "behavior": "returns field 0x05 as signed int16",
-      "downstream": "func_0010C9C8 uses it as a bounded <0x4C (76) jump-table selector; exact semantic label remains open"
+      "downstream": "func_0010C9C8 maps field 0x05 through a bounded <0x4C (76) dispatch table. func_0010BB58 invokes that mapper for both active boxer/corner selectors, places the two mapped values into the final two words of an event parameter block, and submits event 0x00020FA0 through func_003E5860, with func_003E4A94 as the negative-result fallback.",
+      "semantic_behavior": "boxer-specific speech/audio event identity selector",
+      "confidence": "CONFIRMED behavior; exact authored field label and event-family name remain unresolved",
+      "evidence": [
+        "func_00185B30 returns xdbboxr field 0x05 as signed int16.",
+        "func_0010C9C8 uses that value as a 76-entry dispatch selector and may fall back through field 0x07's alias/nickname-linked dispatch.",
+        "func_0010BB58 calls func_0010C9C8 once for each active boxer/corner selector, stores both mapped outputs at parameter-block offsets +0x24/+0x28, then calls func_003E5860 with event constant 0x00020FA0.",
+        "The surrounding executable contains the BEAudio/AuSpeechManager subsystem and decision-announcement script strings, supporting the audio/speech classification without proving the original authored column name."
+      ]
     },
     "0x0B": {
       "function": "func_00185374",

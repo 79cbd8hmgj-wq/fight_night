@@ -36,7 +36,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Resolved: name/resource fields 0x00-0x03, availability 0x04, hometown 0x06, nickname 0x07, weight 0x09, career timing 0x0D, packed 0x0E extraction, rating-mode behavior 0x0F, ratings 0x10-0x18, stance 0x19, style 0x1A, skin tone 0x34, eyebrow/eye/facial-hair/hair-colour fields 0x35-0x39, and hair-style resource token 0x71. Next: field 0x05, physical/biographical 0x08/0x0A-0x0C, exact 0x0E trait labels, remaining handedness/equipment, career/store and created-boxer semantics.",
+      "remaining_static_work": "Resolved: name/resource fields 0x00-0x03, availability 0x04, field 0x05 runtime behavior as a boxer-specific speech/audio event identity selector (exact authored label still open), hometown 0x06, nickname 0x07, weight 0x09, career timing 0x0D, packed 0x0E extraction, rating-mode behavior 0x0F, ratings 0x10-0x18, stance 0x19, style 0x1A, skin tone 0x34, eyebrow/eye/facial-hair/hair-colour fields 0x35-0x39, and hair-style resource token 0x71. Next: physical/biographical 0x08/0x0A-0x0C, exact 0x0E trait labels, remaining handedness/equipment, career/store and created-boxer semantics, plus the exact authored label/event-family name for 0x05.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -71,7 +71,11 @@
           "T_001E3434",
           "T_001E62BC",
           "T_001E76C4",
-          "func_0018ADCC"
+          "func_0018ADCC",
+          "func_0010BB58",
+          "func_0010C9C8",
+          "func_003E5860",
+          "func_003E4A94"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
