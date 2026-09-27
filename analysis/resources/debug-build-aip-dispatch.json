@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "title": "FNR3 PSP debug-build AIP native dispatch cross-map",
+  "retail_revision": {
+    "id": "ULUS10066-v1.00",
+    "boot_sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+    "source": "analysis/reports/static-re-ceiling.json"
+  },
+  "debug_reference": {
+    "id": "ULES00270 review/debug build",
+    "boot_sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "boot_size": 7270752,
+    "elf_entry": "0x0034DF24",
+    "section_count": 62,
+    "text": {
+      "address": "0x00000000",
+      "size": "0x004F64A4"
+    },
+    "data": {
+      "address": "0x0052DD40",
+      "size": "0x0005C760"
+    },
+    "bss": {
+      "address": "0x005923C0",
+      "size": "0x000355A4"
+    },
+    "note": "Reference binary is not tracked; only derived non-expressive metadata is committed."
+  },
+  "cross_build_layout": {
+    "confidence": "PROBABLE",
+    "findings": [
+      "Debug and retail BOOT.BIN have identical .text, .data, and .bss sizes.",
+      "The debug build uses the same key AIP/UI function address family already present in the retail static map, allowing direct address-level cross-reference for the bounded functions below.",
+      "The debug ELF retains additional relocation/development metadata but no conventional .symtab/.strtab or DWARF .debug_* sections."
+    ]
+  },
+  "aip_dispatch": {
+    "confidence": "PROBABLE",
+    "manager_global": "0x005436D8",
+    "registration": {
+      "func_000CDA70": "register FSCommand handler",
+      "func_000CDAC0": "register LoadVariables handler",
+      "func_000CDA9C": "unregister FSCommand handler",
+      "func_000CDAEC": "unregister LoadVariables handler",
+      "func_000CF9C4": "insert/register node in FSCommand handler BST",
+      "func_000CFE08": "insert/register node in LoadVariables handler BST"
+    },
+    "dispatch": {
+      "func_000D024C": "FSCommand dispatch: parse name, search FS handler BST, indirect-call matched handler; returns handled/not-handled result",
+      "func_000D041C": "LoadVariables dispatch: parse name, search LV handler BST, indirect-call matched handler, return produced result",
+      "func_000D066C": "diagnostic dump of FSHandler and LVHandler lists"
+    },
+    "handler_node_layout": {
+      "size": "0x14",
+      "fields": {
+        "+0x00": "left child",
+        "+0x04": "right child",
+        "+0x08": "handler-name string pointer",
+        "+0x0C": "handler target/object pointer",
+        "+0x10": "auxiliary integer; registration glue passes -1"
+      }
+    },
+    "diagnostic_strings": [
+      "<< AIP >> FSCommand received: \"%s\"",
+      "<< AIP >> WARNING! No FS handler found for \"%s\"",
+      "<< AIP >> LoadVariables received: \"%s\"",
+      "<< AIP >> WARNING! No LV handler found for \"%s\"",
+      "<< AIP >> FSHandler list:",
+      "<< AIP >> LVHandler list:"
+    ]
+  },
+  "debug_menu_binding": {
+    "confidence": "PROBABLE",
+    "registration_glue_range": "0x001CEC48-0x001CECB8",
+    "unregister_glue_range": "0x001CECBC-0x001CECFC",
+    "handlers": {
+      "GetStartScreenFromMain": "LoadVariables",
+      "DEBUG_GetDebugMenuData": "LoadVariables",
+      "DEBUG_OnAdvance": "FSCommand",
+      "DEBUG_OnRealFE": "FSCommand"
+    },
+    "resource": "menu/debugmenu.big",
+    "members": [
+      "debugMenu.apt",
+      "debugMenu.const"
+    ],
+    "implication": "The debug-menu APT can retrieve menu data through DEBUG_GetDebugMenuData and invoke action callbacks through DEBUG_OnAdvance / DEBUG_OnRealFE. The exact APT bytecode call sites remain to be decoded."
+  },
+  "provenance": [
+    "Static disassembly of the user-provided ULES00270 debug/review BOOT.BIN.",
+    "Cross-checked against the existing ULUS10066-v1.00 retail address/evidence map in this repository.",
+    "No copyrighted executable bytes are stored in this artifact."
+  ]
+}
