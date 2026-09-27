@@ -16,7 +16,7 @@ dev = [
   "ruff>=0.5",
 ]
 psp-analysis = [
-  "pspdisasm[analysis] @ git+https://github.com/79cbd8hmgj-wq/PSP-disassembly-tool.git@6bff5a7acb7499050a84fefb6e9b0501703c1353",
+  "pspdisasm @ git+https://github.com/79cbd8hmgj-wq/PSP-disassembly-tool.git@6bff5a7acb7499050a84fefb6e9b0501703c1353",
 ]
 
 [project.scripts]
