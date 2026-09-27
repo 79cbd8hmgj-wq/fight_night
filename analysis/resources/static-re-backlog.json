@@ -36,7 +36,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Disassemble func_0018654C (consumes func_001AD268's result); structurally analyze the payload tail specifically searching for a 9-field (Power/Speed/Agility/Stamina/Chin/Body/Heart/Cuts/Overall) stat block, now that the exact field set and order are known from selectBoxer.const; cross-check the +0x18 model against another xdb table's own consumer function.",
+      "remaining_static_work": "The generic XDB record boundary and SelectBoxer rating byte layout are now resolved. Use the recovered func_001AD180/func_001ACCAC/func_001ACD40 accessor pattern to map remaining xdbboxr field IDs to identity/name, weight/division, stance/handedness, appearance/equipment, hometown, career/store and created-boxer semantics; independently bound the second stat-string copy near 0x001E83E0.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -46,12 +46,18 @@
       "sources": {
         "resource": "preload/db.viv!xdbboxr.adf",
         "functions": [
-          "func_001AD268",
-          "T_001D54A0",
-          "T_001E83E0"
+          "0x001D53F0",
+          "func_0018553C",
+          "func_001ACD40",
+          "func_001ACCAC",
+          "func_001AD180"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
+        ],
+        "evidence": [
+          "analysis/resources/xdbboxr-schema.json",
+          "analysis/resources/xdb-schema-evidence.json"
         ]
       }
     },
@@ -79,7 +85,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_AMBIGUOUS",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
-      "remaining_static_work": "GetSelectBoxerInfo is now reached and contains no literal 121 cap; it builds six per-division ID lists from range globals. Trace the remaining literal-121 sites and determine whether any are connected to xdbboxr.adf allocation/indexing or save serialization; inspect created/custom-boxer storage separately.",
+      "remaining_static_work": "121 is now disproven as a roster count: it is xdbboxr's field_count; the current record_count is 37 and the core accessor reads it dynamically from header.word1. Trace the two records outside the 35 stock SelectBoxer IDs and the created/custom-boxer save path, and locate any consumer that allocates or serializes boxer arrays independently of the dynamic XDB record_count.",
       "affected_features": [
         "roster",
         "generated-boxers"
@@ -89,10 +95,12 @@
           "selectboxer.big!selectBoxer.const"
         ],
         "functions": [
+          "func_001AD180",
           "0x001D77C8"
         ],
         "evidence": [
-          "analysis/resources/debug-build-aip-dispatch.json"
+          "analysis/resources/xdbboxr-schema.json",
+          "analysis/resources/xdb-schema-evidence.json"
         ]
       }
     },
