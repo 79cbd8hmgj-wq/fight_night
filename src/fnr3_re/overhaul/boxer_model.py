@@ -1,55 +1,25 @@
-"""Overhaul rule-engine module: the boxer rating model and its replacement
-boundary.
+"""Overhaul rule-engine module: boxer rating model and override boundary.
 
-## What is proven vs. what is not
+Static RE now proves more than the original Alpha 1 implementation did:
 
-Static evidence (this session and the prior delta pass) proves:
+- `xdbboxr.adf` contains 121 fields and 37 records.
+- its descriptor matrix starts at payload `+0x38`, with record stride `0xF2`.
+- the real `UpdateSelectBoxerInfo` handler is `0x001D53F0`.
+- rating fields `0x10..0x18` are direct signed-int16 record fields:
+  Power components A/B, Speed, Agility, Stamina, Chin, Heart, Cuts, Body.
+- `iPower` is the average of fields `0x10/0x11`.
+- `iOverall` is computed through `func_001D50F4`; it is not asserted to be
+  one independently stored raw XDB field.
 
-- The retail boxer-selection screen (``selectboxer.big``) names exactly 9
-  rating fields, in a fixed order, bounded by a ``NUM_STATS`` constant:
-  ``iPower``, ``iSpeed``, ``iAgility``, ``iStamina``, ``iChin``, ``iBody``,
-  ``iHeart``, ``iCuts``, ``iOverall``.
-- All 9 names exist as ``BOOT.BIN`` strings, each appearing twice, both
-  instances owned by the same function pair (``T_001D54A0``/
-  ``T_001E83E0``) -- confirmed this pass to be generic UI native-function
-  *registration* trampolines for this stat block (not the reader itself).
-- ``xdbboxr.adf`` (``preload/db.viv``) is the boxer database: its proven
-  8-word header's ``word0`` is consumed by real code (``func_001AD268``) as
-  a per-entry count (121 in the tracked sample), and a packed 2-bit flags
-  array was proven at payload offset ``+0x18``.
+The exact raw offset for a type-0 rating field is
+`0x38 + record_index*0xF2 + field_id*2`; see `fnr3_re.xdb` and
+`analysis/resources/xdbboxr-schema.json`.
 
-What is **not** proven, despite a focused attempt this pass (a raw
-structural read of the decoded ``xdbboxr.adf`` payload past the flags
-array): the exact byte offset, width, and encoding of each of the 9 rating
-fields within one boxer's record. No consumer function was found this pass
-that reads those payload bytes and correlates them with the 9 proven stat
-names -- only plausible-looking small integers were visible, which is not
-proof. Per this project's discipline, plausible-looking bytes are not
-patched or exposed as if their meaning were known.
-
-## The replacement boundary this module actually implements
-
-Because the per-record layout is unresolved, this module does **not**
-read or write ``xdbboxr.adf`` bytes directly, and does not claim to. It
-implements a **neutral replacement boundary** instead: an ID-keyed override
-table, stored as its own JSON resource (``config/overhaul/alpha1/
-boxer_rating_overrides.json``), which an eventual PSP-side hook would
-consult *in place of* (or layered on top of) the still-unresolved original
-record -- without ever guessing at or overwriting the original bytes. This
-satisfies "a proven replacement boundary" per the milestone's own
-instructions, rather than "an unrelated replacement model": the field
-*names*, *count*, and *order* are all directly evidence-derived, only the
-storage location is a new (documented, reversible) resource rather than
-the still-unmapped original one.
-
-``iOverall``: whether the original computes this from the other 8 or
-stores it independently was not established this pass (T_001D54A0/
-T_001E83E0 are registration-only, not the reader). This model defaults to
-treating ``overall`` as independently stored (the conservative choice --
-it never silently discards a value the original might have stored), and
-optionally accepts a caller-supplied derivation function so a future pass
-that does prove the relationship can wire it in without changing this
-model's shape.
+This module still keeps an ID-keyed JSON override table as a reversible mod
+boundary. That is a design choice, not a claim that the original rating bytes
+are unknown. A future patch layer may now safely target the recovered XDB
+rating fields once boxer-ID/record-ID policy and rebuild constraints are
+finalized.
 """
 
 from __future__ import annotations
@@ -109,10 +79,10 @@ class BoxerRatings:
     ) -> BoxerRatings:
         """Return a copy with ``overall`` recomputed by ``derive``.
 
-        Use only once a future static-RE pass has actually proven the
-        original's Power/Speed/.../Cuts -> Overall relationship; until
-        then, ``overall`` should be treated as independently stored (the
-        default everywhere else in this module).
+        The original now has a recovered computed-Overall helper boundary
+        (``func_001D50F4``), but its full formula is not reconstructed here.
+        Callers may supply a derivation explicitly rather than having this
+        module guess that formula.
         """
 
         return replace(self, overall=derive(self))
@@ -154,13 +124,11 @@ class BoxerRatings:
 class BoxerRatingOverrideTable:
     """A boxer-ID-keyed table of :class:`BoxerRatings` overrides.
 
-    This is the neutral replacement boundary described in this module's
-    docstring: a new resource this mod introduces, never a patch to the
-    still-unresolved ``xdbboxr.adf`` per-record bytes. ``boxer_id`` is
-    treated as an opaque, non-negative integer key -- this pass did not
-    prove ``xdbboxr.adf``'s own boxer-ID scheme, so no assumption is made
-    about how these IDs relate to it beyond "the mod's own consistent
-    identifier for one boxer slot."
+    This remains a reversible mod-owned override resource. The original
+    XDB rating byte layout is now recovered, but the project still avoids
+    silently equating every front-end boxer ID with an XDB record index until
+    that identity mapping is explicitly bounded. ``boxer_id`` therefore
+    remains an opaque, non-negative mod key here.
     """
 
     schema_version: int
@@ -182,9 +150,9 @@ class BoxerRatingOverrideTable:
             "schema_version": self.schema_version,
             "purpose": (
                 "Neutral replacement-boundary override table for boxer ratings. "
-                "Not a patch to xdbboxr.adf -- see fnr3_re.overhaul.boxer_model's "
-                "module docstring for why the original per-record layout is not "
-                "yet safely patchable."
+                "Kept separate from xdbboxr.adf as a reversible mod boundary; "
+                "see fnr3_re.overhaul.boxer_model for the recovered original "
+                "rating layout and remaining ID-mapping constraints."
             ),
             "overrides": {
                 str(boxer_id): ratings.as_dict()
