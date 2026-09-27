@@ -1,0 +1,1509 @@
+{
+  "schema_version": 1,
+  "title": "FNR3 PSP AEMS event-code registry",
+  "source_revision": "ULES00270 review/debug BOOT.BIN",
+  "source_sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+  "confidence": "CONFIRMED",
+  "descriptor_model": {
+    "layout": "8-byte {name pointer, 32-bit hash}",
+    "descriptor_range": "0x00559C90-0x0055A297",
+    "common_hash_low16": "0x48DF",
+    "event_code_formula": "event_code = (hash >> 16) & 0xFFFF",
+    "collision_count": 0
+  },
+  "dispatcher": {
+    "function": "0x00129844",
+    "proposed_name": "AuAemsManager_DispatchEvent",
+    "direct_case_count": 131,
+    "note": "Handler addresses are direct branch/fallthrough targets from the top-level event-code comparison tree. Event-specific internal sub-branches are not represented as separate cases."
+  },
+  "descriptor_count": 193,
+  "entries": [
+    {
+      "descriptor": "0x00559C90",
+      "name": "Global_Crowd_fade",
+      "hash": "0x4CA548DF",
+      "event_code": "0x4CA5",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012A698"
+    },
+    {
+      "descriptor": "0x00559C98",
+      "name": "Global_Pause",
+      "hash": "0x29ED48DF",
+      "event_code": "0x29ED",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012A5E8"
+    },
+    {
+      "descriptor": "0x00559CA0",
+      "name": "CM_DuckerEvent",
+      "hash": "0x309148DF",
+      "event_code": "0x3091",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0013132C"
+    },
+    {
+      "descriptor": "0x00559CA8",
+      "name": "C_CrowdsEvents",
+      "hash": "0x70D648DF",
+      "event_code": "0x70D6",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012ABB4"
+    },
+    {
+      "descriptor": "0x00559CB0",
+      "name": "C_Heckle",
+      "hash": "0x31D248DF",
+      "event_code": "0x31D2",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012A488"
+    },
+    {
+      "descriptor": "0x00559CB8",
+      "name": "C_BooEvent",
+      "hash": "0x5D5448DF",
+      "event_code": "0x5D54",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012ADD8"
+    },
+    {
+      "descriptor": "0x00559CC0",
+      "name": "C_Chant",
+      "hash": "0x465F48DF",
+      "event_code": "0x465F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012B25C"
+    },
+    {
+      "descriptor": "0x00559CC8",
+      "name": "C_Fall",
+      "hash": "0x259E48DF",
+      "event_code": "0x259E",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012B020"
+    },
+    {
+      "descriptor": "0x00559CD0",
+      "name": "C_FightDecision",
+      "hash": "0x2CB048DF",
+      "event_code": "0x2CB0",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012BA9C"
+    },
+    {
+      "descriptor": "0x00559CD8",
+      "name": "C_KnockOut_cheer",
+      "hash": "0x1CCE48DF",
+      "event_code": "0x1CCE",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012AECC"
+    },
+    {
+      "descriptor": "0x00559CE0",
+      "name": "C_RingGirl",
+      "hash": "0x112E48DF",
+      "event_code": "0x112E",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012B7E0"
+    },
+    {
+      "descriptor": "0x00559CE8",
+      "name": "C_RoundEnd",
+      "hash": "0x49CC48DF",
+      "event_code": "0x49CC",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012B93C"
+    },
+    {
+      "descriptor": "0x00559CF0",
+      "name": "C_StumbleEvent",
+      "hash": "0x3B3948DF",
+      "event_code": "0x3B39",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559CF8",
+      "name": "C_ApplauseEvent",
+      "hash": "0x50BC48DF",
+      "event_code": "0x50BC",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559D00",
+      "name": "C_AwwwEvent",
+      "hash": "0x2CD848DF",
+      "event_code": "0x2CD8",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559D08",
+      "name": "C_TauntEvent",
+      "hash": "0x46CC48DF",
+      "event_code": "0x46CC",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012B564"
+    },
+    {
+      "descriptor": "0x00559D10",
+      "name": "NIS_Intro",
+      "hash": "0x1A8848DF",
+      "event_code": "0x1A88",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012A7F8"
+    },
+    {
+      "descriptor": "0x00559D18",
+      "name": "NIS_Corner",
+      "hash": "0x783848DF",
+      "event_code": "0x7838",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012B68C"
+    },
+    {
+      "descriptor": "0x00559D20",
+      "name": "NIS_RefCount",
+      "hash": "0x522D48DF",
+      "event_code": "0x522D",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012AA84"
+    },
+    {
+      "descriptor": "0x00559D28",
+      "name": "Sce_KnockMoment",
+      "hash": "0x2BEB48DF",
+      "event_code": "0x2BEB",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012A994"
+    },
+    {
+      "descriptor": "0x00559D30",
+      "name": "Sce_ReplayMoment",
+      "hash": "0x137448DF",
+      "event_code": "0x1374",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012A538"
+    },
+    {
+      "descriptor": "0x00559D38",
+      "name": "Sce_Replay",
+      "hash": "0x3C1C48DF",
+      "event_code": "0x3C1C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012A748"
+    },
+    {
+      "descriptor": "0x00559D40",
+      "name": "NIS_intro_music",
+      "hash": "0x33E948DF",
+      "event_code": "0x33E9",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012A954"
+    },
+    {
+      "descriptor": "0x00559D48",
+      "name": "Sce_CountDown",
+      "hash": "0x22D548DF",
+      "event_code": "0x22D5",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559D50",
+      "name": "PnchSfx_BlockFull",
+      "hash": "0x581348DF",
+      "event_code": "0x5813",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F46C"
+    },
+    {
+      "descriptor": "0x00559D58",
+      "name": "PnchSfx_BlockPartial",
+      "hash": "0x4D9148DF",
+      "event_code": "0x4D91",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F4B8"
+    },
+    {
+      "descriptor": "0x00559D60",
+      "name": "PnchSfx_JabBody",
+      "hash": "0x4ADA48DF",
+      "event_code": "0x4ADA",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012E1E0"
+    },
+    {
+      "descriptor": "0x00559D68",
+      "name": "PnchSfx_JabHead",
+      "hash": "0x750248DF",
+      "event_code": "0x7502",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012E08C"
+    },
+    {
+      "descriptor": "0x00559D70",
+      "name": "PnchSfx_StraightHead",
+      "hash": "0x131048DF",
+      "event_code": "0x1310",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012E334"
+    },
+    {
+      "descriptor": "0x00559D78",
+      "name": "PnchSfx_StraightBody",
+      "hash": "0x2CC848DF",
+      "event_code": "0x2CC8",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012E488"
+    },
+    {
+      "descriptor": "0x00559D80",
+      "name": "PnchSfx_HookBody",
+      "hash": "0x094348DF",
+      "event_code": "0x0943",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012E7C0"
+    },
+    {
+      "descriptor": "0x00559D88",
+      "name": "PnchSfx_HookHead",
+      "hash": "0x369B48DF",
+      "event_code": "0x369B",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012E668"
+    },
+    {
+      "descriptor": "0x00559D90",
+      "name": "PnchSfx_UppecutHead",
+      "hash": "0x363848DF",
+      "event_code": "0x3638",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012E918"
+    },
+    {
+      "descriptor": "0x00559D98",
+      "name": "Pnchsfx_UppercutBody",
+      "hash": "0x1D5348DF",
+      "event_code": "0x1D53",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012EA70"
+    },
+    {
+      "descriptor": "0x00559DA0",
+      "name": "PnchSfx_SpecialHead",
+      "hash": "0x6F2348DF",
+      "event_code": "0x6F23",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012EE80"
+    },
+    {
+      "descriptor": "0x00559DA8",
+      "name": "Pnchsfx_SpecialBody",
+      "hash": "0x529048DF",
+      "event_code": "0x5290",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F060"
+    },
+    {
+      "descriptor": "0x00559DB0",
+      "name": "PnchSfx_CameraShakeHead",
+      "hash": "0x116B48DF",
+      "event_code": "0x116B",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F294"
+    },
+    {
+      "descriptor": "0x00559DB8",
+      "name": "PnchSfx_CameraShakeBody",
+      "hash": "0x4B5448DF",
+      "event_code": "0x4B54",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F380"
+    },
+    {
+      "descriptor": "0x00559DC0",
+      "name": "PnchSfx_KO",
+      "hash": "0x725448DF",
+      "event_code": "0x7254",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F1B0"
+    },
+    {
+      "descriptor": "0x00559DC8",
+      "name": "PnchSfx_Replay",
+      "hash": "0x27C548DF",
+      "event_code": "0x27C5",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559DD0",
+      "name": "PnchSfx_LowBlow",
+      "hash": "0x5F9248DF",
+      "event_code": "0x5F92",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012EBC4"
+    },
+    {
+      "descriptor": "0x00559DD8",
+      "name": "PnchSfx_Miss",
+      "hash": "0x36CB48DF",
+      "event_code": "0x36CB",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F504"
+    },
+    {
+      "descriptor": "0x00559DE0",
+      "name": "ExrtSfx_Breath",
+      "hash": "0x5B4C48DF",
+      "event_code": "0x5B4C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F5BC"
+    },
+    {
+      "descriptor": "0x00559DE8",
+      "name": "ExrtSfx_Sniff",
+      "hash": "0x67F748DF",
+      "event_code": "0x67F7",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F6B4"
+    },
+    {
+      "descriptor": "0x00559DF0",
+      "name": "ExrtSfx_PunchRecieve",
+      "hash": "0x3F9748DF",
+      "event_code": "0x3F97",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F790"
+    },
+    {
+      "descriptor": "0x00559DF8",
+      "name": "ExrtSfx_ReplayRecieve",
+      "hash": "0x73A048DF",
+      "event_code": "0x73A0",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559E00",
+      "name": "ExrtSfx_PunchThrown",
+      "hash": "0x10E048DF",
+      "event_code": "0x10E0",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F71C"
+    },
+    {
+      "descriptor": "0x00559E08",
+      "name": "ExrtSfx_ReplayThrown",
+      "hash": "0x1DA948DF",
+      "event_code": "0x1DA9",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559E10",
+      "name": "ExrtSfx_KOMnt_Thrown",
+      "hash": "0x2E9448DF",
+      "event_code": "0x2E94",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559E18",
+      "name": "ExsrSfx_KOMnt_Move",
+      "hash": "0x5C5648DF",
+      "event_code": "0x5C56",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F91C"
+    },
+    {
+      "descriptor": "0x00559E20",
+      "name": "ExsrSfx_KOMnt_ThrnBrth",
+      "hash": "0x0F5C48DF",
+      "event_code": "0x0F5C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F8B0"
+    },
+    {
+      "descriptor": "0x00559E28",
+      "name": "ExrtSfx_Grimace",
+      "hash": "0x31BF48DF",
+      "event_code": "0x31BF",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FE40"
+    },
+    {
+      "descriptor": "0x00559E30",
+      "name": "MattSfx_HeadFall",
+      "hash": "0x796148DF",
+      "event_code": "0x7961",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FB48"
+    },
+    {
+      "descriptor": "0x00559E38",
+      "name": "MattSfx_ArmLegFall",
+      "hash": "0x12E748DF",
+      "event_code": "0x12E7",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559E40",
+      "name": "MattSfx_KneeFall",
+      "hash": "0x0FE348DF",
+      "event_code": "0x0FE3",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FA18"
+    },
+    {
+      "descriptor": "0x00559E48",
+      "name": "MattSfx_TorsoFallBack",
+      "hash": "0x7F3348DF",
+      "event_code": "0x7F33",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FAB0"
+    },
+    {
+      "descriptor": "0x00559E50",
+      "name": "MattSfx_TorsoFallFront",
+      "hash": "0x4ACA48DF",
+      "event_code": "0x4ACA",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FA64"
+    },
+    {
+      "descriptor": "0x00559E58",
+      "name": "MattSfx_TorsoFallSide",
+      "hash": "0x341B48DF",
+      "event_code": "0x341B",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FAFC"
+    },
+    {
+      "descriptor": "0x00559E60",
+      "name": "MattSfx_FullBodyFallBack",
+      "hash": "0x7C1248DF",
+      "event_code": "0x7C12",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F980"
+    },
+    {
+      "descriptor": "0x00559E68",
+      "name": "MattSfx_FullBodyFallFront",
+      "hash": "0x520948DF",
+      "event_code": "0x5209",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012F9CC"
+    },
+    {
+      "descriptor": "0x00559E70",
+      "name": "MattSfx_FootForward",
+      "hash": "0x1CB548DF",
+      "event_code": "0x1CB5",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0013030C"
+    },
+    {
+      "descriptor": "0x00559E78",
+      "name": "MattSfx_FootBack",
+      "hash": "0x511948DF",
+      "event_code": "0x5119",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130354"
+    },
+    {
+      "descriptor": "0x00559E80",
+      "name": "MattSfx_FootLunge",
+      "hash": "0x7C2848DF",
+      "event_code": "0x7C28",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0013039C"
+    },
+    {
+      "descriptor": "0x00559E88",
+      "name": "MattSfx_FootStep",
+      "hash": "0x0C2C48DF",
+      "event_code": "0x0C2C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001300EC"
+    },
+    {
+      "descriptor": "0x00559E90",
+      "name": "RingSfx_Bell",
+      "hash": "0x5C6A48DF",
+      "event_code": "0x5C6A",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012BBF8"
+    },
+    {
+      "descriptor": "0x00559E98",
+      "name": "RingSfx_Clap",
+      "hash": "0x617548DF",
+      "event_code": "0x6175",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C0AC"
+    },
+    {
+      "descriptor": "0x00559EA0",
+      "name": "RingSfx_Rope",
+      "hash": "0x22D948DF",
+      "event_code": "0x22D9",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012BE68"
+    },
+    {
+      "descriptor": "0x00559EA8",
+      "name": "RingSfx_RopeLean",
+      "hash": "0x5C4448DF",
+      "event_code": "0x5C44",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012BFA4"
+    },
+    {
+      "descriptor": "0x00559EB0",
+      "name": "RingSfx_Turnbuckle",
+      "hash": "0x1F7D48DF",
+      "event_code": "0x1F7D",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012BD2C"
+    },
+    {
+      "descriptor": "0x00559EB8",
+      "name": "RingSfx_Whistle",
+      "hash": "0x4A2448DF",
+      "event_code": "0x4A24",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012BCB4"
+    },
+    {
+      "descriptor": "0x00559EC0",
+      "name": "Envsfx_FairFreeFall_Climb",
+      "hash": "0x317148DF",
+      "event_code": "0x3171",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012CD94"
+    },
+    {
+      "descriptor": "0x00559EC8",
+      "name": "EnvSfx_FairFreefall_Release",
+      "hash": "0x4A9848DF",
+      "event_code": "0x4A98",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012CB04"
+    },
+    {
+      "descriptor": "0x00559ED0",
+      "name": "Envsfx_FairFreeFall_Scream",
+      "hash": "0x642848DF",
+      "event_code": "0x6428",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012CC4C"
+    },
+    {
+      "descriptor": "0x00559ED8",
+      "name": "EnvSfx_FairCoaster_Track",
+      "hash": "0x612548DF",
+      "event_code": "0x6125",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559EE0",
+      "name": "EnvSfx_FairCoaster_Scream",
+      "hash": "0x666B48DF",
+      "event_code": "0x666B",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C2CC"
+    },
+    {
+      "descriptor": "0x00559EE8",
+      "name": "Envsfx_FairSwing_Scream",
+      "hash": "0x1C8348DF",
+      "event_code": "0x1C83",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559EF0",
+      "name": "Envsfx_FairSP_engine",
+      "hash": "0x1EE748DF",
+      "event_code": "0x1EE7",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C8AC"
+    },
+    {
+      "descriptor": "0x00559EF8",
+      "name": "Envsfx_FairSP_Stop",
+      "hash": "0x29E648DF",
+      "event_code": "0x29E6",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C780"
+    },
+    {
+      "descriptor": "0x00559F00",
+      "name": "EnvSfx_FairSP_TireBump",
+      "hash": "0x599D48DF",
+      "event_code": "0x599D",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C9D8"
+    },
+    {
+      "descriptor": "0x00559F08",
+      "name": "EnvSfx_FairSP_Scream",
+      "hash": "0x601C48DF",
+      "event_code": "0x601C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C528"
+    },
+    {
+      "descriptor": "0x00559F10",
+      "name": "EnvSfx_FairSP_Whoosh",
+      "hash": "0x457C48DF",
+      "event_code": "0x457C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C654"
+    },
+    {
+      "descriptor": "0x00559F18",
+      "name": "Envsfx_Fair_Generator",
+      "hash": "0x045E48DF",
+      "event_code": "0x045E",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012CF18"
+    },
+    {
+      "descriptor": "0x00559F20",
+      "name": "Envsfx_Vice_Fan1",
+      "hash": "0x57B448DF",
+      "event_code": "0x57B4",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D9B0"
+    },
+    {
+      "descriptor": "0x00559F28",
+      "name": "EnvSfx_Vice_Fan2",
+      "hash": "0x725148DF",
+      "event_code": "0x7251",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DA30"
+    },
+    {
+      "descriptor": "0x00559F30",
+      "name": "EnvSfx_Vice_Fan3",
+      "hash": "0x725248DF",
+      "event_code": "0x7252",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DAB0"
+    },
+    {
+      "descriptor": "0x00559F38",
+      "name": "EnvSfx_Vice_Fan4",
+      "hash": "0x325E48DF",
+      "event_code": "0x325E",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DB30"
+    },
+    {
+      "descriptor": "0x00559F40",
+      "name": "Envsfx_Elevece_Heli",
+      "hash": "0x36B648DF",
+      "event_code": "0x36B6",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D01C"
+    },
+    {
+      "descriptor": "0x00559F48",
+      "name": "Envsfx_Elevece_Heli2",
+      "hash": "0x5A5C48DF",
+      "event_code": "0x5A5C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D0DC"
+    },
+    {
+      "descriptor": "0x00559F50",
+      "name": "EnvSfx_Minik",
+      "hash": "0x3D9C48DF",
+      "event_code": "0x3D9C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D19C"
+    },
+    {
+      "descriptor": "0x00559F58",
+      "name": "EnvSfx_Sako",
+      "hash": "0x283F48DF",
+      "event_code": "0x283F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D564"
+    },
+    {
+      "descriptor": "0x00559F60",
+      "name": "EnvSfx_Flu",
+      "hash": "0x51C148DF",
+      "event_code": "0x51C1",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D5E4"
+    },
+    {
+      "descriptor": "0x00559F68",
+      "name": "EnvSfx_Flu_Elev",
+      "hash": "0x673E48DF",
+      "event_code": "0x673E",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D724"
+    },
+    {
+      "descriptor": "0x00559F70",
+      "name": "EnvSfx_Flu_ElevDoor",
+      "hash": "0x468F48DF",
+      "event_code": "0x468F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D65C"
+    },
+    {
+      "descriptor": "0x00559F78",
+      "name": "EnvSfx_Flu_ForkLift",
+      "hash": "0x217848DF",
+      "event_code": "0x2178",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D684"
+    },
+    {
+      "descriptor": "0x00559F80",
+      "name": "EnvSfx_Flu_LightBuzz",
+      "hash": "0x461D48DF",
+      "event_code": "0x461D",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559F88",
+      "name": "EnvSfx_Flu_LightMove",
+      "hash": "0x684848DF",
+      "event_code": "0x6848",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559F90",
+      "name": "EnvSfx_Flu_Truck",
+      "hash": "0x1D2F48DF",
+      "event_code": "0x1D2F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D888"
+    },
+    {
+      "descriptor": "0x00559F98",
+      "name": "EnvSfx_Flu_Spark",
+      "hash": "0x45D748DF",
+      "event_code": "0x45D7",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559FA0",
+      "name": "EnvSfx_Training",
+      "hash": "0x3C5B48DF",
+      "event_code": "0x3C5B",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D25C"
+    },
+    {
+      "descriptor": "0x00559FA8",
+      "name": "EnvSfx_TrainMachine",
+      "hash": "0x5D3F48DF",
+      "event_code": "0x5D3F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D2DC"
+    },
+    {
+      "descriptor": "0x00559FB0",
+      "name": "EnvSfx_TrainMachineRandom",
+      "hash": "0x6EB248DF",
+      "event_code": "0x6EB2",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012D420"
+    },
+    {
+      "descriptor": "0x00559FB8",
+      "name": "EnvSfx_ReplayCamera",
+      "hash": "0x207548DF",
+      "event_code": "0x2075",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C21C"
+    },
+    {
+      "descriptor": "0x00559FC0",
+      "name": "Envsfx_CameraFlash",
+      "hash": "0x605B48DF",
+      "event_code": "0x605B",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012C114"
+    },
+    {
+      "descriptor": "0x00559FC8",
+      "name": "EntrSfx_Fireworks_Air",
+      "hash": "0x56BE48DF",
+      "event_code": "0x56BE",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DBF4"
+    },
+    {
+      "descriptor": "0x00559FD0",
+      "name": "EntrSfx_fireworks_gr",
+      "hash": "0x56D548DF",
+      "event_code": "0x56D5",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x00559FD8",
+      "name": "EntrSfx_SparkCannon",
+      "hash": "0x6D8648DF",
+      "event_code": "0x6D86",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DDA4"
+    },
+    {
+      "descriptor": "0x00559FE0",
+      "name": "EntrSfx_fireballs",
+      "hash": "0x471F48DF",
+      "event_code": "0x471F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DC90"
+    },
+    {
+      "descriptor": "0x00559FE8",
+      "name": "EntrSfx_Confetti",
+      "hash": "0x448F48DF",
+      "event_code": "0x448F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DBB0"
+    },
+    {
+      "descriptor": "0x00559FF0",
+      "name": "EntrSfx_LightRig",
+      "hash": "0x4A7B48DF",
+      "event_code": "0x4A7B",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DEB8"
+    },
+    {
+      "descriptor": "0x00559FF8",
+      "name": "EntrSfx_Smoke",
+      "hash": "0x1D9048DF",
+      "event_code": "0x1D90",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DEF8"
+    },
+    {
+      "descriptor": "0x0055A000",
+      "name": "EntrSfx_Spinners",
+      "hash": "0x5AEA48DF",
+      "event_code": "0x5AEA",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012DF38"
+    },
+    {
+      "descriptor": "0x0055A008",
+      "name": "ChrctrSfx_BreathLight",
+      "hash": "0x329F48DF",
+      "event_code": "0x329F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001311B8"
+    },
+    {
+      "descriptor": "0x0055A010",
+      "name": "ChrctrSfx_BreathHeavy",
+      "hash": "0x0D4848DF",
+      "event_code": "0x0D48",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130EF0"
+    },
+    {
+      "descriptor": "0x0055A018",
+      "name": "ChrctrSfx_BreathGasp",
+      "hash": "0x360848DF",
+      "event_code": "0x3608",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001311CC"
+    },
+    {
+      "descriptor": "0x0055A020",
+      "name": "ChrctrSfx_BreathLoop",
+      "hash": "0x311748DF",
+      "event_code": "0x3117",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A028",
+      "name": "ChrtcrSfx_HeadBut",
+      "hash": "0x2BD148DF",
+      "event_code": "0x2BD1",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012ED18"
+    },
+    {
+      "descriptor": "0x0055A030",
+      "name": "ChrctrSfx_GloveChinTap",
+      "hash": "0x4E1348DF",
+      "event_code": "0x4E13",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FF64"
+    },
+    {
+      "descriptor": "0x0055A038",
+      "name": "ChrtcrSfx_GloveChestHit",
+      "hash": "0x60F848DF",
+      "event_code": "0x60F8",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FF0C"
+    },
+    {
+      "descriptor": "0x0055A040",
+      "name": "ChrctrSfx_GloveHeadHit",
+      "hash": "0x781748DF",
+      "event_code": "0x7817",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0013006C"
+    },
+    {
+      "descriptor": "0x0055A048",
+      "name": "ChrctrSfx_GloveRub",
+      "hash": "0x3F6648DF",
+      "event_code": "0x3F66",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FFA4"
+    },
+    {
+      "descriptor": "0x0055A050",
+      "name": "ChrctrSfx_GloveTap",
+      "hash": "0x444848DF",
+      "event_code": "0x4448",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0013002C"
+    },
+    {
+      "descriptor": "0x0055A058",
+      "name": "ChrctrSfx_BackPat",
+      "hash": "0x2F4F48DF",
+      "event_code": "0x2F4F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001300AC"
+    },
+    {
+      "descriptor": "0x0055A060",
+      "name": "ChrctrSfx_HandClap",
+      "hash": "0x7DCE48DF",
+      "event_code": "0x7DCE",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012E04C"
+    },
+    {
+      "descriptor": "0x0055A068",
+      "name": "ChrctrSfx_FaceWipe",
+      "hash": "0x145448DF",
+      "event_code": "0x1454",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FBD4"
+    },
+    {
+      "descriptor": "0x0055A070",
+      "name": "ChrctrSfx_Clinch",
+      "hash": "0x5B6348DF",
+      "event_code": "0x5B63",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FB94"
+    },
+    {
+      "descriptor": "0x0055A078",
+      "name": "ChrctrSfx_CutToolSelect",
+      "hash": "0x53AE48DF",
+      "event_code": "0x53AE",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FE10"
+    },
+    {
+      "descriptor": "0x0055A080",
+      "name": "ChrctrSfx_CutToolUse",
+      "hash": "0x26F148DF",
+      "event_code": "0x26F1",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FBD4"
+    },
+    {
+      "descriptor": "0x0055A088",
+      "name": "ChrctrSfx_SwellToolSelect",
+      "hash": "0x0CAC48DF",
+      "event_code": "0x0CAC",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FDE0"
+    },
+    {
+      "descriptor": "0x0055A090",
+      "name": "TrnrSfx_Speedbag",
+      "hash": "0x7D7748DF",
+      "event_code": "0x7D77",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A098",
+      "name": "TrnrSfx_Treadmill",
+      "hash": "0x105E48DF",
+      "event_code": "0x105E",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A0A0",
+      "name": "TrnrSfx_Benchpress",
+      "hash": "0x022748DF",
+      "event_code": "0x0227",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A0A8",
+      "name": "TrnrSfx_HeavyBag_Head",
+      "hash": "0x4C1848DF",
+      "event_code": "0x4C18",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0013096C"
+    },
+    {
+      "descriptor": "0x0055A0B0",
+      "name": "TrnrSfx_HeavyBag_Body",
+      "hash": "0x162748DF",
+      "event_code": "0x1627",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00129B40"
+    },
+    {
+      "descriptor": "0x0055A0B8",
+      "name": "TrnrSfx_HeavyBag_Hay",
+      "hash": "0x341F48DF",
+      "event_code": "0x341F",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FE74"
+    },
+    {
+      "descriptor": "0x0055A0C0",
+      "name": "TrnrSfx_Jumprope",
+      "hash": "0x02A648DF",
+      "event_code": "0x02A6",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A0C8",
+      "name": "TrnrSfx_Chinup",
+      "hash": "0x4BE648DF",
+      "event_code": "0x4BE6",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A0D0",
+      "name": "TrnrSfx_Weights",
+      "hash": "0x6CCB48DF",
+      "event_code": "0x6CCB",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001305F4"
+    },
+    {
+      "descriptor": "0x0055A0D8",
+      "name": "TrnrSfx_Mitts",
+      "hash": "0x35EB48DF",
+      "event_code": "0x35EB",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A0E0",
+      "name": "TrnrSfx_ComboDummy_Body",
+      "hash": "0x1DDD48DF",
+      "event_code": "0x1DDD",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A0E8",
+      "name": "TrnrSfx_ComboDummy_Head",
+      "hash": "0x220548DF",
+      "event_code": "0x2205",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001305B0"
+    },
+    {
+      "descriptor": "0x0055A0F0",
+      "name": "TrnrSfx_ComboDummy_Light",
+      "hash": "0x0CEB48DF",
+      "event_code": "0x0CEB",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001309A0"
+    },
+    {
+      "descriptor": "0x0055A0F8",
+      "name": "TrnrSfx_HeavyBag_Light",
+      "hash": "0x2E6E48DF",
+      "event_code": "0x2E6E",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FEA8"
+    },
+    {
+      "descriptor": "0x0055A100",
+      "name": "TrnrSfx_ClockTimer",
+      "hash": "0x79D748DF",
+      "event_code": "0x79D7",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001309D0"
+    },
+    {
+      "descriptor": "0x0055A108",
+      "name": "Trnrfx_Pass",
+      "hash": "0x697048DF",
+      "event_code": "0x6970",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130A60"
+    },
+    {
+      "descriptor": "0x0055A110",
+      "name": "TrnrSfx_Fail",
+      "hash": "0x42FC48DF",
+      "event_code": "0x42FC",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130BA4"
+    },
+    {
+      "descriptor": "0x0055A118",
+      "name": "TrnrSfx_GameStart",
+      "hash": "0x446448DF",
+      "event_code": "0x4464",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130A00"
+    },
+    {
+      "descriptor": "0x0055A120",
+      "name": "Trnrsfx_GameEnd",
+      "hash": "0x058148DF",
+      "event_code": "0x0581",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130A30"
+    },
+    {
+      "descriptor": "0x0055A128",
+      "name": "Trnrsfx_Bonus",
+      "hash": "0x6E2E48DF",
+      "event_code": "0x6E2E",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x001303E4"
+    },
+    {
+      "descriptor": "0x0055A130",
+      "name": "TrnrSfx_Breathing",
+      "hash": "0x07CE48DF",
+      "event_code": "0x07CE",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A138",
+      "name": "Replaymenu_CameraSelect",
+      "hash": "0x78A148DF",
+      "event_code": "0x78A1",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A140",
+      "name": "Replaymenu_Hide",
+      "hash": "0x280148DF",
+      "event_code": "0x2801",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A148",
+      "name": "Replaymenu_Nav_Orbit",
+      "hash": "0x349C48DF",
+      "event_code": "0x349C",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130DA0"
+    },
+    {
+      "descriptor": "0x0055A150",
+      "name": "Replaymenu_Nav_Target",
+      "hash": "0x26B848DF",
+      "event_code": "0x26B8",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130CF0"
+    },
+    {
+      "descriptor": "0x0055A158",
+      "name": "Replaymenu_TransportButtons",
+      "hash": "0x288F48DF",
+      "event_code": "0x288F",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A160",
+      "name": "Replaymenu_ZoomIn",
+      "hash": "0x567748DF",
+      "event_code": "0x5677",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130E10"
+    },
+    {
+      "descriptor": "0x0055A168",
+      "name": "Replaymenu_ZoomOut",
+      "hash": "0x1E1848DF",
+      "event_code": "0x1E18",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00130E80"
+    },
+    {
+      "descriptor": "0x0055A170",
+      "name": "MenuSfx_TCCBeep",
+      "hash": "0x045D48DF",
+      "event_code": "0x045D",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x0012FCA4"
+    },
+    {
+      "descriptor": "0x0055A178",
+      "name": "UnconnectedClass",
+      "hash": "0x268948DF",
+      "event_code": "0x2689",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A180",
+      "name": "MenuSfx_PSP",
+      "hash": "0x5FF448DF",
+      "event_code": "0x5FF4",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A188",
+      "name": "MenuSfx_MoneyCount_Lp",
+      "hash": "0x15AB48DF",
+      "event_code": "0x15AB",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A190",
+      "name": "Intro_Music_PSP",
+      "hash": "0x02BD48DF",
+      "event_code": "0x02BD",
+      "handled_by_central_dispatcher": true,
+      "handler": "0x00131214"
+    },
+    {
+      "descriptor": "0x0055A198",
+      "name": "C_AngryVolume",
+      "hash": "0x110F48DF",
+      "event_code": "0x110F",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1A0",
+      "name": "C_BooVolume",
+      "hash": "0x180048DF",
+      "event_code": "0x1800",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1A8",
+      "name": "C_ChantVolume",
+      "hash": "0x7BCC48DF",
+      "event_code": "0x7BCC",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1B0",
+      "name": "C_StrmVolume",
+      "hash": "0x173F48DF",
+      "event_code": "0x173F",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1B8",
+      "name": "C_RamVolume",
+      "hash": "0x01FE48DF",
+      "event_code": "0x01FE",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1C0",
+      "name": "C_HeckleVolume",
+      "hash": "0x2C4F48DF",
+      "event_code": "0x2C4F",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1C8",
+      "name": "C_KnockOutVolume",
+      "hash": "0x34CD48DF",
+      "event_code": "0x34CD",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1D0",
+      "name": "C_stumbleVolume",
+      "hash": "0x61F748DF",
+      "event_code": "0x61F7",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1D8",
+      "name": "C_tauntVolume",
+      "hash": "0x4F4748DF",
+      "event_code": "0x4F47",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1E0",
+      "name": "sfx_EnviroVolume",
+      "hash": "0x691A48DF",
+      "event_code": "0x691A",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1E8",
+      "name": "sfx_EntFX_EnviroVolume",
+      "hash": "0x006848DF",
+      "event_code": "0x0068",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1F0",
+      "name": "Sfx_Ring_EnviroVolume",
+      "hash": "0x6F8548DF",
+      "event_code": "0x6F85",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A1F8",
+      "name": "sfx_blocksVolume",
+      "hash": "0x451148DF",
+      "event_code": "0x4511",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A200",
+      "name": "sfx_punchVolume",
+      "hash": "0x5B1048DF",
+      "event_code": "0x5B10",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A208",
+      "name": "sfx_GruntsVolume",
+      "hash": "0x2F2E48DF",
+      "event_code": "0x2F2E",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A210",
+      "name": "sfx_CharacterVolume",
+      "hash": "0x085F48DF",
+      "event_code": "0x085F",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A218",
+      "name": "sfx_FootstepsVolume",
+      "hash": "0x07A248DF",
+      "event_code": "0x07A2",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A220",
+      "name": "sfx_FallsVolume",
+      "hash": "0x0BA048DF",
+      "event_code": "0x0BA0",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A228",
+      "name": "sfx_KOmntVolume",
+      "hash": "0x4A3848DF",
+      "event_code": "0x4A38",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A230",
+      "name": "sfx_MenuVolume",
+      "hash": "0x6A3D48DF",
+      "event_code": "0x6A3D",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A238",
+      "name": "sfx_MiniGameVolume",
+      "hash": "0x569448DF",
+      "event_code": "0x5694",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A240",
+      "name": "IntroMusic_Volume",
+      "hash": "0x11A548DF",
+      "event_code": "0x11A5",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A248",
+      "name": "Sweat_state",
+      "hash": "0x4FFD48DF",
+      "event_code": "0x4FFD",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A250",
+      "name": "Heckle_State",
+      "hash": "0x7EF148DF",
+      "event_code": "0x7EF1",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A258",
+      "name": "counter_Override",
+      "hash": "0x2F6248DF",
+      "event_code": "0x2F62",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A260",
+      "name": "counter_output",
+      "hash": "0x1F2548DF",
+      "event_code": "0x1F25",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A268",
+      "name": "Send_positiveEmotions",
+      "hash": "0x05FE48DF",
+      "event_code": "0x05FE",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A270",
+      "name": "Send_negativeEmotions",
+      "hash": "0x002C48DF",
+      "event_code": "0x002C",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A278",
+      "name": "Minick_Azimuth",
+      "hash": "0x2DF148DF",
+      "event_code": "0x2DF1",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A280",
+      "name": "send_master_EntFX_Reverb",
+      "hash": "0x661648DF",
+      "event_code": "0x6616",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A288",
+      "name": "send_master_EntFX_WetDry",
+      "hash": "0x75DE48DF",
+      "event_code": "0x75DE",
+      "handled_by_central_dispatcher": false
+    },
+    {
+      "descriptor": "0x0055A290",
+      "name": "Global",
+      "hash": "0x396348DF",
+      "event_code": "0x3963",
+      "handled_by_central_dispatcher": false
+    }
+  ],
+  "provenance": [
+    "Derived from static bytes and Allegrex disassembly of the user-provided ULES00270 BOOT.BIN.",
+    "No game executable/resource bytes are stored in this artifact."
+  ]
+}
