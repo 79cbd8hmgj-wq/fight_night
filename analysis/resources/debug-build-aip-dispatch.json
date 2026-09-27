@@ -1688,5 +1688,54 @@
       "func_003E5860 accepts the resolved event-handle object plus caller payload and invokes registered listeners.",
       "func_003E4A84 resets/invalidates an event handle by writing -3 to its +0x04 state field."
     ]
+  },
+  "speech_bank_record_model": {
+    "confidence": "CONFIRMED for offsets/lookup behavior; unresolved fields remain conservatively named",
+    "initializer": "0x0013A6D0",
+    "lookup_by_event_id": "0x001379B0",
+    "alternate_record_accessor": "0x001379F4",
+    "bank_object": {
+      "size_minimum": "0x14",
+      "fields": {
+        "+0x00": "loaded data/resource object or pointer; exact type unresolved",
+        "+0x04": "record count (CONFIRMED: bounds the record loop and lookup)",
+        "+0x08": "pointer to 16-byte record array (CONFIRMED)",
+        "+0x0C": "parsed event/header source object used to enumerate records",
+        "+0x10": "byte flag copied from initializer mode parameter"
+      }
+    },
+    "event_record": {
+      "size": "0x10",
+      "fields": {
+        "+0x00": "numeric/interned event identifier used as the first-record base for ID-relative lookup",
+        "+0x04": "primary lookup result returned by 0x001379B0",
+        "+0x08": "source-derived record value/pointer populated during initialization; exact semantic type unresolved",
+        "+0x0C": "secondary record value/flag; 0x001379F4 returns this field"
+      }
+    },
+    "lookup_algorithm": [
+      "records = bank+0x08",
+      "base_id = records[0].field_0",
+      "relative = requested_event_id - base_id (unless the debug/global override byte forces direct indexing)",
+      "require 0 <= relative < bank.record_count",
+      "record = records + relative*0x10",
+      "0x001379B0 returns record+0x04",
+      "0x001379F4 returns record+0x0C"
+    ],
+    "request_to_bank_selection": {
+      "request_size_minimum": "0x14",
+      "fields": {
+        "+0x00": "event ID passed to 0x001379B0",
+        "+0x04": "variant/sub-index added to the +0x04 lookup result before playback/selection",
+        "+0x0C": "16-bit subtype/flag; special values observed include 0x0008, 0x1DD0 and 0x4021 on guarded paths",
+        "+0x10": "speech bank category: 0=com, 1=anc, 2=trn"
+      },
+      "direct_examples": [
+        "category 1 path: 0x0013CEB0 looks up request+0x00 in manager+0x188 and 0x0013CEBC adds request+0x04",
+        "category 0 path: 0x0013D0E8 looks up request+0x00 in manager+0x19C and 0x0013D0F4 adds request+0x04",
+        "category 2 path: 0x0013D4DC/0x0013D578 looks up request+0x00 in the training bank and adds request+0x04"
+      ]
+    },
+    "implication": "The .evt families can be reverse-engineered as structured record sources: the runtime does not merely hash arbitrary names at playback time; it builds a bounded 16-byte record table and performs deterministic ID-relative lookup."
   }
 }
