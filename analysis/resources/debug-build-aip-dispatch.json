@@ -798,5 +798,98 @@
         ]
       }
     }
+  },
+  "pocketdj_init_descriptor": {
+    "confidence": "CONFIRMED for address/config layout; callback semantics are intentionally unresolved unless noted",
+    "builder_function": "0x00295788",
+    "stack_descriptor_range": "sp+0x20..sp+0x5C",
+    "function_pointer_slots": [
+      {
+        "offset": "+0x20",
+        "target": "0x00295FD8"
+      },
+      {
+        "offset": "+0x24",
+        "target": "0x00295FFC"
+      },
+      {
+        "offset": "+0x28",
+        "target": "0x00296018"
+      },
+      {
+        "offset": "+0x2C",
+        "target": "0x00296034"
+      },
+      {
+        "offset": "+0x30",
+        "target": "0x00295FD8",
+        "note": "duplicate of +0x20"
+      },
+      {
+        "offset": "+0x34",
+        "target": "0x00295FFC",
+        "note": "duplicate of +0x24"
+      },
+      {
+        "offset": "+0x38",
+        "target": "0x00296018",
+        "note": "duplicate of +0x28"
+      },
+      {
+        "offset": "+0x3C",
+        "target": "0x00296034",
+        "note": "duplicate of +0x2C"
+      },
+      {
+        "offset": "+0x40",
+        "target": "0x00295CD0",
+        "note": "5-way callback/state switch; case 1 emits EATrax_GoToScreen with /_root and MAINMENU"
+      },
+      {
+        "offset": "+0x44",
+        "target": "0x0029606C",
+        "note": "updates a 0..3 state/index and writes a 3-word table-selected result; exact semantic label unresolved"
+      },
+      {
+        "offset": "+0x48",
+        "target": "0x00296050",
+        "note": "thin wrapper returning func_0026E674(); consumed by 0x0029606C as a random 2-bit selector source"
+      }
+    ],
+    "data_slots": [
+      {
+        "offset": "+0x4C",
+        "value_source": "global 0x00567114",
+        "initial_value": "0x0051B098",
+        "string": "eatrax/"
+      },
+      {
+        "offset": "+0x50",
+        "value_source": "global 0x00567118",
+        "initial_value": "0x0051B0A0",
+        "string": "eavis"
+      },
+      {
+        "offset": "+0x54",
+        "value_source": "global 0x0056711C",
+        "initial_value": "0x0051B0A8",
+        "string": "EATrax::Player"
+      },
+      {
+        "offset": "+0x58",
+        "value": "0.0f"
+      },
+      {
+        "offset": "+0x5C",
+        "value": "0x00064000"
+      }
+    ],
+    "construction_sequence": [
+      "0x00295788 first builds this descriptor and passes it through 0x00427910.",
+      "It then allocates 0x174 bytes using the game's allocator with the EATrax::Player tag context.",
+      "On successful allocation it invokes 0x00423AB8 with the three caller-supplied arguments plus zero as an additional argument.",
+      "The resulting player pointer is stored in global 0x00567124.",
+      "A post-create validity check at 0x00423C10 triggers the PocketDJFightNight.cpp:126 assertion if initialization is not valid."
+    ]
   }
 }
