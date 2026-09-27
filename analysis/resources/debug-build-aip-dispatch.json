@@ -1690,7 +1690,7 @@
     ]
   },
   "speech_bank_record_model": {
-    "confidence": "CONFIRMED for offsets/lookup behavior; unresolved fields remain conservatively named",
+    "confidence": "CONFIRMED for bank/record layout, interned event IDs, base speech indices, and request routing; only record+0x0C remains semantically unresolved",
     "initializer": "0x0013A6D0",
     "lookup_by_event_id": "0x001379B0",
     "alternate_record_accessor": "0x001379F4",
@@ -1707,10 +1707,10 @@
     "event_record": {
       "size": "0x10",
       "fields": {
-        "+0x00": "numeric/interned event identifier used as the first-record base for ID-relative lookup",
-        "+0x04": "primary lookup result returned by 0x001379B0",
-        "+0x08": "source-derived record value/pointer populated during initialization; exact semantic type unresolved",
-        "+0x0C": "secondary record value/flag; 0x001379F4 returns this field"
+        "+0x00": "interned/registered event-key ID returned by 0x00496F20 (CONFIRMED)",
+        "+0x04": "base speech asset/sample index used by the playback path (CONFIRMED)",
+        "+0x08": "pointer to the source parsed event-key object returned by 0x003609D8 (CONFIRMED)",
+        "+0x0C": "1 when the canonicalized record name contains '001', otherwise 2; exact consumer meaning unresolved (CONFIRMED construction, UNKNOWN semantics)"
       }
     },
     "lookup_algorithm": [
@@ -1736,6 +1736,62 @@
         "category 2 path: 0x0013D4DC/0x0013D578 looks up request+0x00 in the training bank and adds request+0x04"
       ]
     },
-    "implication": "The .evt families can be reverse-engineered as structured record sources: the runtime does not merely hash arbitrary names at playback time; it builds a bounded 16-byte record table and performs deterministic ID-relative lookup."
+    "implication": "The .evt families can be reverse-engineered as structured record sources: the runtime does not merely hash arbitrary names at playback time; it builds a bounded 16-byte record table and performs deterministic ID-relative lookup.",
+    "helper_identifications": {
+      "0x004A9A0C": "strcpy (CONFIRMED)",
+      "0x004A9A50": "strlen (CONFIRMED)",
+      "0x004A9944": "strcat (CONFIRMED)",
+      "0x004A9D60": "strstr (CONFIRMED)"
+    },
+    "event_key_interner": {
+      "function": "0x00496F20",
+      "proposed_name": "RegisterEventKeyToken",
+      "confidence": "PROBABLE name; CONFIRMED behavior",
+      "globals": {
+        "0x005769D0": "sorted 8-byte {token_id, object_pointer} table",
+        "0x005769D4": "next monotonically increasing token ID",
+        "0x005769D8": "table capacity",
+        "0x005769DC": "used entry count"
+      },
+      "behavior": [
+        "0x00496F20 binary-searches/insertion-locates the parsed object through 0x004966F0, whose comparison uses the object's first two 16-bit fields.",
+        "If insertion is allowed, it shifts later 8-byte entries, stores the parsed object pointer, assigns the current next-token value, increments next-token and used-count, and returns the assigned token.",
+        "The bank loader stores this returned token at record+0x00."
+      ]
+    },
+    "record_name_canonicalization": {
+      "behavior": [
+        "0x00360C2C copies the per-record parsed string into a local buffer using the confirmed strcpy helper.",
+        "If strstr(name, '_Clone') succeeds, the loader truncates the string at the start of '_Clone'.",
+        "It appends '.dat'.",
+        "It passes that canonicalized .dat name through 0x0033AAEC against the loaded speech-data resource and stores the returned value at record+0x04.",
+        "It separately checks strstr(name, '001') and writes record+0x0C = 1 when present, otherwise 2."
+      ],
+      "implication": "Speech event records resolve canonical data-entry names to base indices during initialization instead of resolving filenames from scratch on every playback request."
+    },
+    "request_to_playback": {
+      "full_path_construction": "base speech directory from 0x0033BBC8(3) + '/' + selected bank data filename",
+      "bank_data_filenames": {
+        "0": "comdat.big",
+        "1": "ancdat.big",
+        "2": "trndat.big"
+      },
+      "final_index": "record.base_index (+0x04) + request.variant_offset (+0x04)",
+      "playback_wrapper": "0x00483AAC",
+      "playback_core": "0x004837A4",
+      "confidence": "CONFIRMED argument dataflow",
+      "evidence": [
+        "All four bank playback branches call 0x001379B0 with request+0x00, add request+0x04 to the returned base index, then call 0x00483AAC.",
+        "0x00483AAC forwards to 0x004837A4 with the bank path and final index.",
+        "0x004837A4 passes that path/index into its lower-level resource/audio open/start path."
+      ]
+    },
+    "subtitle_debug_field": {
+      "manager_offset": "+0x10",
+      "diagnostic": "SUBTITLE ID = %d",
+      "xref": "0x0013B878-0x0013B894",
+      "confidence": "CONFIRMED that manager+0x10 is the value displayed as SUBTITLE ID; exact queue/current-position semantics remain unresolved",
+      "note": "The update routine shifts a 10-word range at +0x10..+0x34 before consuming/displaying +0x10, so avoid prematurely naming the entire array as current-only state."
+    }
   }
 }
