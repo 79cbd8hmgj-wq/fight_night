@@ -277,7 +277,7 @@
       "subsystem": "Boxers",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The generic XDB layout is resolved far enough to map concrete boxer fields. xdbboxr.adf has a 24-byte header, 121 fields, 37 base records, a 31-byte 2-bit-per-field type map at +0x18, and a row-major token matrix at +0x38 with 0xF2-byte rows. Generic accessors prove type 0=inline signed int16, type 1=string/byte pool, type 2=int32 pool, type 3=float pool. UpdateSelectBoxerInfo at 0x001D53F0 maps Power fields 0x10/0x11, Speed 0x12, Agility 0x13, Stamina 0x14, Chin 0x15, Heart 0x16, Cuts 0x17 and Body 0x18; iOverall is computed by func_001D50F4. Name composition resolves field 1=surname/family name and field 2=first/given name; field 3 is a short CRO/resource stem. CORRECTION: field 0 is not the global SelectBoxer/fight-session boxer selector. func_00186284 proves that selector is a cumulative record-position index across registered boxer tables and never consults field 0; rows 35/36 are selected as indices 35/36 even though their field-0 values are 74/75. Field 0 is therefore a secondary/resource identity number with exact role still unresolved. Field 4 is the base/default availability flag: func_00185D84 returns field4>0, the 35-entry stock-list builder consumes that predicate, and func_001B0FE8 falls back to a +0x1C4 unlock bitset for selector 35 when field4 is zero. Field 6 is a confirmed hometown foreign-key into xdbhmtwn.adf; field 7 is a confirmed nickname/alias foreign-key into xdbalias.adf; field 9 is the confirmed boxer-weight field used by the exact six-division classifier. Compact helpers also expose field 0x0D as high-byte+1900 plus low-byte components and field 0x0E as three nibble components, but those packed semantics are not yet named. Two further boxer fields are now confirmed through cross-table accessor chains. Field 0x06 is the xdbhmtwn.adf record ID: T_00185FA0/T_001860A0 read boxer field 6, enter the hometown accessor path at func_001A9020, and retrieve hometown record fields; decoded references land within the 63-record hometown table and expose O_Home_* localization keys. Field 0x07 is the xdbalias.adf nickname record ID: func_00185F34/T_00186108 read boxer field 7, enter the alias accessor path at func_00185008, and retrieve alias fields; decoded references land within the 76-record alias table and expose ST_Nick_* keys. Field 0x0F is also behaviorally resolved: func_001857E4 reads it as a mode gate. When zero, the game's displayed/effective rating path scales rating fields 0x10-0x18 through the boxer's weight class and D_FLT_0055E280 before clamping to 10..100; when nonzero, the alternate path uses the raw/base rating accessor and clamps directly. T_00187434/func_00187548 take complementary branches on this flag. All 37 tracked base rows currently store zero, so the exact boxer category/source that sets a nonzero value remains open.",
+      "evidence": "The generic XDB layout is resolved far enough to map concrete boxer fields. xdbboxr.adf has a 24-byte header, 121 fields, 37 base records, a 31-byte 2-bit-per-field type map at +0x18, and a row-major token matrix at +0x38 with 0xF2-byte rows. Generic accessors prove type 0=inline signed int16, type 1=string/byte pool, type 2=int32 pool, type 3=float pool. UpdateSelectBoxerInfo at 0x001D53F0 maps Power fields 0x10/0x11, Speed 0x12, Agility 0x13, Stamina 0x14, Chin 0x15, Heart 0x16, Cuts 0x17 and Body 0x18; iOverall is computed by func_001D50F4. Name composition resolves field 1=surname/family name and field 2=first/given name; field 3 is a short CRO/resource stem. CORRECTION: field 0 is not the global SelectBoxer/fight-session boxer selector. func_00186284 proves that selector is a cumulative record-position index across registered boxer tables and never consults field 0; rows 35/36 are selected as indices 35/36 even though their field-0 values are 74/75. Field 0 is therefore a secondary/resource identity number with exact role still unresolved. Field 4 is the base/default availability flag: func_00185D84 returns field4>0, the 35-entry stock-list builder consumes that predicate, and func_001B0FE8 falls back to a +0x1C4 unlock bitset for selector 35 when field4 is zero. Field 6 is a confirmed hometown foreign-key into xdbhmtwn.adf; field 7 is a confirmed nickname/alias foreign-key into xdbalias.adf; field 9 is the confirmed boxer-weight field used by the exact six-division classifier. Compact helpers also expose field 0x0D as high-byte+1900 plus low-byte components and field 0x0E as three nibble components, but those packed semantics are not yet named. Two further boxer fields are now confirmed through cross-table accessor chains. Field 0x06 is the xdbhmtwn.adf record ID: T_00185FA0/T_001860A0 read boxer field 6, enter the hometown accessor path at func_001A9020, and retrieve hometown record fields; decoded references land within the 63-record hometown table and expose O_Home_* localization keys. Field 0x07 is the xdbalias.adf nickname record ID: func_00185F34/T_00186108 read boxer field 7, enter the alias accessor path at func_00185008, and retrieve alias fields; decoded references land within the 76-record alias table and expose ST_Nick_* keys. Field 0x0F is also behaviorally resolved: func_001857E4 reads it as a mode gate. When zero, the game's displayed/effective rating path scales rating fields 0x10-0x18 through the boxer's weight class and D_FLT_0055E280 before clamping to 10..100; when nonzero, the alternate path uses the raw/base rating accessor and clamps directly. T_00187434/func_00187548 take complementary branches on this flag. All 37 tracked base rows currently store zero, so the exact boxer category/source that sets a nonzero value remains open. Field 0x05 is now resolved one level further and a prior speech/audio classification is corrected. func_00185B30 reads field 0x05; func_0010C9C8 uses it as a bounded 76-entry source selector and returns a normalized boxer code, with a fallback through field 0x07's alias-linked path for unmapped cases. func_0010BB58 runs that normalizer for both active boxers, writes the two results into payload offsets +0x14/+0x18, and dispatches the payload through func_003E5860. On first-use failure it registers/resolves descriptor D_0055AB38 via func_003E4A94; that descriptor is named 'Replay'. Therefore field 0x05 is proven to feed boxer identity/profile codes into the Replay event path. It is not proven to be a commentary/speech/audio ID.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -316,17 +316,23 @@
           "func_001854DC",
           "func_001857E4",
           "T_00187434",
-          "func_00187548"
+          "func_00187548",
+          "func_00185B30",
+          "func_0010C9C8",
+          "func_0010BB58",
+          "func_003E5860",
+          "func_003E4A94"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
         ],
         "evidence": [
           "analysis/resources/xdbboxr-schema.json",
-          "analysis/resources/xdb-schema-evidence.json"
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       },
-      "remaining_static_work": "Mapped so far: name/resource fields 0x00-0x03, base availability 0x04, hometown 0x06, nickname/alias 0x07, weight 0x09/division classifier, packed career timing 0x0D, packed trait components 0x0E, rating-mode behavior 0x0F, and ratings 0x10-0x18. Continue with field 0x05, remaining physical/biographical fields 0x08/0x0A-0x0C, exact 0x0E trait names, stance/handedness, appearance/equipment, career/store and created-boxer semantics.",
+      "remaining_static_work": "Mapped so far: name/resource fields 0x00-0x03; base availability 0x04; Replay-event identity selector 0x05; hometown 0x06; nickname/alias 0x07; weight 0x09/division classifier; packed career timing 0x0D; packed trait components 0x0E; rating-mode behavior 0x0F; ratings 0x10-0x18; stance 0x19; style 0x1A; skin tone and several head-appearance fields 0x34-0x39; hair-style resource token 0x71. Continue with physical/biographical fields 0x08/0x0A-0x0C, exact 0x0E trait names, remaining handedness/equipment, career/store and created-boxer semantics. The exact authored name/downstream interpretation of the normalized Replay code remains open but must not be conflated with commentary.",
       "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -443,8 +449,8 @@
       "subsystem": "Fight",
       "question": "Does a named, string-evidenced 'combat event' tagging system exist that could anchor a fight-event API reconstruction?",
       "status": "STATICALLY_RESOLVED",
-      "confidence": "PROBABLE",
-      "evidence": "DRONE_-prefixed event tag strings found this session: DRONE_KNOCKDOWN_ATTACK, DRONE_BREAKCLINCH, DRONE_CLINCH, DRONE_ILLEGAL_PUNCH, DRONE_SIGNATURE_PUNCH, DRONE_COUNTER_PUNCH -- consistent with a replay-camera trigger system keyed to fight events.",
+      "confidence": "CONFIRMED",
+      "evidence": "DRONE_-prefixed event tag strings found this session: DRONE_KNOCKDOWN_ATTACK, DRONE_BREAKCLINCH, DRONE_CLINCH, DRONE_ILLEGAL_PUNCH, DRONE_SIGNATURE_PUNCH, DRONE_COUNTER_PUNCH -- consistent with a replay-camera trigger system keyed to fight events. Follow-up PR #37 moves this beyond string-only evidence: func_0010BB58 builds a per-fight-event payload with two boxer-specific normalized codes and dispatches it through generic dispatcher func_003E5860. If needed it registers descriptor D_0055AB38 via func_003E4A94; D_0055AB38 is the named event `Replay` (hash 0x28D86F4F). Neighboring descriptor names include RefClinch, RefStoppage, BlockedPunch, BoxerDamage, CelebrationSequence, LackOfAction, MissedPunch, PunchCombos, UpdateStatus, BoxerFatigue, TauntingResult, FeintingResult, ClinchingResult, Trapped and BoxerRoundHistory. This proves a named fight-event dispatch layer rather than merely suggesting one from DRONE_ strings.",
       "affected_features": [
         "combat"
       ],
@@ -453,6 +459,14 @@
           "DRONE_KNOCKDOWN_ATTACK@0x4f9aa0",
           "DRONE_CLINCH@0x4f9a64",
           "DRONE_ILLEGAL_PUNCH@0x4f9968"
+        ],
+        "functions": [
+          "func_0010BB58",
+          "func_003E5860",
+          "func_003E4A94"
+        ],
+        "evidence": [
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       },
       "remaining_static_work": null,
@@ -1324,7 +1338,7 @@
       "subsystem": "UI/commentary",
       "question": "Is commentary lookup/ID data (audio triggers tied to fight events) statically evidenced?",
       "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "'Decision Announcement Script' was found, suggesting a scripted commentary/announcement system exists, but no commentary ID table or lookup function was located or disassembled this session -- it is unclear whether commentary selection is table-driven (statically reconstructable) or driven by a runtime state machine whose branch conditions were not traced. NEW this delta pass: optionsettings.big!optionSettings.const proves commentary is a player-toggleable rule ('cpToggleCommentary', localized as '$M_Commentary') backed by a real executable field, 'iDisplayCommentaryOption', found in BOOT.BIN at 3 separate string-table locations, each owned by a DIFFERENT function -- T_001D9A08, T_001DC5DC, T_001FB69C -- the same 3 functions also shown (see program-08's new bitfield finding) to read a packed options bitfield and reference 'aDefaultSettings'. This is a concrete, narrower lead than 'Decision Announcement Script' was: it connects the commentary toggle directly to 3 named, disassemblable functions, though it still does not show whether the commentary AUDIO SELECTION itself (as opposed to the on/off toggle) is table-driven.",
+      "evidence": "The commentary on/off rule is statically evidenced (`cpToggleCommentary` / `iDisplayCommentaryOption`), but the commentary AUDIO-SELECTION lookup remains unresolved. A previous lead has now been bounded more precisely: `func_000B065C` owns `Decision Announcement Script`, but static disassembly shows it is part of a fight-presentation script-name initializer alongside Venue Script, Entrance Box1/Box2 Script, Faceoff Script, Winner Celebration Script, Explanation Script, Round Replay 1/2/3 and Corner Script 1/2. Thus `Decision Announcement Script` is not by itself evidence of a commentary-ID table. Separately, the newly-mapped field-0x05 path produces boxer codes for the named `Replay` generic event (`func_0010BB58` -> `func_003E5860`, descriptor D_0055AB38='Replay'); that also does not establish commentary/audio selection. The actual audio/commentary event-ID architecture remains open.",
       "affected_features": [
         "career-2",
         "roster"
@@ -1332,15 +1346,22 @@
       "sources": {
         "strings": [
           "Decision Announcement Script@0x4fa4e8",
-          "iDisplayCommentaryOption@0x50b330"
+          "iDisplayCommentaryOption@0x50b330",
+          "PocketDJFightNight.cpp@0x51b0bc"
         ],
         "functions": [
+          "func_000B065C",
           "T_001D9A08",
           "T_001DC5DC",
-          "T_001FB69C"
+          "T_001FB69C",
+          "func_0010BB58",
+          "func_003E5860"
+        ],
+        "evidence": [
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       },
-      "remaining_static_work": "Disassemble T_001D9A08/T_001DC5DC/T_001FB69C fully (partial disassembly this pass only reached the bitfield-decode prologue) and separately locate and disassemble the function referencing 'Decision Announcement Script' before concluding whether commentary AUDIO selection (not just the on/off toggle) is statically reconstructable.",
+      "remaining_static_work": "Stop using `Decision Announcement Script` or xdbboxr field 0x05 as direct commentary-ID leads. Trace the real AuSpeechManager/PocketDJ/audio-bank consumers and their callers, and complete the commentary-toggle consumers T_001D9A08/T_001DC5DC/T_001FB69C only as needed to establish how the toggle gates those audio paths.",
       "confidence": "CANDIDATE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -1474,13 +1495,30 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "'Decision Announcement Script' and the DRONE_ event tags suggest audio/commentary is event-triggered, but the actual ABI boundary (what data a caller must supply) was not traced.",
+      "evidence": "A generic named fight-event ABI is now statically visible: func_0010BB58 builds a payload containing two normalized boxer codes and dispatches it through func_003E5860 under the named descriptor `Replay`, using func_003E4A94 for registration/first-use fallback. This materially clarifies fight-event infrastructure but does NOT establish the audio/commentary ABI. `Decision Announcement Script` was also traced to func_000B065C and shown to be one presentation-script name among entrance/faceoff/replay/corner/winner scripts rather than a commentary-audio lookup table. PocketDJ/AuSpeechManager strings and functions remain the stronger audio-specific leads.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Trace the DRONE_ tag consumer functions and the Decision Announcement Script reference toward their audio-triggering call sites.",
-      "sources": {},
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Trace AuSpeechManager/PocketDJ and audio-bank call paths to determine what boxer/event identifiers they consume and how they connect to the generic fight-event layer. Do not infer an audio ABI from the Replay payload or Decision Announcement presentation-script name alone.",
+      "sources": {
+        "functions": [
+          "func_0010BB58",
+          "func_003E5860",
+          "func_003E4A94",
+          "func_000B065C",
+          "func_00295738",
+          "func_00295DD4",
+          "func_00295EA0"
+        ],
+        "strings": [
+          "PocketDJFightNight.cpp@0x51b0bc",
+          "Decision Announcement Script@0x4fa4e8"
+        ],
+        "evidence": [
+          "analysis/resources/fight-event-dispatch-evidence.json"
+        ]
+      },
+      "confidence": "PROBABLE for generic fight-event boundary; audio/commentary ABI itself remains unresolved.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
