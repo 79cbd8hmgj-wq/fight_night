@@ -669,7 +669,7 @@
       "subsystem": "Damage",
       "question": "Beyond the already-proven '3-knockdown rule', does the retail options menu expose other named, distinct damage/stoppage rule toggles (auto-recovery, KO moment/highlight, fight stoppage, illegal blows, saved-by-the-bell)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "optionsettings.big!optionSettings.const (decoded this delta pass) names a full 17-entry gameplay-rules toggle list, including 5 not previously evidenced in any pass: cpToggleIllegalBlows, cpToggleSavedByBell, cpToggleAutoRecovery, cpToggleKOMoment, cpToggleFightStoppage (alongside the already-known cpToggleKnockdownRule and the cutman/commentary/rounds toggles tracked elsewhere). 'AutoRecovery' in particular is new, direct evidence that a stun/knockdown recovery mechanic distinct from ordinary stamina regeneration is a real, named, player-toggleable retail rule -- not previously evidenced. None of these 5 toggle-widget names were found as raw strings anywhere in BOOT.BIN's own string table (only 'M_3_Knockdown_Rule' was), consistent with the project's established finding that option-widget internal names and their underlying native-accessor field names differ; the underlying native accessor is 'GetOptionsSettings'/'SetOptionsSettings' (owned by func_001D9870/func_001D98E4, themselves registration trampolines) plus three functions -- T_001D9A08, T_001DC5DC, T_001FB69C -- that each reference both 'aDefaultSettings' and 'iDisplayCommentaryOption', and were shown by partial disassembly of T_001D9A08 to decode a PACKED 32-BIT BITFIELD (multiple 1-2-4-bit sub-fields extracted via shift+mask from a settings word at struct-offset +0x15C, plus related bitfields at +0x19A8/+0x1955) rather than one scalar field per option. This proves the retail options/rules storage format is bit-packed, a significant new structural fact relevant to program-16 (career/save, if this structure is part of the persisted profile) and program-29 (budgets), but the exact bit-position-to-option-name mapping was not completed this pass.",
+      "evidence": "optionsettings.big!optionSettings.const names a full 17-entry gameplay-rules toggle list, including cpToggleIllegalBlows, cpToggleSavedByBell, cpToggleAutoRecovery, cpToggleKOMoment, cpToggleFightStoppage and the previously-known knockdown/cutman/commentary/round toggles. The underlying native accessor family is GetOptionsSettings/SetOptionsSettings. T_001D9A08/T_001DC5DC/T_001FB69C decode a packed 32-bit settings word at fight-session offset +0x15C. FOLLOW-UP cross-build RE corrects an earlier interpretation: +0x19A8 is not another options bitfield. func_001AFFDC writes it as a bounded fight/session mode enum (valid signed values <9, otherwise -1), and the debug quick-fight path writes mode 1. T_001D9A08 uses +0x19A8 as a mode gate while decoding/serving options. Offset +0x1955 remains a separate byte flag/gate. Thus the retail options storage remains bit-packed at +0x15C, while +0x19A8 selects context/mode-dependent behavior.",
       "affected_features": [
         "combat",
         "career-health"
@@ -683,11 +683,15 @@
           "T_001DC5DC",
           "T_001FB69C",
           "func_001D9870",
-          "func_001D98E4"
+          "func_001D98E4",
+          "func_001AFFDC"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Complete the bit-field decode of T_001D9A08/T_001DC5DC/T_001FB69C (struct offsets +0x15C/+0x19A8/+0x1955) and correlate each extracted bit-range, in order, against optionSettings.const's own toggle-declaration order (cpToggleSFX...cpToggleDifficulty...cpToggleKnockdownRule...cpToggleAutoRecovery...) to assign each named option its exact bit position and value range.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Complete the bit-field decode of the +0x15C packed settings word in T_001D9A08/T_001DC5DC/T_001FB69C and correlate each extracted bit-range against optionSettings.const's toggle-declaration order. Treat +0x19A8 only as the now-resolved session-mode gate; separately determine the role of byte +0x1955.",
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-08-05"
