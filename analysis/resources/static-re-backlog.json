@@ -167,16 +167,24 @@
       "subsystem": "Fight",
       "status": "STATICALLY_SOLVABLE",
       "question": "What are the fight lifecycle functions (init/round-start/round-end/result/cleanup)?",
-      "remaining_static_work": "The debug build now exposes 0x00041450 as a shared virtual per-fighter update method at fighter-class slot +0x104; it advances both combat and movement state machines. Trace the higher-level container/manager that invokes slot +0x104 for the fighters to recover the outer fight tick, then follow its init/round/result/cleanup neighbors.",
+      "remaining_static_work": "Debug ULES00270 now yields the concrete chain 0x000859B4 boxer-owner setup -> 0x000A01EC high-level boxer object -> 0x0009D084/0x00054608 fighter-runtime creation at +0x2A0 -> 0x000A0894 virtual high-level update -> 0x000350B4 -> 0x000352F4 -> fighter virtual slot +0x100 -> 0x00041450 per-fighter combat/movement tick. Next: identify the owning manager/update path above 0x000A0894 and map round-start/end/result/cleanup neighbors.",
       "affected_features": [
         "combat"
       ],
       "sources": {
         "functions": [
+          "0x000859B4",
+          "0x000A01EC",
+          "0x0009D084",
+          "0x00054608",
+          "0x000A0894",
+          "0x000350B4",
+          "0x000352F4",
           "0x00041450"
         ],
         "evidence": [
-          "analysis/resources/debug-fight-state-machine.json"
+          "analysis/resources/debug-fight-state-machine.json",
+          "docs/decomp/packages/fight-state-machine/README.md"
         ]
       }
     },
@@ -201,7 +209,7 @@
       "subsystem": "Punches",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the exact hit-detection/collision pipeline and its player/AI convergence point?",
-      "remaining_static_work": "Trace DRONE_ATTACKING update 0x0005B58C and related FEINTING/COUNTER updates from the newly recovered combat-state controller. Identify the punch-execution call(s) shared by human and AI paths and then trace forward into hit/collision resolution. Retain T_001E2084/aiPunchesThrown as a secondary convergence clue.",
+      "remaining_static_work": "The prior aiPunchesThrown/T_001E2084 lead is ruled out as a direct combat owner: aiPunchesThrown belongs to the GetMyCareerStatsInfo front-end output-key cluster. Continue instead from the recovered DRONE_ATTACKING update 0x0005B58C and action-state transitions to locate punch execution and the shared player/AI hit-resolution path.",
       "affected_features": [
         "combat"
       ],
@@ -235,7 +243,7 @@
       "subsystem": "Stamina",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the exact stamina cost/regeneration formula, its caps, and rating inputs?",
-      "remaining_static_work": "Use the recovered per-fighter tick/state machine rather than UI rating accessors: trace DRONE_ATTACKING update 0x0005B58C and its punch/action callees for stamina/energy reads and writes, then inspect 0x00041450 neighbors for passive per-tick recovery.",
+      "remaining_static_work": "Direct iStamina string xrefs are ruled out as in-fight stamina owners: both strings are rating-presentation keys in SelectBoxer/CreateRatings UI. Continue from 0x00041450 and DRONE_ATTACKING 0x0005B58C, tracing action callees and per-tick owner fields for actual energy/stamina reads/writes.",
       "affected_features": [
         "combat",
         "divisions",
@@ -300,7 +308,7 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "What triggers the KO/TKO decision path, and is the referee's stoppage decision statically traceable?",
-      "remaining_static_work": "Trace DRONE_KNOCKDOWN_ATTACK update 0x00061E08 and its transition/exit callbacks toward fight result/stoppage state, while retaining astrTKOTime and the two 3-knockdown-rule consumers as independent convergence anchors.",
+      "remaining_static_work": "The prior astrTKOTime xref lead is ruled out as the KO/TKO decision owner: astrTKOTime belongs to GetCareerHistoryInfo/list output. Continue from DRONE_KNOCKDOWN_ATTACK 0x00061E08, 3-knockdown-rule consumers T_002027F4/T_00205458, and fight result/state transitions.",
       "affected_features": [
         "combat",
         "career-health"
