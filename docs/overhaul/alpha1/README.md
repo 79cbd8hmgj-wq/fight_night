@@ -66,12 +66,16 @@ replacement/hook boundary, patch location, affected Programs). Summary:
    properties for the boxer rating-card display -- not the in-fight
    stamina mechanic. This is a correction that prevents wasted future
    effort, not new gameplay logic.
-8. **`xdbboxr.adf`'s per-record boxer stat layout: attempted, still
-   unresolved.** A direct read of the decoded payload past the proven
-   `+0x18` flags array shows plausible-looking 16-bit values, but no
-   consumer function was found this pass connecting them to the 9 proven
-   stat names. Per this project's discipline, this is reported as an open
-   blocker, not patched or exposed as a resolved field map.
+8. **`xdbboxr.adf`'s physical record layout and several high-value
+   semantic fields are now recovered.** PR #37 resolves the 24-byte XDB
+   header, the packed 2-bit-per-field storage-class table, the row-major
+   descriptor matrix, identity fields 0x00-0x03, weight/division field 0x09,
+   and rating fields 0x10-0x18. A later targeted trace in the same PR also
+   proves field 0x04 is the inclusion/availability gate for the active
+   35-entry stock SelectBoxer roster: T_00278ABC populates a parallel flag
+   table from func_00185D84(field 0x04), func_00278768 counts enabled slots,
+   and func_002787A0 emits only enabled boxer IDs. Most of the remaining 121
+   semantic field names are still open.
 
 These two resolutions were folded into `analysis/reports/
 static-re-ceiling.json` (`program-04-04` now `STATICALLY_RESOLVED`;
@@ -86,31 +90,32 @@ implementation work required -- not a renewed broad-assessment effort.
 
 `src/fnr3_re/overhaul/boxer_model.py`: `BoxerRatings` (the 9 proven fields,
 proven order) and `BoxerRatingOverrideTable` (a new, ID-keyed JSON
-resource). Because `xdbboxr.adf`'s per-record byte layout remains
-unresolved (see finding 8 above), this module does **not** read or write
-those bytes -- it implements a neutral replacement boundary instead, per
-this milestone's own instructions ("a proven replacement boundary" is an
-acceptable alternative to "actual game-owned boxer data" when the latter
-isn't yet safely reachable). `overall` defaults to independently-stored
-(the conservative choice) with an explicit, tested hook
-(`with_overall_derived`) for a future pass that proves the real
-Power/Speed/.../Cuts -> Overall relationship, if one exists.
+resource). The original XDB byte layout is now recovered for the core identity,
+availability, weight/division, and rating fields, but this module still
+does **not** mutate those bytes directly. It retains the neutral override
+boundary as a reversible mod architecture choice while the remaining field
+semantics, rebuild policy, and global boxer-ID/record-ID behavior are still
+being bounded. `overall` keeps an explicit derivation hook because retail
+computes it through `func_001D50F4` rather than exposing a directly mapped
+raw XDB field.
 
 ### B. Boxer selection / roster integration -- PARTIALLY ADVANCED
 
 `GetSelectBoxerInfo`/`UpdateSelectBoxerInfo`/`LoadSelectBoxer`/
 `SetSelectBoxerInfo`'s registration functions (`func_001D537C`/
 `func_001D5438`) were disassembled and confirmed to be registration
-trampolines only, sharing the registry described in finding 6. Their real implementations were **not** reached during Alpha 1. **Follow-up
-PR #37 has since resolved the generic call-by-name dispatch mechanism and
-recovered the debug-menu quick-fight write path.** This directly maps selected
-boxer IDs, venue ID, and session mode in the fight-session object. The broader
-select-boxer screen's division filtering and full roster iteration still require
-their own handler-level traces. The 121-entry
-maximum question is **not** treated as resolved and roster expansion is
-**not** made to depend on it (per this milestone's explicit instruction) --
-`BoxerRatingOverrideTable` is keyed by an opaque, mod-defined `boxer_id`
-with no assumption about `xdbboxr.adf`'s own ID scheme or count.
+trampolines only, sharing the registry described in finding 6. Their real implementations were **not** reached during Alpha 1.
+**Follow-up PR #37 has since resolved the generic call-by-name dispatch,
+the concrete SelectBoxer handlers, the six-class division filter, the
+stock ID ranges, and the active-roster construction path.** The normal
+stock list contains 35 entries (IDs 0-34 across six divisions), while base
+XDB rows 35-36 are bonus/hidden records with global boxer IDs 74 and 75.
+Field 0x04 gates inclusion in the active 35-entry stock list. The old
+"121-entry maximum" interpretation is superseded: 121 is the field count,
+37 is the current base-table record count, and no independent hard total
+roster maximum has yet been proven. `BoxerRatingOverrideTable` therefore
+remains keyed by an opaque, mod-defined `boxer_id` and does not impose a
+retail roster cap.
 
 ### C. Fight lifecycle -- PARTIALLY ADVANCED
 
