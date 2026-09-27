@@ -1574,120 +1574,121 @@
         "name": "Replay",
         "hash": "0x28D86F4F",
         "descriptor_vaddr": "0x0055AB38",
-        "handle_pre_relocation": "0x00021018",
-        "handle_runtime_vaddr": "0x005AB8C0"
+        "handle_pre_relocation": "0x00020FA0",
+        "handle_runtime_vaddr": "0x005AB848"
       },
       {
         "name": "UpdateStatus",
         "hash": "0x1FD36F4F",
         "descriptor_vaddr": "0x0055AB40",
-        "handle_pre_relocation": "0x00021020",
-        "handle_runtime_vaddr": "0x005AB8C8"
+        "handle_pre_relocation": "0x00021018",
+        "handle_runtime_vaddr": "0x005AB8C0"
       },
       {
         "name": "BoxerFatigue",
         "hash": "0x49406F4F",
         "descriptor_vaddr": "0x0055AB48",
-        "handle_pre_relocation": "0x00021028",
-        "handle_runtime_vaddr": "0x005AB8D0"
+        "handle_pre_relocation": "0x00021020",
+        "handle_runtime_vaddr": "0x005AB8C8"
       },
       {
         "name": "TauntingResult",
         "hash": "0x59AB6F4F",
         "descriptor_vaddr": "0x0055AB50",
-        "handle_pre_relocation": "0x00021030",
-        "handle_runtime_vaddr": "0x005AB8D8"
+        "handle_pre_relocation": "0x00021028",
+        "handle_runtime_vaddr": "0x005AB8D0"
       },
       {
         "name": "FeintingResult",
         "hash": "0x70046F4F",
         "descriptor_vaddr": "0x0055AB58",
-        "handle_pre_relocation": "0x00021038",
-        "handle_runtime_vaddr": "0x005AB8E0"
+        "handle_pre_relocation": "0x00021030",
+        "handle_runtime_vaddr": "0x005AB8D8"
       },
       {
         "name": "ClinchingResult",
         "hash": "0x13716F4F",
         "descriptor_vaddr": "0x0055AB60",
-        "handle_pre_relocation": "0x00021040",
-        "handle_runtime_vaddr": "0x005AB8E8"
+        "handle_pre_relocation": "0x00021038",
+        "handle_runtime_vaddr": "0x005AB8E0"
       },
       {
         "name": "Trapped",
         "hash": "0x32496F4F",
         "descriptor_vaddr": "0x0055AB68",
-        "handle_pre_relocation": "0x00021048",
-        "handle_runtime_vaddr": "0x005AB8F0"
+        "handle_pre_relocation": "0x00021040",
+        "handle_runtime_vaddr": "0x005AB8E8"
       },
       {
         "name": "BoxerRoundHistory",
         "hash": "0x1ED36F4F",
         "descriptor_vaddr": "0x0055AB70",
-        "handle_pre_relocation": "0x00021050",
-        "handle_runtime_vaddr": "0x005AB8F8"
+        "handle_pre_relocation": "0x00021048",
+        "handle_runtime_vaddr": "0x005AB8F0"
       },
       {
         "name": "CareerMode",
         "hash": "0x185A6F4F",
         "descriptor_vaddr": "0x0055AB78",
-        "handle_pre_relocation": "0x00021058",
-        "handle_runtime_vaddr": "0x005AB900"
+        "handle_pre_relocation": "0x00021050",
+        "handle_runtime_vaddr": "0x005AB8F8"
       },
       {
         "name": "Knockdown",
         "hash": "0x69746F4F",
         "descriptor_vaddr": "0x0055AB80",
-        "handle_pre_relocation": "0x00021060",
-        "handle_runtime_vaddr": "0x005AB908"
+        "handle_pre_relocation": "0x00021058",
+        "handle_runtime_vaddr": "0x005AB900"
       },
       {
         "name": "IllegalBlows",
         "hash": "0x738A6F4F",
         "descriptor_vaddr": "0x0055AB88",
-        "handle_pre_relocation": "0x00021068",
-        "handle_runtime_vaddr": "0x005AB910"
+        "handle_pre_relocation": "0x00021060",
+        "handle_runtime_vaddr": "0x005AB908"
       },
       {
         "name": "RAFightIntroFlyIn",
         "hash": "0x2F7621D9",
         "descriptor_vaddr": "0x0055AB90",
-        "handle_pre_relocation": "0x00021070",
-        "handle_runtime_vaddr": "0x005AB918"
+        "handle_pre_relocation": "0x00021068",
+        "handle_runtime_vaddr": "0x005AB910"
       },
       {
         "name": "RAFightIntroSegment4",
         "hash": "0x1EA821D9",
         "descriptor_vaddr": "0x0055AB98",
-        "handle_pre_relocation": "0x00021078",
-        "handle_runtime_vaddr": "0x005AB920"
+        "handle_pre_relocation": "0x00021070",
+        "handle_runtime_vaddr": "0x005AB918"
       },
       {
         "name": "RAFightIntroSegment5",
         "hash": "0x05EA21D9",
         "descriptor_vaddr": "0x0055ABA0",
-        "handle_pre_relocation": "0x00021080",
-        "handle_runtime_vaddr": "0x005AB928"
+        "handle_pre_relocation": "0x00021078",
+        "handle_runtime_vaddr": "0x005AB920"
       },
       {
         "name": "RAFightResultSegment1",
         "hash": "0x1B8521D9",
         "descriptor_vaddr": "0x0055ABA8",
-        "handle_pre_relocation": "0x00021088",
-        "handle_runtime_vaddr": "0x005AB930"
+        "handle_pre_relocation": "0x00021080",
+        "handle_runtime_vaddr": "0x005AB928"
       },
       {
         "name": "RAFightResultSegment2",
         "hash": "0x324C21D9",
         "descriptor_vaddr": "0x0055ABB0",
-        "handle_pre_relocation": "0x00021090",
-        "handle_runtime_vaddr": "0x005AB938"
+        "handle_pre_relocation": "0x00021088",
+        "handle_runtime_vaddr": "0x005AB930"
       }
     ],
     "dispatcher_semantics": [
       "func_003E4A94 resolves/registers an event handle from its name/hash descriptor.",
       "func_003E5860 accepts the resolved event-handle object plus caller payload and invokes registered listeners.",
       "func_003E4A84 resets/invalidates an event handle by writing -3 to its +0x04 state field."
-    ]
+    ],
+    "correction": "Replay is deliberately bound out of numerical sequence: raw handle 0x20FA0 -> Replay, then 0x20FA8 -> RefCountDown. After PunchLanded (0x21010), the sequence resumes at UpdateStatus (0x21018). Never derive handle addresses from descriptor index alone; use initializer 0x001106CC."
   },
   "speech_bank_record_model": {
     "confidence": "CONFIRMED for bank/record layout, interned event IDs, base data-file byte offsets, AEMS relative byte ranges, and request routing; record+0x0C consumer meaning remains unresolved",
