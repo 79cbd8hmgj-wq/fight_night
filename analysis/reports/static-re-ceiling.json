@@ -1028,15 +1028,24 @@
       "program_id": "program-13",
       "subsystem": "Weights",
       "question": "What are the exact weight-limit values (in-game units) for each of the 6 divisions?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "The 6 division labels are proven to exist and be consumed by real code; the numeric weight-limit values themselves were not located or disassembled this session.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "Resolved through the generic XDB accessor plus SelectBoxer call path. func_0018600C reads xdbboxr field 0x09 as a signed int16 weight and maps it directly to the six SelectBoxer weight-class enum values. Exact branches are: weight <127 -> Featherweight (enum 5); 127-135 -> Lightweight (4); 136-147 -> Welterweight (3); 148-168 -> Middleweight (2); 169-190 -> Light Heavyweight (1); 191-280 -> Heavyweight (0); >=281 -> invalid/-1. GetSelectBoxerInfo calls this classifier at 0x001D7D28 and then applies the proven <6 weight-class bound. Retail table values independently fit the mapping, including Pacquiao=125 and Morales=126.",
       "affected_features": [
         "divisions",
         "roster"
       ],
-      "remaining_static_work": "Disassemble func_0019527C/func_001B798C/T_001E9A58/T_00202170/T_00201BB4 to find where each maps a division index to a numeric weight boundary.",
-      "sources": {},
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "sources": {
+        "functions": [
+          "func_0018600C",
+          "0x001D77C8 (GetSelectBoxerInfo)"
+        ],
+        "resource": "preload/db.viv!xdbboxr.adf field 0x09",
+        "evidence": [
+          "analysis/resources/xdbboxr-schema.json"
+        ]
+      },
+      "confidence": "CONFIRMED",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-13-02"
@@ -1473,8 +1482,8 @@
     }
   ],
   "counts_overall": {
-    "STATICALLY_RESOLVED": 31,
-    "STATICALLY_SOLVABLE": 29,
+    "STATICALLY_RESOLVED": 32,
+    "STATICALLY_SOLVABLE": 28,
     "STATICALLY_AMBIGUOUS": 3,
     "RUNTIME_ESSENTIAL": 0
   },
@@ -1552,8 +1561,8 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "program-13": {
-      "STATICALLY_RESOLVED": 2,
-      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_RESOLVED": 3,
+      "STATICALLY_SOLVABLE": 0,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
@@ -1602,14 +1611,14 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "roster": {
-      "STATICALLY_RESOLVED": 13,
-      "STATICALLY_SOLVABLE": 8,
+      "STATICALLY_RESOLVED": 14,
+      "STATICALLY_SOLVABLE": 7,
       "STATICALLY_AMBIGUOUS": 2,
       "RUNTIME_ESSENTIAL": 0
     },
     "divisions": {
-      "STATICALLY_RESOLVED": 11,
-      "STATICALLY_SOLVABLE": 5,
+      "STATICALLY_RESOLVED": 12,
+      "STATICALLY_SOLVABLE": 4,
       "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
