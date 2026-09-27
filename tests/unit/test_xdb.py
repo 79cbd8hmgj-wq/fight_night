@@ -4,7 +4,13 @@ import struct
 
 import pytest
 
-from fnr3_re.xdb import (\n    XdbFormatError,\n    parse_xdb_header,\n    xdb_field_token,\n    xdb_field_type,\n    xdb_field_value,\n)
+from fnr3_re.xdb import (
+    XdbFormatError,
+    parse_xdb_header,
+    xdb_field_token,
+    xdb_field_type,
+    xdb_field_value,
+)
 
 
 def _xdb_bytes(
