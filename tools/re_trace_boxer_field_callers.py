@@ -40,3 +40,51 @@ for name in sorted(callers, key=lambda n: by_name[n].address if n in by_name els
         for st in refs:
             print(f'  0x{st.address:08X}: {st.value!r}')
     print(fn.assembly)
+
+
+BIO_STRINGS = {
+    "ViewBoxerBio",
+    "strBoxerFirstName",
+    "strBoxerLastName",
+    "strBoxerRecord",
+    "strRivalFirstName",
+    "strRivalLastName",
+    "iTitleBeltsWon",
+    "iTitleBeltsLost",
+    "strNickName",
+    "strHomeTown",
+    "strStance",
+    "strStyle",
+    "iAge",
+}
+
+print("\n=== BOXER BIO NATIVE/OUTPUT STRING XREFS ===")
+bio_functions: set[str] = set()
+for st in result.strings:
+    if st.value not in BIO_STRINGS:
+        continue
+    print(
+        f"STRING 0x{st.address:08X} {st.value!r} "
+        f"refs={[f'0x{x:08X}' for x in st.referenced_by]}"
+    )
+    for src in st.referenced_by:
+        owner = next(
+            (
+                fn
+                for fn in result.functions
+                if fn.address <= src < fn.address + fn.size
+            ),
+            None,
+        )
+        if owner is not None:
+            bio_functions.add(owner.name)
+
+for name in sorted(
+    bio_functions,
+    key=lambda n: by_name[n].address if n in by_name else 0,
+):
+    fn = by_name.get(name)
+    if fn is None:
+        continue
+    print(f"\n=== BIO XREF FUNCTION {fn.name} @ 0x{fn.address:08X} size=0x{fn.size:X} ===")
+    print(fn.assembly)
