@@ -1524,11 +1524,11 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The speech playback ABI is now bounded across the AEMS producer and AuSpeechManager consumer. AuSpeechManager registers callback 0x00137888 through 0x00498260; generic decoder 0x0049A5C0 builds a 0x20-byte request and invokes it. Request +0x00 is the speech event ID, +0x04 is a relative byte offset, +0x08 is byte length/span, +0x10 selects 0=com / 1=anc / 2=trn, with additional subtype/source fields at +0x0C/+0x0E/+0x14/+0x18/+0x1C. 0x0049B480 is a scaled byte-range decoder, not a sample-index mapper. Speech-bank records are 16 bytes: +0x00 interned event token, +0x04 base byte offset of the canonicalized per-event .dat entry, +0x08 parsed event-key pointer, +0x0C a name-derived 1/2 flag. Final playback computes record.base_offset + request.relative_offset and passes the selected comdat.big/ancdat.big/trndat.big path plus final byte offset down through 0x00483AAC -> 0x004837A4 -> 0x004C242C/0x004C254C. Named generic fight-event registration/dispatch and NISAdvice/TCC are independently resolved. This closes the low-level bank/range side; the remaining interface question is the higher-level mapping from gameplay/named-event payloads and boxer context into AEMS event IDs/variants.",
+      "evidence": "The audio interface is now much more concretely bounded. The debug ELF exposes AuAemsManager as a 0x350-byte singleton with named Init diagnostics, coreaems.viv plus fixed .abk wrappers, venue-dependent banks, boxer-specific chant banks, and weight-class Gsmall/Gmed/Glarge banks. A complete 193-entry original AEMS descriptor registry is recovered: descriptors are {name pointer, 32-bit hash}, every recovered hash has low16 0x48DF, and the event code is hash>>16 with zero collisions. The central positional dispatcher 0x00129844 directly handles 131 named codes; a secondary dispatcher 0x00131374 handles 30 physical/gameplay SFX cases. The actor/entity bridge at 0x00329614 forwards event code, position and parameters into AuAemsManager and retains 'Unsupported AEMS Event'. Separately, AuSpeechManager routes category 0/1/2 to com*/anc*/trn banks and the AEMS->speech callback ABI is recovered down to byte offsets/lengths in those banks. xdbboxr field 0x05 now has cross-system proof as boxer audio/presentation identity because its normalized code feeds both Replay boxer payloads and licensed/CaB/generic chant-bank selection. The remaining unresolved boundary is no longer the generic audio ABI; it is the semantic connection from named gameplay/AEMS events into specific commentary/announcer/training event records and spoken clips.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Trace the producer chain that converts fight-state/named-event payloads (NISAdvice, TCC, BoxerDamage, Knockdown, etc.) into AEMS event IDs and request variant fields. Prioritize call/dataflow edges into the AEMS decoder/interner and any AuSpeechManager methods that enqueue or transform named-event payloads. The bank format and final file-offset playback path are no longer the blocker.",
+      "remaining_static_work": "Trace the now-named AEMS event families into the generic AEMS module-bank execution path and identify which named events feed AuSpeechManager/com*/anc*/trn request generation. Decode enough of comevt.evt/ancevt.evt/trnevt.evt and their AEMS producer records to map gameplay event/payload fields to specific speech event IDs and clip ranges. Generic event-code identity, central dispatch, bank routing and byte-range playback no longer need rediscovery.",
       "sources": {
         "functions": [
           "func_0010BB58",
@@ -1562,7 +1562,18 @@
           "0x00483AAC",
           "0x004837A4",
           "0x004C242C",
-          "0x004C254C"
+          "0x004C254C",
+          "0x00126D3C",
+          "0x00128C1C",
+          "0x00128EB4",
+          "0x00126A18",
+          "0x00132F90",
+          "0x00133884",
+          "0x00133B9C",
+          "0x00129844",
+          "0x00131374",
+          "0x00329614",
+          "0x00108158"
         ],
         "strings": [
           "PocketDJFightNight.cpp@0x51b0bc",
@@ -1594,14 +1605,23 @@
           "TCC = POOR PERFORMANCE",
           "TCC = WASTED ENERGY",
           "TCC = BOXER DAMAGE",
-          "TCC = BOXER RATING/STYLE"
+          "TCC = BOXER RATING/STYLE",
+          "coreaems.viv",
+          "Unsupported AEMS Event",
+          "chant_PSP_Lic%03d.abk",
+          "chant_PSP_CaB%03d.abk",
+          "Chant_PSP_Gen%03d.abk",
+          "Gsmall.abk",
+          "Gmed.abk",
+          "Glarge.abk"
         ],
         "evidence": [
           "analysis/resources/fight-event-dispatch-evidence.json",
-          "analysis/resources/debug-build-aip-dispatch.json"
+          "analysis/resources/debug-build-aip-dispatch.json",
+          "analysis/resources/aems-event-code-registry.json"
         ]
       },
-      "confidence": "CONFIRMED for AEMS request ABI, three speech-bank routing, event-record lookup, byte-range decoding, final bank-byte addressing, named-event registration/dispatch, NISAdvice/TCC identity split, and PocketDJ lifecycle; higher-level gameplay/boxer-context -> AEMS event-ID selection remains STATICALLY_SOLVABLE.",
+      "confidence": "CONFIRMED for AuAemsManager construction/init, 193-name event registry/code derivation, 131-case central dispatcher, 30-case secondary dispatcher, speech-bank categories, AEMS speech request byte ranges, chant identity and bank routing; final gameplay-event -> spoken-commentary mapping remains STATICALLY_SOLVABLE.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
