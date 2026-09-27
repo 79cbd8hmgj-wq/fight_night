@@ -2628,5 +2628,56 @@
       "note": "The exact scheduler/voice semantics of the sixteen active slots remain unresolved; do not call them voices/channels until their consumers are traced."
     },
     "architectural_implication": "The previously separate generic named-event registry and AEMS descriptor registry are now proven to be connected at runtime. The remaining speech problem is downstream mapping/content: identify which subscribed gameplay events and AEMS mapping records eventually generate category 0/1/2 AuSpeechManager requests and which comevt/ancevt/trnevt records they select."
+  },
+  "speech_evt_subscription_bridge": {
+    "confidence": "CONFIRMED",
+    "speech_bank_loader": "0x0013A6D0",
+    "aems_object_registration_wrapper": "0x0049AE38",
+    "aems_mapping_registration": "0x0049AD50",
+    "generic_event_subscription_builder": "0x0049B61C",
+    "proof": [
+      "0x0013A6D0 loads/parses the .evt object into bank+0x00 and then calls 0x0049AE38(bank+0x00, speech_category) at 0x0013A79C.",
+      "0x0049AE38 first calls 0x0049AD50(object, category) to install the parsed object in the global up-to-eight-slot AEMS mapping table, then unconditionally calls 0x0049B61C(object) to register all of its named-event listeners.",
+      "The three direct callers of 0x0013A6D0 pass category 2 for trnevt.evt, category 1 for ancevt.evt, and category 0 for comevt.evt.",
+      "Therefore the commentary, announcer and training .evt objects themselves contain/drive AEMS mappings that subscribe directly to Fight Night generic named gameplay events."
+    ],
+    "category_calls": [
+      {
+        "call_site": "0x0013AEC0",
+        "bank_object": "manager+0x1B0",
+        "category": 2,
+        "event_file": "trnevt.evt",
+        "header_file": "trnhdr.big",
+        "data_file": "trndat.big"
+      },
+      {
+        "call_site": "0x0013AF18",
+        "bank_object": "manager+0x188",
+        "category": 1,
+        "event_file": "ancevt.evt",
+        "header_file": "anchdr.big",
+        "data_file": "ancdat.big"
+      },
+      {
+        "call_site": "0x0013AF70",
+        "bank_object": "manager+0x19C",
+        "category": 0,
+        "event_file": "comevt.evt",
+        "header_file": "comhdr.big",
+        "data_file": "comdat.big"
+      }
+    ],
+    "aems_mapping_table": {
+      "base": "0x0004CE38 pre-relocation/global data family",
+      "capacity": 8,
+      "entry_size": "0x08",
+      "entry_fields": {
+        "+0x00": "parsed AEMS/.evt object pointer",
+        "+0x04": "category value supplied by caller"
+      },
+      "registration_behavior": "0x0049AD50 validates the parsed object header, derives its category-key bytes, avoids duplicate key registration, stores {object, category} in a free slot, and clears per-entry selector state through 0x0049ACC0 when registration fails/collides.",
+      "lookup_connection": "0x00497090 searches this same up-to-eight-entry mapping table by two key bytes; the matched entry's object/category data is then used by 0x004970EC and downstream AEMS request processing."
+    },
+    "architectural_implication": "The remaining commentary problem is no longer identifying which AEMS objects can feed speech. The three speech .evt objects are explicitly registered as AEMS event sources/subscribers with category 0/1/2. Remaining work is to map individual .evt subscriptions and payload schemas through the AEMS active-state processor to the already-recovered AuSpeechManager byte-range request."
   }
 }
