@@ -91,3 +91,55 @@ addresses must still be validated per function before promotion to CONFIRMED.
 
 Machine-readable evidence lives in
 `analysis/resources/debug-build-aip-dispatch.json`.
+
+
+## Concrete debug-menu handler targets
+
+The debug/review build's static initializer at
+`0x001CF2D8-0x001CF39C` resolves the registration targets all the way to
+concrete handler functions:
+
+| Native name | Descriptor | Implementation |
+| --- | ---: | ---: |
+| `GetStartScreenFromMain` | `0x00581D54` | `0x001CED00` |
+| `DEBUG_GetDebugMenuData` | `0x00581D64` | `0x001CED2C` |
+| `DEBUG_OnAdvance` | `0x00581D74` | `0x001CF1A0` |
+| `DEBUG_OnRealFE` | `0x00581D84` | `0x001CF2A0` |
+
+The initializer writes those descriptor addresses into the global slots later
+passed to the AIP registration helpers. Each descriptor has the concrete
+handler function pointer at `+0x0C`.
+
+### `DEBUG_GetDebugMenuData`
+
+`0x001CED2C` is the real data-producing handler. Its output schema is now
+recoverable directly from the native calls:
+
+- `iNumElements = 3`
+- `aBoxNames` receives three localized labels:
+  `TL_Select_Boxer`, `TL_Select_Boxer`, `TL_Select_Venue`
+- paired selector arrays:
+  - `aBoxStrings0` / `aBoxIDs0`
+  - `aBoxStrings1` / `aBoxIDs1`
+  - `aBoxStrings2` / `aBoxIDs2`
+- `aDefaultIDs = [25, 17, 9]`
+
+The first two selector families are populated from boxer data; the third is
+populated from venue data using `Venue_%d` keys.
+
+### `DEBUG_OnAdvance`
+
+`0x001CF1A0` parses `iBox0`, `iBox1`, and `iBox2`, obtains the proven
+fight-session singleton through `func_001B3EA8`, applies the two boxer
+selections through separate corner calls, applies the third selection through
+a distinct session setter consistent with the venue slot, and then executes the
+fight/front-end transition sequence.
+
+This makes the surviving debug menu a concrete developer quick-fight setup
+path rather than merely an orphaned UI asset.
+
+### `DEBUG_OnRealFE`
+
+`0x001CF2A0` calls the front-end command path with the strings
+`ChangeScreen`, `_root`, and `MAINMENU`, providing the route back to the
+normal front end.
