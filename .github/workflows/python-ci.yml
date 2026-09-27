@@ -60,6 +60,8 @@ jobs:
         run: python tools/re_trace_rating_mode.py
       - name: Trace boxer field context
         run: python tools/re_trace_boxer_field_context.py
+      - name: Trace boxer context callers
+        run: python tools/re_trace_boxer_context_callers.py
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
