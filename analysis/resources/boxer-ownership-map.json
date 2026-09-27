@@ -5,7 +5,7 @@
     "path": "BOOT.BIN",
     "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9"
   },
-  "changelog": "schema_version 3: follow-up cross-build static RE resolves the generic XDB ABI and corrects the earlier count interpretation. word0 is field_count and word1 is record_count; +0x18 is a packed 2-bit per-field type table; the row-major int16 descriptor matrix is selected by func_001AD180. For xdbboxr this means 121 fields x 37 records. SelectBoxer rating field IDs 0x10-0x18 are now mapped.",
+  "changelog": "schema_version 3: follow-up cross-build static RE resolves the generic XDB ABI and corrects the earlier count interpretation. word0 is field_count and word1 is record_count; +0x18 is a packed 2-bit per-field type table; the row-major int16 descriptor matrix is selected by func_001AD180. For xdbboxr this means 121 fields x 37 records. SelectBoxer rating field IDs 0x10-0x18 are now mapped. Follow-up SelectBoxer tracing proves xdbboxr field 0x04 gates the 35-entry active stock roster.",
   "chain": [
     {
       "stage": "resource",
@@ -205,5 +205,27 @@
       "evidence": "12 base venue/location names exist under enviro/. The recovered XDB ABI proves xdbvenue.adf word1=12 is its record count (word0=9 fields). Independently, func_001B00A0 accepts venue IDs only while signed venue_id < 12. These three facts converge on a 12-record venue table.",
       "why_not_stronger": "The exact mapping of each of the 12 XDB venue records to the 12 asset-name stems has not yet been traced field-by-field."
     }
-  ]
+  ],
+  "stock_selectboxer_availability": {
+    "confidence": "CONFIRMED",
+    "field_id": "0x04",
+    "predicate_function": "func_00185D84",
+    "initializer": "T_00278ABC",
+    "ordered_id_table": "D_005646F0",
+    "parallel_flag_table": "D_0056477C",
+    "stock_entry_count": 35,
+    "consumers": [
+      {
+        "function": "func_00278768",
+        "role": "counts enabled roster slots",
+        "evidence": "loops 35 D_0056477C words and increments only when a slot equals 1"
+      },
+      {
+        "function": "func_002787A0",
+        "role": "builds an enabled boxer-ID list",
+        "evidence": "walks D_0056477C and D_005646F0 in parallel, skips disabled slots, and copies only enabled boxer IDs to the destination"
+      }
+    ],
+    "conclusion": "Field 0x04 is the stock SelectBoxer inclusion/availability gate. Rows 0-34 all carry 1; bonus rows 35-36 carry 0 and are outside this 35-slot initializer. A separate bonus unlock mechanism, if any, is not inferred from this path."
+  }
 }
