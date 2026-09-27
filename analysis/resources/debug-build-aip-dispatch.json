@@ -891,5 +891,181 @@
       "The resulting player pointer is stored in global 0x00567124.",
       "A post-create validity check at 0x00423C10 triggers the PocketDJFightNight.cpp:126 assertion if initialization is not valid."
     ]
+  },
+  "language_and_commentary_display": {
+    "confidence": "CONFIRMED",
+    "language_global": "0x005604AC",
+    "language_helpers": {
+      "func_00206C48": "leaf getter for 0x005604AC",
+      "func_0020719C": "setter for 0x005604AC",
+      "func_0020715C": {
+        "semantic": "language enum -> display-name string",
+        "mapping": {
+          "1": "English",
+          "2": "French",
+          "other": "Unknown"
+        }
+      }
+    },
+    "display_commentary_predicate": {
+      "function": "func_001B1CFC",
+      "aip_field": "iDisplayCommentaryOption",
+      "behavior": [
+        "If language != French (enum 2), returns true.",
+        "If language == French, returns boolean(session->field_0x160 bit 19)."
+      ],
+      "setter": {
+        "function": "func_001B21FC",
+        "field": "session +0x160",
+        "bit": 19,
+        "dirty_flag": "session +0x1920 = 1"
+      },
+      "callsites": [
+        "0x0013D040",
+        "0x001D9B4C",
+        "0x001DA084",
+        "0x001DC5A0",
+        "0x001DCA38",
+        "0x001FB908"
+      ],
+      "correction": "Bit 19 of session +0x160 is a display/gating flag for the Commentary option in the French-language path; it is NOT established as the commentary on/off setting itself."
+    },
+    "evidence": [
+      "func_0020715C returns literal strings English/French/Unknown for enum values 1/2/other.",
+      "func_001B1CFC compares the language global against 2 before reading session +0x160 bit 19.",
+      "func_001B21FC clears/sets exactly bit 19 of session +0x160 and marks session +0x1920 dirty.",
+      "Options handlers pass func_001B1CFC's boolean result to the AIP property iDisplayCommentaryOption."
+    ]
+  },
+  "audio_static_map": {
+    "confidence": "CONFIRMED for strings/xrefs/object offsets; semantic labels PROBABLE where stated",
+    "au_speech_manager": {
+      "func_00137BA0": {
+        "inferred_name": "AuSpeechManager::InitStream",
+        "confidence": "PROBABLE name, CONFIRMED diagnostic attribution",
+        "diagnostic": "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !",
+        "diagnostic_vaddr": "0x00506AC8",
+        "diagnostic_xref": "0x00137BF0-0x00137BF8",
+        "behavior": "allocates/initializes a stream buffer at object +0x17C and reports the named out-of-memory diagnostic on failure"
+      }
+    },
+    "core_bank_initializer": {
+      "function": "func_00128EB4",
+      "semantic": "fight/frontend audio-bank initialization/attachment routine",
+      "confidence": "PROBABLE semantic; CONFIRMED bank/object-offset mapping",
+      "banks": [
+        {
+          "name": "cctrl.abk",
+          "object_offset": "0xC4",
+          "string_vaddr": "0x00506778",
+          "load_call": "0x00128F90-0x00128F94"
+        },
+        {
+          "name": "pmenu.abk",
+          "object_offset": "0xE8",
+          "string_vaddr": "0x00506784",
+          "load_call": "0x00129008-0x0012900C"
+        },
+        {
+          "name": "steps.abk",
+          "object_offset": "0x100",
+          "string_vaddr": "0x00506790",
+          "load_call": "0x00129080-0x00129084"
+        },
+        {
+          "name": "bell.abk",
+          "object_offset": "0xDC",
+          "string_vaddr": "0x0050679C",
+          "load_call": "0x001290F8-0x001290FC"
+        },
+        {
+          "name": "GSfx.abk",
+          "object_offset": "0xD0",
+          "string_vaddr": "0x005067A8",
+          "load_call": "0x00129170-0x00129174"
+        },
+        {
+          "name": "Punches.abk",
+          "object_offset": "0x154",
+          "string_vaddr": "0x005067B4",
+          "load_call": "0x001291E8-0x001291EC"
+        },
+        {
+          "name": "falls.abk",
+          "object_offset": "0x178",
+          "string_vaddr": "0x005067C0",
+          "load_call": "0x00129260-0x00129264"
+        },
+        {
+          "name": "Blocks.abk",
+          "object_offset": "0x184",
+          "string_vaddr": "0x005067CC",
+          "load_call": "0x001292D8-0x001292DC"
+        },
+        {
+          "name": "cmomets.abk",
+          "object_offset": "0xB8",
+          "string_vaddr": "0x005067D8",
+          "load_call": "0x00129350-0x00129354"
+        },
+        {
+          "name": "rplyst.abk",
+          "object_offset": "0x19C",
+          "string_vaddr": "0x005067E4",
+          "load_call": "0x001293C8-0x001293CC"
+        },
+        {
+          "name": "rplysfx.abk",
+          "object_offset": "0x190",
+          "string_vaddr": "0x005067F0",
+          "load_call": "0x00129440-0x00129444"
+        },
+        {
+          "name": "replay.abk",
+          "object_offset": "0xF4",
+          "string_vaddr": "0x005067FC",
+          "load_call": "0x001294B8-0x001294BC"
+        }
+      ]
+    },
+    "additional_bank_families": {
+      "func_00132F90": [
+        "trng.abk",
+        "cvsmall.abk",
+        "cflust.abk",
+        "csmall.abk",
+        "cfairst.abk",
+        "cvicest.abk",
+        "cmed.abk",
+        "celest.abk",
+        "csakost.abk",
+        "cminist.abk",
+        "clarge.abk",
+        "clst.abk",
+        "rplysfx.abk"
+      ],
+      "func_00133884": [
+        "chant_PSP_CaB%03d.abk",
+        "chant_PSP_Lic%03d.abk",
+        "Chant_PSP_Gen%03d.abk"
+      ],
+      "func_00133B9C": [
+        "Gsmall.abk",
+        "Gmed.abk",
+        "Glarge.abk"
+      ],
+      "func_00133ED8": [
+        "MVenue.abk"
+      ],
+      "observed_unassigned_string": "IntroMusic_%02d.abk"
+    },
+    "standalone_bank_anchor": {
+      "fe_sfx.abk": {
+        "string_vaddr": "0x0050674C",
+        "referencing_function": "func_00126F6C",
+        "xref": "0x00126FCC-0x00126FD8"
+      }
+    },
+    "note": "These bank names and exact code references provide a concrete static path for tracing boxer/event commentary selection into the audio subsystem without assuming that the generic Replay event payload is itself commentary data."
   }
 }
