@@ -1957,5 +1957,126 @@
         "semantics": "complex event-state callback; exact public role unresolved"
       }
     ]
+  },
+  "au_aems_manager": {
+    "confidence": "CONFIRMED for singleton allocation/constructor/init identity and fixed-bank filenames/manager offsets; helper names marked PROBABLE where original C++ symbols are absent",
+    "singleton_factory": {
+      "function": "0x00126D3C",
+      "proposed_name": "AuAemsManager_GetOrCreate",
+      "confidence": "PROBABLE name; CONFIRMED behavior",
+      "singleton_global": "0x0055A990",
+      "allocation_size": "0x350",
+      "constructor": "0x00128C1C",
+      "behavior": "Returns the existing singleton or allocates 0x350 bytes, calls 0x00128C1C, stores the result in 0x0055A990, and returns it."
+    },
+    "constructor": {
+      "function": "0x00128C1C",
+      "proposed_name": "AuAemsManager_ctor",
+      "confidence": "PROBABLE name; CONFIRMED constructor role",
+      "evidence": [
+        "Called only on the freshly allocated 0x350-byte singleton object in 0x00126D3C.",
+        "Initializes the manager's linked-list/container member at +0x78.",
+        "Initializes a repeated run of 0x0C-byte bank wrapper objects at +0x7C through +0x19C using 0x001269A4.",
+        "Clears the manager state fields and returns the original object pointer."
+      ]
+    },
+    "init": {
+      "function": "0x00128EB4",
+      "proposed_name": "AuAemsManager_Init",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "Reached from the manager state transition at 0x00126E08.",
+        "Constructs the core AEMS path from the game's audio base directory, '/', and literal 'coreaems.viv'.",
+        "Loads the core resource into manager+0x28.",
+        "Loads fixed .abk modules from that core resource into dedicated 0x0C-byte manager bank wrappers.",
+        "The associated bank-load helper emits the literal diagnostics 'AuAemsManager::Init() -- Failed AEM Bank Load!' and 'AuAemsManager::Init() -- Failed SNDAEMS_addmodulebank!'."
+      ],
+      "fixed_banks": [
+        {
+          "filename": "cctrl.abk",
+          "manager_offset": "+0xC4"
+        },
+        {
+          "filename": "pmenu.abk",
+          "manager_offset": "+0xE8"
+        },
+        {
+          "filename": "steps.abk",
+          "manager_offset": "+0x100"
+        },
+        {
+          "filename": "bell.abk",
+          "manager_offset": "+0xDC"
+        },
+        {
+          "filename": "GSfx.abk",
+          "manager_offset": "+0xD0"
+        },
+        {
+          "filename": "Punches.abk",
+          "manager_offset": "+0x154"
+        },
+        {
+          "filename": "falls.abk",
+          "manager_offset": "+0x178"
+        },
+        {
+          "filename": "Blocks.abk",
+          "manager_offset": "+0x184"
+        },
+        {
+          "filename": "cmomets.abk",
+          "manager_offset": "+0xB8"
+        },
+        {
+          "filename": "rplyst.abk",
+          "manager_offset": "+0x19C"
+        },
+        {
+          "filename": "rplysfx.abk",
+          "manager_offset": "+0x190"
+        },
+        {
+          "filename": "replay.abk",
+          "manager_offset": "+0xF4"
+        }
+      ],
+      "followup_loader": {
+        "function": "0x00132F90",
+        "confidence": "CONFIRMED that it is called by AuAemsManager_Init after fixed-bank setup; exact original name unresolved",
+        "role": "Loads venue/context-dependent AEMS banks selected from game/fight state."
+      }
+    },
+    "bank_wrapper": {
+      "size": "0x0C",
+      "initializer": "0x001269A4",
+      "release_or_destructor": "0x001269BC",
+      "fields": {
+        "+0x00": "loaded bank/resource pointer",
+        "+0x04": "SNDAEMS module-bank handle; initialized to -1",
+        "+0x08": "ownership/loaded byte flag"
+      },
+      "load_helper": {
+        "function": "0x00126A18",
+        "proposed_name": "AuAemsManager_LoadAemBank",
+        "confidence": "PROBABLE name; CONFIRMED failure diagnostics and module-handle behavior",
+        "behavior": [
+          "Ensures the underlying AEM bank resource is loaded.",
+          "Calls the lower AEMS module-bank registration routine and stores its returned handle at wrapper+0x04.",
+          "Emits the named AuAemsManager::Init bank-load diagnostic if the resource load fails.",
+          "Emits the named SNDAEMS_addmodulebank diagnostic if module-bank registration returns a negative result."
+        ]
+      },
+      "attach_loaded_helper": {
+        "function": "0x00126AD4",
+        "confidence": "CONFIRMED behavior",
+        "behavior": "Attaches an already resolved loaded-bank pointer to the wrapper, registers it with the same lower AEMS module-bank routine, stores the handle, and marks the wrapper state."
+      }
+    },
+    "core_resource": {
+      "filename": "coreaems.viv",
+      "manager_offset": "+0x28",
+      "path_construction": "audio base path + '/' + coreaems.viv"
+    }
   }
 }
