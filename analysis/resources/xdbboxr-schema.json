@@ -167,14 +167,76 @@
   },
   "roster_count_correction": {
     "finding": "121 is the XDB field/column count, not the boxer-record count. xdbboxr.adf contains 37 base rows/records in the tracked retail resource.",
-    "select_boxer_context": "The stock SelectBoxer range table exposes IDs 0-34 across six divisions. The relationship of base rows 35 and 36 to custom/template/other boxer state is not yet proven.",
+    "select_boxer_context": "The normal stock SelectBoxer range table exposes IDs 0-34 across six divisions. Base rows 35 and 36 are now identified as bonus/hidden boxer records: Fabolous (global ID 74) and Little Mac (global ID 75).",
     "global_indexing": "func_00186284 resolves a numeric boxer ID through the registered table-instance chain and subtracts each table's dynamic record_count until the owning table is found.",
-    "hard_maximum": "No hard roster maximum is established. The generic accessor reads record_count dynamically from header word1, and the global resolver can span multiple table instances."
+    "hard_maximum": "No hard total roster maximum is established. The base XDB record count is dynamic, boxer IDs are explicit data (field 0) rather than row indices, and the global resolver can span multiple table instances."
   },
   "unresolved": [
+    "Exact policy meaning of field 0x04: it is a proven boolean-like stock-vs-bonus discriminator, but whether its engine semantic is visible/selectable/unlocked/eligible remains to be named from a higher-level consumer.",
     "Semantic identities and storage types for non-rating field IDs outside the recovered rating block.",
-    "Exact meaning of xdbboxr base rows 35 and 36, which are outside the initial stock SelectBoxer ranges 0-34.",
     "Any independent save/UI limit on total boxer IDs across all registered table instances.",
     "Exact original iOverall formula internals beyond the recovered helper boundary."
-  ]
+  ],
+  "identity_fields": {
+    "confidence": "CONFIRMED for fields 0-2; PROBABLE for field 3's CRO/resource-stem role",
+    "fields": [
+      {
+        "field_id": "0x00",
+        "row_offset": "0x00",
+        "storage": "inline signed int16",
+        "semantic": "global boxer ID",
+        "evidence": "Rows 0-34 contain IDs 0-34 exactly; rows 35-36 contain 74 and 75 rather than their physical row indices. The global boxer resolver consumes numeric boxer IDs through the table-instance chain."
+      },
+      {
+        "field_id": "0x01",
+        "row_offset": "0x02",
+        "storage": "string-pool reference",
+        "semantic": "last/surname or display family name",
+        "evidence": "Decoded values include ALI, FRAZIER, HOLYFIELD, JONES JR, etc. func_001851CC reads field 2 then field 1 while composing the boxer display name."
+      },
+      {
+        "field_id": "0x02",
+        "row_offset": "0x04",
+        "storage": "string-pool reference",
+        "semantic": "first/given name",
+        "evidence": "Decoded values include MUHAMMAD, JOE, EVANDER, ROY, etc. func_001851CC reads field 2 before field 1 while composing the boxer display name."
+      },
+      {
+        "field_id": "0x03",
+        "row_offset": "0x06",
+        "storage": "string-pool reference",
+        "semantic": "short CRO/resource stem",
+        "evidence": "Values are compact stems matching boxer identities, e.g. mali, jfra, ehol, rjon, mpac, fabo and spun."
+      }
+    ]
+  },
+  "base_records_outside_stock_ranges": {
+    "confidence": "CONFIRMED for identities/IDs; selection/unlock policy remains separate",
+    "records": [
+      {
+        "row_index": 35,
+        "boxer_id": 74,
+        "last_or_display_name": "FABOLOUS",
+        "first_name": "",
+        "cro_stem": "fabo"
+      },
+      {
+        "row_index": 36,
+        "boxer_id": 75,
+        "last_or_display_name": "MAC",
+        "first_name": "LITTLE",
+        "cro_stem": "spun"
+      }
+    ],
+    "finding": "The two base-table rows outside the normal SelectBoxer ID ranges 0-34 are real bonus/hidden boxer records, not empty/template/custom-created slots.",
+    "custom_boxer_separation": "GetSelectBoxerInfo has a separate created/custom-boxer path that emits iCustomBoxerID, strCustomBoxerName and iCustomBoxerWeightClass from session/custom state, independently of base rows 35-36."
+  },
+  "selection_flag_candidate": {
+    "field_id": "0x04",
+    "storage": "inline signed int16",
+    "confidence": "PROBABLE",
+    "observed_values": "1 for every normal stock SelectBoxer record 0-34; 0 for bonus rows 35-36.",
+    "executable_evidence": "func_00185D84 reads field 4 and returns whether it is >0. A caller at 0x00278B0C iterates 35 stock boxer IDs, resolves each boxer, calls func_00185D84, and records a boolean result in a parallel table.",
+    "interpretation": "standard-roster/selectability/eligibility flag. Exact distinction between visible, selectable and unlocked remains open."
+  }
 }
