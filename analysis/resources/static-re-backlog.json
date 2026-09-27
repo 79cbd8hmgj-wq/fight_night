@@ -3,7 +3,7 @@
   "revision": "ULUS10066-v1.00",
   "purpose": "Every STATICALLY_SOLVABLE and STATICALLY_AMBIGUOUS evidence question from analysis/reports/static-re-ceiling.json, each carrying a concrete named static avenue. Regenerated after Overhaul Alpha 1's targeted static RE (PR: Overhaul Alpha 1 -- Core Boxer + Fight Systems), which resolved program-04-04 (func_00186464's linked list) and partially advanced program-11-03 (judge weighting) as a direct byproduct of the minimum focused RE that milestone's own implementation work required -- not a renewed broad assessment pass. This file supersedes the narrower Task 10/11 analysis/resources/static-discovery-backlog.json for corpus-wide planning purposes; static-discovery-backlog.json is preserved unmodified. Per task policy, none of these may be moved to runtime-minimum-backlog.json until every named avenue below is exhausted.",
   "related_backlog": "analysis/resources/static-discovery-backlog.json (Task 10/11-scoped predecessor, still valid)",
-  "entry_count": 34,
+  "entry_count": 33,
   "entries": [
     {
       "id": "program-01-02",
@@ -27,44 +27,6 @@
         "functions": [
           "func_001AD694",
           "0x567D60"
-        ]
-      }
-    },
-    {
-      "id": "program-03-05",
-      "program_id": "program-03",
-      "subsystem": "Modules",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "Is the UI-script container format used by all .big screen packages (member types .apt/.const/.o/.msh) identified, and is there a proven mechanism connecting UI scripts to BOOT.BIN native functions?",
-      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's registration is later resolved/dispatched at script-call time (i.e. where the registered name string is looked up and its real implementation function invoked) -- this single mechanism gates nearly every UI-side lead opened by this delta pass (GetSelectBoxerInfo's real implementation, GetRecordBooksInfo's real implementation, etc.), so resolving it once would advance several other STATICALLY_SOLVABLE questions at once. Decoding the .apt bytecode format itself (to recover literal numeric constants such as the difficulty enum's 'm_arrValues') is a separate, larger undertaking not attempted this pass.",
-      "affected_features": [
-        "career-2",
-        "amateur",
-        "roster",
-        "divisions",
-        "generated-boxers",
-        "career-health",
-        "legacy"
-      ],
-      "sources": {
-        "code": [
-          "src/fnr3_re/ea_archive.py (reused, unmodified)"
-        ],
-        "functions": [
-          "func_0CDAC0",
-          "func_0CDA70"
-        ],
-        "ui_resources": [
-          "debugmenu.big",
-          "optionsettings.big",
-          "selectboxer.big",
-          "adhocrivals.big",
-          "careerfighthistory.big",
-          "recordbooks.big",
-          "genericbackground.big",
-          "internetmainmenu.big",
-          "mainmenu.big",
-          "tutorialoverlay.big"
         ]
       }
     },
