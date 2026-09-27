@@ -5,7 +5,7 @@
   "resource": "preload/db.viv!xdbboxr.adf",
   "status": "record_layout_and_rating_fields_mapped",
   "confidence": "PROBABLE",
-  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. Identity, stock-roster availability, hometown, nickname/alias, weight/division, and the core rating block are now mapped. Many appearance/equipment/career fields remain unresolved.",
+  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. Identity, base availability, Replay identity selector, hometown, nickname/alias, weight/division, career timing, rating mode, core ratings, stance/style and several appearance fields are now mapped.",
   "container": {
     "compressed_size": 3117,
     "decoded_size": 9704,
@@ -173,10 +173,10 @@
     "hard_maximum": "No hard total roster maximum is established. Base record_count is dynamic and func_00186284 can span multiple registered boxer-table instances."
   },
   "unresolved": [
+    "Exact authored label and downstream interpretation of the normalized Replay boxer codes derived from field 0x05; Replay-event dataflow itself is resolved, but commentary/audio semantics are explicitly not claimed.",
     "What boxer/category source sets field 0x0F nonzero; its effect is proven as alternate/raw versus weight-class-adjusted rating mode, but the owning semantic category is unresolved.",
     "Exact semantic names of the three packed 0x0E nibble traits.",
     "Exact semantic role of field 0x00's secondary/resource identity number (74/75 for the two bonus records).",
-    "Exact authored label and event-family name for field 0x05; runtime behavior is now confirmed as a boxer-specific speech/audio event identity selector feeding event 0x00020FA0.",
     "Semantic identities for remaining physical/biographical fields including likely age/height/reach and the packed 0x0D/0x0E metadata.",
     "Remaining handedness/equipment and deeper appearance-resource semantics; stance, style, skin tone, eyebrow, eye colour, facial hair, facial-hair colour, hair colour, and the hair-style resource token are now mapped.",
     "Career/store/generated-boxer fields and any independent save/UI maximum on the cumulative boxer selector space.",
@@ -459,14 +459,15 @@
     "0x05": {
       "function": "func_00185B30",
       "behavior": "returns field 0x05 as signed int16",
-      "downstream": "func_0010C9C8 maps field 0x05 through a bounded <0x4C (76) dispatch table. func_0010BB58 invokes that mapper for both active boxer/corner selectors, places the two mapped values into the final two words of an event parameter block, and submits event 0x00020FA0 through func_003E5860, with func_003E4A94 as the negative-result fallback.",
-      "semantic_behavior": "boxer-specific speech/audio event identity selector",
-      "confidence": "CONFIRMED behavior; exact authored field label and event-family name remain unresolved",
+      "downstream": "func_0010C9C8 normalizes the field through a bounded 76-entry mapping; func_0010BB58 places two normalized boxer codes into the named Replay event payload before generic event dispatch.",
+      "semantic_behavior": "Replay-event boxer identity/profile source selector",
+      "confidence": "CONFIRMED Replay-event dataflow; exact authored column label and normalized-code meaning unresolved",
       "evidence": [
         "func_00185B30 returns xdbboxr field 0x05 as signed int16.",
-        "func_0010C9C8 uses that value as a 76-entry dispatch selector and may fall back through field 0x07's alias/nickname-linked dispatch.",
-        "func_0010BB58 calls func_0010C9C8 once for each active boxer/corner selector, stores both mapped outputs at parameter-block offsets +0x24/+0x28, then calls func_003E5860 with event constant 0x00020FA0.",
-        "The surrounding executable contains the BEAudio/AuSpeechManager subsystem and decision-announcement script strings, supporting the audio/speech classification without proving the original authored column name."
+        "func_0010C9C8 maps the value through a bounded 76-entry table and can fall back through field 0x07's alias-linked path.",
+        "func_0010BB58 calls func_0010C9C8 for both active boxers and writes both results to payload +0x14/+0x18.",
+        "The payload is dispatched through func_003E5860 under descriptor D_0055AB38, whose name is Replay.",
+        "No direct evidence ties this field to commentary/audio selection."
       ]
     },
     "0x0B": {
@@ -593,5 +594,22 @@
         "evidence": "func_0018A110 maps field 0x71 to scratch +0x13C. T_001E76C4 publishes the UI iHairStyle index separately, then stores D_0055F9A8[iHairStyle] into +0x13C before committing."
       }
     ]
+  },
+  "replay_identity_field_0x05": {
+    "field_id": "0x05",
+    "row_offset": "0x0A",
+    "storage": "inline signed int16",
+    "confidence": "CONFIRMED for Replay-event dataflow; exact normalized-code meaning remains unresolved",
+    "native_reader": "func_00185B30",
+    "normalizer": "func_0010C9C8",
+    "behavior": [
+      "func_0010C9C8 treats field 0x05 as a bounded 76-entry selector and maps it to a normalized boxer code.",
+      "Licensed boxers represented in multiple weight classes use different field-0x05 source values that normalize to the same output code in several observed pairs.",
+      "When the direct field-0x05 mapping produces no code, the mapper can fall back through field 0x07's alias/nickname-linked path.",
+      "func_0010BB58 invokes the mapper for both active boxers, writes the normalized results to Replay-event payload offsets +0x14 and +0x18, and dispatches the payload through func_003E5860.",
+      "The first-use fallback registers/resolves descriptor D_0055AB38 through func_003E4A94; that descriptor is named Replay."
+    ],
+    "conclusion": "Field 0x05 is a per-boxer source selector for normalized Replay-event identity/profile codes. It is NOT presently proven to be a commentary, speech, or audio ID.",
+    "evidence_file": "analysis/resources/fight-event-dispatch-evidence.json"
   }
 }
