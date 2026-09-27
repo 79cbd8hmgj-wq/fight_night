@@ -718,13 +718,29 @@
       "subsystem": "Damage",
       "question": "What triggers the KO/TKO decision path, and is the referee's stoppage decision statically traceable?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "astrTKOTime suggests a timer-based TKO mechanism exists; not traced to its consuming function this session.",
+      "evidence": "astrTKOTime suggests a timer-based TKO mechanism exists; not traced to its consuming function this session. Follow-up debug-ELF xref analysis rules out astrTKOTime as the stoppage-decision lead: its direct code xref is inside GetCareerHistoryInfo at 0x001EE220, where astrTKOTime is emitted alongside astrFightResult and aRoundsLasted as stored career-history UI data. This is a read/display path, not the underlying KO/TKO/referee decision.",
       "affected_features": [
         "combat",
         "career-health"
       ],
-      "remaining_static_work": "Find the referencing function for astrTKOTime and trace its callers.",
-      "sources": {},
+      "remaining_static_work": "Do not pursue astrTKOTime further. Trace the actual fight-state producers around the named RefStoppage/Knockdown/IllegalBlows generic events and the fight-session result setters/consumers to locate the KO/TKO/referee-stoppage decision path.",
+      "sources": {
+        "functions": [
+          "0x001EE220"
+        ],
+        "strings": [
+          "astrTKOTime",
+          "astrFightResult",
+          "aRoundsLasted",
+          "RefStoppage",
+          "Knockdown",
+          "IllegalBlows"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json",
+          "analysis/resources/fight-event-dispatch-evidence.json"
+        ]
+      },
       "confidence": "CANDIDATE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -1264,8 +1280,8 @@
       "program_id": "program-16",
       "subsystem": "Career/save",
       "question": "Does a retail 'Records/Hall of Fame' legacy-tracking system exist (relevant to the planned legacy-systems overhaul feature)?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "recordbooks.big!recordBooks.const (decoded this delta pass) names a full record-book category list as localization keys: '$TL_Boxing_Hall_Of_Fame', '$TL_Most_Career_Earnings', '$TL_Most_Wins', '$TL_Fastest_KOs', '$TL_Most_KOs', '$TL_Top_10', plus column headers '$T_Record'/'$T_Boxer'/'$T_KOs'/'$T_KO_Time'/'$T_Wins'/'$T_Earnings'/'$T_Career'/'$T_Rank'. This directly proves a retail Hall-of-Fame/records-book legacy system exists, driven by a native 'GetRecordBooksInfo' accessor (BOOT.BIN string owners func_001EE218/func_001EE28C -- the same registration-trampoline pair as GetCareerHistoryInfo/GetAdhocRivalsInfo/GetAdhocRivalsUserInfo above, confirming all four list-screen native accessors funnel through one shared registrar). The real implementation behind the registered name was not located this pass.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "The native AIP bridge is now resolved through the concrete GetRecordBooksInfo implementation at 0x001EEA3C. Registration function 0x001EE168 binds GetCareerHistoryInfo / GetAdhocRivalsUserInfo / GetAdhocRivalsInfo / GetRecordBooksInfo in order to concrete implementations 0x001EE220 / 0x001EE558 / 0x001EE808 / 0x001EEA3C. GetRecordBooksInfo reads iPage and emits astrNames, astrStatColumn1 and astrStatColumn2. Its selector is explicitly bounded to six pages (0..5; sltiu < 6 at 0x001EEC58), and its output loop has a literal hard cap of exactly 10 entries (slti < 0x0A at 0x001EEDE4, loop at 0x001EEDE8). This matches the decoded recordBooks.const categories including Hall of Fame, Most Career Earnings, Most Wins, Fastest KOs, Most KOs and Top 10.",
       "affected_features": [
         "legacy"
       ],
@@ -1278,11 +1294,16 @@
         ],
         "functions": [
           "func_001EE218",
-          "func_001EE28C"
+          "func_001EE28C",
+          "0x001EE168",
+          "0x001EEA3C"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's native-function-name registration is dispatched at call time to reach GetRecordBooksInfo's real implementation and observe what record categories/limits it actually populates (e.g. is 'Top 10' a hard cap of exactly 10 entries).",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "confidence": "CONFIRMED",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-16-07"
@@ -1659,8 +1680,8 @@
     }
   ],
   "counts_overall": {
-    "STATICALLY_RESOLVED": 32,
-    "STATICALLY_SOLVABLE": 29,
+    "STATICALLY_RESOLVED": 33,
+    "STATICALLY_SOLVABLE": 28,
     "STATICALLY_AMBIGUOUS": 2,
     "RUNTIME_ESSENTIAL": 0
   },
@@ -1744,8 +1765,8 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "program-16": {
-      "STATICALLY_RESOLVED": 3,
-      "STATICALLY_SOLVABLE": 4,
+      "STATICALLY_RESOLVED": 4,
+      "STATICALLY_SOLVABLE": 3,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
@@ -1812,8 +1833,8 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "legacy": {
-      "STATICALLY_RESOLVED": 3,
-      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_RESOLVED": 4,
+      "STATICALLY_SOLVABLE": 0,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
@@ -1826,8 +1847,8 @@
   },
   "static_ceiling": {
     "definition": "Count-based projection = STATICALLY_RESOLVED + STATICALLY_SOLVABLE, i.e. every question with either evidence already in hand or a concrete named static avenue remaining. STATICALLY_AMBIGUOUS questions are excluded from the ceiling because they are not proven closeable by static work alone yet (their alternatives may or may not collapse to one answer statically).",
-    "statically_resolved": 32,
-    "statically_solvable": 29,
+    "statically_resolved": 33,
+    "statically_solvable": 28,
     "ceiling_count": 61,
     "total_bounded_questions": 63,
     "ceiling_fraction_of_total": 0.9683,
