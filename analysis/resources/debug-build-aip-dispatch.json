@@ -1419,47 +1419,274 @@
         "+0x10": "CONFIRMED speech category selector 0/1/2"
       }
     },
-    "tcc_selection": {
-      "function": "0x0013DDC4",
-      "proposed_name": "AuSpeechManager_EvaluateTCC",
-      "confidence": "PROBABLE name; CONFIRMED role as TCC condition/event selection",
-      "evidence": [
-        "Called from the AuSpeechManager update path at 0x0013BCBC.",
-        "Reads boxer/fight state and rating-like values through existing boxer/session accessors.",
-        "Contains direct debug-label xrefs for multiple TCC decision branches.",
-        "Builds a compact event payload and eventually submits it through the generic event dispatch layer."
-      ],
-      "debug_labels": [
-        {
-          "address": "0x00506BD0",
-          "text": "TCC = MULTI KD",
-          "xref": "0x0013E730"
-        },
-        {
-          "address": "0x00506BE0",
-          "text": "TCC = POOR PERFORMANCE",
-          "xref": "0x0013E7FC"
-        },
-        {
-          "address": "0x00506BF8",
-          "text": "TCC = WASTED ENERGY",
-          "xrefs": [
-            "0x0013E8C4",
-            "0x0013E9F4"
-          ]
-        },
-        {
-          "address": "0x00506C0C",
-          "text": "TCC = BOXER DAMAGE",
-          "xref": "0x0013EB08"
-        },
-        {
-          "address": "0x00506C20",
-          "text": "TCC = BOXER RATING/STYLE",
-          "xref": "0x0013F130"
-        }
-      ],
-      "implication": "The debug build exposes concrete commentary-condition families rather than only a generic on/off toggle. These labels provide direct static anchors for how gameplay state is converted into speech/commentary event selection."
+    "event_selection": {
+      "confidence": "CONFIRMED for event identity/registration/dispatch; payload field semantics remain partially unresolved",
+      "correction": "Earlier evidence labeled 0x0013DDC4 as a TCC event selector because it contains 'TCC = ...' diagnostics. Relocation-aware analysis proves this routine dispatches the named NISAdvice event instead. The actual TCC event is emitted separately by the main AuSpeechManager update path at 0x0013B410.",
+      "nis_advice": {
+        "producer": "0x0013DDC4",
+        "event_handle_pre_relocation": "0x00020FB0",
+        "event_handle_runtime_vaddr": "0x005AB858",
+        "descriptor": "0x0055AAD0",
+        "name": "NISAdvice",
+        "hash": "0x08654C54",
+        "evidence": [
+          "0x0013F1F8 loads the relocated event handle, then 0x0013F20C calls func_003E5860 with the payload at sp+0x18C.",
+          "Failure fallback at 0x0013F220 calls func_003E4A94 with descriptor 0x0055AAD0.",
+          "Descriptor 0x0055AAD0 is the {name,hash} pair NISAdvice / 0x08654C54.",
+          "PSP HI16/LO16 relocation records at the handle load target program segment 1; adding raw 0x20FB0 to segment-1 vaddr 0x0058A8A8 resolves the handle to 0x005AB858 in BSS."
+        ],
+        "condition_debug_labels": [
+          "TCC = MULTI KD",
+          "TCC = POOR PERFORMANCE",
+          "TCC = WASTED ENERGY",
+          "TCC = BOXER DAMAGE",
+          "TCC = BOXER RATING/STYLE"
+        ],
+        "interpretation": "TCC-labelled gameplay conditions feed construction of a NISAdvice event. The acronym TCC itself remains unexpanded."
+      },
+      "tcc_event": {
+        "producer_region": "0x0013B410 main AuSpeechManager update path",
+        "dispatch_site": "0x0013BBE0",
+        "event_handle_pre_relocation": "0x00020FC0",
+        "event_handle_runtime_vaddr": "0x005AB868",
+        "descriptor": "0x0055AAE0",
+        "name": "TCC",
+        "hash": "0x74184C54",
+        "payload_stack": "sp+0xAC",
+        "payload_words": 3,
+        "payload_construction": [
+          "sp+0xAC <- $19",
+          "sp+0xB0 <- $20",
+          "sp+0xB4 <- result of func_001086B0(...)"
+        ],
+        "note": "The three payload fields are directly observed but are not given semantic names yet."
+      }
     }
+  },
+  "named_event_registry": {
+    "confidence": "CONFIRMED",
+    "registration_function": "0x001106CC",
+    "resolver_or_registration_api": "func_003E4A94",
+    "dispatcher": "func_003E5860",
+    "descriptor_layout": "{ +0x00 name pointer, +0x04 32-bit name hash }",
+    "handle_storage": "8-byte per-event handle objects relocated into segment-1/BSS storage",
+    "relocation_rule_used_here": "PSP HI16/LO16 records identify program segment 1 as the address base. Segment-1 vaddr is 0x0058A8A8; raw handle offsets below are added to it.",
+    "entries": [
+      {
+        "name": "RefCountDown",
+        "hash": "0x761C4C54",
+        "descriptor_vaddr": "0x0055AAC8",
+        "handle_pre_relocation": "0x00020FA8",
+        "handle_runtime_vaddr": "0x005AB850"
+      },
+      {
+        "name": "NISAdvice",
+        "hash": "0x08654C54",
+        "descriptor_vaddr": "0x0055AAD0",
+        "handle_pre_relocation": "0x00020FB0",
+        "handle_runtime_vaddr": "0x005AB858"
+      },
+      {
+        "name": "OnplayAdvice",
+        "hash": "0x38FE4C54",
+        "descriptor_vaddr": "0x0055AAD8",
+        "handle_pre_relocation": "0x00020FB8",
+        "handle_runtime_vaddr": "0x005AB860"
+      },
+      {
+        "name": "TCC",
+        "hash": "0x74184C54",
+        "descriptor_vaddr": "0x0055AAE0",
+        "handle_pre_relocation": "0x00020FC0",
+        "handle_runtime_vaddr": "0x005AB868"
+      },
+      {
+        "name": "StartOfRound",
+        "hash": "0x7A4F4C54",
+        "descriptor_vaddr": "0x0055AAE8",
+        "handle_pre_relocation": "0x00020FC8",
+        "handle_runtime_vaddr": "0x005AB870"
+      },
+      {
+        "name": "RefClinch",
+        "hash": "0x1DD04C54",
+        "descriptor_vaddr": "0x0055AAF0",
+        "handle_pre_relocation": "0x00020FD0",
+        "handle_runtime_vaddr": "0x005AB878"
+      },
+      {
+        "name": "RefStoppage",
+        "hash": "0x089E4C54",
+        "descriptor_vaddr": "0x0055AAF8",
+        "handle_pre_relocation": "0x00020FD8",
+        "handle_runtime_vaddr": "0x005AB880"
+      },
+      {
+        "name": "BlockedPunch",
+        "hash": "0x20216F4F",
+        "descriptor_vaddr": "0x0055AB00",
+        "handle_pre_relocation": "0x00020FE0",
+        "handle_runtime_vaddr": "0x005AB888"
+      },
+      {
+        "name": "BoxerDamage",
+        "hash": "0x5EFA6F4F",
+        "descriptor_vaddr": "0x0055AB08",
+        "handle_pre_relocation": "0x00020FE8",
+        "handle_runtime_vaddr": "0x005AB890"
+      },
+      {
+        "name": "CelebrationSequence",
+        "hash": "0x39806F4F",
+        "descriptor_vaddr": "0x0055AB10",
+        "handle_pre_relocation": "0x00020FF0",
+        "handle_runtime_vaddr": "0x005AB898"
+      },
+      {
+        "name": "LackOfAction",
+        "hash": "0x36F06F4F",
+        "descriptor_vaddr": "0x0055AB18",
+        "handle_pre_relocation": "0x00020FF8",
+        "handle_runtime_vaddr": "0x005AB8A0"
+      },
+      {
+        "name": "MissedPunch",
+        "hash": "0x09A46F4F",
+        "descriptor_vaddr": "0x0055AB20",
+        "handle_pre_relocation": "0x00021000",
+        "handle_runtime_vaddr": "0x005AB8A8"
+      },
+      {
+        "name": "PunchCombos",
+        "hash": "0x0E526F4F",
+        "descriptor_vaddr": "0x0055AB28",
+        "handle_pre_relocation": "0x00021008",
+        "handle_runtime_vaddr": "0x005AB8B0"
+      },
+      {
+        "name": "PunchLanded",
+        "hash": "0x324F6F4F",
+        "descriptor_vaddr": "0x0055AB30",
+        "handle_pre_relocation": "0x00021010",
+        "handle_runtime_vaddr": "0x005AB8B8"
+      },
+      {
+        "name": "Replay",
+        "hash": "0x28D86F4F",
+        "descriptor_vaddr": "0x0055AB38",
+        "handle_pre_relocation": "0x00021018",
+        "handle_runtime_vaddr": "0x005AB8C0"
+      },
+      {
+        "name": "UpdateStatus",
+        "hash": "0x1FD36F4F",
+        "descriptor_vaddr": "0x0055AB40",
+        "handle_pre_relocation": "0x00021020",
+        "handle_runtime_vaddr": "0x005AB8C8"
+      },
+      {
+        "name": "BoxerFatigue",
+        "hash": "0x49406F4F",
+        "descriptor_vaddr": "0x0055AB48",
+        "handle_pre_relocation": "0x00021028",
+        "handle_runtime_vaddr": "0x005AB8D0"
+      },
+      {
+        "name": "TauntingResult",
+        "hash": "0x59AB6F4F",
+        "descriptor_vaddr": "0x0055AB50",
+        "handle_pre_relocation": "0x00021030",
+        "handle_runtime_vaddr": "0x005AB8D8"
+      },
+      {
+        "name": "FeintingResult",
+        "hash": "0x70046F4F",
+        "descriptor_vaddr": "0x0055AB58",
+        "handle_pre_relocation": "0x00021038",
+        "handle_runtime_vaddr": "0x005AB8E0"
+      },
+      {
+        "name": "ClinchingResult",
+        "hash": "0x13716F4F",
+        "descriptor_vaddr": "0x0055AB60",
+        "handle_pre_relocation": "0x00021040",
+        "handle_runtime_vaddr": "0x005AB8E8"
+      },
+      {
+        "name": "Trapped",
+        "hash": "0x32496F4F",
+        "descriptor_vaddr": "0x0055AB68",
+        "handle_pre_relocation": "0x00021048",
+        "handle_runtime_vaddr": "0x005AB8F0"
+      },
+      {
+        "name": "BoxerRoundHistory",
+        "hash": "0x1ED36F4F",
+        "descriptor_vaddr": "0x0055AB70",
+        "handle_pre_relocation": "0x00021050",
+        "handle_runtime_vaddr": "0x005AB8F8"
+      },
+      {
+        "name": "CareerMode",
+        "hash": "0x185A6F4F",
+        "descriptor_vaddr": "0x0055AB78",
+        "handle_pre_relocation": "0x00021058",
+        "handle_runtime_vaddr": "0x005AB900"
+      },
+      {
+        "name": "Knockdown",
+        "hash": "0x69746F4F",
+        "descriptor_vaddr": "0x0055AB80",
+        "handle_pre_relocation": "0x00021060",
+        "handle_runtime_vaddr": "0x005AB908"
+      },
+      {
+        "name": "IllegalBlows",
+        "hash": "0x738A6F4F",
+        "descriptor_vaddr": "0x0055AB88",
+        "handle_pre_relocation": "0x00021068",
+        "handle_runtime_vaddr": "0x005AB910"
+      },
+      {
+        "name": "RAFightIntroFlyIn",
+        "hash": "0x2F7621D9",
+        "descriptor_vaddr": "0x0055AB90",
+        "handle_pre_relocation": "0x00021070",
+        "handle_runtime_vaddr": "0x005AB918"
+      },
+      {
+        "name": "RAFightIntroSegment4",
+        "hash": "0x1EA821D9",
+        "descriptor_vaddr": "0x0055AB98",
+        "handle_pre_relocation": "0x00021078",
+        "handle_runtime_vaddr": "0x005AB920"
+      },
+      {
+        "name": "RAFightIntroSegment5",
+        "hash": "0x05EA21D9",
+        "descriptor_vaddr": "0x0055ABA0",
+        "handle_pre_relocation": "0x00021080",
+        "handle_runtime_vaddr": "0x005AB928"
+      },
+      {
+        "name": "RAFightResultSegment1",
+        "hash": "0x1B8521D9",
+        "descriptor_vaddr": "0x0055ABA8",
+        "handle_pre_relocation": "0x00021088",
+        "handle_runtime_vaddr": "0x005AB930"
+      },
+      {
+        "name": "RAFightResultSegment2",
+        "hash": "0x324C21D9",
+        "descriptor_vaddr": "0x0055ABB0",
+        "handle_pre_relocation": "0x00021090",
+        "handle_runtime_vaddr": "0x005AB938"
+      }
+    ],
+    "dispatcher_semantics": [
+      "func_003E4A94 resolves/registers an event handle from its name/hash descriptor.",
+      "func_003E5860 accepts the resolved event-handle object plus caller payload and invokes registered listeners.",
+      "func_003E4A84 resets/invalidates an event handle by writing -3 to its +0x04 state field."
+    ]
   }
 }
