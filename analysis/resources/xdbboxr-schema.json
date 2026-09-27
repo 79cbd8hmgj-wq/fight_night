@@ -1,52 +1,172 @@
 {
-  "schema_version": 1,
-  "model_version": 2,
+  "schema_version": 2,
+  "model_version": 3,
   "revision": "ULUS10066-v1.00",
   "resource": "preload/db.viv!xdbboxr.adf",
-  "status": "static_header_only",
-  "confidence": "CANDIDATE",
-  "summary": "Only the shared 32-byte xdb table header (see xdb-schema-evidence.json) is currently proven for xdbboxr.adf. No per-record field offset, width, or signedness is included here because no static evidence -- header arithmetic, byte-pattern inspection, or executable parser code -- reliably pinned the record boundary in this pass. This file exists so future work extends a versioned model instead of re-deriving the header from scratch, and so no downstream consumer accidentally treats an unproven field as confirmed.",
+  "status": "generic_record_layout_resolved_rating_fields_partial",
+  "confidence": "PROBABLE (retail resource/header evidence plus matching-address ULES00270 executable accessor trace)",
+  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The generic XDB accessor ABI is now mapped. The per-record descriptor matrix begins at payload +0x38 with a 0xF2-byte row stride. SelectBoxer's real UpdateSelectBoxerInfo path identifies the rating field IDs and proves fields 0x10-0x18 are inline signed int16 descriptors. Many non-rating semantic field IDs remain unresolved.",
   "container": {
     "compressed_size": 3117,
     "decoded_size": 9704,
+    "decoded_size_hex": "0x25E8",
     "refpack_header": "10fb",
-    "refpack_decode": "clean: exact declared-size match (9704 bytes), zero trailing bytes, self-consistent decode/encode round trip via src/fnr3_re/refpack.py"
+    "refpack_decode": "clean: exact declared-size match, zero RefPack trailing bytes"
   },
-  "proven_header_fields": {
-    "word0": {"value": 121, "candidate_meaning": "record count", "confidence": "CANDIDATE", "reason": "121 is a plausible boxer-database row count (larger than the ~40-fighter playable roster commonly reported for this title, consistent with also including legends/created-boxer template slots), but no stride arithmetic or executable code confirms it names a record count rather than some other quantity."},
-    "word1": {"value": 37, "candidate_meaning": "field/column count", "confidence": "CANDIDATE", "reason": "37 is a plausible per-boxer field count for a rich boxer schema (name, ratings, attributes, appearance, ...), but this is a plausibility judgement, not a proven claim -- flagged explicitly per the evidence standard's prohibition on promoting a claim from a value that merely 'looks right'."},
-    "section_size_a": {"value": 9012, "candidate_meaning": "size in bytes of a leading fixed-size section, distinct from a 692-byte trailing region", "confidence": "CANDIDATE"},
-    "trailing_bytes": {"value": 692, "candidate_meaning": "possible string pool or secondary section following the fixed section", "confidence": "CANDIDATE"},
-    "word6": {"value": 21, "candidate_meaning": "unknown; xdbboxr.adf is one of only two tables (with xdbcutpn.adf) where this word is non-zero", "confidence": "CANDIDATE"}
-  },
-  "record_layout": {
-    "status": "partially_resolved",
-    "record_count": 121,
-    "record_count_confidence": "PROBABLE",
-    "record_count_evidence": "func_001AD268 reads word0 directly from the payload and uses it as a genuine per-entry loop bound (see boxer-ownership-map.json's header_word0_proof) -- this settles the structural question of whether word0 is consumed as a count at all, though it does not yet prove the counted entries are specifically 'boxer records' as opposed to some other per-row flag.",
-    "record_stride": null,
-    "fields": [],
-    "flags_array": {
-      "offset": "+0x18",
-      "confidence": "CANDIDATE",
-      "layout": "2 bits per entry, 4 entries per byte, for word0 (121) entries -- ceil(121/4) = 31 bytes, spanning payload offset 0x18 through 0x36",
-      "evidence": "func_001AD268 computes each entry's address as payload+0x18+(index>>2) and extracts (byte >> shift) & 0x3 where shift depends on index&0x3; see boxer-ownership-map.json's revised_header_model.",
-      "meaning_of_the_4_values": "unresolved -- not determined whether 0/1/2/3 correspond to boxer status categories (e.g. active/legend/created/hidden) or something unrelated to boxer semantics specifically"
+  "header": {
+    "size": 32,
+    "field_count": {
+      "word": "word0",
+      "value": 121,
+      "confidence": "PROBABLE",
+      "evidence": "func_001ACCAC bounds field_id against header[0]; func_001AD268 scans exactly header[0] field-type codes."
     },
-    "why_still_unresolved_beyond_the_above": [
-      "No boxer-record field accessor (a function that reads a specific named field -- rating, weight, name, etc. -- out of an indexed boxer entry) was located and traced in this pass; BOOT.BIN contains 24,576 disassembled functions and the boxer table's known consumers (6 direct singleton-accessor callers plus func_001AD268) do not themselves read individual named fields.",
-      "The boxer-table runtime accessor found in BOOT.BIN (func_00186464, see boxer-ownership-map.json) walks the loaded table via a linked-list 'next' pointer at offset +0x10 of each visited node rather than doing index*stride array arithmetic against the payload directly -- whether this linked list is built from the payload's flags-array entries, or is a separate structure entirely, was not determined.",
-      "The byte range after the +0x18 flags array (payload offset ~0x37 onward, out of 9704 total bytes) was not further structurally analyzed in this pass."
+    "record_count": {
+      "word": "word1",
+      "value": 37,
+      "confidence": "PROBABLE",
+      "evidence": "func_001AD180 bounds record_index against header[1] and computes record_descriptor = matrix_base + record_index*(field_count*2)."
+    },
+    "float_pool_base": {
+      "word": "word2",
+      "value": 9012,
+      "hex": "0x2334"
+    },
+    "int32_pool_base": {
+      "word": "word3",
+      "value": 9012,
+      "hex": "0x2334"
+    },
+    "string_pool_base": {
+      "word": "word4",
+      "value": 9012,
+      "hex": "0x2334"
+    },
+    "word5": 0,
+    "raw_word6": 21,
+    "raw_word7": 0,
+    "trailing_string_pool_bytes": 692
+  },
+  "field_type_table": {
+    "offset": "0x18",
+    "bytes": 31,
+    "aligned_end": "0x38",
+    "layout": "2 bits per field, four fields per byte; field shift = 6 - ((field_id & 3)*2)",
+    "native_types": {
+      "0": "inline signed int16 stored directly in the record descriptor",
+      "1": "string: payload + string_pool_base + signed16 descriptor",
+      "2": "int32: payload + int32_pool_base + signed16(descriptor)*4",
+      "3": "float32: payload + float_pool_base + signed16(descriptor)*4"
+    },
+    "evidence": [
+      "func_001ACCAC",
+      "func_001ACD40",
+      "func_001ACE20"
     ]
   },
-  "boxer_data_is_not_confined_to_this_table": {
-    "confidence": "PROBABLE for the archive family, CANDIDATE for any specific field split",
-    "finding": "xdbboxr.adf is not the sole boxer database. A 9-entry resource registry table found in BOOT.BIN (see analysis/resources/resource-loader-map.json) groups xdbboxr.adf's containing archive (preload/db.viv is not itself in that table, but 4 sibling appearance archives are) alongside boxersh.viv (staged damage models, gloves), cboxshr.viv (shorts models), boxmisc.viv (face/damage/equipment geometry), boxmisc2.viv (headgear-compatible hair morphs), boxerpre.viv, allhair.viv, actors.viv, and tables.viv. None of these are xdbboxr.adf-format tables -- they are 3D model/geometry archives -- so boxer *appearance* data is confirmed split across a completely separate resource family from boxer *database* fields, consistent with a normal game-engine separation of database records (identity/stats) from rendering assets (models/textures), not a schema-splitting surprise.",
-    "see_also": "analysis/resources/boxer-ownership-map.json's cross_resource_relationships and analysis/resources/corpus-resource-index.json"
+  "record_descriptor_matrix": {
+    "offset": "0x38",
+    "offset_formula": "word2 - align4(field_count * record_count * 2)",
+    "stride": 242,
+    "stride_hex": "0xF2",
+    "records": 37,
+    "fields_per_record": 121,
+    "descriptor_width": 2,
+    "order": "row-major: offset = 0x38 + record_index*0xF2 + field_id*2",
+    "end": "0x2334",
+    "evidence": "func_001AD180 computes the matrix start from word2 and the aligned field_count*record_count*2 size, then advances record_index by field_count*2."
   },
-  "explicitly_not_claimed": [
-    "field offsets for name/rating/weight/division/stance/handedness/appearance/hair/shorts/equipment/hometown/nationality/career-eligibility/rivals/training/store-unlock/created-boxer flags -- none of these have been located in xdbboxr.adf's decoded bytes or in executable field-accessor code",
-    "whether word0=121 counts playable roster boxers, all database rows including templates, or something else",
-    "whether the 692-byte trailing region is a string pool, a secondary record array, or padding"
+  "select_boxer_ratings": {
+    "source_handler": "0x001D53F0 (UpdateSelectBoxerInfo)",
+    "accessor_chain": [
+      "func_00185114",
+      "func_0018553C",
+      "func_001ACD40"
+    ],
+    "field_storage": "Fields 0x10-0x18 are type 0 because the packed type codes for field IDs 16-31 are all zero (raw word7=0); therefore these ratings are direct signed int16 values in each record descriptor row.",
+    "fields": [
+      {
+        "ui": "iPower",
+        "field_ids": [
+          "0x10",
+          "0x11"
+        ],
+        "record_relative_offsets": [
+          "0x20",
+          "0x22"
+        ],
+        "payload_record0_offsets": [
+          "0x58",
+          "0x5A"
+        ],
+        "behavior": "average of the two signed-int16 power components"
+      },
+      {
+        "ui": "iSpeed",
+        "field_id": "0x12",
+        "record_relative_offset": "0x24",
+        "payload_record0_offset": "0x5C",
+        "storage": "int16"
+      },
+      {
+        "ui": "iAgility",
+        "field_id": "0x13",
+        "record_relative_offset": "0x26",
+        "payload_record0_offset": "0x5E",
+        "storage": "int16"
+      },
+      {
+        "ui": "iStamina",
+        "field_id": "0x14",
+        "record_relative_offset": "0x28",
+        "payload_record0_offset": "0x60",
+        "storage": "int16"
+      },
+      {
+        "ui": "iChin",
+        "field_id": "0x15",
+        "record_relative_offset": "0x2A",
+        "payload_record0_offset": "0x62",
+        "storage": "int16"
+      },
+      {
+        "ui": "iHeart",
+        "field_id": "0x16",
+        "record_relative_offset": "0x2C",
+        "payload_record0_offset": "0x64",
+        "storage": "int16"
+      },
+      {
+        "ui": "iCuts",
+        "field_id": "0x17",
+        "record_relative_offset": "0x2E",
+        "payload_record0_offset": "0x66",
+        "storage": "int16"
+      },
+      {
+        "ui": "iBody",
+        "field_id": "0x18",
+        "record_relative_offset": "0x30",
+        "payload_record0_offset": "0x68",
+        "storage": "int16"
+      },
+      {
+        "ui": "iOverall",
+        "storage": "computed",
+        "behavior": "computed by func_001D50F4; no direct raw field asserted"
+      }
+    ],
+    "per_record_offset_formula": "payload_offset = 0x38 + record_index*0xF2 + field_id*2"
+  },
+  "roster_count_correction": {
+    "finding": "121 is the XDB field count, not a boxer-record count. xdbboxr.adf contains 37 rows/records in the tracked retail resource.",
+    "select_boxer_context": "The stock SelectBoxer range table exposes 35 IDs (0-34) across six divisions. The relationship of the two additional XDB rows to created/template/other boxer records is not yet proven.",
+    "hard_maximum": "No hard roster maximum is claimed. The generic accessor reads record_count dynamically from header word1."
+  },
+  "unresolved": [
+    "Semantic identities for the other xdbboxr field IDs outside the recovered rating block.",
+    "Exact meaning of the two xdbboxr records not included in the initial stock SelectBoxer ID ranges.",
+    "Whether any save/UI/other executable subsystem imposes a hard maximum independent of the dynamic XDB record_count.",
+    "Exact original iOverall formula details beyond its recovered helper boundary."
   ]
 }
