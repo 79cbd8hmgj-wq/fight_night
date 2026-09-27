@@ -300,5 +300,38 @@
         ]
       }
     }
+  },
+  "aems_to_speech_bridge": {
+    "confidence": "CONFIRMED for callback registration/request layout/byte-range playback arithmetic",
+    "registration": {
+      "speech_callback": "0x00137888",
+      "registration_function": "0x00498260",
+      "producer": "0x0049A5C0"
+    },
+    "request_layout": {
+      "+0x00": "speech event ID",
+      "+0x04": "relative byte offset within the event's canonical speech-data entry",
+      "+0x08": "byte length/span",
+      "+0x0C": "16-bit subtype/flag",
+      "+0x0E": "associated signed 16-bit source field",
+      "+0x10": "bank category: 0=com, 1=anc, 2=trn",
+      "+0x14": "AEMS-derived 16-bit field; semantics unresolved",
+      "+0x18": "AEMS-derived byte field; semantics unresolved",
+      "+0x1C": "first-request boolean flag"
+    },
+    "byte_range_decoder": {
+      "function": "0x0049B480",
+      "behavior": "decodes a per-entry byte start and byte length from scaled position entries; the producer can add an additional source-relative byte displacement to the start"
+    },
+    "final_playback_addressing": {
+      "formula": "final bank byte offset = event-record base .dat offset + request relative byte offset",
+      "path": "selected comdat.big / ancdat.big / trndat.big pathname",
+      "playback_chain": "0x0013CCA4 -> 0x00483AAC -> 0x004837A4 -> 0x004C242C/0x004C254C"
+    },
+    "allocation_callbacks": {
+      "0x001375D0": "AEMS allocation adapter (confirmed behavior)",
+      "0x001375F4": "AEMS free adapter (confirmed behavior)"
+    },
+    "implication": "The speech ABI is now bounded across both sides of the callback: generic AEMS events produce explicit bank/event/range requests, and AuSpeechManager maps those requests to byte ranges in the three speech data banks. What remains is semantic mapping from gameplay/named-event payloads to the AEMS event IDs and bank records."
   }
 }
