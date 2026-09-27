@@ -290,8 +290,8 @@
       ],
       "division_arrays": [
         {
-          "index": 0,
-          "name": "aFeatherWeightID",
+          "weight_class_enum": 0,
+          "name": "aHeavyWeightID",
           "start_global": "0x0056090C",
           "end_global": "0x00560910",
           "count_global": "0x00560914",
@@ -302,8 +302,8 @@
           "initial_count": 7
         },
         {
-          "index": 1,
-          "name": "aLightWeightID",
+          "weight_class_enum": 1,
+          "name": "aLightHeavyWeightID",
           "start_global": "0x00560918",
           "end_global": "0x0056091C",
           "count_global": "0x00560920",
@@ -314,8 +314,8 @@
           "initial_count": 4
         },
         {
-          "index": 2,
-          "name": "aWelterWeightID",
+          "weight_class_enum": 2,
+          "name": "aMiddleWeightID",
           "start_global": "0x00560924",
           "end_global": "0x00560928",
           "count_global": "0x0056092C",
@@ -326,8 +326,8 @@
           "initial_count": 7
         },
         {
-          "index": 3,
-          "name": "aMiddleWeightID",
+          "weight_class_enum": 3,
+          "name": "aWelterWeightID",
           "start_global": "0x00560930",
           "end_global": "0x00560934",
           "count_global": "0x00560938",
@@ -338,8 +338,8 @@
           "initial_count": 7
         },
         {
-          "index": 4,
-          "name": "aLightHeavyWeightID",
+          "weight_class_enum": 4,
+          "name": "aLightWeightID",
           "start_global": "0x0056093C",
           "end_global": "0x00560940",
           "count_global": "0x00560944",
@@ -350,8 +350,8 @@
           "initial_count": 6
         },
         {
-          "index": 5,
-          "name": "aHeavyWeightID",
+          "weight_class_enum": 5,
+          "name": "aFeatherWeightID",
           "start_global": "0x00560948",
           "end_global": "0x0056094C",
           "count_global": "0x00560950",
@@ -374,7 +374,16 @@
         "strCustomBoxerName",
         "iCustomBoxerWeightClass"
       ],
-      "roster_cap_note": "The handler contains no 121-entry roster cap. It builds six lists from per-division start/end globals. This does not by itself prove that the database/save architecture can exceed 121 records."
+      "roster_cap_note": "The handler contains no 121-entry roster cap. It builds six lists from per-division start/end globals. This does not by itself prove that the database/save architecture can exceed 121 records.",
+      "weight_class_enum_order": [
+        "Heavyweight",
+        "Light Heavyweight",
+        "Middleweight",
+        "Welterweight",
+        "Lightweight",
+        "Featherweight"
+      ],
+      "random_selection_corroboration": "SetSelectBoxerInfo at 0x001D87E0 uses the same enum order and chooses random IDs as start + (rng % count), directly confirming the start/count table semantics."
     }
   }
 }
