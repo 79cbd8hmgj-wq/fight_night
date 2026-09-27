@@ -1918,10 +1918,27 @@
       {
         "registration_function": "0x004980C4",
         "callbacks": [
-          "0x001375D0",
-          "0x001375F4"
-        ],
-        "semantics": "unresolved"
+          {
+            "address": "0x001375D0",
+            "proposed_name": "AEMS_AllocAdapter",
+            "confidence": "CONFIRMED behavior",
+            "evidence": [
+              "0x004980C4 stores it as the callback invoked by 0x004980D8.",
+              "Generic AEMS callers pass a requested byte size to 0x004980D8, use the returned pointer as writable storage, and later release that same pointer through 0x00498104.",
+              "0x001375D0 forwards the requested size to 0x0033C950 and returns the resulting pointer."
+            ]
+          },
+          {
+            "address": "0x001375F4",
+            "proposed_name": "AEMS_FreeAdapter",
+            "confidence": "CONFIRMED behavior",
+            "evidence": [
+              "0x004980C4 stores it as the callback invoked by 0x00498104.",
+              "Generic AEMS call sites pass pointers previously obtained through the allocation callback.",
+              "0x001375F4 forwards the pointer to 0x00365984."
+            ]
+          }
+        ]
       },
       {
         "registration_function": "0x004981C4",
@@ -1929,14 +1946,14 @@
           "0x00137824",
           "0x00137874"
         ],
-        "semantics": "unresolved"
+        "semantics": "state/notification pair; exact meaning unresolved"
       },
       {
         "registration_function": "0x00498210",
         "callbacks": [
           "0x00137480"
         ],
-        "semantics": "unresolved"
+        "semantics": "complex event-state callback; exact public role unresolved"
       }
     ]
   }
