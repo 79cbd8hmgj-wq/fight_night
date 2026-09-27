@@ -3203,5 +3203,62 @@
       },
       "note": "Field semantics are observations from the state-specific methods and are not yet promoted to gameplay-facing names."
     }
+  },
+  "debug_elf_padding_map": {
+    "confidence": "CONFIRMED",
+    "load_segments": [
+      {
+        "index": 0,
+        "vaddr": "0x00000000",
+        "file_offset": "0x00000100",
+        "file_size": "0x0058A8A4",
+        "mem_size": "0x0058A8A4",
+        "flags": "R E"
+      },
+      {
+        "index": 1,
+        "vaddr": "0x0058A8A8",
+        "file_offset": "0x0058A9A8",
+        "file_size": "0x00007AF4",
+        "mem_size": "0x0003D0BC",
+        "flags": "RW"
+      }
+    ],
+    "file_backed_inter_section_gaps": [
+      {
+        "range": "0x004F748C-0x004F74BF",
+        "size": 52,
+        "between": ".rodata.sceNid -> .rodata",
+        "bytes": "all zero",
+        "mapped_segment": 0,
+        "note": "Largest file-backed alignment gap; segment 0 is executable. Large enough only for a very small trampoline/stub, not substantive overhaul code."
+      },
+      {
+        "range": "0x0052DD30-0x0052DD3F",
+        "size": 16,
+        "between": ".rodata -> .data",
+        "bytes": "all zero",
+        "mapped_segment": 0,
+        "note": "Tiny file-backed alignment gap."
+      },
+      {
+        "range": "0x0058A8A4-0x0058A8A7",
+        "size": 4,
+        "between": ".dtors / end of LOAD[0] -> .cplinit / start of LOAD[1]",
+        "bytes": "all zero",
+        "note": "Cross-segment alignment gap; not useful as a practical code/data cave."
+      }
+    ],
+    "zero_fill_gap_before_bss": {
+      "range": "0x0059239C-0x005923BF",
+      "size": 36,
+      "cause": ".linkonce.d ends at segment-1 file-backed end; .bss begins at 0x005923C0",
+      "backing": "not file-backed; zero-filled by segment memory extent",
+      "mapped_segment": 1,
+      "flags": "RW",
+      "note": "Potential tiny runtime scratch space only if deliberately addressed; not a file patch cave and not executable under the ELF segment flags."
+    },
+    "reference_check": "A direct aligned-address scan found no code/data references to addresses inside the two usable file-backed padding ranges. The only literal occurrence for 0x0058A8A4 is ELF program-header metadata, not a gameplay reference.",
+    "conclusion": "BOOT.BIN has no substantial inter-section free region. The largest directly patchable mapped padding is 52 bytes, followed by 16 bytes. Larger overhaul code/data will require repurposing proven-dead content, extending/rebuilding the module, or an explicit injected allocation/overlay strategy rather than relying on linker padding."
   }
 }
