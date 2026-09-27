@@ -48,10 +48,15 @@
       "status": "STATIC_PENDING",
       "static_avenues_remaining": [
         "The generic record boundary and storage ABI are resolved; map remaining semantic field IDs by tracing concrete readers through func_001ACD40.",
-        "Rating fields are already structurally mapped: fields 0x10-0x18 are inline signed-int16 values at record-relative +0x20..+0x30 (Power uses two components; Overall is computed).",
-        "Trace identity/name, division/weight, stance/handedness, appearance/equipment, hometown, career/store, and created-boxer accessors to their field IDs."
+        "Already resolved: identity fields 0x00-0x03, stock SelectBoxer availability field 0x04, weight/division field 0x09 plus func_0018600C, and rating fields 0x10-0x18 (Power uses two components; Overall is computed).",
+        "Trace stance/handedness, appearance/equipment, hometown, career/store, rivals/training, and created-boxer accessors to their field IDs."
       ],
-      "why_not_yet_statically_resolved": "The physical record layout and rating block are resolved, but semantic names for most of the remaining 121 field IDs are not."
+      "why_not_yet_statically_resolved": "The physical record layout and several high-value semantic fields are resolved, but semantic names for most of the remaining 121 field IDs are not."
+    },
+    {
+      "question": "Is xdbboxr.adf field 0x04's stock SelectBoxer policy resolved?",
+      "status": "STATICALLY_RESOLVED",
+      "reason": "func_00185D84 reads field 0x04 and returns value>0. T_00278ABC applies that predicate across exactly 35 ordered stock boxer IDs from D_005646F0 and writes the parallel D_0056477C availability flags. func_00278768 counts the enabled flags, and func_002787A0 builds the output boxer-ID list by skipping disabled entries. This proves field 0x04 gates inclusion in the active stock SelectBoxer roster; separate bonus/hidden unlock policy is not inferred."
     },
     {
       "question": "What does func_00186464's 8-bit-masked index parameter actually select when walking the +0x10 linked list -- a boxer record, a table-instance registration, or something else?",
