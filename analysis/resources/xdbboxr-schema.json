@@ -3,9 +3,9 @@
   "model_version": 3,
   "revision": "ULUS10066-v1.00",
   "resource": "preload/db.viv!xdbboxr.adf",
-  "status": "generic_record_layout_resolved_rating_fields_partial",
-  "confidence": "PROBABLE (retail resource/header evidence plus matching-address ULES00270 executable accessor trace)",
-  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The generic XDB accessor ABI is now mapped. The per-record descriptor matrix begins at payload +0x38 with a 0xF2-byte row stride. SelectBoxer's real UpdateSelectBoxerInfo path identifies the rating field IDs and proves fields 0x10-0x18 are inline signed int16 descriptors. Many non-rating semantic field IDs remain unresolved.",
+  "status": "record_layout_and_rating_fields_mapped",
+  "confidence": "PROBABLE",
+  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. UpdateSelectBoxerInfo plus the generic XDB accessors map the core rating fields to exact inline signed-int16 tokens. Many non-rating field identities remain unresolved.",
   "container": {
     "compressed_size": 3117,
     "decoded_size": 9704,
@@ -14,38 +14,42 @@
     "refpack_decode": "clean: exact declared-size match, zero RefPack trailing bytes"
   },
   "header": {
-    "size": 32,
+    "size": 24,
     "field_count": {
       "word": "word0",
       "value": 121,
-      "confidence": "PROBABLE",
-      "evidence": "func_001ACCAC bounds field_id against header[0]; func_001AD268 scans exactly header[0] field-type codes."
+      "confidence": "CONFIRMED",
+      "evidence": "func_001ACCAC bounds field_id against header[0]; func_001AD268 scans exactly header[0] 2-bit field-type codes."
     },
     "record_count": {
       "word": "word1",
       "value": 37,
-      "confidence": "PROBABLE",
-      "evidence": "func_001AD180 bounds record_index against header[1] and computes record_descriptor = matrix_base + record_index*(field_count*2)."
+      "confidence": "CONFIRMED",
+      "evidence": "func_001AD21C returns header[1]; func_001AD180 bounds record_index against header[1] and computes row = matrix_base + record_index*(field_count*2)."
     },
     "float_pool_base": {
       "word": "word2",
       "value": 9012,
-      "hex": "0x2334"
+      "hex": "0x2334",
+      "confidence": "CONFIRMED"
     },
     "int32_pool_base": {
       "word": "word3",
       "value": 9012,
-      "hex": "0x2334"
+      "hex": "0x2334",
+      "confidence": "CONFIRMED"
     },
     "string_pool_base": {
       "word": "word4",
       "value": 9012,
-      "hex": "0x2334"
+      "hex": "0x2334",
+      "confidence": "CONFIRMED"
     },
-    "word5": 0,
-    "raw_word6": 21,
-    "raw_word7": 0,
-    "trailing_string_pool_bytes": 692
+    "reserved_word5": {
+      "value": 0,
+      "confidence": "PROBABLE"
+    },
+    "note": "Bytes at +0x18 and +0x1C are not header words: +0x18 starts the packed field-type bitmap and +0x38 begins the aligned row matrix in xdbboxr."
   },
   "field_type_table": {
     "offset": "0x18",
@@ -53,11 +57,12 @@
     "aligned_end": "0x38",
     "layout": "2 bits per field, four fields per byte; field shift = 6 - ((field_id & 3)*2)",
     "native_types": {
-      "0": "inline signed int16 stored directly in the record descriptor",
-      "1": "string: payload + string_pool_base + signed16 descriptor",
-      "2": "int32: payload + int32_pool_base + signed16(descriptor)*4",
-      "3": "float32: payload + float_pool_base + signed16(descriptor)*4"
+      "0": "inline signed int16 stored directly in the row token",
+      "1": "byte/string pool at payload + string_pool_base + signed16 token",
+      "2": "int32 pool at payload + int32_pool_base + signed16(token)*4",
+      "3": "float32 pool at payload + float_pool_base + signed16(token)*4"
     },
+    "confidence": "CONFIRMED",
     "evidence": [
       "func_001ACCAC",
       "func_001ACD40",
@@ -66,7 +71,7 @@
   },
   "record_descriptor_matrix": {
     "offset": "0x38",
-    "offset_formula": "word2 - align4(field_count * record_count * 2)",
+    "offset_formula": "align4(0x18 + ceil(field_count/4))",
     "stride": 242,
     "stride_hex": "0xF2",
     "records": 37,
@@ -74,7 +79,8 @@
     "descriptor_width": 2,
     "order": "row-major: offset = 0x38 + record_index*0xF2 + field_id*2",
     "end": "0x2334",
-    "evidence": "func_001AD180 computes the matrix start from word2 and the aligned field_count*record_count*2 size, then advances record_index by field_count*2."
+    "confidence": "CONFIRMED",
+    "evidence": "func_001AD180 computes the matrix base as word2 - align4(field_count*record_count*2), then advances by field_count*2 per record. For xdbboxr the result is 0x38 and the padded matrix ends exactly at word2=0x2334."
   },
   "select_boxer_ratings": {
     "source_handler": "0x001D53F0 (UpdateSelectBoxerInfo)",
@@ -83,7 +89,7 @@
       "func_0018553C",
       "func_001ACD40"
     ],
-    "field_storage": "Fields 0x10-0x18 are type 0 because the packed type codes for field IDs 16-31 are all zero (raw word7=0); therefore these ratings are direct signed int16 values in each record descriptor row.",
+    "field_storage": "Fields 0x10-0x18 resolve as type 0 inline signed int16 tokens through func_001ACD40. Power averages two component fields; iOverall is computed separately.",
     "fields": [
       {
         "ui": "iPower",
@@ -99,6 +105,7 @@
           "0x58",
           "0x5A"
         ],
+        "storage": "int16 + int16",
         "behavior": "average of the two signed-int16 power components"
       },
       {
@@ -153,20 +160,21 @@
       {
         "ui": "iOverall",
         "storage": "computed",
-        "behavior": "computed by func_001D50F4; no direct raw field asserted"
+        "behavior": "computed by func_001D50F4; no direct raw XDB field asserted"
       }
     ],
     "per_record_offset_formula": "payload_offset = 0x38 + record_index*0xF2 + field_id*2"
   },
   "roster_count_correction": {
-    "finding": "121 is the XDB field count, not a boxer-record count. xdbboxr.adf contains 37 rows/records in the tracked retail resource.",
-    "select_boxer_context": "The stock SelectBoxer range table exposes 35 IDs (0-34) across six divisions. The relationship of the two additional XDB rows to created/template/other boxer records is not yet proven.",
-    "hard_maximum": "No hard roster maximum is claimed. The generic accessor reads record_count dynamically from header word1."
+    "finding": "121 is the XDB field/column count, not the boxer-record count. xdbboxr.adf contains 37 base rows/records in the tracked retail resource.",
+    "select_boxer_context": "The stock SelectBoxer range table exposes IDs 0-34 across six divisions. The relationship of base rows 35 and 36 to custom/template/other boxer state is not yet proven.",
+    "global_indexing": "func_00186284 resolves a numeric boxer ID through the registered table-instance chain and subtracts each table's dynamic record_count until the owning table is found.",
+    "hard_maximum": "No hard roster maximum is established. The generic accessor reads record_count dynamically from header word1, and the global resolver can span multiple table instances."
   },
   "unresolved": [
-    "Semantic identities for the other xdbboxr field IDs outside the recovered rating block.",
-    "Exact meaning of the two xdbboxr records not included in the initial stock SelectBoxer ID ranges.",
-    "Whether any save/UI/other executable subsystem imposes a hard maximum independent of the dynamic XDB record_count.",
-    "Exact original iOverall formula details beyond its recovered helper boundary."
+    "Semantic identities and storage types for non-rating field IDs outside the recovered rating block.",
+    "Exact meaning of xdbboxr base rows 35 and 36, which are outside the initial stock SelectBoxer ranges 0-34.",
+    "Any independent save/UI limit on total boxer IDs across all registered table instances.",
+    "Exact original iOverall formula internals beyond the recovered helper boundary."
   ]
 }
