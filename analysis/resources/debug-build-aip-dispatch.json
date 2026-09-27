@@ -2344,5 +2344,203 @@
         "note": "The literal Gsmall/Gmed/Glarge filenames are proven. Do not expand the 'G' prefix to a semantic word without further evidence."
       }
     }
+  },
+  "actor_aems_bridge": {
+    "confidence": "CONFIRMED for event-object fields, AuAemsManager call boundary, and negative-result diagnostic; owning actor/entity class remains unresolved",
+    "callback_function": "0x00329614",
+    "owning_region_tag": "actor",
+    "input_event_object": {
+      "+0x00": "signed 16-bit AEMS event code",
+      "+0x08": "32-bit event parameter",
+      "+0x0C": "32-bit event parameter",
+      "+0x10": "32-bit event parameter",
+      "+0x18": "float X/world-position component",
+      "+0x1C": "float Y/world-position component",
+      "+0x20": "float Z/world-position component"
+    },
+    "bridge_chain": [
+      "0x00329614 extracts the event code, three event parameters, and world-position vector from the actor/entity event object.",
+      "It obtains/creates the higher-level game audio object through 0x00107988.",
+      "It forwards the event through 0x00108158.",
+      "0x00108158 obtains the AuAemsManager singleton through 0x00126D3C and calls 0x00129844.",
+      "If the bridge result is negative, 0x00329614 emits the literal diagnostic 'Unsupported AEMS Event' through the owning object's virtual logger."
+    ],
+    "semantic_boundary": "This proves an actor/entity -> AuAemsManager positional-event bridge. The exact actor-side class name is not assigned without stronger source/RTTI evidence."
+  },
+  "aems_event_dispatch": {
+    "confidence": "CONFIRMED for descriptor/code derivation, dispatcher role, and direct switch coverage; individual handler semantics follow retained event names",
+    "dispatcher": "0x00129844",
+    "proposed_name": "AuAemsManager_DispatchEvent",
+    "call_signature_shape": "(manager, signed int16 event_code, position/vector pointer, scalar/default 1000, param8, paramC, param10)",
+    "behavior": [
+      "Sign-extends the 16-bit AEMS event code and dispatches through a large comparison tree.",
+      "Uses manager+0x24 and a global disable/state byte as early gates.",
+      "Accepts positional/default-vector handling through 0x00127328 when the supplied vector matches the static default vector.",
+      "Returns 0 on the normal completed path and 1 on the observed early-disabled/uninitialized path in this build.",
+      "No negative return assignment was found inside 0x00129844, making the actor-side 'Unsupported AEMS Event' negative-result check a defensive boundary rather than evidence of a normal unsupported-case return in this build."
+    ],
+    "descriptor_encoding": {
+      "layout": "{ +0x00 name pointer, +0x04 32-bit hash }",
+      "hash_low16": "0x48DF for all 193 recovered descriptors",
+      "event_code": "upper 16 bits of the descriptor hash",
+      "example": {
+        "name": "C_KnockOut_cheer",
+        "hash": "0x1CCE48DF",
+        "event_code": "0x1CCE",
+        "dispatcher_case": "0x0012AECC"
+      }
+    },
+    "registry_stats": {
+      "descriptor_count": 193,
+      "unique_event_code_count": 193,
+      "hash_code_collisions": 0,
+      "directly_handled_by_0x00129844": 131,
+      "not_directly_handled_by_0x00129844": 62
+    },
+    "category_summary": {
+      "NIS": {
+        "descriptors": 4,
+        "directly_handled": 4
+      },
+      "character": {
+        "descriptors": 17,
+        "directly_handled": 16
+      },
+      "control/state": {
+        "descriptors": 23,
+        "directly_handled": 0
+      },
+      "crowd": {
+        "descriptors": 23,
+        "directly_handled": 11
+      },
+      "entrance": {
+        "descriptors": 8,
+        "directly_handled": 7
+      },
+      "environment": {
+        "descriptors": 33,
+        "directly_handled": 28
+      },
+      "exertion": {
+        "descriptors": 10,
+        "directly_handled": 7
+      },
+      "mat/footwork": {
+        "descriptors": 12,
+        "directly_handled": 11
+      },
+      "menu": {
+        "descriptors": 3,
+        "directly_handled": 1
+      },
+      "other": {
+        "descriptors": 4,
+        "directly_handled": 3
+      },
+      "punch": {
+        "descriptors": 18,
+        "directly_handled": 17
+      },
+      "replay menu": {
+        "descriptors": 7,
+        "directly_handled": 4
+      },
+      "ring": {
+        "descriptors": 6,
+        "directly_handled": 6
+      },
+      "scene": {
+        "descriptors": 4,
+        "directly_handled": 3
+      },
+      "training": {
+        "descriptors": 21,
+        "directly_handled": 13
+      }
+    },
+    "representative_resolved_cases": [
+      {
+        "code": "0x1CCE",
+        "name": "C_KnockOut_cheer",
+        "handler": "0x0012AECC"
+      },
+      {
+        "code": "0x2CB0",
+        "name": "C_FightDecision",
+        "handler": "0x0012BA9C"
+      },
+      {
+        "code": "0x465F",
+        "name": "C_Chant",
+        "handler": "0x0012B25C"
+      },
+      {
+        "code": "0x5D54",
+        "name": "C_BooEvent",
+        "handler": "0x0012ADD8"
+      },
+      {
+        "code": "0x1310",
+        "name": "PnchSfx_StraightHead",
+        "handler": "0x0012E334"
+      },
+      {
+        "code": "0x0943",
+        "name": "PnchSfx_HookBody",
+        "handler": "0x0012E7C0"
+      },
+      {
+        "code": "0x7254",
+        "name": "PnchSfx_KO",
+        "handler": "0x0012F1B0"
+      },
+      {
+        "code": "0x10E0",
+        "name": "ExrtSfx_PunchThrown",
+        "handler": "0x0012F71C"
+      },
+      {
+        "code": "0x3F97",
+        "name": "ExrtSfx_PunchRecieve",
+        "handler": "0x0012F790"
+      },
+      {
+        "code": "0x0D48",
+        "name": "ChrctrSfx_BreathHeavy",
+        "handler": "0x00130EF0"
+      },
+      {
+        "code": "0x3C1C",
+        "name": "Sce_Replay",
+        "handler": "0x0012A748"
+      },
+      {
+        "code": "0x1374",
+        "name": "Sce_ReplayMoment",
+        "handler": "0x0012A538"
+      },
+      {
+        "code": "0x1A88",
+        "name": "NIS_Intro",
+        "handler": "0x0012A7F8"
+      },
+      {
+        "code": "0x7838",
+        "name": "NIS_Corner",
+        "handler": "0x0012B68C"
+      },
+      {
+        "code": "0x02BD",
+        "name": "Intro_Music_PSP",
+        "handler": "0x00131214"
+      },
+      {
+        "code": "0x045D",
+        "name": "MenuSfx_TCCBeep",
+        "handler": "0x0012FCA4"
+      }
+    ],
+    "registry_artifact": "analysis/resources/aems-event-code-registry.json"
   }
 }
