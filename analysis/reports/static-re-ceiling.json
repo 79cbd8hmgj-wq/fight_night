@@ -1317,7 +1317,7 @@
       "question": "Are the boxer-selection/roster-browser UI screens identified?",
       "status": "STATICALLY_RESOLVED",
       "confidence": "PROBABLE",
-      "evidence": "RESOLVED this delta pass: selectboxer.big is the boxer-selection screen itself, confirmed by its own screen-title localization key 'TL_Select_Boxer' and its full UI script (selectBoxer.apt/.const/.o/.msh, BIGF archive, 4 members). Its native data accessor is 'GetSelectBoxerInfo' (BOOT.BIN @0x50ae30), alongside companion accessors 'UpdateSelectBoxerInfo' (@0x50ae44), 'LoadSelectBoxer' (@0x50ae5c), and 'SetSelectBoxerInfo' (@0x50ae8c) -- all four owned by the same registration-trampoline pair func_001D537C/func_001D5438. The screen exposes a Red/Blue two-corner selection model (SelectBoxerRedID/SelectBoxerBlueID, iCornerID) with per-corner weight-class filtering across the 6 proven divisions, a Random-boxer option (bIsRandomBoxer/randBoxer), and Custom/created-boxer support (iCustomBoxerID/strCustomBoxerName/iCustomBoxerWeightClass, also found directly in BOOT.BIN at 0x50b0a4/0x50b0c8, owned by the large T_001D7878 function). This directly answers the original question (yes, identified: selectboxer.big) and additionally establishes a fully-named schema for what the screen consumes/produces, useful for program-04's roster/created-boxer questions above. func_001AF768's own screen identity (whether it is this screen or a different one) is still not determined -- see the remaining program-04 entry on that function.",
+      "evidence": "selectboxer.big is the boxer-selection screen (TL_Select_Boxer; selectBoxer.apt/.const/.o/.msh). Follow-up PR #37 maps its AIP natives through the now-resolved dispatch layer to concrete handlers: GetSelectBoxerInfo -> 0x001D77C8, UpdateSelectBoxerInfo -> 0x001D53F0, LoadSelectBoxer -> 0x001D56AC, SetSelectBoxerInfo -> 0x001D87E0, GetCornerInfo -> 0x001D8CE8, SetCornerSide -> 0x001D5974, and UpdateRandomBoxerInfo -> 0x001D57FC. The screen exposes Red/Blue corner selection, six executable-bounded weight classes, random boxer support, and custom/created-boxer fields. GetSelectBoxerInfo builds the six stock boxer-ID ranges; UpdateSelectBoxerInfo resolves real rating data; SetSelectBoxerInfo uses the same weight-class range table for random selection. Earlier notes treating these as registration-only leads are superseded. func_001AF768 is independently resolved as the fight-session constructor, not a SelectBoxer UI constructor.",
       "affected_features": [
         "roster",
         "career-2",
@@ -1334,9 +1334,17 @@
           "iCustomBoxerWeightClass@0x50b0c8"
         ],
         "functions": [
-          "func_001D537C",
-          "func_001D5438",
-          "T_001D7878"
+          "0x001D77C8",
+          "0x001D53F0",
+          "0x001D56AC",
+          "0x001D87E0",
+          "0x001D8CE8",
+          "0x001D5974",
+          "0x001D57FC"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json",
+          "analysis/resources/xdbboxr-schema.json"
         ]
       },
       "remaining_static_work": null,
