@@ -1022,7 +1022,7 @@
       "subsystem": "Weights",
       "question": "Is the division count (6) a fixed compile-time constant with identifiable consumers that would need updating for new divisions (e.g. Bantamweight, Cruiserweight)?",
       "status": "STATICALLY_RESOLVED",
-      "evidence": "The real GetSelectBoxerInfo handler at 0x001D77C8 contains explicit six-way weight-class control flow: literal unsigned bounds of 6 at 0x001D7D58 and 0x001D8170, plus global 0x005608D0 initialized to 6. It populates exactly six named per-division boxer-ID arrays. The initial range table is Featherweight IDs 0-6, Lightweight 7-10, Welterweight 11-17, Middleweight 18-24, Light Heavyweight 25-30, and Heavyweight 31-34. Six is therefore an executable-level bound in this SelectBoxer path.",
+      "evidence": "The real GetSelectBoxerInfo handler at 0x001D77C8 contains explicit six-way weight-class control flow: literal unsigned bounds of 6 at 0x001D7D58 and 0x001D8170, plus global 0x005608D0 initialized to 6. It populates exactly six named per-division boxer-ID arrays. Tracing which array receives each range gives the executable enum/order: 0 Heavyweight IDs 0-6 (7), 1 Light Heavyweight 7-10 (4), 2 Middleweight 11-17 (7), 3 Welterweight 18-24 (7), 4 Lightweight 25-30 (6), 5 Featherweight 31-34 (4). SetSelectBoxerInfo at 0x001D87E0 independently uses the same six-way enum and selects random IDs as start + (rng % count), corroborating the range/count semantics. Six is therefore an executable-level bound in the SelectBoxer path.",
       "affected_features": [
         "divisions"
       ],
@@ -1031,7 +1031,8 @@
           "selectboxer.big!selectBoxer.const"
         ],
         "functions": [
-          "0x001D77C8"
+          "0x001D77C8 (GetSelectBoxerInfo)",
+          "0x001D87E0 (SetSelectBoxerInfo)"
         ],
         "globals": [
           "0x005608D0",
