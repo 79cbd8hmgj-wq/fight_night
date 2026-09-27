@@ -431,5 +431,233 @@
     ],
     "availability": "func_001B0FE8 accepts field4>0 directly; when field4==0 it special-cases selector 35 through a session/object unlock bitset at +0x1C4. T_001B2648 sets bits in that same bitset.",
     "custom_created_boxer_note": "The SelectBoxer custom-created-boxer output path is separate and emits iCustomBoxerID/strCustomBoxerName/iCustomBoxerWeightClass from session/custom state, so rows 35/36 are not created-boxer placeholders."
+  },
+  "debug_elf_symbol_harvest": {
+    "confidence": "CONFIRMED unless individually marked PROBABLE",
+    "binary": {
+      "id": "ULES00270 review/debug BOOT.BIN",
+      "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+      "size": 7270752,
+      "elf_class": "ELF32 little-endian MIPS/Allegrex",
+      "elf_type": "processor-specific 0xFFA0 PSP relocatable executable form",
+      "entry": "0x0034DF24",
+      "section_count": 62,
+      "module_name": "FightNight",
+      "note": "Binary is not tracked; this block contains derived metadata only."
+    },
+    "relocation_inventory": {
+      "entry_size": 8,
+      "total_records": 178126,
+      "sections": {
+        ".rel.text": 152464,
+        ".rel.lib.ent": 1,
+        ".rel.lib.stub": 84,
+        ".rel.rodata.sceModuleInfo": 4,
+        ".rel.rodata.sceResident": 5,
+        ".rel.rodata": 8232,
+        ".rel.data": 13791,
+        ".rel.eh_frame": 1,
+        ".rel.cplinit": 536,
+        ".rel.psp_lib_markimport_": 5,
+        ".rel.linkonce.d": 3003
+      },
+      "implication": "The debug ELF retains unusually rich relocation metadata even though conventional symbol/debug sections are absent; address/reference reconstruction should exploit these relocations."
+    },
+    "conventional_debug_sections": {
+      "symtab": false,
+      "strtab": false,
+      "dwarf_debug_sections": false,
+      "note": "No conventional .symtab/.strtab or .debug_* sections were observed. Source/assert strings and relocations are therefore the primary symbol-recovery evidence."
+    },
+    "psp_import_libraries": [
+      "Kernel_Library",
+      "InterruptManager",
+      "sceNetResolver",
+      "sceNetApctl",
+      "sceNetInet",
+      "scePower",
+      "sceNetAdhocctl",
+      "sceNetAdhoc",
+      "sceMpeg",
+      "sceAtrac3plus",
+      "sceAudio",
+      "sceSasCore",
+      "sceGe_user",
+      "sceCtrl",
+      "sceSuspendForUser",
+      "UtilsForUser",
+      "ThreadManForUser",
+      "SysMemUserForUser",
+      "StdioForUser",
+      "ModuleMgrForUser",
+      "LoadExecForUser",
+      "IoFileMgrForUser",
+      "sceNet",
+      "sceWlanDrv",
+      "sceUtility",
+      "sceRtc",
+      "sceUmdUser",
+      "sceDisplay"
+    ],
+    "source_paths": [
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\AIP\\\\aip.cpp",
+        "file_offset": "0x004FAE34",
+        "vaddr": "0x004FAD34",
+        "xrefs": [
+          {
+            "instruction": "0x000CE8D4",
+            "function": "T_000CE8A0",
+            "source_line": 1492,
+            "assert_expression": "s_pfnGetLocalizedString",
+            "confidence": "CONFIRMED",
+            "implication": "Directly source-attributes T_000CE8A0 to boxing/AIP/aip.cpp; its null-callback assertion is the existing localization indirection lead."
+          }
+        ]
+      },
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\fe\\\\feplayer.cpp",
+        "file_offset": "0x0050A0F4",
+        "vaddr": "0x00509FF4",
+        "xrefs": [
+          {
+            "instruction": "0x001C66F0",
+            "function": "func_001C6658",
+            "source_line": 3270,
+            "assert_expression": "texture_file",
+            "confidence": "PROBABLE function boundary; CONFIRMED source/assert xref",
+            "implication": "Source-attributes the containing FE-player routine and ties it to a texture_file allocation/load failure path."
+          }
+        ]
+      },
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\fe_psp\\\\aptextobj\\\\source\\\\Animation\\\\AnimationUtils.h",
+        "file_offset": "0x0050FE08",
+        "vaddr": "0x0050FD08",
+        "xrefs": [
+          {
+            "instruction": "0x002228CC",
+            "function": "func_0022284C",
+            "source_line": 74,
+            "assert_expression": "myPointer"
+          },
+          {
+            "instruction": "0x00222A18",
+            "function": "func_00222998",
+            "source_line": 74,
+            "assert_expression": "myPointer"
+          },
+          {
+            "instruction": "0x00222B6C",
+            "function": "func_00222AE4",
+            "source_line": 74,
+            "assert_expression": "myPointer"
+          },
+          {
+            "instruction": "0x00222CD4",
+            "function": "func_00222C4C",
+            "source_line": 74,
+            "assert_expression": "myPointer"
+          }
+        ],
+        "confidence": "PROBABLE function boundaries; CONFIRMED source/assert xrefs",
+        "implication": "Four PSP front-end animation helper routines instantiate the same AnimationUtils.h line-74 myPointer assertion."
+      },
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\hud\\\\fui\\\\fuitccgame.cpp",
+        "file_offset": "0x00510354",
+        "vaddr": "0x00510254",
+        "xrefs": [
+          {
+            "instruction": "0x00241378",
+            "function": "func_002412BC",
+            "source_line": 554,
+            "assert_expression": "damageText"
+          },
+          {
+            "instruction": "0x0024158C",
+            "function": "func_002414B8",
+            "source_line": 623,
+            "assert_expression": "layout"
+          }
+        ],
+        "confidence": "PROBABLE function boundaries; CONFIRMED source/assert xrefs",
+        "implication": "Source-attributes two HUD/FUI routines and anchors their debug assertions to damageText and layout."
+      },
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\pocketdj\\\\PocketDJFightNight.cpp",
+        "file_offset": "0x0051B1BC",
+        "vaddr": "0x0051B0BC",
+        "xrefs": [
+          {
+            "instruction": "0x002958CC",
+            "function": "func_00295788",
+            "source_line": 3,
+            "assert_expression": "!\\\"pocketdj not inited!\\\""
+          },
+          {
+            "instruction": "0x00295E5C",
+            "function": "func_00295E24",
+            "source_line": 182,
+            "assert_expression": "player"
+          },
+          {
+            "instruction": "0x00295F24",
+            "function": "func_00295EF0",
+            "source_line": 225,
+            "assert_expression": "player"
+          }
+        ],
+        "confidence": "PROBABLE function boundaries; CONFIRMED source/assert xrefs",
+        "implication": "Directly source-attributes three audio/PocketDJ routines, materially strengthening these addresses as the audio-specific path for interface-audio work."
+      },
+      {
+        "path": "E:/MyWork/Perforce/depot/project/Apt/5.02.01-250/source/AptAuxEAGLREAL/AptAuxEAGLREAL.cpp",
+        "file_offset": "0x00525314",
+        "vaddr": "0x00525214",
+        "xref_count": 25,
+        "xref_range": "0x003DDD78-0x003E1D9C",
+        "confidence": "CONFIRMED source xrefs; individual nearest-prologue boundaries remain PROBABLE",
+        "notable_asserts": [
+          "nRetVal >= 0",
+          "pASFLUT && pASFLUT[0] == 'A' && pASFLUT[1] == 'S' && pASFLUT[2] == 'F' && pASFLUT[3] == 'T'",
+          "modelTARList.GetNumTARs() == 1",
+          "strlen(szFileName) < 250",
+          "i != pLevel->soundData.nSounds",
+          "i != nMaskModels",
+          "pShape != NULL",
+          "gnTarNumberForBatchDraw == -1",
+          "gnTarNumberForBatchDraw >= 0",
+          "pCurrentPool->nDeadStrings < DEADSTRINGPERFRAME",
+          "gnNumDelayedReleasePointers < pCurrentAptAuxParams->iMaxStringCount && \"Increase the size of AptAuxInit Param -> iMaxStringCount at initialization\"",
+          "i != MAX_NUM_ASYNC_LOADS"
+        ],
+        "implication": "Provides a strong middleware attribution band for APT/EAGLREAL code so it can be separated from Fight Night gameplay logic during symbol recovery."
+      },
+      {
+        "path": "E:/MyWork/Perforce/depot/project/Apt/5.02.01-250/source/AptAuxEAGLREAL/aptrealfont.cpp",
+        "file_offset": "0x00525B08",
+        "vaddr": "0x00525A08",
+        "xref_count": 9,
+        "xref_range": "0x003E2058-0x003E392C",
+        "confidence": "CONFIRMED source xrefs; individual nearest-prologue boundaries remain PROBABLE",
+        "notable_asserts": [
+          "false",
+          "gLevelInfo",
+          "allocStrings",
+          "gpDelayedReleasePointers",
+          "!\"not enough characters allocated for strings - set up AIP::Init with more characters!\\n\"",
+          "allocStrings == NULL",
+          "gpDelayedReleasePointers == NULL"
+        ],
+        "implication": "Identifies the adjacent APT real-font implementation region as middleware rather than title-specific Fight Night logic."
+      }
+    ],
+    "methodology": [
+      "File offsets and loaded virtual addresses were derived from the ELF section mapping; the relevant allocatable sections have a 0x100 file-offset bias.",
+      "Code xrefs were independently recovered from Allegrex LUI + ADDIU/ORI address constructions in .text.",
+      "Containing function starts marked PROBABLE were bounded by the nearest standard negative stack-frame prologue and checked against surrounding return/prologue structure.",
+      "Assert line numbers and expressions were recovered from the argument setup at each source-path xref."
+    ]
   }
 }
