@@ -654,5 +654,60 @@
     "The retail overhaul no longer needs to invent a stamina/damage architecture from UI names: the debug build exposes concrete energy drain/regeneration, max-energy degradation/recovery, health regeneration/max-health degradation, punch-damage, flash-KO and KO-moment functions.",
     "These are debug-build addresses. Before patching, each target must be matched to ULUS10066 by instruction/data-flow signature and its original bytes/ABI verified.",
     "0x0007EB7C is currently the strongest damage hook candidate; 0x00079E80 and 0x00079DF4 are the strongest stamina/energy hook candidates."
-  ]
+  ],
+  "physical_combat_state_object": {
+    "owner_field": "high-level boxer +0x294",
+    "size": "0x360",
+    "constructor": "0x00078378",
+    "reset_initializer": "0x00078440",
+    "member_function_table": "0x0057C764",
+    "owner_back_pointer": "+0x358",
+    "member_function_table_field": "+0x35C",
+    "confidence": "CONFIRMED structural ownership; semantic field names below use direct energy/health modifier behavior",
+    "construction_evidence": [
+      "0x000A01EC allocates 0x360 bytes, calls 0x00078378(new_object, high_level_boxer), and stores the result at high-level boxer+0x294.",
+      "0x00078378 stores the high-level boxer pointer at object+0x358 and table pointer 0x0057C764 at +0x35C.",
+      "0x00078378/0x00078440 initialize the energy/health fields later consumed by 0x00079E80, 0x00079DF4, 0x0007A000, 0x0007A198 and 0x0007C75C."
+    ],
+    "core_fields": {
+      "+0x08": "current energy (strongly CONFIRMED by drain/regen dataflow)",
+      "+0x0C": "maximum/current-cap energy ceiling (strongly CONFIRMED by max-E reduction and between-round max-E regen)",
+      "+0x00/+0x04": "one current/max health-region pair",
+      "+0x10/+0x14": "second current/max health-region pair",
+      "+0x18/+0x1C": "third current/max health-region pair",
+      "+0x20/+0x24/+0x28/+0x2C": "additional health/damage state values; exact labels still open",
+      "+0x304/+0x308": "active health-regeneration accumulator/rate-like values consumed by 0x0007C75C",
+      "+0x324": "countdown/gate that can restore current energy to the +0x0C ceiling",
+      "+0x358": "owning high-level boxer object",
+      "+0x35C": "member-function table pointer"
+    },
+    "active_update": {
+      "function": "0x0007C75C",
+      "proposed_name": "PhysicalCombatState_Update",
+      "confidence": "CONFIRMED per-active-path health/energy update; exact original name unknown",
+      "owner_calls": [
+        "0x0009E2C4: calls 0x0007C75C(high_level_boxer+0x294)",
+        "0x0009E3BC: calls 0x0007C75C(high_level_boxer+0x294)",
+        "0x000A8D48: calls 0x0007C75C(high_level_boxer+0x294)"
+      ],
+      "behavior": [
+        "Uses modifier slot 0 'dec E cost for movement' then calls 0x00079E80 to drain energy when movement-cost conditions are active.",
+        "Uses modifier slot 5 'inc current H regen rate' then calls 0x0007A000.",
+        "Uses modifier slot 4 'inc current E regen rate' then calls 0x00079DF4.",
+        "Maintains timers/gates and clamps the physical state through helper calls after regeneration/drain work."
+      ],
+      "implication": "0x0007C75C is a stronger single overhaul integration boundary for live stamina/health behavior than patching every movement/attack caller separately."
+    },
+    "between_round_recovery": {
+      "function": "0x0007854C",
+      "caller": "0x0009BB94",
+      "owner_call_site": "0x0009BC24 -> 0x0007854C(high_level_boxer+0x294)",
+      "confidence": "CONFIRMED recovery/reset path; round-boundary interpretation strongly supported by higher-level lifecycle caller",
+      "behavior": [
+        "Uses modifier slot 16 'inc between round max E regen rate' and raises the +0x0C max-energy ceiling.",
+        "Uses modifier slot 5 'inc current H regen rate' and calls 0x0007A000.",
+        "Runs inside 0x0009BB94, which is invoked once for each of the two fighters by 0x000802B8."
+      ]
+    }
+  }
 }
