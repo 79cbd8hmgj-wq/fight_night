@@ -2,11 +2,10 @@
 
 ## Status
 
-Follow-up PR #37 substantially advances the XDB model. The generic table ABI is now
-statically mapped far enough to distinguish fields from records, locate the row matrix,
-and resolve all four storage classes. `xdbboxr.adf`'s SelectBoxer rating block is mapped
-to exact field IDs and row-relative byte offsets. Many non-rating semantic fields remain
-open, so this package is not yet a complete boxer-schema decompilation.
+PR #37 substantially advances the XDB model. The generic table ABI is mapped far enough
+to distinguish fields from records, locate the row matrix, resolve all four storage
+classes, and identify concrete boxer identity/rating fields. Many non-rating semantic
+fields remain open, so this is not yet a complete boxer-schema decompilation.
 
 Locked retail source remains `BOOT.BIN` SHA-256
 `906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9`.
@@ -26,12 +25,12 @@ The old 8-word/32-byte-header interpretation is superseded. The executable prove
 +0x10  u32 string_pool_offset
 +0x14  u32 reserved/unknown
 +0x18  packed 2-bit field types (4 fields/byte, MSB-first)
-NaN
-NaN
-NaN
-NaN
-NaN
-NaN
+        align to 4 bytes
+        record matrix: record_count rows * field_count int16 tokens
+word2   float pool
+word3   int32 pool
+word4   byte/string pool
+```
 
 Executable proof:
 
@@ -66,6 +65,38 @@ This corrects the earlier interpretation that 121 was a boxer-record count. It i
 number of fields/columns. The base table has 37 rows and the generic accessor reads that
 count dynamically.
 
+## Boxer identity fields
+
+Direct decoding plus the native name-composition path now resolves the leading fields:
+
+| Field | Row-relative token | Storage | Meaning |
+| --- | ---: | --- | --- |
+| `0x00` | `+0x00` | signed int16 | explicit global boxer ID |
+| `0x01` | `+0x02` | string pool | last/surname or family display name |
+| `0x02` | `+0x04` | string pool | first/given name |
+| `0x03` | `+0x06` | string pool | short CRO/resource stem (probable) |
+
+`func_001851CC` reads field 2 and then field 1 while composing the display name,
+independently corroborating the first/given-name and surname mapping.
+
+The two physical rows outside the normal SelectBoxer ID ranges are real bonus records:
+
+| Physical row | Global boxer ID | Name | CRO stem |
+| ---: | ---: | --- | --- |
+| 35 | 74 | Fabolous | `fabo` |
+| 36 | 75 | Little Mac | `spun` |
+
+This also proves that global boxer ID is not required to equal physical XDB row index.
+The created/custom-boxer SelectBoxer path is separate and emits
+`iCustomBoxerID`, `strCustomBoxerName`, and `iCustomBoxerWeightClass` from
+session/custom state; rows 35-36 are not created-boxer placeholders.
+
+Field `0x04` is a strong standard-roster/selectability candidate: it is `1` for every
+normal stock record 0-34 and `0` for Fabolous/Little Mac. `func_00185D84` reads field 4
+and returns whether it is positive; a caller at `0x00278B0C` applies that predicate
+across 35 stock boxer IDs. The exact engine label (visible/selectable/unlocked/eligible)
+has not yet been promoted to confirmed.
+
 ## SelectBoxer rating fields
 
 `UpdateSelectBoxerInfo` at `0x001D53F0` reaches the table through
@@ -86,25 +117,24 @@ count dynamically.
 `iPower` is the average of the two power components. `iOverall` is computed through
 `func_001D50F4`; no direct raw Overall field is asserted.
 
-For record 0, the rating tokens therefore begin at payload offsets `0x58` through
-`0x68`. For record `n`, use `0x38 + n*0xF2 + field_id*2`.
+For record 0, the rating tokens begin at payload offsets `0x58` through `0x68`.
+For record `n`, use `0x38 + n*0xF2 + field_id*2`.
 
 ## Boxer ID / roster implications
 
-The stock SelectBoxer range table exposes IDs 0-34 across six executable-bounded weight
-classes. The base XDB contains 37 rows, leaving rows 35-36 semantically unresolved.
-`func_00186284` resolves a boxer ID through the registered table-instance chain and
-subtracts each table's dynamic record count until it reaches the owning table. Therefore
-`121` is not a roster cap and the global ID space is not inherently limited to one
-37-row table. A separate hard cap in save/UI/allocation code is still unproven.
+The normal stock SelectBoxer range table exposes IDs 0-34 across six executable-bounded
+weight classes. The same base XDB also contains bonus IDs 74 and 75. `func_00186284`
+resolves a numeric boxer ID through the registered table-instance chain, subtracting each
+table's dynamic record count until it reaches the owning table. Therefore `121` is not a
+roster cap and the global ID space is not inherently limited to one 37-row table.
+A separate hard cap in save/UI/allocation code is still unproven.
 
 ## Remaining work
 
-The next static targets are the non-rating field IDs: identity/name, weight/division,
-stance/handedness, appearance/equipment references, hometown, career/store state, and
-created-boxer metadata. The generic accessor ABI is now known, so each concrete reader can
-be traced directly to a field ID and storage class instead of inferring structure from raw
-bytes.
+The next static targets are the exact semantic label of field 4 and the other non-rating
+fields: weight/division, stance/handedness, appearance/equipment references, hometown,
+career/store state, and remaining created-boxer metadata. The generic accessor ABI is
+known, so each concrete reader can now be traced directly to a field ID and storage class.
 
 Machine-readable evidence:
 
