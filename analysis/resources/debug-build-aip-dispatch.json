@@ -1793,5 +1793,132 @@
       "confidence": "CONFIRMED that manager+0x10 is the value displayed as SUBTITLE ID; exact queue/current-position semantics remain unresolved",
       "note": "The update routine shifts a 10-word range at +0x10..+0x34 before consuming/displaying +0x10, so avoid prematurely naming the entire array as current-only state."
     }
+  },
+  "aems_speech_request_abi": {
+    "confidence": "CONFIRMED for callback registration, producer, field offsets and downstream use; several producer-side source-field semantics remain intentionally generic",
+    "callback_registration": {
+      "initializer": "0x0013AC78",
+      "registration_call": "0x0013ADD0-0x0013ADDC",
+      "registration_function": "0x00498260",
+      "callback": "0x00137888",
+      "manager_context": "manager+0x148",
+      "constant_argument": "0x00008CA0",
+      "implication": "AuSpeechManager does not invent the request structure locally; its wrapper is installed as a callback into the generic AEMS/event subsystem."
+    },
+    "callback_invocation": {
+      "producer_function": "0x0049A5C0",
+      "caller": "0x00499E64 (call at 0x00499EEC)",
+      "invocation_site": "0x0049A7F4-0x0049A800",
+      "callback_argument": "sp+0x10",
+      "request_size_minimum": "0x20",
+      "implication": "The generic AEMS decoder builds the request on its stack and calls 0x00137888 with a pointer to that request."
+    },
+    "request_layout": {
+      "+0x00": {
+        "construction": "source record +0x00 -> request +0x00",
+        "downstream_use": "0x0013CCA4 / 0x001379B0 use it as the speech-bank event ID",
+        "semantic": "event ID",
+        "confidence": "CONFIRMED"
+      },
+      "+0x04": {
+        "construction": "first numeric output from 0x0049B480, with optional adjustment from source halfword +0x06",
+        "downstream_use": "added to the bank record's base speech/sample index before playback",
+        "semantic": "variant/sub-index offset",
+        "confidence": "CONFIRMED downstream arithmetic; exact AEMS source-field name unresolved"
+      },
+      "+0x08": {
+        "construction": "second numeric output from 0x0049B480",
+        "downstream_use": "not consumed by the currently mapped AuSpeechManager router branches",
+        "semantic": "secondary AEMS-derived numeric field",
+        "confidence": "CONFIRMED construction; semantic role unresolved"
+      },
+      "+0x0C": {
+        "construction": "16-bit value copied from the source packet/object",
+        "downstream_use": "AuSpeechManager compares this subtype/flag against special constants on guarded paths",
+        "semantic": "16-bit subtype/flag",
+        "confidence": "CONFIRMED"
+      },
+      "+0x0E": {
+        "construction": "associated signed 16-bit value copied from source+0x02",
+        "downstream_use": "not yet assigned a stable semantic name",
+        "semantic": "associated signed 16-bit AEMS field",
+        "confidence": "CONFIRMED construction"
+      },
+      "+0x10": {
+        "construction": "value from the descriptor/matching context selected by 0x00497090",
+        "downstream_use": "0x0013CCA4 routes 0=com*, 1=anc*, 2=trn*",
+        "semantic": "speech bank category",
+        "confidence": "CONFIRMED"
+      },
+      "+0x14": {
+        "construction": "unsigned 16-bit value from source/descriptor +0x02",
+        "downstream_use": "not yet bounded",
+        "semantic": "AEMS-derived 16-bit field",
+        "confidence": "CONFIRMED construction"
+      },
+      "+0x18": {
+        "construction": "byte copied from source header +0x09",
+        "downstream_use": "not yet bounded",
+        "semantic": "AEMS-derived byte field",
+        "confidence": "CONFIRMED construction"
+      },
+      "+0x1C": {
+        "construction": "for the first emitted request: (source byte +0x0A >> 5) & 1; subsequent requests receive 0",
+        "downstream_use": "not yet bounded",
+        "semantic": "first-request boolean flag",
+        "confidence": "CONFIRMED construction"
+      }
+    },
+    "category_source": {
+      "selector": "0x00497090",
+      "input_matching": "matches source bytes +0x02/+0x03 against candidate descriptor bytes +0x09/+0x08",
+      "selected_entry": "returns a descriptor entry whose +0x04 value becomes request+0x10",
+      "implication": "The com/anc/trn category is encoded by the generic event descriptor mapping before the speech callback executes."
+    },
+    "variant_decoder": {
+      "function": "0x0049B480",
+      "confidence": "CONFIRMED as the producer of request+0x04/+0x08; exact semantic names unresolved",
+      "outputs": {
+        "first": "request+0x04, later used as the additive speech variant/sub-index",
+        "second": "request+0x08, currently unused by the mapped AuSpeechManager bank-selection paths"
+      },
+      "evidence": "The function derives both outputs from parsed event-object fields and per-entry bytes; naming the internal fields more specifically awaits further structure recovery."
+    },
+    "generic_aems_registration": {
+      "function": "0x00498260",
+      "confidence": "CONFIRMED initialization/registration role; exact original symbol name unknown",
+      "behavior": [
+        "stores the callback pointer supplied by AuSpeechManager",
+        "stores the manager/context argument and constant 0x8CA0",
+        "invokes generic setup helpers 0x0049AA94, 0x00499C74 and 0x0049A5B4",
+        "initializes additional tables/registries through 0x00497250, 0x00498130, 0x00496510 and 0x004972BC",
+        "sets an initialized/magic state used by the generic event subsystem"
+      ]
+    },
+    "neighboring_callback_registrations": [
+      {
+        "registration_function": "0x004980C4",
+        "callbacks": [
+          "0x001375D0",
+          "0x001375F4"
+        ],
+        "semantics": "unresolved"
+      },
+      {
+        "registration_function": "0x004981C4",
+        "callbacks": [
+          "0x00137824",
+          "0x00137874"
+        ],
+        "semantics": "unresolved"
+      },
+      {
+        "registration_function": "0x00498210",
+        "callbacks": [
+          "0x00137480"
+        ],
+        "semantics": "unresolved"
+      }
+    ]
   }
 }
