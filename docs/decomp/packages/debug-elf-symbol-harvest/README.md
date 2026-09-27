@@ -776,3 +776,106 @@ BOOT.BIN no longer contains an unidentified control-flow gap for commentary.
 The remaining work is data-oriented: enumerate the external comevt.evt,
 ancevt.evt and trnevt.evt subscription records and map their payload schemas
 to exact speech event IDs, variants, and byte ranges.
+
+
+## AEMS runtime scheduling pipeline
+
+The middle of the named-event -> speech path is now recovered rather than left
+as an opaque `0x004974CC` handoff.
+
+### Eight registered AEMS groups
+
+The registry at pre-relocation `0x0003CE38` relocates through PSP program
+segment 1 (`0x0058A8A8`) to runtime `0x005C76E0`.
+
+It contains **8 entries × 8 bytes**:
+
+- `+0x00`: parsed AEMS/EVT object pointer
+- `+0x04`: group/category index
+
+`0x0049AD50` installs an EVT object into this registry. Its
+`0x004983BC` helper proves the object carries the two selector bytes at
+`+0x08/+0x09` used by the packed mapping keys.
+
+For AuSpeechManager, the category argument passed to `0x0049AE38` is the same
+group index used here:
+
+- group 0 -> commentary `com*`
+- group 1 -> announcer `anc*`
+- group 2 -> training `trn*`
+
+Thus the speech-bank category is also the AEMS scheduling group, not an
+unrelated later classification.
+
+### 16-slot admission scheduler
+
+The scheduler state immediately follows at runtime `0x005C7720`
+(pre-relocation `0x0003CE78`):
+
+- 8 × u32 active counts
+- 8 × s32 current admitted-slot indices
+- 16 admitted slots × 0x10 bytes
+
+Each admitted slot contains:
+
+| Offset | Meaning |
+| --- | --- |
+| `+0x00` | scheduler time/tick |
+| `+0x04` | u16 sequence/generation |
+| `+0x06` | active flag |
+| `+0x07` | AEMS group/category |
+| `+0x08` | resolved mapping-record pointer |
+| `+0x0C` | owned copied event/mapping packet |
+
+`0x004974CC` resolves the packet's mapping key, chooses one of these slots,
+updates the owning group's count/current slot, and can immediately process the
+group when mapping-record byte `+0x0A` bit 5 is set.
+
+`0x00497CA4` is the complementary release path: it frees the packet, clears
+the slot, clears the group's current-slot reference when applicable, and
+decrements the group count.
+
+### 8 × 0xA0 decoder contexts
+
+The execution table at pre-relocation `0x000180A8` resolves to runtime
+`0x005A2950`. It contains **8 contexts × 0xA0 bytes**.
+
+Top-level context fields:
+
+| Offset | Meaning |
+| --- | --- |
+| `+0x00` | resolved AEMS mapping-record pointer |
+| `+0x04` | selected parsed event/variant object |
+| `+0x08` | selected variant/index byte |
+| `+0x09` | active flag |
+| `+0x0A` | number of 12-byte execution descriptors |
+| `+0x0B` | gameplay-payload word count from the mapping record |
+| `+0x0C` | owned packet copy |
+| `+0x10` | start of up to 12 execution descriptors |
+
+Each execution descriptor is 0x0C bytes. Its exact field semantics are not yet
+promoted, but construction is proven: pointer/value at +0x00, signed 16-bit
+selectors at +0x04/+0x06, and a derived u16 value at +0x08.
+
+### End-to-end middle path
+
+The recovered control flow is:
+
+```text
+generic named event
+  -> 0x0049B564 builds copied mapping packet
+  -> 0x004974CC admits it into 8-group / 16-slot scheduler
+  -> 0x0049A104 evaluates mapping conditions
+  -> 0x00499CEC constructs the group's 0xA0 decoder context
+  -> 0x00499E64 executes that context
+  -> 0x0049A5C0 builds the 0x20-byte AuSpeechManager request
+  -> 0x00137888
+  -> com / anc / trn bank routing
+  -> event-record byte range
+  -> speech playback
+```
+
+The individual subscription names and payload schemas for
+`comevt.evt`, `ancevt.evt`, and `trnevt.evt` remain external-resource
+facts. BOOT.BIN now proves the machinery that executes them, but cannot by
+itself enumerate data that exists only in those resource files.
