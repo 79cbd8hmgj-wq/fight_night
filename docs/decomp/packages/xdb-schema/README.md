@@ -93,6 +93,27 @@ session/custom state; rows 35-36 are not created-boxer placeholders.
 
 Field `0x04` is now a confirmed **base/default availability flag**. It is `1` for every normal stock record 0-34 and `0` for Fabolous/Little Mac. `func_00185D84` returns `field4 > 0`; the 35-entry stock roster builder uses that predicate directly. `func_001B0FE8` additionally proves that a zero flag is not necessarily permanent: selector index 35 can be enabled by a per-boxer bit in the session/object bitset beginning at `+0x1C4`. `T_001B2648` sets bits in that same bitset using `func_001AF728` (`word = index / 32`, `bit = index % 32`). The executable behavior is confirmed; the most specific user-facing word—unlocked/selectable/available—remains a naming question.
 
+## Replay identity selector
+
+Field `0x05` is now mapped through a concrete event consumer rather than inferred
+from its value distribution.
+
+- `func_00185B30` reads boxer field `0x05`.
+- `func_0010C9C8` uses it as a bounded 76-entry source selector and returns a
+  normalized boxer code. Several alternate-weight records of the same licensed
+  fighter normalize to the same result.
+- If the direct field-`0x05` mapping has no code, the mapper can fall back through
+  field `0x07`'s alias/nickname-linked path.
+- `func_0010BB58` runs the mapper for both active boxers and places the two results
+  into event-payload offsets `+0x14` and `+0x18`.
+- That payload is dispatched through `func_003E5860`. The first-use fallback
+  resolves/registers descriptor `D_0055AB38` through `func_003E4A94`.
+- `D_0055AB38` is the named event **`Replay`**.
+
+Therefore field `0x05` is a per-boxer source selector for normalized **Replay-event
+identity/profile codes**. Earlier wording that treated it as a speech/commentary
+identity has been withdrawn: no static evidence presently proves that these codes
+are commentary or audio IDs.
 ## Hometown and nickname references
 
 Two more leading boxer fields are now resolved through their actual foreign-key tables:
@@ -160,7 +181,7 @@ The normal stock SelectBoxer range table exposes selector indices 0-34 across si
 
 ## Remaining work
 
-The next static targets are field `0x00`'s secondary/resource-ID role, field `0x05`'s 76-entry index/dispatch space, the physical/biographical fields (including the packed `0x0D`/`0x0E` helpers), stance/handedness, appearance/equipment references, career/store state, and remaining created-boxer metadata. Hometown (`0x06`), nickname/alias (`0x07`), weight (`0x09`), ratings (`0x10`-`0x18`), and base availability (`0x04`) are no longer open.
+The next static targets are field `0x00`'s secondary/resource-ID role, physical/biographical fields `0x08`/`0x0A`-`0x0C`, the exact names of the packed `0x0E` traits, remaining handedness/equipment references, career/store state, and created-boxer metadata. Field `0x05`'s Replay-event dataflow is resolved; only the exact authored column name and downstream meaning of the normalized Replay code remain open, and no commentary/audio meaning is assumed.
 
 Machine-readable evidence:
 
