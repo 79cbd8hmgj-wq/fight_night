@@ -1505,5 +1505,167 @@
   "provenance": [
     "Derived from static bytes and Allegrex disassembly of the user-provided ULES00270 BOOT.BIN.",
     "No game executable/resource bytes are stored in this artifact."
-  ]
+  ],
+  "secondary_dispatcher": {
+    "function": "0x00131374",
+    "proposed_name": "AuAemsManager_DispatchSimpleEvent",
+    "confidence": "CONFIRMED as a distinct 30-case AEMS event dispatcher; proposed name is descriptive, not an original symbol",
+    "signature_shape": "(manager, signed int16 event_code, scalar/int parameter, secondary selector)",
+    "world_position_parameter": false,
+    "return_behavior": "Observed function epilogue returns 0; disabled/uninitialized paths also converge to the same zero return.",
+    "case_count": 30,
+    "relationship_to_central_dispatcher": "All 30 recovered cases are a subset of the named physical/gameplay SFX events also understood by 0x00129844. This overload is not the destination for the unhandled volume/state descriptor family.",
+    "cases": [
+      {
+        "event_code": "0x1D53",
+        "handler": "0x00131CE8",
+        "name": "Pnchsfx_UppercutBody"
+      },
+      {
+        "event_code": "0x1CB5",
+        "handler": "0x001314F0",
+        "name": "MattSfx_FootForward"
+      },
+      {
+        "event_code": "0x1310",
+        "handler": "0x00131788",
+        "name": "PnchSfx_StraightHead"
+      },
+      {
+        "event_code": "0x10E0",
+        "handler": "0x00132560",
+        "name": "ExrtSfx_PunchThrown"
+      },
+      {
+        "event_code": "0x0FE3",
+        "handler": "0x00132A18",
+        "name": "MattSfx_KneeFall"
+      },
+      {
+        "event_code": "0x0F5C",
+        "handler": "0x00132754",
+        "name": "ExsrSfx_KOMnt_ThrnBrth"
+      },
+      {
+        "event_code": "0x0943",
+        "handler": "0x00131AC4",
+        "name": "PnchSfx_HookBody"
+      },
+      {
+        "event_code": "0x36CB",
+        "handler": "0x00132400",
+        "name": "PnchSfx_Miss"
+      },
+      {
+        "event_code": "0x369B",
+        "handler": "0x001319B0",
+        "name": "PnchSfx_HookHead"
+      },
+      {
+        "event_code": "0x3638",
+        "handler": "0x00131BD4",
+        "name": "PnchSfx_UppecutHead"
+      },
+      {
+        "event_code": "0x341B",
+        "handler": "0x00132C6C",
+        "name": "MattSfx_TorsoFallSide"
+      },
+      {
+        "event_code": "0x2CC8",
+        "handler": "0x0013189C",
+        "name": "PnchSfx_StraightBody"
+      },
+      {
+        "event_code": "0x2BD1",
+        "handler": "0x00131F10",
+        "name": "ChrtcrSfx_HeadBut"
+      },
+      {
+        "event_code": "0x22D9",
+        "handler": "0x00132E20",
+        "name": "RingSfx_Rope"
+      },
+      {
+        "event_code": "0x1F7D",
+        "handler": "0x00132E98",
+        "name": "RingSfx_Turnbuckle"
+      },
+      {
+        "event_code": "0x5F92",
+        "handler": "0x00131DFC",
+        "name": "PnchSfx_LowBlow"
+      },
+      {
+        "event_code": "0x5813",
+        "handler": "0x0013236C",
+        "name": "PnchSfx_BlockFull"
+      },
+      {
+        "event_code": "0x5290",
+        "handler": "0x0013215C",
+        "name": "Pnchsfx_SpecialBody"
+      },
+      {
+        "event_code": "0x5209",
+        "handler": "0x00132904",
+        "name": "MattSfx_FullBodyFallFront"
+      },
+      {
+        "event_code": "0x4ADA",
+        "handler": "0x00131674",
+        "name": "PnchSfx_JabBody"
+      },
+      {
+        "event_code": "0x4ACA",
+        "handler": "0x00132B2C",
+        "name": "MattSfx_TorsoFallFront"
+      },
+      {
+        "event_code": "0x3F97",
+        "handler": "0x00132620",
+        "name": "ExrtSfx_PunchRecieve"
+      },
+      {
+        "event_code": "0x7F33",
+        "handler": "0x00132BCC",
+        "name": "MattSfx_TorsoFallBack"
+      },
+      {
+        "event_code": "0x7C12",
+        "handler": "0x001327F0",
+        "name": "MattSfx_FullBodyFallBack"
+      },
+      {
+        "event_code": "0x7961",
+        "handler": "0x00132D0C",
+        "name": "MattSfx_HeadFall"
+      },
+      {
+        "event_code": "0x7502",
+        "handler": "0x00131560",
+        "name": "PnchSfx_JabHead"
+      },
+      {
+        "event_code": "0x7254",
+        "handler": "0x00132270",
+        "name": "PnchSfx_KO"
+      },
+      {
+        "event_code": "0x6F23",
+        "handler": "0x00132048",
+        "name": "PnchSfx_SpecialHead"
+      },
+      {
+        "event_code": "0x67F7",
+        "handler": "0x001324B8",
+        "name": "ExrtSfx_Sniff"
+      },
+      {
+        "event_code": "0x605B",
+        "handler": "0x00132F0C",
+        "name": "Envsfx_CameraFlash"
+      }
+    ]
+  }
 }
