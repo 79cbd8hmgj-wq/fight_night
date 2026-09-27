@@ -36,7 +36,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Resolved: names (fields 1-3), base/default availability (field 4), hometown reference (field 6), nickname/alias reference (field 7), weight/division (field 9), ratings (0x10-0x18), XDB row layout, and bonus physical rows 35-36. Corrected: field 0 is not the cumulative boxer selector; func_00186284 uses record position across registered tables. Next trace field 0's secondary/resource-ID consumer, field 5's 76-entry index/dispatch space, physical/biographical fields, packed 0x0D/0x0E, stance/handedness, appearance/equipment, career/store and remaining created-boxer semantics.",
+      "remaining_static_work": "Resolved: identity 0x00-0x03, stock-roster gate 0x04, hometown link 0x06, nickname/alias link 0x07, weight 0x09/division thresholds, ratings 0x10-0x18, bonus rows 35-36. Next trace field 0x05, packed physical/appearance fields 0x0D/0x0E, equipment/appearance, career/store, and remaining created-boxer semantics.",
       "affected_features": [
         "career-2",
         "amateur",
