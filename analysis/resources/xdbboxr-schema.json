@@ -5,7 +5,7 @@
   "resource": "preload/db.viv!xdbboxr.adf",
   "status": "record_layout_and_rating_fields_mapped",
   "confidence": "PROBABLE",
-  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. UpdateSelectBoxerInfo plus the generic XDB accessors map the core rating fields to exact inline signed-int16 tokens. Many non-rating field identities remain unresolved.",
+  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. UpdateSelectBoxerInfo plus the generic XDB accessors map the core rating fields to exact inline signed-int16 tokens. Field 0x04 is now proven to gate inclusion in the 35-entry active stock SelectBoxer roster. Many other non-rating field identities remain unresolved.",
   "container": {
     "compressed_size": 3117,
     "decoded_size": 9704,
@@ -172,7 +172,7 @@
     "hard_maximum": "No hard total roster maximum is established. The base XDB record count is dynamic, boxer IDs are explicit data (field 0) rather than row indices, and the global resolver can span multiple table instances."
   },
   "unresolved": [
-    "Exact policy meaning of field 0x04: it is a proven boolean-like stock-vs-bonus discriminator, but whether its engine semantic is visible/selectable/unlocked/eligible remains to be named from a higher-level consumer.",
+    "Whether bonus/hidden rows outside the 35-entry stock SelectBoxer list use a separate unlock policy; field 0x04 is only proven as the stock-list inclusion gate.",
     "Semantic identities and storage types for non-rating field IDs outside the recovered rating block.",
     "Any independent save/UI limit on total boxer IDs across all registered table instances.",
     "Exact original iOverall formula internals beyond the recovered helper boundary."
@@ -230,14 +230,6 @@
     ],
     "finding": "The two base-table rows outside the normal SelectBoxer ID ranges 0-34 are real bonus/hidden boxer records, not empty/template/custom-created slots.",
     "custom_boxer_separation": "GetSelectBoxerInfo has a separate created/custom-boxer path that emits iCustomBoxerID, strCustomBoxerName and iCustomBoxerWeightClass from session/custom state, independently of base rows 35-36."
-  },
-  "selection_flag_candidate": {
-    "field_id": "0x04",
-    "storage": "inline signed int16",
-    "confidence": "PROBABLE",
-    "observed_values": "1 for every normal stock SelectBoxer record 0-34; 0 for bonus rows 35-36.",
-    "executable_evidence": "func_00185D84 reads field 4 and returns whether it is >0. A caller at 0x00278B0C iterates 35 stock boxer IDs, resolves each boxer, calls func_00185D84, and records a boolean result in a parallel table.",
-    "interpretation": "standard-roster/selectability/eligibility flag. Exact distinction between visible, selectable and unlocked remains open."
   },
   "weight_and_division": {
     "confidence": "CONFIRMED",
@@ -300,5 +292,20 @@
         ">=281 -> -1"
       ]
     }
+  },
+  "selection_flag": {
+    "field_id": "0x04",
+    "row_offset": "0x08",
+    "storage": "inline signed int16",
+    "semantic": "stock SelectBoxer roster inclusion/availability flag",
+    "confidence": "CONFIRMED",
+    "observed_values": "1 for every normal stock SelectBoxer record 0-34; 0 for bonus rows 35-36.",
+    "executable_evidence": [
+      "func_00185D84 reads XDB field 4 through func_001ACD40 and returns whether the signed int16 value is >0.",
+      "T_00278ABC iterates exactly 0x23 (35) entries from D_005646F0, resolves each boxer with func_00185114, calls func_00185D84, and writes 1 into the parallel D_0056477C slot when the predicate is true.",
+      "func_00278768 scans exactly 35 D_0056477C slots and returns the count whose value equals 1.",
+      "func_002787A0 uses that count, walks D_0056477C and D_005646F0 in parallel, skips zero-flag entries, and copies only enabled boxer IDs into the caller's output list."
+    ],
+    "conclusion": "Field 0x04 directly gates membership in the active 35-entry stock SelectBoxer list. This proves stock-roster availability/selectability semantics for this consumer path; it does not by itself define the separate unlock policy for bonus/hidden rows."
   }
 }
