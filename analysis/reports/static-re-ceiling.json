@@ -1495,11 +1495,11 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "A generic named fight-event ABI is now statically visible: func_0010BB58 builds a payload containing two normalized boxer codes and dispatches it through func_003E5860 under the named descriptor `Replay`, using func_003E4A94 for registration/first-use fallback. This materially clarifies fight-event infrastructure but does NOT establish the audio/commentary ABI. `Decision Announcement Script` was also traced to func_000B065C and shown to be one presentation-script name among entrance/faceoff/replay/corner/winner scripts rather than a commentary-audio lookup table. The debug ELF now provides direct source attribution for three PocketDJ routines: func_00295788 -> PocketDJFightNight.cpp line 3 (`!\"pocketdj not inited!\"`), func_00295E24 -> line 182 (`player`), and func_00295EF0 -> line 225 (`player`). These are stronger audio-specific anchors than the previously cited interior-instruction addresses.",
+      "evidence": "A generic named fight-event ABI is now statically visible: func_0010BB58 builds a payload containing two normalized boxer codes and dispatches it through func_003E5860 under the named descriptor `Replay`, using func_003E4A94 for registration/first-use fallback. This materially clarifies fight-event infrastructure but does NOT establish the audio/commentary ABI. `Decision Announcement Script` was also traced to func_000B065C and shown to be one presentation-script name among entrance/faceoff/replay/corner/winner scripts rather than a commentary-audio lookup table. The debug ELF now provides direct source attribution and PSP callback semantics for the PocketDJ layer: func_00295788 is sourced to PocketDJFightNight.cpp:126 and allocates/initializes the global EATrax::Player; func_0029598C is a leaf getter for that global and has 50 direct call sites; func_00295E24 is sourced to line 182 and is called immediately after the named `ServiceSceCallbacks() -> Suspending PocketDJ` log; func_00295EF0 is sourced to line 225 and is called immediately after `ServiceSceCallbacks() -> Resuming PocketDJ`. This resolves a concrete PocketDJ lifecycle boundary but still does not identify the boxer/event-to-commentary selection ABI.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Trace outward from the source-attributed PocketDJFightNight.cpp routines (func_00295788, func_00295E24, func_00295EF0), plus AuSpeechManager/audio-bank consumers, to determine what boxer/event identifiers they consume and how they connect to the generic fight-event layer. Do not infer an audio ABI from the Replay payload or Decision Announcement presentation-script name alone.",
+      "remaining_static_work": "Use the now-resolved PocketDJ lifecycle boundary as an anchor: trace consumers/callees around the global EATrax::Player returned by func_0029598C, then follow AuSpeechManager/audio-bank paths to determine what boxer/event identifiers actually select commentary or sound. Keep the generic Replay event layer separate unless a concrete call/data path joins them.",
       "sources": {
         "functions": [
           "func_0010BB58",
@@ -1507,8 +1507,11 @@
           "func_003E4A94",
           "func_000B065C",
           "func_00295788",
+          "func_0029594C",
+          "func_0029598C",
           "func_00295E24",
-          "func_00295EF0"
+          "func_00295EF0",
+          "func_00341768"
         ],
         "strings": [
           "PocketDJFightNight.cpp@0x51b0bc",
@@ -1519,7 +1522,7 @@
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "confidence": "PROBABLE for the generic fight-event boundary and PocketDJ source attribution; audio/commentary ABI itself remains unresolved.",
+      "confidence": "CONFIRMED for PocketDJ lifecycle/source attribution; PROBABLE for generic fight-event boundary; audio/commentary selection ABI remains unresolved.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
