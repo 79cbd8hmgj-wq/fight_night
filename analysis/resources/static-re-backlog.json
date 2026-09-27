@@ -141,7 +141,7 @@
       "subsystem": "Fight",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the fight-session/context object's structure (fighter pointers, round state, result state)?",
-      "remaining_static_work": "Advanced: the debug prototype now exposes the actual Player object path. 0x000859B4 allocates/stores Player objects, 0x0008552C retrieves them, 0x000A01EC is the probable Player constructor, and the Player vtable/interface block rooted at 0x0057D03C contains probable Player::Update at 0x000A0894. Next, trace the owners that invoke the Player virtual slot beginning at +0x28 and map the Player fields touched by 0x000A0894/0x000A1100 into fight/session state.",
+      "remaining_static_work": "Debug ULES00270 now proves a boxer/fighter runtime controller constructed at 0x000409FC with a movement object at +0x1F4 and a 14-slot combat-state controller at +0x21C. The shared fighter tick 0x00041450 advances current combat state and movement state each tick. Next: transfer/match this object layout into ULUS10066 and trace the owner/container that invokes fighter virtual slot +0x104.",
       "affected_features": [
         "combat",
         "career-2",
@@ -149,14 +149,15 @@
       ],
       "sources": {
         "functions": [
-          "0x000859B4",
-          "0x0008552C",
-          "0x000A01EC",
-          "0x000A0894",
-          "0x000A1100"
+          "0x000409FC",
+          "0x00034458",
+          "0x00034C98",
+          "0x00041450",
+          "0x00064158",
+          "0x00064220"
         ],
         "evidence": [
-          "analysis/resources/player-fight-loop-evidence.json"
+          "analysis/resources/debug-fight-state-machine.json"
         ]
       }
     },
@@ -166,19 +167,16 @@
       "subsystem": "Fight",
       "status": "STATICALLY_SOLVABLE",
       "question": "What are the fight lifecycle functions (init/round-start/round-end/result/cleanup)?",
-      "remaining_static_work": "Pivot from UI/setup screens to the newly recovered Player path: identify the enclosing owner that virtually dispatches Player slot +0x28 (probable Player::Update at 0x000A0894), then trace start/end transitions around the 0x000859B4 Player setup and Player teardown paths. This is now a concrete static avenue toward the per-frame fight tick.",
+      "remaining_static_work": "The debug build now exposes 0x00041450 as a shared virtual per-fighter update method at fighter-class slot +0x104; it advances both combat and movement state machines. Trace the higher-level container/manager that invokes slot +0x104 for the fighters to recover the outer fight tick, then follow its init/round/result/cleanup neighbors.",
       "affected_features": [
         "combat"
       ],
       "sources": {
         "functions": [
-          "0x000859B4",
-          "0x000A01EC",
-          "0x000A0668",
-          "0x000A0894"
+          "0x00041450"
         ],
         "evidence": [
-          "analysis/resources/player-fight-loop-evidence.json"
+          "analysis/resources/debug-fight-state-machine.json"
         ]
       }
     },
@@ -203,19 +201,19 @@
       "subsystem": "Punches",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the exact hit-detection/collision pipeline and its player/AI convergence point?",
-      "remaining_static_work": "New strongest lead: 0x000A1100 is called from probable Player::Update (0x000A0894) and from two punch/collision-region paths (0x0002EB60 and 0x0002F14C). Trace 0x000A1100 and those callers/callees to locate the player/AI hit-resolution convergence point. The previous aiPunchesThrown-only avenue is now secondary.",
+      "remaining_static_work": "Trace DRONE_ATTACKING update 0x0005B58C and related FEINTING/COUNTER updates from the newly recovered combat-state controller. Identify the punch-execution call(s) shared by human and AI paths and then trace forward into hit/collision resolution. Retain T_001E2084/aiPunchesThrown as a secondary convergence clue.",
       "affected_features": [
         "combat"
       ],
       "sources": {
         "functions": [
-          "0x000A0894",
-          "0x000A1100",
-          "0x0002EB60",
-          "0x0002F14C"
+          "0x0005B58C",
+          "0x0005C878",
+          "0x0005CD54",
+          "T_001E2084"
         ],
         "evidence": [
-          "analysis/resources/player-fight-loop-evidence.json"
+          "analysis/resources/debug-fight-state-machine.json"
         ]
       }
     },
@@ -237,7 +235,7 @@
       "subsystem": "Stamina",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the exact stamina cost/regeneration formula, its caps, and rating inputs?",
-      "remaining_static_work": "Use the newly recovered probable Player::Update path (0x000A0894) and its combat-event handler candidate 0x000A1100 as the primary search region for in-fight energy/stamina state. The old rating-card functions remain ruled out. Trace float/state writes and callees from these Player methods before returning to unrelated UI accessors.",
+      "remaining_static_work": "Use the recovered per-fighter tick/state machine rather than UI rating accessors: trace DRONE_ATTACKING update 0x0005B58C and its punch/action callees for stamina/energy reads and writes, then inspect 0x00041450 neighbors for passive per-tick recovery.",
       "affected_features": [
         "combat",
         "divisions",
@@ -245,11 +243,11 @@
       ],
       "sources": {
         "functions": [
-          "0x000A0894",
-          "0x000A1100"
+          "0x00041450",
+          "0x0005B58C"
         ],
         "evidence": [
-          "analysis/resources/player-fight-loop-evidence.json"
+          "analysis/resources/debug-fight-state-machine.json"
         ]
       }
     },
@@ -259,12 +257,19 @@
       "subsystem": "Stamina",
       "status": "STATICALLY_SOLVABLE",
       "question": "Is there a round-boundary stamina recovery mechanism, and is it distinct from in-round regeneration?",
-      "remaining_static_work": "Search for a round-transition function (likely shared with the round-state machine sought under program-05) that also touches the iStamina fields.",
+      "remaining_static_work": "Outer fight/round lifecycle remains open, but the per-fighter update boundary is now 0x00041450. After locating its owning fight-loop caller, inspect round-transition neighbors for a distinct stamina restoration write and compare it with any in-tick recovery path.",
       "affected_features": [
         "combat",
         "career-health"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x00041450"
+        ],
+        "evidence": [
+          "analysis/resources/debug-fight-state-machine.json"
+        ]
+      }
     },
     {
       "id": "program-08-03",
@@ -272,7 +277,7 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the health/vitality field structure, hit-resolution formula, and stun/dazed state machine?",
-      "remaining_static_work": "Trace damage/stun/knockdown state from the probable Player update/event path (0x000A0894 -> 0x000A1100) toward the already-known knockdown/3-KD readers. The player object is now a concrete owning structure, making backward dataflow from T_001F2E00/T_002027F4/T_00205458 substantially narrower.",
+      "remaining_static_work": "Trace DRONE_ATTACKING 0x0005B58C forward into punch/hit effects and DRONE_KNOCKDOWN_ATTACK 0x00061E08 around knockdown transitions, then correlate with T_001F2E00's authoritative knockdown reads. The recovered fighter controller gives a bounded combat-state path instead of a whole-binary search.",
       "affected_features": [
         "combat",
         "divisions",
@@ -280,14 +285,12 @@
       ],
       "sources": {
         "functions": [
-          "0x000A0894",
-          "0x000A1100",
-          "T_001F2E00",
-          "T_002027F4",
-          "T_00205458"
+          "0x0005B58C",
+          "0x00061E08",
+          "T_001F2E00"
         ],
         "evidence": [
-          "analysis/resources/player-fight-loop-evidence.json"
+          "analysis/resources/debug-fight-state-machine.json"
         ]
       }
     },
@@ -297,12 +300,24 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "What triggers the KO/TKO decision path, and is the referee's stoppage decision statically traceable?",
-      "remaining_static_work": "Find the referencing function for astrTKOTime and trace its callers.",
+      "remaining_static_work": "Trace DRONE_KNOCKDOWN_ATTACK update 0x00061E08 and its transition/exit callbacks toward fight result/stoppage state, while retaining astrTKOTime and the two 3-knockdown-rule consumers as independent convergence anchors.",
       "affected_features": [
         "combat",
         "career-health"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x00061E08",
+          "T_002027F4",
+          "T_00205458"
+        ],
+        "strings": [
+          "astrTKOTime"
+        ],
+        "evidence": [
+          "analysis/resources/debug-fight-state-machine.json"
+        ]
+      }
     },
     {
       "id": "program-08-05",
@@ -431,20 +446,23 @@
       "subsystem": "AI",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the AI decision-update loop and action-selection logic?",
-      "remaining_static_work": "Corrected false lead: func_00093C5C and func_00091D24 are the constructor/destructor pair for a 0xD4 per-Player AI modifier/config object stored at Player+0x2BC; they are not the AI decision loop. Continue from probable Player::Update 0x000A0894, the combat-event handler candidate 0x000A1100, and the owned subobjects created by Player constructor 0x000A01EC to locate the actual action-selection/update logic.",
+      "remaining_static_work": "The debug build now provides a bounded per-fighter action-state architecture. Trace selection/transitions into DRONE_ATTACKING/COUNTER/DEFENDING/FEINTING and correlate those decision callers with func_00093C5C/func_00091D24 attack-power consumers to identify the AI decision-update loop.",
       "affected_features": [
         "combat"
       ],
       "sources": {
         "functions": [
-          "0x00093C5C",
-          "0x00091D24",
-          "0x000A01EC",
-          "0x000A0894",
-          "0x000A1100"
+          "0x00034458",
+          "0x00034C08",
+          "0x0005B58C",
+          "0x0005CD54",
+          "0x0005F41C",
+          "0x0005C878",
+          "func_00093C5C",
+          "func_00091D24"
         ],
         "evidence": [
-          "analysis/resources/player-fight-loop-evidence.json"
+          "analysis/resources/debug-fight-state-machine.json"
         ]
       }
     },
