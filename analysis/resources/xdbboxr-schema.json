@@ -173,6 +173,8 @@
     "hard_maximum": "No hard total roster maximum is established. Base record_count is dynamic and func_00186284 can span multiple registered boxer-table instances."
   },
   "unresolved": [
+    "Exact semantic names of the three packed 0x0E nibble traits.",
+    "Exact semantic labels for fields 0x05, 0x06-0x08, 0x0A-0x0C and 0x0F.",
     "Exact semantic role of field 0x00's secondary/resource identity number (74/75 for the two bonus records).",
     "Exact semantic label for field 0x05 and its 76-entry consumer/dispatch space.",
     "Semantic identities for remaining physical/biographical fields including likely age/height/reach and the packed 0x0D/0x0E metadata.",
@@ -405,5 +407,64 @@
         ]
       }
     ]
+  },
+  "career_timing_fields": {
+    "confidence": "PROBABLE semantic labels; CONFIRMED bit extraction/arithmetic",
+    "packed_field": {
+      "field_id": "0x0D",
+      "row_offset": "0x1A",
+      "storage": "inline signed int16",
+      "layout": {
+        "low_byte": "career/pro start age",
+        "high_byte": "career/pro start year minus 1900"
+      }
+    },
+    "accessors": {
+      "func_001853F0": "returns ((field_0x0D >> 8) & 0xFF) + 1900",
+      "func_00185434": "returns field_0x0D & 0xFF"
+    },
+    "executable_corroboration": [
+      "func_00197DAC reads the high-byte accessor as a calendar year and rejects entries whose start year is later than the current simulated year.",
+      "The same function combines the low byte with the start year as start_year - start_age + 39, i.e. the calendar year in which the boxer reaches age 39, and uses that threshold in career-era filtering.",
+      "Decoded retail rows match real boxer career timing strongly enough to support the semantic labels: e.g. Ali encodes 1960/18, Frazier 1965/21, Holyfield 1984/22 and Roy Jones Jr 1989/20."
+    ],
+    "note": "Some retail rows appear to contain reused or imperfect historical values, so this records the engine meaning of the packed fields rather than asserting historical accuracy for every boxer."
+  },
+  "packed_trait_field_0x0E": {
+    "confidence": "CONFIRMED packing; semantic labels unresolved",
+    "field_id": "0x0E",
+    "row_offset": "0x1C",
+    "storage": "inline signed int16",
+    "accessors": [
+      {
+        "function": "func_00185468",
+        "value": "field & 0x000F",
+        "destination_examples": "generated/career boxer byte +0x0E"
+      },
+      {
+        "function": "func_0018549C",
+        "value": "(field & 0x00F0) >> 4",
+        "destination_examples": "generated/career boxer byte +0x0F"
+      },
+      {
+        "function": "func_001854DC",
+        "value": "((field & 0x0F00) >> 8) - 5",
+        "destination_examples": "generated/career boxer byte +0x10"
+      }
+    ],
+    "evidence": "func_00197DAC and a second career-generation path copy the three decoded components into adjacent bytes of generated boxer/career records.",
+    "unresolved": "Exact trait names represented by the three nibbles."
+  },
+  "auxiliary_field_accessors": {
+    "0x05": {
+      "function": "func_00185B30",
+      "behavior": "returns field 0x05 as signed int16",
+      "downstream": "func_0010C9C8 uses it as a bounded <0x4C (76) jump-table selector; exact semantic label remains open"
+    },
+    "0x0B": {
+      "function": "func_00185374",
+      "behavior": "reads field 0x0B; under a fight-session condition from func_001B10AC, values >=63 are transformed to value/2 + value/8 (5/8 scaling), otherwise returned directly",
+      "semantic": "unresolved"
+    }
   }
 }
