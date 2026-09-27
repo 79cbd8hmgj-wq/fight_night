@@ -592,8 +592,9 @@
           {
             "instruction": "0x002958CC",
             "function": "func_00295788",
-            "source_line": 3,
-            "assert_expression": "!\\\"pocketdj not inited!\\\""
+            "source_line": 126,
+            "assert_expression": "!\\\"pocketdj not inited!\\\"",
+            "implication": "func_00295788 allocates/constructs an EATrax::Player object, stores it in the PocketDJ global slot, validates initialization, and destroys/clears it on failure; behavior supports a PROBABLE PocketDJ initialization/create semantic."
           },
           {
             "instruction": "0x00295E5C",
@@ -684,9 +685,63 @@
       }
     ],
     "replacement_audio_source_anchors": [
-      "func_00295788 -> PocketDJFightNight.cpp line 3, assert !\"pocketdj not inited!\"",
+      "func_00295788 -> PocketDJFightNight.cpp line 126, assert !\"pocketdj not inited!\"",
       "func_00295E24 -> PocketDJFightNight.cpp line 182, assert player",
       "func_00295EF0 -> PocketDJFightNight.cpp line 225, assert player"
     ]
+  },
+  "pocketdj_semantic_anchors": {
+    "confidence": "CONFIRMED behavior unless otherwise noted",
+    "service_callback": {
+      "function": "0x00341768",
+      "inferred_name": "ServiceSceCallbacks",
+      "name_evidence": [
+        "ServiceSceCallbacks() -> Suspending PocketDJ",
+        "ServiceSceCallbacks() -> Unlocking volatile memory!",
+        "ServiceSceCallbacks() -> Resuming PocketDJ",
+        "ServiceSceCallbacks() -> Locking volatile memory!"
+      ],
+      "behavior": "PSP callback/service state machine that sequences PocketDJ suspend/resume around volatile-memory transitions."
+    },
+    "pocketdj": {
+      "func_00295788": {
+        "source": "PocketDJFightNight.cpp:126",
+        "semantic": "PocketDJ/EATrax player create-or-initialize routine",
+        "confidence": "PROBABLE semantic; CONFIRMED source attribution",
+        "evidence": [
+          "Allocates 0x174 bytes tagged by string EATrax::Player.",
+          "Calls func_423AB8 on the new object with the routine's three incoming arguments.",
+          "Stores the object at global 0x00567124.",
+          "Calls func_423C10 to validate/initialize it.",
+          "On failure triggers the PocketDJFightNight.cpp:126 assert !\"pocketdj not inited!\", destroys the object through func_423B58(..., 3), and clears the global."
+        ]
+      },
+      "func_0029594C": {
+        "semantic": "PocketDJ/EATrax player teardown/clear routine",
+        "confidence": "PROBABLE",
+        "evidence": [
+          "Loads global player pointer 0x00567124.",
+          "Calls func_423B58(player, 3).",
+          "Clears 0x00567124, mirror 0x00573A24, and state byte 0x00567128."
+        ]
+      },
+      "func_0029598C": {
+        "semantic": "PocketDJ/EATrax player getter",
+        "confidence": "CONFIRMED behavior",
+        "evidence": "Leaf routine returns global 0x00567124; 50 direct JAL call sites were observed in .text."
+      },
+      "func_00295E24": {
+        "source": "PocketDJFightNight.cpp:182",
+        "semantic": "PocketDJ suspend path",
+        "confidence": "CONFIRMED behavior",
+        "evidence": "ServiceSceCallbacks at 0x00341768 logs `ServiceSceCallbacks() -> Suspending PocketDJ` immediately before its sole direct call to 0x00295E24."
+      },
+      "func_00295EF0": {
+        "source": "PocketDJFightNight.cpp:225",
+        "semantic": "PocketDJ resume path",
+        "confidence": "CONFIRMED behavior",
+        "evidence": "ServiceSceCallbacks at 0x00341768 logs `ServiceSceCallbacks() -> Resuming PocketDJ` immediately before its sole direct call to 0x00295EF0."
+      }
+    }
   }
 }
