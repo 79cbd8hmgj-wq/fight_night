@@ -294,5 +294,29 @@
     ],
     "correction": "Prior backlog wording treated 0x00093C5C/0x00091D24 as attack-power consumers and possible AI decision-loop functions. They are constructor/destructor boundaries for the AI modifier object. Actual decision logic must be found by tracing accessors/consumers of the object at high-level boxer +0x2BC.",
     "next_static_step": "Trace direct callers of the small functions immediately following 0x00091D24 (modifier-array access/scaling helpers) and all uses of high-level boxer +0x2BC, prioritizing calls from combat-state and high-level boxer update paths."
+  },
+  "fight_lifecycle_reset_path": {
+    "manager_method": "0x0001ED6C",
+    "manager_table_context": "central fight-manager member-function table 0x005794A4; 0x0001ED6C is the previously mapped table +0x30 function pointer",
+    "two_fighter_reset": "0x000802B8",
+    "per_boxer_reset": "0x0009BB94",
+    "physical_recovery": "0x0007854C",
+    "confidence": "CONFIRMED call chain; precise public label (round start vs round reset vs fight-start reset) remains PROBABLE",
+    "evidence": [
+      "0x0001ED6C performs manager/subsystem setup, then calls 0x000802B8 and 0x0008000C.",
+      "0x000802B8 loops boxer indices 0 and 1 through 0x0008552C and calls 0x0009BB94 once for each boxer.",
+      "0x0009BB94 calls 0x0007854C on high-level boxer+0x294.",
+      "0x0007854C applies the explicitly named 'inc between round max E regen rate' modifier and health-regeneration logic.",
+      "Other callers of 0x000802B8 in the 0x0007FFxx state-controller region use the same setup/reset helper under countdown/state transitions."
+    ],
+    "bounded_chain": [
+      "central fight manager 0x0001ED6C",
+      "0x000802B8 two-fighter setup/reset",
+      "0x0008552C select boxer owner 0/1",
+      "0x0009BB94 per-boxer reset/setup",
+      "boxer+0x294 physical combat state",
+      "0x0007854C between-round max-energy/health recovery"
+    ],
+    "next_step": "Trace the 0x0007FFxx callers and 0x0008000C state transition to distinguish fight-start setup from between-round reset and recover the exact round-state enum/lifecycle transitions."
   }
 }
