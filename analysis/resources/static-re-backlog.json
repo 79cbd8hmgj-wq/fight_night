@@ -36,7 +36,7 @@
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Identity fields 0-3, the exact row layout, rating fields 0x10-0x18, and bonus rows 35-36 are resolved. Trace concrete readers for field 4's exact policy label and for weight/division, stance/handedness, appearance/equipment, hometown, career/store and remaining created-boxer semantics.",
+      "remaining_static_work": "Identity fields 0-4, the exact row layout, rating fields 0x10-0x18, weight/division field 0x09 plus its classifier, and bonus rows 35-36 are resolved. Trace concrete readers for stance/handedness, appearance/equipment, hometown, career/store, rivals/training, and remaining created-boxer semantics.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -53,7 +53,11 @@
           "func_001AD180",
           "func_001851CC",
           "func_00185D84",
-          "0x00278B0C"
+          "0x00278B0C",
+          "func_0018600C",
+          "func_00278768",
+          "func_002787A0",
+          "T_00278ABC"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
