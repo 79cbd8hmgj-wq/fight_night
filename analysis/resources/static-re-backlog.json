@@ -480,27 +480,39 @@
       "subsystem": "UI/commentary",
       "status": "STATICALLY_AMBIGUOUS",
       "question": "Is commentary lookup/ID data (audio triggers tied to fight events) statically evidenced?",
-      "remaining_static_work": "`Decision Announcement Script` has now been traced to func_000B065C and is a fight-presentation script-name entry, not a commentary-ID table. xdbboxr field 0x05 has likewise been traced into the named Replay event and is not proven audio/commentary data. Trace actual AuSpeechManager/PocketDJ/audio-bank consumers and use the iDisplayCommentaryOption functions only to establish how the toggle gates those audio paths.",
+      "remaining_static_work": "Trace from the now-anchored AuSpeechManager/audio-bank routines to the concrete speech/event selector and boxer identifiers. func_001B1CFC is now proven to produce the language-dependent iDisplayCommentaryOption flag (English=always display; French=session +0x160 bit 19), not the commentary on/off setting.",
       "affected_features": [
         "career-2",
         "roster"
       ],
       "sources": {
         "strings": [
-          "Decision Announcement Script@0x4fa4e8",
           "iDisplayCommentaryOption@0x50b330",
-          "PocketDJFightNight.cpp@0x51b0bc"
+          "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !@0x506ac8",
+          "PocketDJFightNight.cpp@0x51b0bc",
+          "Decision Announcement Script@0x4fa4e8",
+          "rplyst.abk@0x5067e4",
+          "replay.abk@0x5067fc"
         ],
         "functions": [
           "func_000B065C",
-          "func_001D9958",
-          "func_001DC52C",
-          "func_001FB6B8",
+          "func_001B1CFC",
+          "func_001B21FC",
+          "func_00128EB4",
+          "func_00137BA0",
+          "func_00206C48",
+          "func_0020715C",
+          "func_0020719C",
+          "func_00295788",
+          "func_0029598C",
+          "func_00295E24",
+          "func_00295EF0",
           "func_0010BB58",
           "func_003E5860"
         ],
         "evidence": [
-          "analysis/resources/fight-event-dispatch-evidence.json"
+          "analysis/resources/fight-event-dispatch-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       }
     },
@@ -525,7 +537,7 @@
       "subsystem": "Audio",
       "status": "STATICALLY_SOLVABLE",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
-      "remaining_static_work": "Generic named fight-event dispatch is now proven through the Replay path, but the audio/commentary ABI is not. Trace AuSpeechManager/PocketDJ/audio-bank consumers to determine which event/boxer identifiers they consume and how they attach to the generic event layer. Do not use the Decision Announcement presentation-script name or Replay boxer codes as substitutes for that evidence.",
+      "remaining_static_work": "Trace callers/consumers of func_00137BA0 and the bank handles populated by func_00128EB4/func_00132F90, then connect those speech/event paths to boxer/event identifiers. PocketDJ lifecycle, language gating, and bank inventory are now concrete anchors; the final commentary-selection ABI is still unresolved.",
       "affected_features": [
         "roster"
       ],
@@ -535,12 +547,24 @@
           "func_003E5860",
           "func_003E4A94",
           "func_000B065C",
-          "func_00295738",
-          "func_00295DD4",
-          "func_00295EA0"
+          "func_00128EB4",
+          "func_00132F90",
+          "func_00137BA0",
+          "func_00295788",
+          "func_0029598C",
+          "func_00295E24",
+          "func_00295EF0",
+          "func_00341768"
+        ],
+        "strings": [
+          "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !@0x506ac8",
+          "PocketDJFightNight.cpp@0x51b0bc",
+          "rplyst.abk@0x5067e4",
+          "replay.abk@0x5067fc"
         ],
         "evidence": [
-          "analysis/resources/fight-event-dispatch-evidence.json"
+          "analysis/resources/fight-event-dispatch-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       }
     },
