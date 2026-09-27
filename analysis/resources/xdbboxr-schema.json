@@ -173,8 +173,8 @@
     "hard_maximum": "No hard total roster maximum is established. Base record_count is dynamic and func_00186284 can span multiple registered boxer-table instances."
   },
   "unresolved": [
+    "What boxer/category source sets field 0x0F nonzero; its effect is proven as alternate/raw versus weight-class-adjusted rating mode, but the owning semantic category is unresolved.",
     "Exact semantic names of the three packed 0x0E nibble traits.",
-    "Exact semantic labels for fields 0x05, 0x06-0x08, 0x0A-0x0C and 0x0F.",
     "Exact semantic role of field 0x00's secondary/resource identity number (74/75 for the two bonus records).",
     "Exact semantic label for field 0x05 and its 76-entry consumer/dispatch space.",
     "Semantic identities for remaining physical/biographical fields including likely age/height/reach and the packed 0x0D/0x0E metadata.",
@@ -466,5 +466,20 @@
       "behavior": "reads field 0x0B; under a fight-session condition from func_001B10AC, values >=63 are transformed to value/2 + value/8 (5/8 scaling), otherwise returned directly",
       "semantic": "unresolved"
     }
+  },
+  "rating_mode_field_0x0F": {
+    "field_id": "0x0F",
+    "row_offset": "0x1E",
+    "storage": "inline signed int16",
+    "confidence": "CONFIRMED for executable behavior; semantic source/type label remains unresolved",
+    "observed_retail_base_rows": "0 for all 37 rows in the tracked base xdbboxr.adf",
+    "behavior": [
+      "func_001857E4 reads field 0x0F after resolving rating fields 0x10-0x18.",
+      "When field 0x0F != 0, func_001857E4 returns the selected raw rating (or derived Power/Overall slot) clamped to 10..100.",
+      "When field 0x0F == 0, func_001857E4 obtains the boxer's weight class through func_0018600C and scales the selected rating through D_FLT_0055E280 before clamping it to 10..100.",
+      "T_00187434 only populates its nine-rating output through func_001857E4 when field 0x0F == 0 and marks output +0x78 = 1.",
+      "func_00187548 takes the complementary path: when field 0x0F != 0 it fills the nine-rating output with the unscaled/base accessor func_0018553C and marks output +0x78 = 0."
+    ],
+    "conclusion": "Field 0x0F selects between the game's weight-class-adjusted rating path and an alternate/raw rating mode. The underlying boxer category that sets the flag is not yet proven, so it is intentionally not named 'created', 'career', or similar."
   }
 }
