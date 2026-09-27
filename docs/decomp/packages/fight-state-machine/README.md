@@ -162,3 +162,71 @@ Immediate static targets are:
 `0x00041450` is a strong **debug-build** hook boundary. It is not yet a safe
 retail patch site; ULUS10066 transfer/matching and original-instruction/ABI
 verification are still required.
+
+
+## Outer owner and call chain
+
+The next two caller layers are also recovered.
+
+`0x000352F4` is the direct virtual-update invoker. It loads
+`fighter+0x64`, selects the member-function entry at table `+0x100`, and
+invokes the function pointer at entry `+0x04`. For the fighter class tables
+above that pointer is `0x00041450`. `0x000350B4` is a thin wrapper around
+this call.
+
+A larger high-level boxer object is constructed by `0x000A01EC`. It installs
+member-function table `0x0057D03C` at object `+0x18` and owns the fighter
+runtime pointer at `+0x2A0`.
+
+Its virtual update method is `0x000A0894` (table entry `+0x28`, function
+pointer `+0x2C`). At `0x000A0E80` it calls:
+
+```text
+0x000350B4(object+0x2A0)
+  -> 0x000352F4
+     -> fighter virtual table +0x100
+        -> 0x00041450
+```
+
+`0x0009D084` populates `object+0x2A0`. At
+`0x0009D22C-0x0009D23C` it calls `0x00054608` using selected boxer/XDB
+data and stores the returned fighter runtime pointer at `+0x2A0`.
+
+`0x000859B4` bridges fight-session setup to these high-level boxer objects:
+it reads the fight-session singleton and selected boxer IDs, allocates 0x2D0
+byte objects, constructs them with `0x000A01EC`, stores them in the owning
+manager, then invokes `0x0009D084` to create each object's fighter runtime.
+
+This gives the current bounded chain:
+
+```text
+fight-session boxer selections
+  -> 0x000859B4 boxer-owner setup
+     -> 0x000A01EC high-level boxer object
+        -> 0x0009D084 / 0x00054608 fighter-runtime creation
+        -> 0x000A0894 high-level update
+           -> 0x000350B4
+              -> 0x000352F4
+                 -> 0x00041450 fighter tick
+                    -> combat state update
+                    -> movement state update
+```
+
+## Corrected false gameplay leads
+
+Three prior string-xref avenues were presentation-side rather than direct
+gameplay owners:
+
+- `aiPunchesThrown` is part of the `GetMyCareerStatsInfo` output-key
+  cluster with `aiPunchesLanded`, `aiPunchAccuracy`, rank and career
+  record fields. Its owner is a front-end data builder, not proof of the
+  hit-resolution pipeline.
+- `astrTKOTime` is part of `GetCareerHistoryInfo`/list output alongside
+  opponent name, fight result and rounds lasted. Its xref is not the KO/TKO
+  decision routine.
+- both `iStamina` strings are rating-presentation keys: one in SelectBoxer
+  and one in Get/Update/SetCreateRatingsInfo. They do not identify the
+  in-fight stamina field or formula.
+
+These strings remain useful schema/UI evidence, but are no longer used as
+primary combat-code leads.
