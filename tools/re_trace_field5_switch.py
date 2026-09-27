@@ -50,13 +50,30 @@ def main() -> None:
     for target, indices in sorted(groups.items()):
         print(f'0x{target:08X}: {indices}')
 
+    print('\n=== CALLERS OF FIELD5 MAPPER ===')
+    printed: set[str] = set()
+    for ref in result.references:
+        if ref.kind != 'call' or ref.target_address != TARGET_FUNC:
+            continue
+        name = ref.source_function or '<unknown>'
+        print(f'CALL 0x{ref.source_address:08X} {name} -> 0x{TARGET_FUNC:08X}')
+        fn_by_name = next((x for x in result.functions if x.name == name), None)
+        if fn_by_name is not None and name not in printed:
+            printed.add(name)
+            print(f'--- {fn_by_name.name} @ 0x{fn_by_name.address:08X} size=0x{fn_by_name.size:X} ---')
+            refs = [
+                st for st in result.strings
+                if any(fn_by_name.address <= src < fn_by_name.address + fn_by_name.size for src in st.referenced_by)
+            ]
+            for st in refs:
+                print(f'STRING 0x{st.address:08X}: {st.value!r}')
+            print(fn_by_name.assembly)
+
     print('\n=== REFERENCES FROM FIELD5 CALLER ===')
     for ref in result.references:
         if ref.source_function == fn.name:
-            print(
-                f'0x{ref.source_address:08X} {ref.kind} -> '
-                f'{ref.target_name or hex(ref.target_address or 0)}'
-            )
+            target = 'None' if ref.target_address is None else f'0x{ref.target_address:08X}'
+        print(f'0x{ref.source_address:08X} {ref.kind} -> {target}')
 
 
 if __name__ == '__main__':
