@@ -743,5 +743,60 @@
         "evidence": "ServiceSceCallbacks at 0x00341768 logs `ServiceSceCallbacks() -> Resuming PocketDJ` immediately before its sole direct call to 0x00295EF0."
       }
     }
+  },
+  "pocketdj_lifecycle": {
+    "confidence": "CONFIRMED for suspend/resume call context; PROBABLE for init/shutdown semantic labels",
+    "service_callback_function": {
+      "address": "0x00341768",
+      "proposed_name": "ServiceSceCallbacks",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "The function materializes four literal debug strings: 'ServiceSceCallbacks() -> Suspending PocketDJ', '... Unlocking volatile memory!', '... Resuming PocketDJ', and '... Locking volatile memory!'.",
+        "Immediately after printing the suspend message it calls 0x00295E24.",
+        "Immediately after printing the resume message it calls 0x00295EF0."
+      ]
+    },
+    "functions": {
+      "0x00295788": {
+        "proposed_name": "PocketDJ_InitOrCreatePlayer",
+        "confidence": "PROBABLE",
+        "evidence": [
+          "Called from the game initialization sequence at 0x001BAF64 only when the PocketDJ singleton getter 0x0029598C returns null.",
+          "Allocates/constructs a player object, stores it at global 0x00567124, and asserts at PocketDJFightNight.cpp:126 if creation fails.",
+          "The assert expression is !\"pocketdj not inited!\"."
+        ]
+      },
+      "0x0029594C": {
+        "proposed_name": "PocketDJ_ShutdownOrDestroyPlayer",
+        "confidence": "PROBABLE",
+        "evidence": [
+          "Called during the complementary shutdown sequence when the singleton exists.",
+          "Calls 0x00423B58(player, 3), then clears global 0x00567124 and associated state."
+        ]
+      },
+      "0x0029598C": {
+        "proposed_name": "PocketDJ_GetPlayer",
+        "confidence": "CONFIRMED",
+        "evidence": "Leaf getter that returns global 0x00567124."
+      },
+      "0x00295E24": {
+        "proposed_name": "PocketDJ_Suspend",
+        "confidence": "CONFIRMED",
+        "source_line": 182,
+        "evidence": [
+          "Source-attributed to PocketDJFightNight.cpp line 182 with assert expression 'player'.",
+          "ServiceSceCallbacks calls it immediately after the literal 'Suspending PocketDJ' diagnostic."
+        ]
+      },
+      "0x00295EF0": {
+        "proposed_name": "PocketDJ_Resume",
+        "confidence": "CONFIRMED",
+        "source_line": 225,
+        "evidence": [
+          "Source-attributed to PocketDJFightNight.cpp line 225 with assert expression 'player'.",
+          "ServiceSceCallbacks calls it immediately after the literal 'Resuming PocketDJ' diagnostic."
+        ]
+      }
+    }
   }
 }
