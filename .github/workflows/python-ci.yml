@@ -52,6 +52,8 @@ jobs:
           PY
       - name: Trace boxer field helpers
         run: python tools/re_trace_boxer_field_helpers.py
+      - name: Trace boxer field callers
+        run: python tools/re_trace_boxer_field_callers.py
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
