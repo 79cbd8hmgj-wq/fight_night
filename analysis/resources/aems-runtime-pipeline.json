@@ -103,13 +103,25 @@
     },
     "execution_descriptor": {
       "size": "0x0C",
+      "confidence": "CONFIRMED",
       "fields": {
-        "+0x00": "source object/pointer selected during mapping evaluation",
-        "+0x04": "signed 16-bit selector/index copied from source +0x04",
-        "+0x06": "signed 16-bit selector/index copied from source +0x06",
-        "+0x08": "u16 derived selector/value populated from source byte +0x0A and mapping state"
+        "+0x00": "interned event/object token ID (CONFIRMED); 0x0049A5C0 copies this directly to AuSpeechManager request +0x00",
+        "+0x04": "signed cached index into the global 8-byte {token ID, parsed object pointer} interner table; -1 means unresolved/stale and 0x00496AF0 refreshes it",
+        "+0x06": "signed optional block displacement; -1 means no extra block displacement",
+        "+0x08": "u16 byte-range entry selector passed to 0x0049B480"
       },
-      "semantic_boundary": "The binary layout and population dataflow are confirmed; original field names are not."
+      "token_cache_dataflow": [
+        "0x0049A5C0 uses descriptor +0x04 as an index into the global interner table at 0x005769D0.",
+        "It compares the table entry's token ID against descriptor +0x00.",
+        "On mismatch it calls 0x00496AF0(token_id), which linearly resolves the correct table index, then caches that index back into descriptor +0x04.",
+        "The table entry's parsed object pointer is then used with descriptor +0x08 to decode the selected byte range."
+      ],
+      "block_displacement": [
+        "0x0049B480 returns the selected entry's byte start and byte length.",
+        "The parsed object's block scale is (byte +0x07 + 1) << 8.",
+        "When descriptor +0x06 != -1, 0x0049A5C0 adds descriptor+0x06 * block_scale to the byte start.",
+        "The resulting relative byte start becomes AuSpeechManager request +0x04."
+      ]
     }
   },
   "packet_to_decoder": {
@@ -240,7 +252,7 @@
       "+0x06": "count controlling a leading u16 variable table before the condition-clause region; exact semantic label unresolved",
       "+0x07": "count of 3-byte condition clauses evaluated by 0x0049B108 (CONFIRMED)",
       "+0x08": "field not yet semantically bounded",
-      "+0x09": "signed acceptance threshold compared against 0x0049AB4C(100,-1); probability/chance interpretation is PROBABLE",
+      "+0x09": "signed random-acceptance threshold: 0x004974CC draws an integer 0..99 using 0x0049AB4C(100,-1) and rejects when threshold < draw (CONFIRMED); -1 rejects all, 0 accepts only draw 0, >=99 accepts all draws",
       "+0x0A": "flags; bit 0 affects evaluator behavior and bit 5 forces immediate scheduler processing (CONFIRMED)",
       "+0x0B": "number of 32-bit words copied from the generic gameplay-event payload into the AEMS packet (CONFIRMED)",
       "+0x0C...": "variable tables/condition data"
@@ -265,7 +277,39 @@
     "scheduler_use": {
       "expiry": "0x00497364 compares current_scheduler_time - slot_time against existing mapping +0x02 and releases expired slots",
       "priority": "when no free/expired slot exists, 0x00497364 compares the new mapping +0x04 priority with existing slots in the same group to choose an eviction candidate",
-      "threshold": "0x004974CC compares signed mapping +0x09 to the bounded result of 0x0049AB4C(100,-1) before admission"
+      "threshold": "0x0049AB4C(100,-1) returns a PRNG-backed bounded integer 0..99; 0x004974CC rejects when signed mapping+0x09 < random_draw, proving +0x09 is a probabilistic acceptance threshold"
     }
+  },
+  "global_event_object_interner": {
+    "confidence": "CONFIRMED",
+    "table_pointer_global": "0x005769D0",
+    "next_token_global": "0x005769D4",
+    "capacity_global": "0x005769D8",
+    "used_count_global": "0x005769DC",
+    "entry_size": 8,
+    "entry_fields": {
+      "+0x00": "monotonically assigned token ID",
+      "+0x04": "parsed event/object pointer"
+    },
+    "registration_function": "0x00496F20",
+    "token_to_index_function": "0x00496AF0",
+    "registration_behavior": [
+      "0x00496F20 finds/inserts the parsed object in the sorted interner table.",
+      "It writes the current next-token value to entry +0x00 and the object pointer to +0x04.",
+      "It increments next-token and used-count and returns the assigned token ID.",
+      "AuSpeechManager stores that returned token in each 16-byte speech-bank record +0x00."
+    ],
+    "implication": "The same token namespace crosses the parser, decoder context, AEMS request and AuSpeechManager speech-bank lookup."
+  },
+  "random_selection": {
+    "prng_core": "0x0049A860",
+    "bounded_selector": "0x0049AB4C",
+    "confidence": "CONFIRMED for range behavior",
+    "behavior": [
+      "0x0049A860 advances a multiword PRNG state and returns a 32-bit pseudorandom value.",
+      "0x0049AB4C(range, exclude) scales the PRNG high 16 bits into 0..range-1.",
+      "When exclude == -1, it returns that bounded result directly.",
+      "The admission path calls 0x0049AB4C(100,-1), therefore the admission draw is exactly 0..99."
+    ]
   }
 }
