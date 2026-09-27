@@ -1524,11 +1524,11 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The title-specific speech ABI is now substantially bounded. AuSpeechManager initializes a confirmed commentary dataset at +0x19C from comdat.big / comevt.evt / comhdr.big using common loader func_0013A6D0. The loader constructs 0x10-byte records with key ID (+0), resolved data entry (+4), header entry (+8), and variant/class (+0xC). func_001379B0 maps an incoming speech ID to record+4; func_001379F4 maps it to record+0xC. In func_0013CCA4 the incoming event ID is looked up specifically against manager+0x19C, event+4 is added to the resolved data entry, and the result flows into func_00483AAC. Trainer- and announcer-prefixed datasets are initialized in the same ABI at +0x1B0 and +0x188. func_0013DDC4 provides the strongest current selector lead, classifying fight state under explicit TCC diagnostics. The missing piece is the exact rule/boxer identifier -> commentary event-ID mapping, not the storage/lookup ABI.",
+      "evidence": "The generic fight-event layer is now relocation-resolved rather than inferred: func_003E4A94 binds an 8-byte event handle to a {name-pointer,32-bit-hash} descriptor and func_003E5860 dispatches caller payloads through that handle. A contiguous named registry is recovered, including NISAdvice, OnplayAdvice, TCC, StartOfRound, BoxerDamage, LackOfAction, PunchCombos, PunchLanded, Replay, BoxerFatigue, Knockdown and others. AuSpeechManager is also statically split into three request categories/banks: category 0 -> comdat/comevt/comhdr, 1 -> ancdat/ancevt/anchdr, 2 -> trndat/trnevt/trnhdr. Important correction: 0x0013DDC4 contains TCC-labelled condition diagnostics but dispatches NISAdvice through relocated handle 0x005AB858; the actual TCC event uses handle 0x005AB868 and is emitted separately at 0x0013BBE0 from the main speech-manager update path. PocketDJ lifecycle/source attribution remains independently recovered. Together this establishes a concrete speech-bank + named-event architecture, but the final ABI mapping specific boxer/event identifiers into com*/anc*/trn event records is not yet fully decoded.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Trace func_0013DDC4's selected TCC category/mask and surrounding speech-event construction to the event ID passed into func_0013CCA4, then identify where boxer-specific values enter that selection. The dataset, record, and lookup ABI no longer need to be rediscovered.",
+      "remaining_static_work": "Decode the com*/anc*/trn event/header record structures and trace the request-router fields (+0x00/+0x04/+0x0C/+0x10) into actual event-record selection. For NISAdvice/TCC, finish the payload-field semantics and identify which downstream speech-bank lookup consumes those named events. The architecture is now bounded enough that this should be targeted static work rather than a whole-binary search.",
       "sources": {
         "functions": [
           "func_0010BB58",
@@ -1548,7 +1548,12 @@
           "func_001379F4",
           "func_0013CCA4",
           "func_0013DDC4",
-          "func_0013B410"
+          "func_0013B410",
+          "0x0013A6D0",
+          "0x0013AC78",
+          "0x0013CCA4",
+          "0x0013DDC4",
+          "0x0013B410"
         ],
         "strings": [
           "PocketDJFightNight.cpp@0x51b0bc",
@@ -1564,14 +1569,30 @@
           "trnhdr.big@0x506b54",
           "ancdat.big@0x506b60",
           "ancevt.evt@0x506b6c",
-          "anchdr.big@0x506b78"
+          "anchdr.big@0x506b78",
+          "comdat.big",
+          "comevt.evt",
+          "comhdr.big",
+          "ancdat.big",
+          "ancevt.evt",
+          "anchdr.big",
+          "trndat.big",
+          "trnevt.evt",
+          "trnhdr.big",
+          "NISAdvice",
+          "TCC",
+          "TCC = MULTI KD",
+          "TCC = POOR PERFORMANCE",
+          "TCC = WASTED ENERGY",
+          "TCC = BOXER DAMAGE",
+          "TCC = BOXER RATING/STYLE"
         ],
         "evidence": [
           "analysis/resources/fight-event-dispatch-evidence.json",
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "confidence": "CONFIRMED for commentary dataset/record/lookup ABI and AuSpeech/PocketDJ lifecycle; final boxer/event selection semantics remain unresolved.",
+      "confidence": "CONFIRMED for speech-bank categories, named-event registration/dispatch, NISAdvice/TCC identity split, and PocketDJ suspend/resume lifecycle; the final commentary/audio selection ABI remains STATICALLY_SOLVABLE.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
