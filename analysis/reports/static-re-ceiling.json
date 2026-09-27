@@ -1524,11 +1524,11 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "The audio interface is now bounded across the full generic-gameplay-event -> AEMS -> speech-bank stack. The debug ELF exposes a complete 193-entry named AEMS registry, AuAemsManager dispatch, boxer/chant and weight-class bank routing, and the three AuSpeechManager com/anc/trn bank categories with byte-range playback. Crucially, 0x0049B61C proves parsed AEMS bank entries actively subscribe to Fight Night's generic named-event bus: each 0x20-byte subscription embeds a {name,hash} descriptor, an 8-byte generic event handle, and a 16-byte listener node. It registers the event with func_003E4A94, installs callback 0x0049B564 plus a packed AEMS mapping key, and inserts the listener through func_003E5938. Generic dispatcher func_003E5860/0x003E58A8 later invokes callback(event_payload, context). 0x0049B564 resolves the mapping key through 0x004970EC, allocates an AEMS command packet, copies the gameplay payload after the key word, and submits it through 0x004974CC; failed submissions are freed, successful ones transfer ownership into the AEMS active-state machinery. Therefore the generic gameplay-event -> AEMS boundary is CONFIRMED rather than hypothetical. The remaining unresolved boundary is narrower: which subscribed AEMS records generate category 0/1/2 speech requests, and how their payload fields select specific comevt.evt/ancevt.evt/trnevt.evt records and spoken byte ranges.",
+      "evidence": "The audio/commentary interface is now statically continuous from Fight Night named gameplay events into the three speech-bank families. The generic event bus -> AEMS bridge is confirmed: parsed AEMS objects subscribe named events through 0x0049B61C, generic dispatcher func_003E5860 calls callback 0x0049B564 with (payload, mapping-context), and that callback builds/submits an AEMS packet through 0x004974CC. The stronger follow-up is speech-specific: bank loader 0x0013A6D0 passes its parsed .evt object to 0x0049AE38, which registers the object/category via 0x0049AD50 and immediately invokes 0x0049B61C. Its three direct calls prove category 0 = comevt.evt/comhdr.big/comdat.big, 1 = ancevt.evt/anchdr.big/ancdat.big, and 2 = trnevt.evt/trnhdr.big/trndat.big. Therefore commentary, announcer and training .evt objects themselves subscribe directly to generic gameplay events and enter the same AEMS command path. The low-level AuSpeechManager request layout, event-record lookup, byte-range decoder and final bank byte addressing are already recovered. Remaining uncertainty is individual speech .evt subscription names/payload schemas and the AEMS active-state transformation into the already-known 0x20-byte AuSpeechManager request—not the architectural connection itself.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Trace accepted packets from 0x004974CC through the sixteen-slot AEMS active-state/update machinery until they either invoke the registered AuSpeechManager callback or resolve to non-speech SFX. For the speech-producing subset, map the AEMS subscription/mapping key and packet words to the 0x20-byte AuSpeechManager request fields, then decode enough comevt.evt/ancevt.evt/trnevt.evt records to attach gameplay event names/payload fields to specific speech event IDs and byte ranges. Do not redo generic event registration, AEMS naming, or bank-byte playback.",
+      "remaining_static_work": "Trace 0x004974CC accepted packets through the sixteen-slot AEMS active-state/update machinery to the callback producer 0x0049A5C0. Recover the transformation from AEMS packet/mapping fields into AuSpeechManager request +0x00/+0x04/+0x08/+0x0C/+0x0E/+0x10/+0x14/+0x18/+0x1C. Then recover or parse individual comevt.evt/ancevt.evt/trnevt.evt subscription descriptors so named gameplay events can be tied to exact speech event IDs/byte ranges. Do not rediscover speech categories, generic-event subscription, AEMS packet construction, or playback addressing.",
       "sources": {
         "functions": [
           "func_0010BB58",
@@ -1581,7 +1581,9 @@
           "0x003E58A8",
           "0x0049702C",
           "0x004970EC",
-          "0x004974CC"
+          "0x004974CC",
+          "0x0049AE38",
+          "0x0049AD50"
         ],
         "strings": [
           "PocketDJFightNight.cpp@0x51b0bc",
@@ -1629,7 +1631,7 @@
           "analysis/resources/aems-event-code-registry.json"
         ]
       },
-      "confidence": "CONFIRMED for generic gameplay-event subscription into AEMS, AEMS packet construction/submission, 193-name event-code registry, AuAemsManager dispatch, speech-bank categories, AEMS speech request byte ranges, chant identity and bank routing; final AEMS-active-state -> specific spoken-commentary mapping remains STATICALLY_SOLVABLE.",
+      "confidence": "CONFIRMED for named gameplay-event -> AEMS subscription, direct speech-EVT category registration (0=com, 1=anc, 2=trn), AEMS packet construction/submission, AuSpeechManager bank routing and byte-range playback; individual event-to-spoken-clip mapping remains STATICALLY_SOLVABLE.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
