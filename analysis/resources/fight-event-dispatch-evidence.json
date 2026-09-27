@@ -361,5 +361,36 @@
       "Welterweight/Lightweight/Featherweight -> Gsmall.abk"
     ],
     "semantic_boundary": "The literal Gsmall/Gmed/Glarge filenames and six-class routing are proven. The meaning of the 'G' prefix is not expanded without direct evidence."
+  },
+  "generic_event_to_aems_bridge": {
+    "confidence": "CONFIRMED",
+    "subscription_builder": "0x0049B61C",
+    "callback": "0x0049B564",
+    "listener_registration": "func_003E5938 / 0x003E5980",
+    "generic_dispatch": "func_003E5860 / 0x003E58A8",
+    "packet_submitter": "0x004974CC",
+    "per_event_subscription_layout": {
+      "size": "0x20",
+      "descriptor": "+0x00..+0x07",
+      "event_handle": "+0x08..+0x0F",
+      "listener_node": "+0x10..+0x1F",
+      "callback_pointer": "+0x18 = 0x0049B564",
+      "listener_context": "+0x1C = 32-bit AEMS mapping key"
+    },
+    "callback_dataflow": [
+      "Generic gameplay event dispatch invokes listener callback(event_payload, listener_context).",
+      "0x0049B564 resolves listener_context through 0x004970EC into an AEMS mapping record.",
+      "The callback allocates 4 + 4*N bytes, where N is record byte +0x0B.",
+      "Packet word 0 receives the 4-byte AEMS mapping key; N payload words are copied from the generic gameplay-event payload into packet+4.",
+      "0x004974CC accepts/submits the packet into the AEMS active-state machinery.",
+      "If submission fails the callback frees the packet; a successful result transfers ownership."
+    ],
+    "mapping_key": {
+      "packer": "0x0049702C",
+      "resolver": "0x004970EC",
+      "shape": "{u16 selector, u8 category-B, u8 category-A}",
+      "note": "0x00497090 selects one of up to eight mapping descriptors by the two category bytes; 0x00497048 resolves the 16-bit selector within that descriptor."
+    },
+    "implication": "Named gameplay events are not merely parallel to AEMS. Parsed AEMS bank entries actively subscribe to Fight Night's generic event bus, and fired gameplay-event payloads are converted into AEMS command packets. This closes the high-level generic-event -> AEMS boundary."
   }
 }
