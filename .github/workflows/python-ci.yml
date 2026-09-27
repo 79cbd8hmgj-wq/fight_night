@@ -66,6 +66,8 @@ jobs:
         run: python tools/re_trace_secondary_xdb.py
       - name: Trace boxer speech mapper
         run: python tools/re_trace_speech_mapper.py
+      - name: Trace boxer audio event bridge
+        run: python tools/re_trace_audio_event_bridge.py
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
