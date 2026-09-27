@@ -272,5 +272,27 @@
       "evidence": "Both iStamina strings sit in nine-rating UI key blocks alongside iPower/iSpeed/iAgility/iChin/iBody/iHeart/iCuts/iOverall.",
       "consequence": "Direct iStamina string xrefs do not identify the in-fight stamina storage/formula."
     }
+  },
+  "ai_modifier_object": {
+    "field_in_high_level_boxer": "+0x2BC",
+    "constructor": "0x00093C5C",
+    "destructor": "0x00091D24",
+    "confidence": "CONFIRMED",
+    "named_categories": [
+      "ai/mods/p%d/misc offense",
+      "ai/mods/p%d/defense",
+      "ai/mods/p%d/bagotricks",
+      "ai/mods/p%d/attack power",
+      "ai/mods/p%d/energy and health",
+      "ai/mods/p%d/phys damage"
+    ],
+    "evidence": [
+      "0x000A01EC allocates 0xD4 bytes, calls 0x00093C5C(object, boxer/context, XDB/context), and stores the result at high-level boxer object+0x2BC.",
+      "0x00093C5C directly formats/uses all six ai/mods/p%d/... category strings and initializes the returned 0xD4-byte object.",
+      "The paired teardown function beginning at 0x000A0668 walks owned subobjects and finally calls 0x00091D24(object+0x2BC, 3).",
+      "0x00091D24 reconstructs the same six ai/mods paths from object+0xD0 and frees the object when its flag argument bit 0 is set."
+    ],
+    "correction": "Prior backlog wording treated 0x00093C5C/0x00091D24 as attack-power consumers and possible AI decision-loop functions. They are constructor/destructor boundaries for the AI modifier object. Actual decision logic must be found by tracing accessors/consumers of the object at high-level boxer +0x2BC.",
+    "next_static_step": "Trace direct callers of the small functions immediately following 0x00091D24 (modifier-array access/scaling helpers) and all uses of high-level boxer +0x2BC, prioritizing calls from combat-state and high-level boxer update paths."
   }
 }
