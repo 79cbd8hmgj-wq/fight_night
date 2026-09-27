@@ -64,6 +64,8 @@ jobs:
         run: python tools/re_trace_boxer_context_callers.py
       - name: Trace secondary boxer XDB accessors
         run: python tools/re_trace_secondary_xdb.py
+      - name: Trace boxer speech mapper
+        run: python tools/re_trace_speech_mapper.py
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
