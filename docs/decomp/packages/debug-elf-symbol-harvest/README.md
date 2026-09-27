@@ -162,3 +162,41 @@ Any downstream evidence should use the corrected function starts.
   standard MIPS negative-stack prologues and surrounding epilogues.
 - The machine-readable source of truth is
   `analysis/resources/debug-build-aip-dispatch.json`.
+
+
+## PocketDJ EATrax callback descriptor
+
+The probable PocketDJ init/create routine at `0x00295788` constructs a
+callback/config block at `sp+0x20..sp+0x5C` before the EATrax player is
+created.
+
+Function-pointer slots:
+
+- `+0x20` -> `0x00295FD8`
+- `+0x24` -> `0x00295FFC`
+- `+0x28` -> `0x00296018`
+- `+0x2C` -> `0x00296034`
+- `+0x30..+0x3C` repeat the same four callbacks
+- `+0x40` -> `0x00295CD0`
+- `+0x44` -> `0x0029606C`
+- `+0x48` -> `0x00296050`
+
+The callback at `0x00295CD0` is a five-way switch. Its case-1 path invokes
+the literal command `EATrax_GoToScreen` with `/_root` and `MAINMENU`.
+The callback at `0x00296050` is a thin wrapper around `func_0026E674`; its
+return value is consumed by `0x0029606C` as a two-bit 0..3 selector while
+avoiding the current state. Exact public-facing names for these callbacks are
+not promoted yet.
+
+The descriptor also carries direct string/config pointers:
+
+- `+0x4C`: `eatrax/`
+- `+0x50`: `eavis`
+- `+0x54`: `EATrax::Player`
+- `+0x58`: `0.0f`
+- `+0x5C`: `0x00064000`
+
+After descriptor setup, the routine allocates `0x174` bytes, constructs the
+player, stores the resulting pointer at global `0x00567124`, and performs the
+source-attributed line-126 initialization assertion if the created player is
+not valid.
