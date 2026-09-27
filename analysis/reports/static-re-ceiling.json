@@ -1495,30 +1495,31 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "A generic named fight-event ABI is now statically visible: func_0010BB58 builds a payload containing two normalized boxer codes and dispatches it through func_003E5860 under the named descriptor `Replay`, using func_003E4A94 for registration/first-use fallback. This materially clarifies fight-event infrastructure but does NOT establish the audio/commentary ABI. `Decision Announcement Script` was also traced to func_000B065C and shown to be one presentation-script name among entrance/faceoff/replay/corner/winner scripts rather than a commentary-audio lookup table. PocketDJ/AuSpeechManager strings and functions remain the stronger audio-specific leads.",
+      "evidence": "A generic named fight-event ABI is now statically visible: func_0010BB58 builds a payload containing two normalized boxer codes and dispatches it through func_003E5860 under the named descriptor `Replay`, using func_003E4A94 for registration/first-use fallback. This materially clarifies fight-event infrastructure but does NOT establish the audio/commentary ABI. `Decision Announcement Script` was also traced to func_000B065C and shown to be one presentation-script name among entrance/faceoff/replay/corner/winner scripts rather than a commentary-audio lookup table. The debug ELF now provides direct source attribution for three PocketDJ routines: func_00295788 -> PocketDJFightNight.cpp line 3 (`!\"pocketdj not inited!\"`), func_00295E24 -> line 182 (`player`), and func_00295EF0 -> line 225 (`player`). These are stronger audio-specific anchors than the previously cited interior-instruction addresses.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Trace AuSpeechManager/PocketDJ and audio-bank call paths to determine what boxer/event identifiers they consume and how they connect to the generic fight-event layer. Do not infer an audio ABI from the Replay payload or Decision Announcement presentation-script name alone.",
+      "remaining_static_work": "Trace outward from the source-attributed PocketDJFightNight.cpp routines (func_00295788, func_00295E24, func_00295EF0), plus AuSpeechManager/audio-bank consumers, to determine what boxer/event identifiers they consume and how they connect to the generic fight-event layer. Do not infer an audio ABI from the Replay payload or Decision Announcement presentation-script name alone.",
       "sources": {
         "functions": [
           "func_0010BB58",
           "func_003E5860",
           "func_003E4A94",
           "func_000B065C",
-          "func_00295738",
-          "func_00295DD4",
-          "func_00295EA0"
+          "func_00295788",
+          "func_00295E24",
+          "func_00295EF0"
         ],
         "strings": [
           "PocketDJFightNight.cpp@0x51b0bc",
           "Decision Announcement Script@0x4fa4e8"
         ],
         "evidence": [
-          "analysis/resources/fight-event-dispatch-evidence.json"
+          "analysis/resources/fight-event-dispatch-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "confidence": "PROBABLE for generic fight-event boundary; audio/commentary ABI itself remains unresolved.",
+      "confidence": "PROBABLE for the generic fight-event boundary and PocketDJ source attribution; audio/commentary ABI itself remains unresolved.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
