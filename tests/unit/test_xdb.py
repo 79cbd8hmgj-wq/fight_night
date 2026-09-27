@@ -4,7 +4,7 @@ import struct
 
 import pytest
 
-from fnr3_re.xdb import XdbFormatError, parse_xdb_header, xdb_field_type
+from fnr3_re.xdb import (\n    XdbFormatError,\n    parse_xdb_header,\n    xdb_field_token,\n    xdb_field_type,\n    xdb_field_value,\n)
 
 
 def _xdb_bytes(
@@ -90,3 +90,26 @@ def test_record_and_field_bounds() -> None:
         header.record_offset(37)
     with pytest.raises(IndexError):
         header.field_token_offset(0, 121)
+
+
+def _typed_xdb_bytes() -> bytes:
+    data = bytearray(47)
+    struct.pack_into("<6I", data, 0, 4, 1, 36, 40, 44, 0)
+    # fields 0..3 -> inline i16, string, int32, float32
+    data[0x18] = 0b00011011
+    struct.pack_into("<4h", data, 0x1C, -7, 0, 0, 0)
+    struct.pack_into("<f", data, 36, 1.5)
+    struct.pack_into("<i", data, 40, 123456)
+    data[44:47] = b"Hi\x00"
+    return bytes(data)
+
+
+def test_resolves_all_four_native_xdb_storage_classes() -> None:
+    data = _typed_xdb_bytes()
+
+    assert [xdb_field_type(data, i) for i in range(4)] == [0, 1, 2, 3]
+    assert xdb_field_token(data, 0, 0) == -7
+    assert xdb_field_value(data, 0, 0) == -7
+    assert xdb_field_value(data, 0, 1) == b"Hi"
+    assert xdb_field_value(data, 0, 2) == 123456
+    assert xdb_field_value(data, 0, 3) == pytest.approx(1.5)
