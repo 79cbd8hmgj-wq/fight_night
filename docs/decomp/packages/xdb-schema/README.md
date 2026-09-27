@@ -97,6 +97,28 @@ and returns whether it is positive; a caller at `0x00278B0C` applies that predic
 across 35 stock boxer IDs. The exact engine label (visible/selectable/unlocked/eligible)
 has not yet been promoted to confirmed.
 
+## Weight field and exact division thresholds
+
+`func_0018600C` reads XDB field `0x09` as a signed-int16 boxer weight and maps
+that value directly to the SelectBoxer weight-class enum. The recovered mapping is:
+
+| Enum | Division | Weight range |
+| ---: | --- | ---: |
+| 0 | Heavyweight | 191-280 |
+| 1 | Light Heavyweight | 169-190 |
+| 2 | Middleweight | 148-168 |
+| 3 | Welterweight | 136-147 |
+| 4 | Lightweight | 127-135 |
+| 5 | Featherweight | <=126 |
+
+Weights `>=281` return `-1`/invalid. `GetSelectBoxerInfo` calls this classifier
+at `0x001D7D28` and immediately applies the independently-proven `<6` enum bound.
+Retail records corroborate the scale directly: Manny Pacquiao's row stores `125`
+and Erik Morales's stores `126` in field `0x09`.
+
+Field `0x09` is therefore the exact boxer-weight field at row-relative token
+`+0x12`, and the six retail division thresholds no longer require inference from UI
+labels.
 ## SelectBoxer rating fields
 
 `UpdateSelectBoxerInfo` at `0x001D53F0` reaches the table through
