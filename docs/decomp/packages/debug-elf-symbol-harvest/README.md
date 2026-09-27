@@ -200,3 +200,71 @@ After descriptor setup, the routine allocates `0x174` bytes, constructs the
 player, stores the resulting pointer at global `0x00567124`, and performs the
 source-attributed line-126 initialization assertion if the created player is
 not valid.
+
+
+## AuSpeechManager bank architecture
+
+The debug build exposes the PSP speech system as three explicit bank families.
+This is the first direct static bridge from gameplay state to the actual
+commentary/announcer/training speech assets.
+
+### Core functions
+
+| Address | Evidence-backed role |
+| --- | --- |
+| `0x00137B34` | speech-manager singleton/factory path; allocates 0x1E8 bytes and calls the constructor |
+| `0x0013AA94` | AuSpeechManager constructor |
+| `0x00137BA0` | AuSpeechManager stream initialization; directly references the named `AuSpeechManager::InitStream()` failure diagnostic |
+| `0x0013AC78` | main speech-bank initialization/setup path |
+| `0x00137888` | public/request dispatch wrapper |
+| `0x0013CCA4` | three-way speech-bank request router |
+| `0x0013DDC4` | probable `AuSpeechManager_EvaluateTCC`; TCC gameplay-condition selector |
+
+### Bank triples and category IDs
+
+The initialization path passes three separate filename triples through the same
+bank-loader helper at `0x0013A6D0`:
+
+| Request category | Manager substructure | Data | Events | Header | Interpretation |
+| ---: | --- | --- | --- | --- | --- |
+| 0 | `+0x19C` | `comdat.big` | `comevt.evt` | `comhdr.big` | commentary |
+| 1 | `+0x188` | `ancdat.big` | `ancevt.evt` | `anchdr.big` | announcer |
+| 2 | `+0x1B0` | `trndat.big` | `trnevt.evt` | `trnhdr.big` | training |
+
+The numeric routing is not inferred from file order. `0x0013CCA4` reads the
+request's `+0x10` field and selects:
+
+- `0` -> the `com*` bank and `manager+0x19C`
+- `1` -> the `anc*` bank and `manager+0x188`
+- `2` -> the `trn*` bank and `manager+0x1B0`
+- values `>= 3` do not select one of these banks
+
+Other request fields are used by the selected bank but remain conservatively
+unnamed:
+
+- `+0x00`: event/index-like value
+- `+0x04`: additive offset/index after bank lookup
+- `+0x0C`: 16-bit subtype/flag
+- `+0x10`: confirmed three-way speech category selector
+
+### TCC condition families
+
+The large selector at `0x0013DDC4` has direct debug-string xrefs that name
+five decision families:
+
+- `TCC = MULTI KD`
+- `TCC = POOR PERFORMANCE`
+- `TCC = WASTED ENERGY`
+- `TCC = BOXER DAMAGE`
+- `TCC = BOXER RATING/STYLE`
+
+The routine reads boxer/fight state and rating/stat values, derives event flags,
+builds an event payload, and sends that payload through the generic event
+dispatch layer. The exact expansion of the acronym `TCC` is not promoted
+without further evidence, but its role as commentary/speech condition
+selection is now directly bounded by the surrounding AuSpeechManager bank
+architecture.
+
+This materially changes the audio RE picture: FNR3 PSP does not expose only a
+commentary enable/disable toggle. The debug executable preserves the bank
+routing and multiple gameplay-context selectors that feed speech events.
