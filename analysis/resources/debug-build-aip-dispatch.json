@@ -1067,5 +1067,132 @@
       }
     },
     "note": "These bank names and exact code references provide a concrete static path for tracing boxer/event commentary selection into the audio subsystem without assuming that the generic Replay event payload is itself commentary data."
+  },
+  "audio_manager_ownership": {
+    "confidence": "CONFIRMED structural ownership; exact C++ method names are inferred only where diagnostics name them",
+    "managers": {
+      "AuController": {
+        "singleton_global": "0x0055A6AC",
+        "singleton_accessor": "func_00107988",
+        "allocation_size": "0x8C",
+        "constructor": "func_001077A8",
+        "init": {
+          "function": "func_001079F4",
+          "confidence": "PROBABLE exact method name from diagnostics",
+          "diagnostics": [
+            "AuController::Init() -- Out of Memory creating soundlibbuffer !",
+            "AuController::InitAudio() -- Snd::System::Init() FAILED !"
+          ],
+          "behavior": "allocates/stores the soundlib buffer at +0x20, initializes the underlying sound system, and marks object byte +0x5A initialized"
+        }
+      },
+      "AuAemsManager": {
+        "singleton_global": "0x0055A990",
+        "singleton_accessor": "func_00126D3C",
+        "allocation_size": "0x350",
+        "constructor": "func_00128C1C",
+        "core_bank_initialization": "func_00128EB4",
+        "bank_slot_helper": {
+          "func_00126A18": "loads/creates an AEM bank/module into a small slot structure; emits AuAemsManager::Init() failure diagnostics",
+          "func_00126AD4": "attaches/registers an already-created bank handle into a slot; emits the same SNDAEMS_addmodulebank diagnostic on failure",
+          "func_00126B2C": "releases/clears a bank slot"
+        },
+        "destructor_evidence": "The destructor path iterates 0x0C-byte bank slots from object +0x7C through +0x19C and releases them with func_001269BC/func_00126B2C-family helpers."
+      },
+      "AuSpeechManager": {
+        "singleton_global": "0x0055AA90",
+        "singleton_accessor": "func_00137B34",
+        "allocation_size": "0x1E8",
+        "constructor": "func_0013AA94",
+        "init_stream": {
+          "function": "func_00137BA0",
+          "diagnostic": "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !",
+          "stream_buffer_field": "+0x17C"
+        },
+        "registered_event_bridge": {
+          "callback": "func_00137888",
+          "callback_registration": "0x0013ADCC-0x0013ADDC",
+          "registration_constant": "0x8CA0",
+          "event_processor": "func_0013CCA4",
+          "flow": "func_00137888 obtains the AuSpeechManager singleton through func_00137B34 and forwards its event argument to func_0013CCA4."
+        },
+        "commentary_language_gate": {
+          "location": "func_0013CCA4 @ 0x0013D024-0x0013D04C",
+          "behavior": "The speech-event processor checks language via func_00206C48. For French (enum 2) it calls func_001B1CFC and abandons this processing branch if the predicate is false; non-French bypasses this check.",
+          "implication": "The +0x160 bit-19 predicate is not merely UI metadata: in the French path it gates a real AuSpeechManager event-processing branch. Its exact user-facing on/off meaning is still not promoted beyond the proven iDisplayCommentaryOption/gating role."
+        }
+      }
+    }
+  },
+  "named_diagnostic_anchors": {
+    "audio": [
+      {
+        "function": "func_001079F4",
+        "strings": [
+          "AuController::Init() -- Out of Memory creating soundlibbuffer !",
+          "AuController::InitAudio() -- Snd::System::Init() FAILED !"
+        ]
+      },
+      {
+        "function": "func_00126A18",
+        "strings": [
+          "AuAemsManager::Init() -- Failed AEM Bank Load!",
+          "AuAemsManager::Init() -- Failed SNDAEMS_addmodulebank!"
+        ]
+      },
+      {
+        "function": "func_00126AD4",
+        "strings": [
+          "AuAemsManager::Init() -- Failed SNDAEMS_addmodulebank!"
+        ]
+      },
+      {
+        "function": "func_00137BA0",
+        "strings": [
+          "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !"
+        ]
+      }
+    ],
+    "event_stack": [
+      {
+        "function": "func_000CBE74",
+        "string": "EventStackBase::Alloc - Event too large (%u bytes)"
+      },
+      {
+        "function": "func_000CC00C",
+        "string": "EventStackBase::FreeOldest - Attempting to free space in an empty event stack"
+      }
+    ],
+    "network_frontend": [
+      {
+        "function": "func_00252AD8",
+        "string": "QueueNetworkEvent:: %d / skipping lower priority event"
+      },
+      {
+        "function": "func_00252BE8",
+        "string": "OnNetworkStateChange:: %d"
+      },
+      {
+        "function": "func_00252E24",
+        "string": "HandleQueuedNetworkEvent:: ..."
+      },
+      {
+        "function": "func_0025312C",
+        "string": "DismissNetworkEvent:: %d"
+      },
+      {
+        "function": "func_0025339C",
+        "string": "InternalCheckFlowArgs::Network update enabled"
+      },
+      {
+        "function": "func_00265ECC",
+        "string": "InetInitFlow::generic screen ready"
+      },
+      {
+        "function": "func_00265F34",
+        "string": "InetInitFlow::NetConfigResults %d"
+      }
+    ],
+    "note": "Entries are source/diagnostic attribution anchors. A diagnostic containing Class::Method is strong naming evidence for the containing routine, but exact C++ method promotion remains conservative where one routine contains diagnostics for multiple named methods."
   }
 }
