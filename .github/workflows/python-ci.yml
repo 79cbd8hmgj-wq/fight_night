@@ -50,8 +50,6 @@ jobs:
           assert info.revision_locked
           print(info.package_version, info.observed_revision)
           PY
-      - name: Trace field-5 audio bridge
-        run: python tools/re_trace_field5_audio_bridge_compact.py
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
