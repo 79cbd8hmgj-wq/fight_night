@@ -335,5 +335,31 @@
       "0x001375F4": "AEMS free adapter (confirmed behavior)"
     },
     "implication": "The speech ABI is now bounded across both sides of the callback: generic AEMS events produce explicit bank/event/range requests, and AuSpeechManager maps those requests to byte ranges in the three speech data banks. What remains is semantic mapping from gameplay/named-event payloads to the AEMS event IDs and bank records."
+  },
+  "chant_identity_bridge": {
+    "confidence": "CONFIRMED for dataflow and filename selection; original field/function labels remain partially unresolved",
+    "xdb_field": "0x05",
+    "raw_reader": "func_00185B30",
+    "normalized_boxer_code": "func_0010C9C8",
+    "chant_loader": "0x00133884",
+    "chant_id_normalizer": "0x001278C0",
+    "container": "chants.viv",
+    "filename_selection": [
+      "normalized chant ID < 500 -> chant_PSP_Lic%03d.abk",
+      "normalized chant ID >= 500 -> chant_PSP_CaB%03d.abk",
+      "missing per-boxer bank -> Chant_PSP_Gen%03d.abk with randomized ID 100..107"
+    ],
+    "implication": "The same xdbboxr field-0x05-derived normalized boxer identity used in Replay payloads also selects boxer-specific chant audio. Field 0x05 is therefore demonstrably part of boxer audio/presentation identity, but this still does not make it a raw commentary/speech-line ID."
+  },
+  "weight_class_audio_bridge": {
+    "confidence": "CONFIRMED routing",
+    "loader": "0x00133B9C",
+    "weight_class_accessor": "0x0018600C",
+    "routing": [
+      "Heavyweight -> Glarge.abk",
+      "Light Heavyweight/Middleweight -> Gmed.abk",
+      "Welterweight/Lightweight/Featherweight -> Gsmall.abk"
+    ],
+    "semantic_boundary": "The literal Gsmall/Gmed/Glarge filenames and six-class routing are proven. The meaning of the 'G' prefix is not expanded without direct evidence."
   }
 }
