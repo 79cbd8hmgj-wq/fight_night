@@ -32,7 +32,8 @@
       "If the dispatcher is not initialized for the event, func_0010BB58 calls func_003E4A94 with descriptor D_0055AB38 and retries.",
       "D_0055AB38 resolves to the literal event name Replay."
     ],
-    "semantic_boundary": "Field 0x05 is proven to feed boxer identity/profile codes in the Replay event payload. This does not prove that the field or normalized code is a commentary/speech/audio ID."
+    "semantic_boundary": "Field 0x05 is proven to feed boxer identity/profile codes in the Replay event payload. This does not prove that the field or normalized code is a commentary/speech/audio ID.",
+    "handle_runtime_vaddr": "0x005AB848"
   },
   "neighboring_named_event_descriptors": [
     "RefClinch",
@@ -164,102 +165,103 @@
         "hash": "0x324F6F4F"
       },
       {
-        "handle": "0x005AB8C0",
+        "handle": "0x005AB848",
         "descriptor": "0x0055AB38",
         "name": "Replay",
         "hash": "0x28D86F4F"
       },
       {
-        "handle": "0x005AB8C8",
+        "handle": "0x005AB8C0",
         "descriptor": "0x0055AB40",
         "name": "UpdateStatus",
         "hash": "0x1FD36F4F"
       },
       {
-        "handle": "0x005AB8D0",
+        "handle": "0x005AB8C8",
         "descriptor": "0x0055AB48",
         "name": "BoxerFatigue",
         "hash": "0x49406F4F"
       },
       {
-        "handle": "0x005AB8D8",
+        "handle": "0x005AB8D0",
         "descriptor": "0x0055AB50",
         "name": "TauntingResult",
         "hash": "0x59AB6F4F"
       },
       {
-        "handle": "0x005AB8E0",
+        "handle": "0x005AB8D8",
         "descriptor": "0x0055AB58",
         "name": "FeintingResult",
         "hash": "0x70046F4F"
       },
       {
-        "handle": "0x005AB8E8",
+        "handle": "0x005AB8E0",
         "descriptor": "0x0055AB60",
         "name": "ClinchingResult",
         "hash": "0x13716F4F"
       },
       {
-        "handle": "0x005AB8F0",
+        "handle": "0x005AB8E8",
         "descriptor": "0x0055AB68",
         "name": "Trapped",
         "hash": "0x32496F4F"
       },
       {
-        "handle": "0x005AB8F8",
+        "handle": "0x005AB8F0",
         "descriptor": "0x0055AB70",
         "name": "BoxerRoundHistory",
         "hash": "0x1ED36F4F"
       },
       {
-        "handle": "0x005AB900",
+        "handle": "0x005AB8F8",
         "descriptor": "0x0055AB78",
         "name": "CareerMode",
         "hash": "0x185A6F4F"
       },
       {
-        "handle": "0x005AB908",
+        "handle": "0x005AB900",
         "descriptor": "0x0055AB80",
         "name": "Knockdown",
         "hash": "0x69746F4F"
       },
       {
-        "handle": "0x005AB910",
+        "handle": "0x005AB908",
         "descriptor": "0x0055AB88",
         "name": "IllegalBlows",
         "hash": "0x738A6F4F"
       },
       {
-        "handle": "0x005AB918",
+        "handle": "0x005AB910",
         "descriptor": "0x0055AB90",
         "name": "RAFightIntroFlyIn",
         "hash": "0x2F7621D9"
       },
       {
-        "handle": "0x005AB920",
+        "handle": "0x005AB918",
         "descriptor": "0x0055AB98",
         "name": "RAFightIntroSegment4",
         "hash": "0x1EA821D9"
       },
       {
-        "handle": "0x005AB928",
+        "handle": "0x005AB920",
         "descriptor": "0x0055ABA0",
         "name": "RAFightIntroSegment5",
         "hash": "0x05EA21D9"
       },
       {
-        "handle": "0x005AB930",
+        "handle": "0x005AB928",
         "descriptor": "0x0055ABA8",
         "name": "RAFightResultSegment1",
         "hash": "0x1B8521D9"
       },
       {
-        "handle": "0x005AB938",
+        "handle": "0x005AB930",
         "descriptor": "0x0055ABB0",
         "name": "RAFightResultSegment2",
         "hash": "0x324C21D9"
       }
-    ]
+    ],
+    "correction": "Replay is registered out of sequence at runtime handle 0x005AB848 (raw 0x20FA0). RefCountDown begins at 0x005AB850 (raw 0x20FA8), and the later sequence resumes after PunchLanded at UpdateStatus=0x005AB8C0. The initializer 0x001106CC is authoritative."
   },
   "speech_event_bridge": {
     "confidence": "CONFIRMED for named event identities and dispatch sites; payload semantics partially unresolved",
