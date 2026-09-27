@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "title": "FNR3 PSP generic-event to AEMS runtime pipeline",
+  "source_revision": "ULES00270 review/debug BOOT.BIN",
+  "source_sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+  "confidence": "CONFIRMED for control/dataflow and layouts unless individually marked",
+  "relocation_context": {
+    "program_segment_1_vaddr": "0x0058A8A8",
+    "note": "The state-table addresses below are PSP-relocated references targeting program segment 1. Raw pre-relocation offsets are retained for reproducibility."
+  },
+  "generic_event_subscription": {
+    "subscriber_builder": "0x0049B61C",
+    "listener_callback": "0x0049B564",
+    "generic_event_resolver": "func_003E4A94",
+    "generic_listener_attach": "func_003E5938",
+    "speech_evt_registration": "0x0049AE38 -> 0x0049AD50 -> 0x0049B61C",
+    "subscription_entry": {
+      "size": "0x20",
+      "fields": {
+        "+0x00..+0x07": "generic named-event descriptor {name pointer, 32-bit hash}",
+        "+0x08..+0x0F": "8-byte generic event handle storage",
+        "+0x10..+0x1F": "generic event listener node",
+        "+0x18": "listener callback = 0x0049B564",
+        "+0x1C": "packed 4-byte AEMS mapping key"
+      }
+    },
+    "mapping_key_packer": {
+      "function": "0x0049702C",
+      "layout": "little-endian 32-bit: +0x00 u16 token/key, +0x02 u8 selector B, +0x03 u8 selector A",
+      "note": "0x0049B61C constructs +0x1C through this helper from parsed EVT fields."
+    },
+    "callback_packet_builder": {
+      "function": "0x0049B564",
+      "behavior": [
+        "resolves the listener's packed mapping key through 0x004970EC",
+        "reads mapping-record +0x0B as the number of 32-bit gameplay-payload words required by this mapping",
+        "allocates 4 + payload_words*4 bytes through the registered AEMS allocator",
+        "copies the 4-byte mapping key to packet +0x00",
+        "copies exactly payload_words words from the generic named-event payload to packet +0x04",
+        "submits ownership to 0x004974CC; failed submission frees the packet immediately"
+      ]
+    }
+  },
+  "admission_scheduler": {
+    "submit_function": "0x004974CC",
+    "state_pre_relocation": "0x0003CE78",
+    "state_runtime_vaddr": "0x005C7720",
+    "group_count": 8,
+    "admitted_slot_count": 16,
+    "state_layout": {
+      "+0x000..+0x01F": "8 x u32 active-packet counts, one per AEMS group",
+      "+0x020..+0x03F": "8 x s32 current/selected admitted-slot indices; -1 means none",
+      "+0x040": "start of 16 admitted-slot records",
+      "admitted_slot_stride": "0x10"
+    },
+    "admitted_slot_record": {
+      "size": "0x10",
+      "fields": {
+        "+0x00": "scheduler time/tick captured from 0x0049B528 (behavior confirmed; exact time-unit name unresolved)",
+        "+0x04": "u16 sequence/generation value used to order events sharing a time value",
+        "+0x06": "active flag",
+        "+0x07": "AEMS group index 0..7",
+        "+0x08": "resolved AEMS mapping-record pointer",
+        "+0x0C": "owned copied mapping/gameplay-event packet pointer"
+      }
+    },
+    "behavior": [
+      "rejects reentrant submission through a global guard",
+      "resolves packet +0x00 mapping key through 0x004970EC",
+      "retrieves the AEMS group index via 0x00497140 and chooses one of 16 admitted slots with 0x00497364",
+      "stores scheduler ordering data, mapping pointer and packet ownership in the selected slot",
+      "increments the owning group's active count and records its current slot",
+      "if mapping-record byte +0x0A bit 5 is set, immediately invokes the group's processing path at 0x00497E48"
+    ],
+    "release_function": "0x00497CA4",
+    "release_behavior": [
+      "frees the owned packet if present",
+      "clears slot active state",
+      "clears the group's current-slot index if this slot was current",
+      "decrements the group's active count without allowing it to remain negative"
+    ]
+  },
+  "decoder_contexts": {
+    "state_pre_relocation": "0x000180A8",
+    "state_runtime_vaddr": "0x005A2950",
+    "context_count": 8,
+    "context_stride": "0xA0",
+    "init_all": "0x00499C74",
+    "reset_one": "0x00499BD0",
+    "build_one": "0x00499CEC",
+    "execute_one": "0x00499E64",
+    "active_test": "0x00499E44",
+    "context_layout": {
+      "+0x00": "resolved AEMS mapping-record pointer",
+      "+0x04": "selected parsed AEMS event/variant object pointer",
+      "+0x08": "selected variant/index byte",
+      "+0x09": "active flag",
+      "+0x0A": "number of 12-byte execution descriptors, derived from selected object byte +0x02 >> 2",
+      "+0x0B": "mapping-record gameplay-payload word count (source for owned packet-copy allocation)",
+      "+0x0C": "owned copy of the mapping/gameplay packet",
+      "+0x10": "start of up to 12 execution descriptors",
+      "execution_descriptor_stride": "0x0C"
+    },
+    "execution_descriptor": {
+      "size": "0x0C",
+      "fields": {
+        "+0x00": "source object/pointer selected during mapping evaluation",
+        "+0x04": "signed 16-bit selector/index copied from source +0x04",
+        "+0x06": "signed 16-bit selector/index copied from source +0x06",
+        "+0x08": "u16 derived selector/value populated from source byte +0x0A and mapping state"
+      },
+      "semantic_boundary": "The binary layout and population dataflow are confirmed; original field names are not."
+    }
+  },
+  "packet_to_decoder": {
+    "evaluator": "0x0049A104",
+    "confidence": "CONFIRMED as the admitted-packet mapping/condition evaluator; exact original symbol unknown",
+    "behavior": [
+      "re-resolves the packet's 4-byte mapping key and AEMS group",
+      "evaluates mapping conditions and selects parsed event/variant objects",
+      "builds temporary execution-descriptor data",
+      "calls 0x00499CEC to materialize the owning group's 0xA0 decoder context",
+      "may create no active decoder context when mapping/conditions reject the packet"
+    ],
+    "group_processing": "0x00497E48",
+    "sequence": [
+      "obtain group's current admitted slot",
+      "reset the group's existing decoder context with 0x00499BD0",
+      "evaluate the admitted packet through 0x0049A4F0 / 0x0049A104",
+      "release the admitted slot with 0x00497CA4",
+      "if a decoder context became active, execute it through 0x00499E64"
+    ]
+  },
+  "decoder_to_speech": {
+    "executor": "0x00499E64",
+    "sequence": [
+      "reconstructs the 4-byte mapping key from the decoder context's owned packet",
+      "runs AEMS state/update helpers 0x0049AFB4 and 0x004999EC",
+      "calls 0x0049A5C0 with the resolved mapping record, selected event/variant object and mapping key",
+      "0x0049A5C0 constructs the already-recovered 0x20-byte AEMS->AuSpeechManager requests and invokes the registered speech callback",
+      "updates per-group execution accounting and resets the decoder context through 0x00499BD0"
+    ],
+    "speech_request_producer": "0x0049A5C0",
+    "downstream": "0x00137888 AuSpeechManager callback -> category 0/1/2 com/anc/trn routing -> speech-bank event record -> bank byte range"
+  },
+  "end_to_end_path": [
+    "Fight Night generic named gameplay event",
+    "generic event listener installed from .evt data",
+    "0x0049B564 mapping packet builder",
+    "0x004974CC 8-group / 16-slot admission scheduler",
+    "0x0049A104 mapping/condition evaluator",
+    "0x00499CEC 8-way decoder-context builder",
+    "0x00499E64 decoder executor",
+    "0x0049A5C0 AEMS speech-request producer",
+    "0x00137888 AuSpeechManager callback",
+    "com/anc/trn event record lookup",
+    "speech data bank byte range playback"
+  ],
+  "unresolved_boundary": [
+    "Individual comevt.evt / ancevt.evt / trnevt.evt subscription names and their exact payload-word requirements are external-data facts not recoverable from BOOT.BIN alone.",
+    "The semantic names of several mapping-condition fields and execution-descriptor fields remain unresolved.",
+    "Exact spoken-clip identity for a given gameplay event requires the corresponding speech .evt/.hdr/.big data or a runtime capture."
+  ],
+  "provenance": [
+    "Derived from static disassembly and PSP relocation records in the user-provided ULES00270 debug/review BOOT.BIN.",
+    "No executable or commercial resource bytes are committed."
+  ]
+}
