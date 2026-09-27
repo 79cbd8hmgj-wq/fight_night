@@ -2077,6 +2077,272 @@
       "filename": "coreaems.viv",
       "manager_offset": "+0x28",
       "path_construction": "audio base path + '/' + coreaems.viv"
+    },
+    "context_dependent_banks": {
+      "confidence": "CONFIRMED for numeric venue routing, filenames, wrapper offsets, chant filename selection, and weight-class G-bank selection; proposed helper names remain PROBABLE",
+      "venue_loader": {
+        "function": "0x00132F90",
+        "proposed_name": "AuAemsManager_LoadVenueBanks",
+        "confidence": "PROBABLE name; CONFIRMED routing",
+        "venue_source": "fight-session singleton via 0x001B3EA8; numeric venue ID at session+0x19AC",
+        "valid_selector_domain": "existing fight-session setter independently bounds venue IDs to 0..11",
+        "routes": [
+          {
+            "venue_ids": [
+              0,
+              1
+            ],
+            "banks": [
+              {
+                "filename": "trng.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              2
+            ],
+            "banks": [
+              {
+                "filename": "cvsmall.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "cflust.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              3
+            ],
+            "banks": [
+              {
+                "filename": "csmall.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "cfairst.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              4
+            ],
+            "banks": [
+              {
+                "filename": "csmall.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "cvicest.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              5
+            ],
+            "banks": [
+              {
+                "filename": "cmed.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "cminist.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              6
+            ],
+            "banks": [
+              {
+                "filename": "cmed.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "celest.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              7
+            ],
+            "banks": [
+              {
+                "filename": "cmed.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "csakost.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              8
+            ],
+            "banks": [
+              {
+                "filename": "clarge.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "clst.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              9
+            ],
+            "banks": [
+              {
+                "filename": "clarge.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "clst.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              10,
+              11
+            ],
+            "banks": [
+              {
+                "filename": "clarge.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "clst.abk",
+                "manager_offset": "+0xAC"
+              }
+            ],
+            "note": "This case also enters an additional rplysfx.abk-related flow; exact destination/ownership is intentionally not promoted until fully bounded."
+          }
+        ],
+        "note": "No human-readable venue names are assigned here; only the numeric IDs and literal bank filenames are statically proven."
+      },
+      "boxer_chant_loader": {
+        "function": "0x00133884",
+        "proposed_name": "AuAemsManager_LoadBoxerChants",
+        "confidence": "PROBABLE name; CONFIRMED behavior",
+        "resource_container": "chants.viv",
+        "manager_resource_offset": "+0x2C",
+        "active_venue_gate": "returns for ordinary nonnegative venue IDs below 3; chant load path is entered for venue >=3 (negative/exception path also reaches the loader)",
+        "boxer_identity_input": {
+          "source": "resolved boxer code from func_0010C9C8",
+          "xdb_origin": "xdbboxr field 0x05 feeds func_0010C9C8's bounded boxer-code mapping",
+          "chant_normalizer": "0x001278C0"
+        },
+        "filename_rules": [
+          {
+            "condition": "normalized chant ID < 500",
+            "format": "chant_PSP_Lic%03d.abk"
+          },
+          {
+            "condition": "normalized chant ID >= 500",
+            "format": "chant_PSP_CaB%03d.abk"
+          },
+          {
+            "condition": "selected per-boxer bank absent",
+            "format": "Chant_PSP_Gen%03d.abk",
+            "id_rule": "100 + (func_0026E674() & 7), i.e. 100..107"
+          }
+        ],
+        "corner_storage": [
+          {
+            "corner": 0,
+            "loaded_resource_pointer": "manager+0x30",
+            "bank_wrapper": "manager+0x88"
+          },
+          {
+            "corner": 1,
+            "loaded_resource_pointer": "manager+0x34",
+            "bank_wrapper": "manager+0x94"
+          }
+        ],
+        "implication": "The normalized value ultimately sourced from xdbboxr field 0x05 participates in boxer-specific crowd/audio presentation identity. It is not evidence of a raw commentary-line ID."
+      },
+      "chant_id_normalizer": {
+        "function": "0x001278C0",
+        "proposed_name": "NormalizeBoxerChantId",
+        "confidence": "PROBABLE name; CONFIRMED mapping",
+        "mapping": [
+          "0x1FE..0x203 -> input + 2",
+          "0x204 -> 0x207",
+          "0x205 -> 0x208",
+          "0x206 -> -1",
+          "0x207..0x20B -> input + 6",
+          "0x20C..0x211 -> -1",
+          "0x212 -> 0x20F",
+          "0x213 -> 0x206",
+          "0x214 -> 0x209",
+          "0x215 -> 0x20B",
+          "0x216 -> 0x20C",
+          "0x217 -> 0x212",
+          "0x218..0x21A -> -1",
+          "outside 0x1FE..0x21A -> unchanged"
+        ],
+        "note": "The exact business meaning of the remapped numeric namespace beyond chant-bank selection is not promoted."
+      },
+      "weight_class_g_bank_loader": {
+        "function": "0x00133B9C",
+        "proposed_name": "AuAemsManager_LoadWeightClassGBanks",
+        "confidence": "PROBABLE name; CONFIRMED six-class routing",
+        "boxer_resolution": "reads selected boxer IDs from fight-session +0x19B0 + corner*4, resolves boxer data via 0x00185114, and obtains the six-class enum via 0x0018600C",
+        "routes": [
+          {
+            "weight_class_enum": 0,
+            "existing_class": "Heavyweight",
+            "bank": "Glarge.abk",
+            "manager_wrapper": "+0x148"
+          },
+          {
+            "weight_class_enum": [
+              1,
+              2
+            ],
+            "existing_classes": [
+              "Light Heavyweight",
+              "Middleweight"
+            ],
+            "bank": "Gmed.abk",
+            "manager_wrapper": "+0x13C"
+          },
+          {
+            "weight_class_enum": [
+              3,
+              4,
+              5
+            ],
+            "existing_classes": [
+              "Welterweight",
+              "Lightweight",
+              "Featherweight"
+            ],
+            "bank": "Gsmall.abk",
+            "manager_wrapper": "+0x130"
+          }
+        ],
+        "note": "The literal Gsmall/Gmed/Glarge filenames are proven. Do not expand the 'G' prefix to a semantic word without further evidence."
+      }
     }
   }
 }
