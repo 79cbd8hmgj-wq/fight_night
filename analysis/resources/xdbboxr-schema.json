@@ -238,5 +238,67 @@
     "observed_values": "1 for every normal stock SelectBoxer record 0-34; 0 for bonus rows 35-36.",
     "executable_evidence": "func_00185D84 reads field 4 and returns whether it is >0. A caller at 0x00278B0C iterates 35 stock boxer IDs, resolves each boxer, calls func_00185D84, and records a boolean result in a parallel table.",
     "interpretation": "standard-roster/selectability/eligibility flag. Exact distinction between visible, selectable and unlocked remains open."
+  },
+  "weight_and_division": {
+    "confidence": "CONFIRMED",
+    "weight_field": {
+      "field_id": "0x09",
+      "row_offset": "0x12",
+      "storage": "inline signed int16",
+      "semantic": "boxer weight in the game's pound-scale units",
+      "evidence": "func_0018600C reads XDB field 9 and immediately maps its value to the six SelectBoxer weight-class enum values; known rows independently fit the thresholds (e.g. Pacquiao=125, Morales=126)."
+    },
+    "classifier": {
+      "function": "func_0018600C",
+      "selectboxer_corroboration": "GetSelectBoxerInfo calls func_0018600C at 0x001D7D28 and applies an explicit <6 enum bound.",
+      "enum_order": [
+        {
+          "enum": 0,
+          "name": "Heavyweight",
+          "minimum": 191,
+          "maximum": 280
+        },
+        {
+          "enum": 1,
+          "name": "Light Heavyweight",
+          "minimum": 169,
+          "maximum": 190
+        },
+        {
+          "enum": 2,
+          "name": "Middleweight",
+          "minimum": 148,
+          "maximum": 168
+        },
+        {
+          "enum": 3,
+          "name": "Welterweight",
+          "minimum": 136,
+          "maximum": 147
+        },
+        {
+          "enum": 4,
+          "name": "Lightweight",
+          "minimum": 127,
+          "maximum": 135
+        },
+        {
+          "enum": 5,
+          "name": "Featherweight",
+          "minimum": null,
+          "maximum": 126
+        }
+      ],
+      "invalid_high_weight": "values >= 281 return -1",
+      "exact_branches": [
+        "<127 -> 5",
+        "127..135 -> 4",
+        "136..147 -> 3",
+        "148..168 -> 2",
+        "169..190 -> 1",
+        "191..280 -> 0",
+        ">=281 -> -1"
+      ]
+    }
   }
 }
