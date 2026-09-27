@@ -176,3 +176,72 @@ def xdb_field_type(decoded: bytes | bytearray | memoryview, field_index: int) ->
     byte = data[header.type_bitmap_offset + (field_index >> 2)]
     shift = 6 - ((field_index & 3) * 2)
     return (byte >> shift) & 0x3
+
+
+def xdb_field_token(
+    decoded: bytes | bytearray | memoryview,
+    record_index: int,
+    field_index: int,
+) -> int:
+    """Return the signed 16-bit token stored for one record/field pair."""
+
+    data = bytes(decoded)
+    header = parse_xdb_header(data)
+    offset = header.field_token_offset(record_index, field_index)
+    return struct.unpack_from("<h", data, offset)[0]
+
+
+def xdb_field_value(
+    decoded: bytes | bytearray | memoryview,
+    record_index: int,
+    field_index: int,
+) -> int | float | bytes:
+    """Resolve one XDB field exactly as the recovered native accessor does.
+
+    Type 0 returns the inline signed-int16 token. Type 1 returns the
+    NUL-terminated byte string at ``string_pool_offset + token``. Types 2
+    and 3 return the indexed little-endian int32/float32 pool value.
+    """
+
+    data = bytes(decoded)
+    header = parse_xdb_header(data)
+    token = xdb_field_token(data, record_index, field_index)
+    field_type = xdb_field_type(data, field_index)
+
+    if field_type == 0:
+        return token
+    if token < 0:
+        raise XdbFormatError(
+            f"negative pool token for field {field_index}: {token}"
+        )
+
+    if field_type == 1:
+        offset = header.string_pool_offset + token
+        if not header.string_pool_offset <= offset < header.payload_size:
+            raise XdbFormatError(
+                f"string-pool token is outside payload: field {field_index}, token {token}"
+            )
+        terminator = data.find(b"\x00", offset)
+        if terminator < 0:
+            raise XdbFormatError(
+                f"unterminated string-pool value: field {field_index}, token {token}"
+            )
+        return data[offset:terminator]
+
+    if field_type == 2:
+        offset = header.int32_pool_offset + token * 4
+        if offset < header.int32_pool_offset or offset + 4 > header.string_pool_offset:
+            raise XdbFormatError(
+                f"int32-pool token is outside pool: field {field_index}, token {token}"
+            )
+        return struct.unpack_from("<i", data, offset)[0]
+
+    if field_type == 3:
+        offset = header.float_pool_offset + token * 4
+        if offset < header.float_pool_offset or offset + 4 > header.int32_pool_offset:
+            raise XdbFormatError(
+                f"float-pool token is outside pool: field {field_index}, token {token}"
+            )
+        return struct.unpack_from("<f", data, offset)[0]
+
+    raise AssertionError(f"unreachable XDB field type: {field_type}")
