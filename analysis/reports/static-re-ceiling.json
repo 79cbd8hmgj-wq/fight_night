@@ -1338,31 +1338,43 @@
       "subsystem": "UI/commentary",
       "question": "Is commentary lookup/ID data (audio triggers tied to fight events) statically evidenced?",
       "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "The commentary on/off rule is statically evidenced (`cpToggleCommentary` / `iDisplayCommentaryOption`), but the commentary AUDIO-SELECTION lookup remains unresolved. A previous lead has now been bounded more precisely: `func_000B065C` owns `Decision Announcement Script`, but static disassembly shows it is part of a fight-presentation script-name initializer alongside Venue Script, Entrance Box1/Box2 Script, Faceoff Script, Winner Celebration Script, Explanation Script, Round Replay 1/2/3 and Corner Script 1/2. Thus `Decision Announcement Script` is not by itself evidence of a commentary-ID table. Separately, the newly-mapped field-0x05 path produces boxer codes for the named `Replay` generic event (`func_0010BB58` -> `func_003E5860`, descriptor D_0055AB38='Replay'); that also does not establish commentary/audio selection. The actual audio/commentary event-ID architecture remains open.",
+      "evidence": "The audio/commentary selection lookup remains unresolved, but the debug ELF now sharply separates several concepts that had been conflated. `iDisplayCommentaryOption` is produced by func_001B1CFC: language global 0x005604AC maps 1=English, 2=French, other=Unknown; non-French returns display=true, while French uses session +0x160 bit 19. func_001B21FC is the exact setter for that bit. Therefore +0x160 bit 19 is a French-path display/gating flag for the Commentary option, NOT established as the commentary on/off state. A real speech/audio path is now anchored independently: func_00137BA0 emits the literal `AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !`; func_00128EB4 loads/attaches core banks including cctrl, pmenu, steps, bell, GSfx, Punches, falls, Blocks, cmomets, rplyst, rplysfx and replay; and the PocketDJ lifecycle/source anchors are mapped separately. `Decision Announcement Script` remains presentation-script data, and the generic Replay event remains distinct from commentary selection.",
       "affected_features": [
         "career-2",
         "roster"
       ],
       "sources": {
         "strings": [
-          "Decision Announcement Script@0x4fa4e8",
           "iDisplayCommentaryOption@0x50b330",
-          "PocketDJFightNight.cpp@0x51b0bc"
+          "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !@0x506ac8",
+          "PocketDJFightNight.cpp@0x51b0bc",
+          "Decision Announcement Script@0x4fa4e8",
+          "rplyst.abk@0x5067e4",
+          "replay.abk@0x5067fc"
         ],
         "functions": [
           "func_000B065C",
-          "func_001D9958",
-          "func_001DC52C",
-          "func_001FB6B8",
+          "func_001B1CFC",
+          "func_001B21FC",
+          "func_00128EB4",
+          "func_00137BA0",
+          "func_00206C48",
+          "func_0020715C",
+          "func_0020719C",
+          "func_00295788",
+          "func_0029598C",
+          "func_00295E24",
+          "func_00295EF0",
           "func_0010BB58",
           "func_003E5860"
         ],
         "evidence": [
-          "analysis/resources/fight-event-dispatch-evidence.json"
+          "analysis/resources/fight-event-dispatch-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Stop using `Decision Announcement Script` or xdbboxr field 0x05 as direct commentary-ID leads. Trace the real AuSpeechManager/PocketDJ/audio-bank consumers and their callers, and complete the commentary-toggle consumers func_001D9958/func_001DC52C/func_001FB6B8 only as needed to establish how the toggle gates those audio paths.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Trace from the now-anchored AuSpeechManager/audio-bank routines to the concrete speech/event selector and boxer identifiers. Treat func_001B1CFC/+0x160 bit 19 only as the language-dependent Commentary-option display/gating path unless a separate consumer proves on/off semantics.",
+      "confidence": "PROBABLE for language/display, AuSpeechManager and bank-loader boundaries; commentary selection ABI remains CANDIDATE.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-28-03"
@@ -1495,11 +1507,11 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "A generic named fight-event ABI is now statically visible: func_0010BB58 builds a payload containing two normalized boxer codes and dispatches it through func_003E5860 under the named descriptor `Replay`, using func_003E4A94 for registration/first-use fallback. This materially clarifies fight-event infrastructure but does NOT establish the audio/commentary ABI. `Decision Announcement Script` was also traced to func_000B065C and shown to be one presentation-script name among entrance/faceoff/replay/corner/winner scripts rather than a commentary-audio lookup table. The debug ELF now provides direct PocketDJ lifecycle anchors: func_00295788 is the probable player init/create routine (PocketDJFightNight.cpp:126, assert !\"pocketdj not inited!\"), func_0029598C is the singleton getter, func_00295E24 is CONFIRMED suspend (line 182), and func_00295EF0 is CONFIRMED resume (line 225). The containing ServiceSceCallbacks routine at 0x00341768 prints literal 'Suspending PocketDJ'/'Resuming PocketDJ' diagnostics immediately before those calls.",
+      "evidence": "A generic named fight-event ABI is now statically visible: func_0010BB58 builds a payload containing two normalized boxer codes and dispatches it through func_003E5860 under the named descriptor `Replay`, using func_003E4A94 for registration/first-use fallback. This materially clarifies fight-event infrastructure but does NOT establish the audio/commentary ABI. `Decision Announcement Script` was also traced to func_000B065C and shown to be one presentation-script name among entrance/faceoff/replay/corner/winner scripts rather than a commentary-audio lookup table. The debug ELF now provides direct PocketDJ lifecycle anchors: func_00295788 is the probable player init/create routine (PocketDJFightNight.cpp:126, assert !\"pocketdj not inited!\"), func_0029598C is the singleton getter, func_00295E24 is CONFIRMED suspend (line 182), and func_00295EF0 is CONFIRMED resume (line 225). The containing ServiceSceCallbacks routine at 0x00341768 prints literal 'Suspending PocketDJ'/'Resuming PocketDJ' diagnostics immediately before those calls. The same ELF also identifies func_00137BA0 through the literal AuSpeechManager::InitStream diagnostic and maps func_00128EB4's core audio-bank slots, including rplyst.abk at +0x19C, rplysfx.abk at +0x190 and replay.abk at +0xF4. This creates a title-specific speech/bank path to trace next.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Continue outward from the now-bounded PocketDJ lifecycle region and trace player methods/audio-bank consumers that select tracks/events or speech. The lifecycle names are useful anchors, but they do not yet prove the boxer/commentary identifier ABI.",
+      "remaining_static_work": "Trace callers/consumers of func_00137BA0 and the bank handles populated by func_00128EB4/func_00132F90, then connect those speech/event paths to boxer/event identifiers. The PocketDJ lifecycle and bank inventory are now anchors, not the final selection ABI.",
       "sources": {
         "functions": [
           "func_0010BB58",
@@ -1510,18 +1522,24 @@
           "func_0029598C",
           "func_00295E24",
           "func_00295EF0",
-          "0x00341768"
+          "0x00341768",
+          "func_00137BA0",
+          "func_00128EB4",
+          "func_00132F90"
         ],
         "strings": [
           "PocketDJFightNight.cpp@0x51b0bc",
-          "Decision Announcement Script@0x4fa4e8"
+          "Decision Announcement Script@0x4fa4e8",
+          "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !@0x506ac8",
+          "rplyst.abk@0x5067e4",
+          "replay.abk@0x5067fc"
         ],
         "evidence": [
           "analysis/resources/fight-event-dispatch-evidence.json",
           "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "confidence": "PROBABLE for generic fight-event boundary and PocketDJ init/shutdown labels; CONFIRMED for PocketDJ singleton getter and suspend/resume lifecycle calls; audio/commentary ABI remains unresolved.",
+      "confidence": "CONFIRMED for PocketDJ lifecycle, language/display predicate, AuSpeechManager diagnostic attribution, and bank/object-offset map; audio/commentary selection ABI remains unresolved.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
