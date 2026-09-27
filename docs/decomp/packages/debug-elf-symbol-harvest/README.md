@@ -340,3 +340,89 @@ The actual `TCC` event uses handle `0x005AB868`. The main AuSpeechManager
 update path beginning at `0x0013B410` builds a three-word payload at
 `sp+0xAC` and dispatches it at `0x0013BBE0`. The three words are directly
 observed, but their semantic field names remain intentionally unresolved.
+
+
+## AEMS-to-speech request ABI
+
+The producer side of the AuSpeechManager request is now statically recovered.
+
+During AuSpeechManager initialization, `0x00498260` installs
+`0x00137888` as a callback into the generic AEMS/event subsystem. The
+generic decoder at `0x0049A5C0` later constructs a request at `sp+0x10`
+and invokes that callback directly.
+
+The request is at least **0x20 bytes**:
+
+| Offset | Recovered meaning |
+| --- | --- |
+| `+0x00` | event ID consumed by the selected speech bank |
+| `+0x04` | relative byte offset within the event's canonical speech-data entry |
+| `+0x08` | byte length/span of the decoded AEMS range |
+| `+0x0C` | 16-bit subtype/flag |
+| `+0x0E` | associated signed 16-bit source field |
+| `+0x10` | bank category: 0=com, 1=anc, 2=trn |
+| `+0x14` | AEMS-derived 16-bit field; semantics still open |
+| `+0x18` | AEMS-derived byte field; semantics still open |
+| `+0x1C` | first-request boolean; first emitted request gets bit 5 of source byte +0x0A, later requests get 0 |
+
+The category field comes from a descriptor selected by `0x00497090`; it is
+therefore assigned by the generic AEMS/event mapping before AuSpeechManager is
+called.
+
+### Byte-range decoder
+
+`0x0049B480` is now bounded as a byte-range decoder.
+
+Its input object uses:
+
+- `+0x05` as entry count
+- low 7 bits of `+0x04` to derive entry stride:
+  `(value & 0x7F) + 2`
+- `+0x07` to derive byte scale:
+  `(value + 1) << 8`
+- `+0x08` as the final/end position for the last entry
+- variable-size entries beginning at `+0x0C`, each starting with a
+  big-endian 16-bit position
+
+For entry N it produces:
+
+```text
+start_bytes = entry[N].position_units * block_scale
+length_bytes = next_position_bytes - start_bytes
+```
+
+For the final entry, the object-level `+0x08` value supplies the ending
+position. The caller can additionally add source `+0x06 * block_scale` to
+the start.
+
+This proves request `+0x04` is a **relative byte offset** and request
+`+0x08` is a **byte length**, not an abstract sample number.
+
+### Final speech-file offset
+
+The bank record's `+0x04` field is likewise a **base byte offset**. The bank
+loader canonicalizes each event record name:
+
+```text
+name
+-> strip "_Clone"
+-> append ".dat"
+-> lookup in comdat.big / ancdat.big / trndat.big
+-> store returned base byte offset
+```
+
+AuSpeechManager computes:
+
+```text
+final_bank_byte_offset =
+    event_record.base_data_offset +
+    aems_request.relative_byte_offset
+```
+
+and sends the selected bank pathname plus that offset through
+`0x00483AAC -> 0x004837A4 -> 0x004C242C/0x004C254C`.
+
+The lower file/audio layer copies the pathname into its resource object and
+stores the offset at object `+0x118`; the alternate path adjusts the same
+offset while walking segmented file extents. This independently confirms the
+byte-offset interpretation.
