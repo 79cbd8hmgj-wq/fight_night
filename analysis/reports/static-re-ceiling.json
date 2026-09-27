@@ -270,7 +270,7 @@
       "subsystem": "Boxers",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "A packed 2-bit-per-entry flags array was proven at payload offset +0x18 (121 entries, ~31 bytes); the byte range past it (offset ~0x37 through the payload's 9704 bytes) has not been structurally analyzed. NEW this delta pass: selectboxer.big!selectBoxer.const (decoded 'Apt constant file' UI-script constant pool, entries 144-154) names exactly 9 boxer rating-stat fields in a fixed order -- iPower, iSpeed, iAgility, iStamina, iChin, iBody, iHeart, iCuts, iOverall -- bounded by a matching NUM_STATS constant. All 9 names (not just iStamina, previously the only one checked) are proven to exist as BOOT.BIN strings, each appearing twice and both instances owned by the SAME function pair T_001D54A0/T_001E83E0 (cross-checked this pass: iPower@0x50aecc/0x50c6ac, iSpeed@0x50aed4/0x50c6b4, iAgility@0x50aedc/0x50c6bc, iChin@0x50aef4/0x50c6d4, iBody@0x50aefc/0x50c6dc, iHeart@0x50af04/0x50c6e4, iCuts@0x50af0c/0x50c6ec, iOverall@0x50af14/0x50c6f4). This gives the per-record schema question a concrete, named, ordered 9-field candidate list to search for in the payload tail, where none existed before.",
+      "evidence": "The xdbboxr payload still has a proven count of 121 and a packed 2-bit-per-entry flags array at +0x18; raw record-byte offsets past that header/flags region are not yet fully decoded. Follow-up PR #37 resolves the real SelectBoxer rating reader: UpdateSelectBoxerInfo begins at 0x001D53F0 (so the older T_001D54A0 function-boundary interpretation was wrong). It parses iBoxerID/iCorner and publishes the nine UI ratings. Through func_0018553C -> func_001ACD40, the internal schema-field mapping is now: Power = average of schema IDs 0x10/0x11; Speed=0x12; Agility=0x13; Stamina=0x14; Chin=0x15; Body=0x18; Heart=0x16; Cuts=0x17. iOverall is computed by func_001D50F4 instead of being read as one direct raw field. This establishes real executable consumers and internal field IDs, but not yet the physical byte offsets/encoding of those schema IDs in xdbboxr.adf.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -280,16 +280,20 @@
       "sources": {
         "resource": "preload/db.viv!xdbboxr.adf",
         "functions": [
-          "func_001AD268",
-          "T_001D54A0",
-          "T_001E83E0"
+          "0x001D53F0 (UpdateSelectBoxerInfo)",
+          "func_0018553C",
+          "func_001ACD40",
+          "func_001D50F4"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Disassemble func_0018654C (consumes func_001AD268's result); structurally analyze the payload tail specifically searching for a 9-field (Power/Speed/Agility/Stamina/Chin/Body/Heart/Cuts/Overall) stat block, now that the exact field set and order are known from selectBoxer.const; cross-check the +0x18 model against another xdb table's own consumer function.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Trace func_001ACD40/func_001ACC54/func_001ACCAC back through the xdb schema descriptors to convert internal field IDs 0x10-0x18 into exact xdbboxr.adf byte offsets/types. Then extend the same method to identity, division, stance/handedness, appearance, hometown, career/store and created-boxer fields. Independently bound the second stat-name copy near 0x001E83E0 before assigning it semantics.",
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-03"
