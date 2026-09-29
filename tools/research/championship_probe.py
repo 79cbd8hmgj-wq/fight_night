@@ -258,12 +258,45 @@ def main() -> None:
         })
 
     focused_ranges = {
-        "champion_transfer_tail": disasm_range(raw, elf, 0x00196F58, 0x00197018),
+        "champion_transfer_full": disasm_range(raw, elf, 0x00196DC4, 0x00197018),
         "result_title_transfer_region": disasm_range(raw, elf, 0x0019CB00, 0x0019CDA0),
+        "ranking_belt_region": disasm_range(raw, elf, 0x001E2B70, 0x001E2D20),
+        "career_stats_title_region": disasm_range(raw, elf, 0x001E2580, 0x001E2888),
+        "trophy_title_region": disasm_range(raw, elf, 0x001FE400, 0x001FE850),
         "division_mapping_helper": disasm_range(raw, elf, 0x0019527C, 0x00195340),
         "career_slot_to_weight_class": disasm_range(raw, elf, 0x001929C4, 0x00192A40),
         "title_record_getter": disasm_range(raw, elf, 0x00192930, 0x001929C4),
         "title_gate_helper": disasm_range(raw, elf, 0x001971A0, 0x00197280),
+    }
+
+    def read_c_string(address: int) -> str | None:
+        off = elf.vaddr_to_offset(address)
+        if off is None:
+            return None
+        end = raw.find(b"\\0", off, min(len(raw), off + 256))
+        if end < 0:
+            return None
+        try:
+            return raw[off:end].decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+
+    named_string_addresses = [
+        0x0050BB58, 0x0050BB70, 0x0050BB78, 0x0050BB88, 0x0050BB9C, 0x0050BBB0,
+        0x0050BBC8, 0x0050BBD8, 0x0050BBF0, 0x0050BC04, 0x0050BC1C, 0x0050BC2C,
+        0x0050BC3C, 0x0050BC4C, 0x0050BC54, 0x0050BC60, 0x0050BC74, 0x0050BC80,
+        0x0050BC8C, 0x0050BC94, 0x0050BC9C, 0x0050BCA0, 0x0050BCA4, 0x0050BCA8,
+        0x0050BCD0, 0x0050BCE0, 0x0050BCEC, 0x0050BD00, 0x0050BD10, 0x0050BD1C,
+        0x0050BD28, 0x0050D698, 0x0050D6AC, 0x0050D6BC, 0x0050D6FC,
+        0x0050D748, 0x0050D758, 0x0050D768, 0x0050D778, 0x0050D788, 0x0050D798,
+        0x0050D7A8, 0x0050D7BC, 0x0050D7D8, 0x0050D8B8, 0x0050D8CC,
+        0x0050D8E0, 0x0050D8F8, 0x0050D904, 0x0050D918, 0x0050D924,
+        0x0050D938, 0x0050D948, 0x0050D95C, 0x0050D964, 0x0050D96C,
+        0x0050D978, 0x0050D98C, 0x0050D9A8, 0x0050D9B8,
+    ]
+    named_strings = {
+        f"0x{address:08X}": read_c_string(address)
+        for address in named_string_addresses
     }
 
     print("CHAMPIONSHIP_PROBE_BEGIN")
