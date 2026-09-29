@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "native_interface": {
+    "registration_cluster": "0x002036A8",
+    "names": [
+      "GetContractInfo",
+      "GetContractPersonInfo",
+      "SetContractPersonContractInfo",
+      "AttemptSignContract"
+    ],
+    "ui_keys": [
+      "iContractPersonID",
+      "iTrainerID",
+      "iAffordable",
+      "iContractType",
+      "iSignedContractPerson",
+      "strWeeksRemaining",
+      "strPercentCut",
+      "strRatingFocus",
+      "astrSigningFee",
+      "aContractPersonIDs",
+      "astrContractPersonFirstName",
+      "astrContractPersonLastName",
+      "strCROContract",
+      "strContractCRO",
+      "strBank"
+    ],
+    "localization_and_focus_keys": [
+      "INFO_Weeks",
+      "INFO_Expertise_%d",
+      "ST_Power",
+      "ST_Speed",
+      "ST_Balanced",
+      "ST_Unknown"
+    ],
+    "confidence": "CONFIRMED names/keys; exact one-to-one binding of every large provider to its registered name remains partially unresolved"
+  },
+  "contract_type_selector": {
+    "global": "0x00023950",
+    "confidence": "CONFIRMED",
+    "mapping": {
+      "0": "trainer",
+      "nonzero": "cutman"
+    },
+    "evidence": [
+      "0x002037BC branches on global 0x00023950.",
+      "Type 0 path constructs/loads the 0x001B91A4/0x001B9534 object family backed by TRNR trainer.fnc and reads the embedded contract at career+0xE8.",
+      "Nonzero path constructs/loads the 0x001A015C/0x001A04F4 object family backed by CUST cutman.fnc and reads the embedded contract at career+0x134.",
+      "0x00203B7C reads iTrainerID, then passes installer slot 1 when the selector is 0 and slot 2 when the selector is nonzero.",
+      "0x00203E78 emits iContractType from the same selector global."
+    ],
+    "note": "The UI input key iTrainerID is reused by the generic signing handler even when the current contract-person type is cutman."
+  },
+  "embedded_contract_slots": {
+    "confidence": "CONFIRMED",
+    "slot_0": {
+      "offset": "career+0x60",
+      "meaning": "fight contract"
+    },
+    "slot_1": {
+      "offset": "career+0xE8",
+      "meaning": "trainer contract"
+    },
+    "slot_2": {
+      "offset": "career+0x134",
+      "meaning": "cutman contract"
+    },
+    "installer": "0x00193840",
+    "selector_logic": "slot argument 0/1/2 maps directly to +0x60/+0xE8/+0x134"
+  },
+  "generic_signing_flow": {
+    "function": "0x00193840",
+    "proposed_name": "InstallCareerContract",
+    "confidence": "CONFIRMED behavior; proposed name is descriptive",
+    "inputs": "career object, contract slot 0..2, selected person/contract ID",
+    "behavior": [
+      "Selects the appropriate embedded contract object by slot.",
+      "Invokes that object's select/load method (+0x28 member-function slot).",
+      "Invokes its +0x38 member-function slot to obtain the signing/up-front cost.",
+      "Rejects the signing when profile+0xA0 bank balance is below the required cost.",
+      "Calls 0x0019FC10 to finalize the selected contract.",
+      "When the cost is nonzero, adds it to profile+0x98 and subtracts it from profile+0xA0.",
+      "Fight-contract slot 0 has additional copying into profile+0x13C/+0x140; staff slots use the shared path without that fight-specific copy."
+    ],
+    "economy_fields": {
+      "profile+0xA0": "CONFIRMED career bank/balance",
+      "profile+0x98": "CONFIRMED cumulative money/expense-like total incremented by staff/fight signing costs; exact public label unresolved"
+    }
+  },
+  "contract_finalizer": {
+    "function": "0x0019FC10",
+    "confidence": "CONFIRMED",
+    "behavior": [
+      "If an old live contract is in state 2, first resets it through 0x0019FBF4.",
+      "Copies current persistent profile date profile+0x9C into the contract object's date/state storage at object+0x18.",
+      "Invokes the embedded contract object's +0x28 selection/install method with the selected ID.",
+      "Sets generic live-contract state to 2 through 0x0019F978."
+    ],
+    "implication": "Trainer and cutman contracts retain a signing/start date in the same generic contract framework as fight contracts, enabling weeks-remaining/term calculations."
+  },
+  "trainer_resource": {
+    "resource": "contract/contracts.viv!trainer.fnc",
+    "loader": "0x001B9284",
+    "magic": "TRNR",
+    "record_count_global": "0x0055E6C4",
+    "record_table_global": "0x0055E6C0",
+    "record_size_bytes": 24,
+    "live_object_constructor": "0x001B91A4",
+    "load_record_by_id": "0x001B9534",
+    "eligibility": "0x001B9490",
+    "confidence": "CONFIRMED",
+    "raw_record_fields": {
+      "+0x00": "32-bit value used by staff-detail percentage-cut formatting; semantic mapping to trainer cut/fee is PROBABLE",
+      "+0x04": "32-bit accessor 0x001B9510; exact semantic label unresolved",
+      "+0x08": "eligibility/range bound, -1 sentinel supported",
+      "+0x0C": "eligibility/range bound, -1 sentinel supported",
+      "+0x10": "32-bit accessor 0x001B9528; exact semantic label unresolved",
+      "+0x14": "signed value consumed by 0x001B9658/0x001B9680 to update boxer-related state; exact semantic label unresolved"
+    },
+    "focus_display": {
+      "keys": [
+        "ST_Power",
+        "ST_Speed",
+        "ST_Balanced",
+        "ST_Unknown"
+      ],
+      "evidence": "The type-0 staff-detail path indexes a focus string table and emits it through strRatingFocus.",
+      "confidence": "CONFIRMED trainer UI has a discrete rating-focus classification; mapping back to one raw trainer.fnc field remains unresolved"
+    }
+  },
+  "cutman_resource": {
+    "resource": "contract/contracts.viv!cutman.fnc",
+    "loader": "0x001A023C",
+    "magic": "CUST",
+    "record_count_global": "0x0055D42C",
+    "record_table_global": "0x0055D428",
+    "record_size_bytes": 24,
+    "live_object_constructor": "0x001A015C",
+    "load_record_by_id": "0x001A04F4",
+    "eligibility": "0x001A0450",
+    "confidence": "CONFIRMED",
+    "raw_record_fields": {
+      "+0x00": "32-bit value used by shared staff-detail percentage-cut formatting; exact semantic label unresolved",
+      "+0x04": "32-bit accessor 0x001A04D0; exact semantic label unresolved",
+      "+0x08": "eligibility/range bound, -1 sentinel supported",
+      "+0x0C": "eligibility/range bound, -1 sentinel supported",
+      "+0x10": "32-bit accessor 0x001A04E8; exact semantic label unresolved",
+      "+0x14": "signed field consumed by cutman-specific downstream logic; exact semantic label unresolved"
+    },
+    "expertise_display": {
+      "key": "INFO_Expertise_%d",
+      "behavior": "The cutman detail path formats a one-based expertise level and emits it through the shared strRatingFocus UI slot.",
+      "confidence": "CONFIRMED UI behavior; exact raw source offset remains unresolved"
+    }
+  },
+  "contract_detail_provider": {
+    "region": "0x00203760",
+    "confidence": "CONFIRMED generic staff detail behavior",
+    "behavior": [
+      "Reads iContractPersonID.",
+      "Switches by global iContractType selector.",
+      "For trainer, either copies the currently signed trainer contract from career+0xE8 or loads a trainer.fnc record by requested ID.",
+      "For cutman, either copies the currently signed cutman contract from career+0x134 or loads a cutman.fnc record by requested ID.",
+      "Computes/emits strWeeksRemaining via generic live-contract date/term state.",
+      "Computes/emits strPercentCut.",
+      "Emits trainer focus as ST_Power/ST_Speed/ST_Balanced/ST_Unknown, or cutman expertise through INFO_Expertise_%d, using the shared strRatingFocus output."
+    ]
+  },
+  "sign_handler": {
+    "function": "0x00203B7C",
+    "proposed_binding": "AttemptSignContract",
+    "binding_confidence": "PROBABLE from registration order and behavior; direct iTrainerID input is CONFIRMED",
+    "behavior": [
+      "Reads iTrainerID.",
+      "Gets the live career object.",
+      "If iContractType selector is 0, calls 0x00193840 with slot 1 (trainer).",
+      "Otherwise calls 0x00193840 with slot 2 (cutman)."
+    ]
+  },
+  "persistence_answer": {
+    "question": "Are training/staff contract state part of the same career state?",
+    "answer": "YES for trainer/cutman live contract state.",
+    "confidence": "CONFIRMED",
+    "evidence": [
+      "Both staff contracts are embedded directly in the same career object that owns fight contracts and persistent profile data.",
+      "Signing writes contract date/state into those embedded objects and debits the persistent career bank.",
+      "The Career UI and next-event logic query this same live career object."
+    ],
+    "boundary": "This proves trainer/cutman contract persistence architecture. It does not yet fully map the serialized save offsets for every field inside the embedded live-contract objects."
+  },
+  "career2_relevance": {
+    "reusable": [
+      "generic staff/person contract UI",
+      "affordability checks",
+      "signing fees",
+      "percentage cuts",
+      "contract start dates / weeks remaining",
+      "trainer rating-focus categories",
+      "cutman expertise",
+      "two persistent staff slots"
+    ],
+    "extension_plan": [
+      "Preserve trainer slot as the base coach/trainer contract.",
+      "Generalize the existing contract-person framework for manager/promoter contracts rather than inventing a totally separate UI pattern.",
+      "Use the existing date/term/economy machinery for longer camps and staff relationships.",
+      "Separate optional training activity quality from trainer contract quality in the next RE pass.",
+      "Treat promoter fight terms and persistent promoter/manager relationships as separate layers: retail proves the former, while the latter is an overhaul extension."
+    ],
+    "next_static_step": [
+      "DEFERRED: no additional staff/manager/promoter work in the current Career Mode 2.0 version."
+    ]
+  },
+  "promoter_manager_boundary": {
+    "confidence": "CONFIRMED bounded static architecture boundary",
+    "persistent_staff_roles": {
+      "selector": "global 0x00023950",
+      "recovered_roles": {
+        "0": "trainer",
+        "nonzero": "cutman"
+      },
+      "embedded_slots": {
+        "career+0xE8": "trainer contract",
+        "career+0x134": "cutman contract"
+      },
+      "conclusion": "No third persistent manager/promoter person-contract slot is present in the recovered generic staff selector/installer mapping."
+    },
+    "promoter_fight_contract_terms": {
+      "source": "career fight-contract fine-print provider",
+      "confirmed_ui_keys": [
+        "INFO_Promoter_Selects",
+        "INFO_Promoter_Cut"
+      ],
+      "related_contract_fields": [
+        "strPurseCut",
+        "INFO_Your_Cut"
+      ],
+      "interpretation": "Retail supports promoter-facing control/cut terms as properties of individual fight contracts.",
+      "boundary": "These fine-print terms do not prove a persistent named promoter relationship, promoter roster, promoter contract slot, or manager relationship field."
+    },
+    "manager_boundary": {
+      "evidence": "career2-contract-evidence explicitly leaves 'manager relationship field' in not-yet-proven state.",
+      "result": "No persistent manager relationship field is currently evidenced in the bounded retail career/staff structures."
+    },
+    "career2_extension_path": [
+      "Reuse the proven contract-person UI and InstallCareerContract/date/economy machinery for new manager/promoter relationships.",
+      "Keep fight-level promoter control/cut as separate offer terms even if a persistent promoter relationship is added.",
+      "Do not alias trainer/cutman slots or existing fine-print flags into manager/promoter state without new evidence."
+    ]
+  },
+  "current_version_scope": {
+    "status": "DEFERRED_TO_NEXT_VERSION_BY_USER",
+    "systems": [
+      "trainer/cutman expansion",
+      "manager/promoter relationships"
+    ],
+    "instruction": "Preserve recovered retail evidence only. Do not continue RE or implementation on these systems during the current Career Mode 2.0 version."
+  }
+}

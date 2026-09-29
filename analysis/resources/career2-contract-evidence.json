@@ -1,0 +1,781 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "native_interface": {
+    "registration_cluster": "0x001FF110",
+    "names": [
+      "GetFightContractInfo",
+      "GetIndividualContractInfo",
+      "OnSelectFightContract",
+      "OnSelectFightContractConfirm",
+      "GetFinePrintInfo",
+      "OnRivalFinalChallenge"
+    ],
+    "data_keys": [
+      "aContractID",
+      "astrContractGoals",
+      "astrContractRanks",
+      "astrContractOpponents",
+      "astrContractPurse",
+      "iContractID"
+    ],
+    "confidence": "CONFIRMED interface names/keys; exact one-to-one native-handler binding for each large implementation remains to be proven"
+  },
+  "special_career_contracts": {
+    "confidence": "CONFIRMED",
+    "contract_type_resolver": "0x001A2C98",
+    "evidence": [
+      "0x001A2C98 reads a signed 16-bit contract/type field at contract-object+0x1C -> record+0x34 and returns the type, with one conditional remap for type 27.",
+      "The large contract-list implementation switches on the resolved type using a 26-entry table for types 2..27."
+    ],
+    "jump_table": {
+      "vaddr": "0x0050E1C0",
+      "type_23_target": "0x001FF770",
+      "type_27_target": "0x001FF6C0"
+    },
+    "go_pro": {
+      "resolved_type": 23,
+      "case": "0x001FF770",
+      "ui_key": "iGoProContractID",
+      "output_site": "0x001FF7D8",
+      "behavior": "Copies the selected contract record's ID into the Go Pro contract-ID output."
+    },
+    "retire": {
+      "resolved_type": 27,
+      "case": "0x001FF6C0",
+      "ui_key": "iRetireContractID",
+      "output_site": "0x001FF728",
+      "behavior": "Copies the selected contract record's ID into the Retire contract-ID output.",
+      "caveat": "0x001A2C98 conditionally remaps raw type 27 to type 25 when a contract-object virtual predicate succeeds; the meaning of that predicate is not yet named."
+    },
+    "implication": "Turning professional and retirement are already represented as first-class special contract paths in the retail career system, making them strong extension/replacement points for Career Mode 2.0."
+  },
+  "career_contract_state": {
+    "provider_region": "0x0020002C",
+    "confidence": "CONFIRMED output keys; exact original function/native name still pending",
+    "keys": [
+      {
+        "name": "iCareerStage",
+        "xref": "0x002000C0"
+      },
+      {
+        "name": "iContractSigned",
+        "xref": "0x002001A4"
+      },
+      {
+        "name": "INFO_Earnings",
+        "xref": "0x00200260"
+      },
+      {
+        "name": "strEarnings",
+        "xref": "0x00200278"
+      },
+      {
+        "name": "INFO_Bank",
+        "xref": "0x00200270"
+      },
+      {
+        "name": "strAccount",
+        "xref": "0x00200278"
+      },
+      {
+        "name": "INFO_Your_Rank",
+        "xref": "0x00200288"
+      },
+      {
+        "name": "strRank",
+        "xref": "0x00200290"
+      },
+      {
+        "name": "INFO_Date",
+        "xref": "0x002002A4"
+      },
+      {
+        "name": "strDate",
+        "xref": "0x002002B0"
+      }
+    ],
+    "implication": "The existing contract/career screen already joins contract status with career stage, finances, rank and date, which is a natural UI/data boundary for dynamic offers and negotiation."
+  },
+  "contract_detail_fields": {
+    "provider_region": "0x00201BD0",
+    "confidence": "CONFIRMED UI field keys; exact record offsets are still being decoded",
+    "keys": [
+      "strPurseCut",
+      "strRankChange",
+      "strDivision",
+      "strVenue",
+      "strTimetoFight",
+      "INFO_Your_Cut",
+      "INFO_Rank_Change",
+      "INFO_Division",
+      "INFO_Venue",
+      "INFO_Weeks_till_fight",
+      "iUnderCardFight"
+    ],
+    "implication": "Several Career 2.0 offer attributes already exist in the original detail model: purse split, ranking effect, division, venue, time-to-fight and undercard status."
+  },
+  "fine_print": {
+    "provider_region": "0x00202810",
+    "confidence": "CONFIRMED fine-print key usage; likely GetFinePrintInfo implementation but exact native binding remains to be proven",
+    "fields": [
+      "INFO_Sponsor_Fight_Yes",
+      "INFO_Sponsor_Fight_No",
+      "INFO_Future_Contracts",
+      "INFO_Weightclass_Change_Yes",
+      "INFO_Weightclass_Change_No",
+      "INFO_Bonus",
+      "INFO_Required",
+      "INFO_Promoter_Selects",
+      "INFO_Promoter_Cut",
+      "INFO_15_Untimed",
+      "O_%d_Rounds",
+      "INFO_3_Minute_Rounds",
+      "INFO_2_Minute_Rounds2",
+      "INFO_No_Cutmen",
+      "INFO_Headgear",
+      "INFO_Stop_Fights2",
+      "INFO_A_Knockdown_Wins2",
+      "INFO_Win_With_Most2",
+      "INFO_Only_Ref",
+      "M_3_Knockdown_Rule"
+    ],
+    "implication": "The original contract model already carries a broad rules/obligations layer that can be repurposed for negotiation terms rather than treating a contract as only opponent+purse."
+  },
+  "career2_alignment": {
+    "directly_supported_or_extendable": [
+      "dynamic fight offer list",
+      "rank impact",
+      "purse and purse cut",
+      "venue",
+      "weeks/camp time to fight",
+      "weight-class change conditions",
+      "bonuses",
+      "future-contract commitments",
+      "promoter control/cut",
+      "round count and round length",
+      "special rules",
+      "Go Pro transition",
+      "retirement transition",
+      "player championship contract generation",
+      "slot-specific title scheduling with persistent subtype-8 match descriptors",
+      "three paired player championship challenge/defense contract families",
+      "slot-specific title defenses using persistent subtype-9 match descriptors",
+      "standard title challenge opponent selection from ladder slot 0",
+      "standard title defense opponent selection from ladder slot 1"
+    ],
+    "not_yet_proven": [
+      "rematch-clause storage",
+      "catchweight field",
+      "opponent-replacement protection",
+      "broadcast placement",
+      "manager relationship field",
+      "multi-fight term length semantics",
+      "negotiation mutation/validation rules"
+    ],
+    "next_static_step": "Continue current-version fight-offer/contract implementation without adding persistent manager/promoter relationship mechanics.",
+    "current_version_exclusions": [
+      "persistent manager relationship field",
+      "persistent promoter relationship/influence system",
+      "trainer/cutman expansion",
+      "recovery/injury expansion"
+    ]
+  },
+  "selection_and_confirmation": {
+    "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
+    "selection_handler": {
+      "function": "0x001FF210",
+      "native_binding": "OnSelectFightContract",
+      "binding_confidence": "CONFIRMED by direct read of UI input key iContractID",
+      "input_key": "iContractID",
+      "selected_id_destination": "0x000193840(career_object, slot=0, contract_id)",
+      "followup": "0x001FFE1C(contract_id)",
+      "evidence": [
+        "0x001FF244 loads string 0x0050DB00 = 'iContractID' into the UI-value reader 0x000D241C.",
+        "The decoded integer is passed as a2 to 0x000193840 with a1=0.",
+        "0x000193840 selects the embedded object at career+0x60 for slot 0 and invokes its member-function entry +0x28.",
+        "The career+0x60 object's +0x28 method is 0x001A2FA0, which copies the selected contract record into the live object.",
+        "The handler then calls 0x001FFE1C with the same selected contract ID."
+      ],
+      "implication": "The original game already has a clean 'select offer -> load live selected-contract object' boundary that can be replaced by a generated Career 2.0 offer list without changing the downstream contract-detail/scheduling machinery."
+    },
+    "confirmation_handler": {
+      "function": "0x001FF3A0",
+      "native_binding": "OnSelectFightContractConfirm",
+      "binding_confidence": "CONFIRMED by direct read of UI input key iYes",
+      "input_key": "iYes",
+      "reject_or_cancel_path": "If iYes is false, or no valid selected opponent/contract state is present, 0x00019FBF4 resets the contract/career selection state.",
+      "accept_path": [
+        "Reads the live selected contract embedded at career+0x60.",
+        "Invokes contract member-function entry +0x48, which resolves to 0x001A2D34 and returns selected_record+0x20.",
+        "Multiplies that value by 7.",
+        "Copies the current packed career date from career-profile +0x9C into a temporary date object and calls 0x001A1280 with the 7x value as a day offset.",
+        "Writes literal career state/event code 25 to career-profile +0x80.",
+        "Calls 0x0019443C, 0x00194518 and 0x00195564 to update downstream career/schedule state.",
+        "Finalizes/releases the temporary date object."
+      ],
+      "scheduled_date": {
+        "base_field": "career-profile +0x9C",
+        "contract_value": "selected contract record +0x20 via 0x001A2D34",
+        "conversion": "days = contract_value * 7",
+        "date_math": "0x001A1280",
+        "confidence": "CONFIRMED whole-week scheduling arithmetic; the original field name is unknown"
+      },
+      "persistent_transition": {
+        "field": "career-profile +0x80",
+        "accepted_contract_value": 25,
+        "confidence": "CONFIRMED write; semantic label is a career state/event code but its enum name remains unresolved"
+      },
+      "implication": "Career 2.0 negotiation can remain upstream of this boundary: once an offer is accepted, the original scheduling/date machinery can potentially be reused with an extended/generated contract record."
+    }
+  },
+  "contract_record": {
+    "confidence": "CONFIRMED size/type/timeline fields; other offsets remain partially unresolved",
+    "size_bytes": 68,
+    "selected_record_loader": "0x001A2FA0",
+    "global_record_table_pointer": "0x0055D530",
+    "selected_count_global": "0x0055D534",
+    "live_record_storage": "contract_object+0x1C points to owned record storage beginning at object+0x10",
+    "evidence": [
+      "0x001A2FA0 computes record_address = global_table + contract_id * 68 (id*64 + id*4).",
+      "It copies exactly eight 8-byte chunks plus one final 4-byte word = 68 bytes into the live contract record.",
+      "It marks selection validity through 0x0019F978 after the copy."
+    ],
+    "fields": {
+      "+0x20": {
+        "observed_role": "whole-week scheduling offset used when an accepted contract creates the future fight date",
+        "getter": "0x001A2D34",
+        "confirmation_use": "value * 7 days -> 0x001A1280 date arithmetic",
+        "confidence": "CONFIRMED arithmetic role; exact original field name unknown"
+      },
+      "+0x30": {
+        "observed_role": "packed flags consumed throughout detail/fine-print code",
+        "confidence": "CONFIRMED packed field; individual bits still being decoded"
+      },
+      "+0x34": {
+        "observed_role": "signed contract type",
+        "getter_or_resolver": "0x001A2C98",
+        "confidence": "CONFIRMED"
+      },
+      "+0x44": {
+        "observed_role": "packed fine-print/rules bitfield read by 0x001A5594",
+        "confidence": "CONFIRMED"
+      }
+    },
+    "correction": "Previous evidence revision wrote these globals as 0x0056D530/0x0056D534. Direct LUI/addend recheck proves the correct debug-ELF addresses are 0x0055D530/0x0055D534."
+  },
+  "live_contract_object": {
+    "confidence": "CONFIRMED",
+    "career_slot0_offset": "+0x60",
+    "vtable": "0x005819B4",
+    "methods": {
+      "+0x28": "0x001A2FA0 - select/copy contract by ID",
+      "+0x38": "0x001A2C80 - returns live record +0x14",
+      "+0x40": "0x001A2C8C - returns live record +0x10",
+      "+0x48": "0x001A2D34 - returns live record +0x20 scheduling value",
+      "+0x50": "0x001A2C10 - contract/current-state comparison predicate",
+      "+0x58": "0x001A4F50",
+      "+0x60": "0x001A38C4",
+      "+0x68": "0x001A3B5C"
+    },
+    "note": "Only method roles proven by direct dataflow are semantically named; the remaining methods stay address-only."
+  },
+  "fights_resource_loader": {
+    "function": "0x001A3D48",
+    "resource": "contract/contracts.viv!fights.fnc",
+    "magic": "FITE",
+    "base_template_size_bytes": 68,
+    "template_pointer_global": "0x0055D530",
+    "template_count_global": "0x0055D534",
+    "confidence": "CONFIRMED",
+    "evidence": [
+      "The function directly references the fights.fnc filename.",
+      "It recognizes the little-endian 0x45544946 value, bytes 'FITE'.",
+      "It allocates/copies entries using a 0x44-byte stride.",
+      "0x001A2FA0 bounds contract IDs against 0x0055D534 and indexes 0x0055D530 by id*0x44 before copying the template into the live contract wrapper."
+    ],
+    "note": "The live contract wrapper contains additional derived fields before/around the copied template. '0x44-byte contract record' should therefore be read as the base fights.fnc template size, not the total live wrapper size.",
+    "decoded_table": "FITE header + 50 x 68-byte records = 3408 bytes",
+    "raw_table_status": "Decoded and structurally verified from the tracked contract/contracts.viv sample."
+  },
+  "offer_eligibility": {
+    "function": "0x001A3FBC",
+    "proposed_name": "EvaluateFightContractEligibility",
+    "confidence": "CONFIRMED eligibility role; proposed name is descriptive",
+    "caller_context": {
+      "generator": "0x0020002C",
+      "current_rank_argument": "current boxer progression record +0x04 (zero-based rank)",
+      "evidence": [
+        "0x0020002C reads the current progression record through 0x001928F0 and sign-extends byte +0x04 into $23.",
+        "Every candidate-template check passes $23 as the second argument to 0x001A3FBC.",
+        "The generator repeatedly loads a candidate template through 0x001A2FA0, calls 0x001A3FBC, and only formats/adds the contract to the UI when the evaluator returns true."
+      ]
+    },
+    "current_career_inputs": [
+      "profile+0x121 career phase",
+      "profile+0xA0 bank/money",
+      "current progression record +0x04 rank",
+      "current progression record +0x05/+0x06/+0x07, whose sum is used as total completed fights",
+      "current progression record +0x05 separately as the numerator in a percentage calculation",
+      "profile+0x13C and additional live-career prerequisite state"
+    ],
+    "live_contract_inputs": [
+      "record+0x18 and +0x1C rank-range bounds",
+      "record+0x24 prerequisite/relationship field (exact meaning unresolved)",
+      "record+0x30 packed eligibility flags",
+      "record+0x34 contract type",
+      "record+0x50 percentage/threshold-like field (exact semantic label unresolved)",
+      "value returned through contract vtable +0x38 / 0x001A2C80 (record+0x14), compared against profile bank"
+    ],
+    "phase_side_flag": {
+      "field": "live record +0x30 bit 0",
+      "behavior": "The evaluator requires bool(profile+0x121) to equal NOT(bit0). Thus templates explicitly select the initial-amateur side versus the nonzero/post-initial side of the career phase.",
+      "confidence": "CONFIRMED boolean relationship",
+      "boundary": "Without the raw fights.fnc templates, the bit value for the specific Go Pro and Retire records is not asserted."
+    },
+    "rank_gate": {
+      "upper_or_worse_rank_field": "record+0x18",
+      "lower_or_better_rank_field": "record+0x1C",
+      "sentinel": "-1 disables the corresponding bound",
+      "behavior": "The current zero-based rank must fall inside the template-defined range.",
+      "confidence": "CONFIRMED comparisons; descriptive bound names reflect zero-is-best ranking convention"
+    },
+    "money_gate": {
+      "required_value_source": "contract vtable +0x38 -> 0x001A2C80 -> record+0x14",
+      "career_value": "profile+0xA0",
+      "behavior": "Contract is rejected when current bank/money is below the returned template value.",
+      "confidence": "CONFIRMED comparison; exact design meaning of the template amount remains unresolved"
+    },
+    "record_gate": {
+      "formula": "percentage = round((record+0x05 * 100) / (record+0x05 + record+0x06 + record+0x07)) when total fights > 0",
+      "template_field": "record+0x50 participates in the final gate",
+      "confidence": "CONFIRMED arithmetic; exact semantic interpretation of +0x50 and the edge-case fallback is unresolved"
+    },
+    "contract_type_dispatch": "Types 1..27 have a type-specific precheck before converging on the shared phase/rank/money/record gates. Go Pro type 23 and Retire type 27 use the generic type branch rather than a wholly separate eligibility function.",
+    "significance": "Retail FNR3 already generates a filtered fight-contract list from candidate pools. Career Mode 2.0 can replace/extend the candidate pools and eligibility policy rather than building the entire offer-selection pipeline from scratch."
+  },
+  "dynamic_offer_generator": {
+    "function": "0x0020002C",
+    "proposed_binding": "GetFightContractInfo",
+    "confidence": "CONFIRMED contract-list generation behavior; native name binding remains highly probable from the surrounding registration cluster",
+    "behavior": [
+      "Gets the current career/progression record and current zero-based rank.",
+      "Branches on profile+0x121 career phase and other career flags.",
+      "Iterates multiple candidate-ID pools.",
+      "Loads each candidate into a temporary live contract object with 0x001A2FA0.",
+      "Filters it with 0x001A3FBC.",
+      "Formats accepted candidates through 0x001FF4E4 into the contract-list output.",
+      "Uses random selection for several pools, while maintaining additional progression/rival/availability gates."
+    ],
+    "implication": "The original professional/amateur career already has a dynamic offer-generation skeleton. The overhaul can substitute richer pool construction (rank, record, reputation, promoter, health, recent activity, titles, etc.) while preserving the proven UI and selection/confirmation interfaces."
+  },
+  "automatic_offer_refresh": {
+    "selector": "0x001A319C",
+    "proposed_name": "SelectRandomEligibleCareerContract",
+    "confidence": "CONFIRMED behavior; proposed name is descriptive",
+    "career_phase_pool_selection": {
+      "field": "profile+0x121",
+      "behavior": "Converts the phase to a boolean and selects one of two candidate-pool descriptors.",
+      "raw_pool_descriptor_addend": "0x00021318",
+      "boundary": "The 0x21318 value is a pre-relocation data addend in the PSP ELF; do not treat it as a final runtime address."
+    },
+    "behavior": [
+      "Constructs a temporary live-contract wrapper.",
+      "Selects a candidate-ID pool based on bool(profile+0x121).",
+      "Iterates the pool and loads each candidate with 0x001A2FA0.",
+      "Gets the current career rank and filters each candidate through 0x001A3FBC.",
+      "Collects at most 10 eligible contract IDs.",
+      "If at least one is eligible, chooses one using RNG 0x0026E674.",
+      "Installs the chosen ID into the career live-contract slot through 0x0019FC10.",
+      "Runs 0x0019FAC4 and 0x001935E4 to perform the corresponding career/event setup.",
+      "Returns 1 on success and 0 when no eligible template was found."
+    ],
+    "max_eligible_candidates": 10,
+    "only_direct_caller": "0x001B720C inside 0x001B6A40",
+    "significance": "The retail career already has an automatic eligible-offer fallback. Career Mode 2.0 can replace the phase-specific candidate pools and/or eligibility policy while preserving the downstream selected-contract and UI flow."
+  },
+  "post_fight_offer_refresh": {
+    "function": "0x001B6A40",
+    "proposed_name": "UpdateCareerAfterFight",
+    "confidence": "CONFIRMED as a large fight-result/career-update path; proposed name is descriptive",
+    "input_evidence": [
+      "The function receives a fight/result object and extracts boxer/result data.",
+      "It reads numerous authoritative fight statistics through 0x000BA748.",
+      "It reads and writes the live career object and persistent profile.",
+      "It updates progression records before refreshing the next contract."
+    ],
+    "progression_and_offer_flow": [
+      "Calls 0x0019AAAC and 0x00194724 with fight/result statistics and a phase-derived argument.",
+      "Clears current progression-record +0x28/+0x24 and profile +0x02/+0x03.",
+      "Calls 0x0019DFE8.",
+      "Copies the current packed profile date and invokes 0x00195564, 0x00195430 and 0x00193048.",
+      "Checks profile+0x121 and existing contract/prerequisite state.",
+      "When an existing contract path cannot be retained and profile+0x140 is nonzero, calls 0x001A319C to choose a random eligible contract.",
+      "If that automatic selection fails, clears profile+0x13C and profile+0x140."
+    ],
+    "automatic_selector_call_site": "0x001B720C",
+    "existing_contract_path": "0x001B715C-0x001B71F4 can retain/install an already-selected contract through 0x0019FC10 and 0x001935E4 when its state/flags permit",
+    "post_fight_profile_flags": {
+      "+0x09/+0x10": "set together when a threshold/stat-accumulation condition is reached",
+      "+0x0A/+0x11": "set together from a fight-stat ratio compared against ~0.7",
+      "+0x0B/+0x12": "set together from another fight-stat ratio compared against ~0.4",
+      "warning": "These bytes are confirmed post-fight progression/achievement-like flags but are not semantically named yet."
+    },
+    "significance": [
+      "This function is a natural Career Mode 2.0 world-advance boundary because it already applies fight consequences, advances career state/date and selects the next offer.",
+      "A living-division/world simulation can be inserted around this boundary so the wider boxing world advances after player fights rather than only changing the player record."
+    ],
+    "next_static_step": "Trace title-contract eligibility types 13/14/15 and adjacent contract families for challenger/eliminator policy. The normal AI matcher is now proven to emit subtype 0 only."
+  },
+  "fights_fnc_decoded_template_table": {
+    "confidence": "CONFIRMED resource framing/count/stride; semantic labels remain limited to fields already proven by executable dataflow",
+    "source": "contract/contracts.viv!fights.fnc",
+    "compression": "EA RefPack 0x10FB",
+    "compressed_size_bytes": 1027,
+    "decoded_size_bytes": 3408,
+    "header": {
+      "magic": "FITE",
+      "record_count": 50,
+      "header_size_bytes": 8
+    },
+    "record_table": {
+      "record_size_bytes": 68,
+      "proof": "3408 decoded bytes = 8-byte FITE header + 50 * 68-byte templates, matching loader 0x001A3D48 and selector 0x001A2FA0's 0x44-byte stride."
+    },
+    "template_to_live_offset_relationship": {
+      "relationship": "For code-proven copied fields, template_offset = live_selected_record_offset - 0x10.",
+      "corroboration": [
+        "Live +0x20 scheduling-weeks field maps to template +0x10; decoded templates contain small whole-week values such as 1,2,4,5,6,10,12,15,16,18,20,24 and 34.",
+        "Live +0x18/+0x1C rank-range bounds map to template +0x08/+0x0C; decoded values use rank-like ranges plus -1 sentinels exactly as the eligibility code expects.",
+        "Live +0x30 packed eligibility flags map to template +0x20.",
+        "Live +0x34 signed contract type maps to template +0x24 low 16 bits."
+      ],
+      "boundary": "The live wrapper also contains derived/adjacent state beyond the 68 copied bytes; this mapping should not be extrapolated to fields outside the copied template without code evidence."
+    },
+    "special_type_crosscheck": {
+      "go_pro": {
+        "contract_type": 23,
+        "decoded_template_index": 1,
+        "template_offset_0x24": "0x00000017",
+        "significance": "Directly matches the statically recovered Go Pro type 23."
+      },
+      "retire": {
+        "contract_type": 27,
+        "decoded_template_index": 2,
+        "template_offset_0x24": "0x0004001B",
+        "significance": "Low 16 bits directly match the statically recovered Retire type 27; upper 16 bits are a separate adjacent/packed value and are not named here."
+      },
+      "conditional_type_25": {
+        "contract_type": 25,
+        "decoded_template_indices": [
+          3,
+          22,
+          37,
+          38,
+          39
+        ],
+        "significance": "Confirms type 25 is represented in the raw template table, consistent with 0x001A2C98's conditional type-27 remap target; the type-25 public meaning remains unresolved."
+      }
+    },
+    "championship_relevance": {
+      "finding": "Types 15, 13 and 14 are now bounded as the three slot-specific championship/award contract templates, for career slots 0, 1 and 2 respectively.",
+      "shared_match_subtype": 8,
+      "proof": [
+        "Each type's GetIndividualContractInfo branch consumes the corresponding slot's title-state byte and maps that slot to one of six absolute weight classes for an INFO_Awards label.",
+        "The three templates all use top-five rank bounds and all encode upper-halfword 8 at template+0x24, which becomes live contract +0x36 and is passed to AssignCareerMatch."
+      ],
+      "boundary": "This establishes the player-facing championship-contract family and scheduled-match subtype. It does not yet prove AI title matchmaking or a separate eliminator type."
+    }
+  },
+  "title_contract_family": {
+    "confidence": "CONFIRMED slot-bound championship/award contract family; exact localized public wording of each case is not yet recovered",
+    "individual_contract_provider": {
+      "region": "0x002027F4..0x002035A4",
+      "native_binding": "GetIndividualContractInfo",
+      "binding_evidence": "The native registration for GetIndividualContractInfo points into this provider family; the provider loads the selected contract through 0x001A2FA0, resolves its type through 0x001A2C98, and dispatches by type."
+    },
+    "persistent_career_model": {
+      "career_slot_count": 3,
+      "absolute_weight_class_count": 6,
+      "slot_to_class_getter": "0x001929C4(career,slot) -> profile[0x2D + slot]"
+    },
+    "contracts": [
+      {
+        "contract_type": 15,
+        "decoded_template_index": 4,
+        "career_slot": 0,
+        "slot_state_gate": "profile+0x1C",
+        "formatter_case": "0x00202AD4",
+        "scheduling_weeks": 18,
+        "rank_bounds": "zero-based rank 0..4",
+        "packed_type_word": "0x0008000F",
+        "match_subtype": 8
+      },
+      {
+        "contract_type": 13,
+        "decoded_template_index": 6,
+        "career_slot": 1,
+        "slot_state_gate": "profile+0x1E",
+        "formatter_case": "0x00202BC4",
+        "scheduling_weeks": 20,
+        "rank_bounds": "zero-based rank 0..4",
+        "packed_type_word": "0x0008000D",
+        "match_subtype": 8
+      },
+      {
+        "contract_type": 14,
+        "decoded_template_index": 8,
+        "career_slot": 2,
+        "slot_state_gate": "profile+0x1D",
+        "formatter_case": "0x002029E4",
+        "scheduling_weeks": 16,
+        "rank_bounds": "zero-based rank 0..4",
+        "packed_type_word": "0x0008000E",
+        "match_subtype": 8
+      }
+    ],
+    "evidence": [
+      "Types 15, 13 and 14 each enter a distinct GetIndividualContractInfo case tied to one of the three persistent career slots.",
+      "Each case reads the slot's title-state byte, calls 0x001929C4 for that slot and selects a division-dependent INFO_Awards localization key from the six absolute weight classes.",
+      "The same title-state bytes are consumed by 0x0019DFE8 when championship holders are initialized, tying these formatter cases to championship state rather than generic fight formatting.",
+      "All three decoded fights.fnc templates restrict the player to the top five ranks (0..4), consistent with championship eligibility.",
+      "All three raw template type words have upper halfword 8; because template+0x26 copies to live-record+0x36, accepted contract scheduling passes match subtype 8 into 0x00194518."
+    ],
+    "accepted_contract_schedule": {
+      "source_field": "live selected contract +0x36",
+      "source_value_for_all_three_title_contracts": 8,
+      "call_site": "0x001FF4AC",
+      "scheduler": "0x00194518 AssignCareerMatch",
+      "persistent_descriptor": "progression record+0x24 bits 8..15 = subtype 8",
+      "date": "profile date + contract weeks*7, stored to progression record+0x28"
+    },
+    "result_pipeline_boundary": {
+      "note": "Subtype 8 is now proven for the three player championship-contract templates. The nearby result predicates 0x001A2400/0x001A2430/0x001A2460 primarily inspect the descriptor's 4-bit result/state code, not the 8-bit subtype.",
+      "implication": "Do not claim subtype 8 alone causes a belt transfer. The shared result path also checks current-holder identity and career/result-state gates before calling the proven title-transfer writer 0x00196DC4."
+    },
+    "unresolved": [
+      "Whether any stock path outside the regular AI matcher schedules AI-vs-AI subtype-8/9 championship bouts.",
+      "The exact localized public wording behind the division-specific INFO_Awards keys and special INFO_Awards_16/FP_Everlast_Belt cases.",
+      "Whether a distinct mandatory-challenger/eliminator contract family exists elsewhere in the 50-template table."
+    ],
+    "ai_equivalent": {
+      "confidence": "CONFIRMED absence from the regular AI matcher; no separate AI title scheduler found among direct AssignCareerMatch callers",
+      "regular_ai_matcher": "0x00195564 initializes subtype to 0 at 0x001955D4 and passes it unchanged at 0x00195758.",
+      "special_scheduler": "0x001A4F50 uses profile+0x4E as fighter A and live-contract +0x36 as subtype, so its subtype-8 title paths are player-facing.",
+      "accepted_contract": "0x001FF490 also uses profile+0x4E as fighter A and selected opponent profile+0x166.",
+      "implication": "AI-vs-AI championship scheduling is an overhaul feature rather than an already recovered stock policy."
+    },
+    "defense_contracts": [
+      {
+        "contract_type": 20,
+        "decoded_template_index": 5,
+        "career_slot": 0,
+        "slot_state_gate": "profile+0x1C",
+        "paired_challenge_contract_type": 15,
+        "scheduling_weeks": 4,
+        "rank_bounds": "zero-based rank 0 only",
+        "packed_type_word": "0x00090014",
+        "match_subtype": 9,
+        "confidence": "CONFIRMED standard title-defense contract for career slot 0"
+      },
+      {
+        "contract_type": 18,
+        "decoded_template_index": 7,
+        "career_slot": 1,
+        "slot_state_gate": "profile+0x1E",
+        "paired_challenge_contract_type": 13,
+        "scheduling_weeks": 4,
+        "rank_bounds": "zero-based rank 0 only",
+        "packed_type_word": "0x00090012",
+        "match_subtype": 9,
+        "confidence": "CONFIRMED standard title-defense contract for career slot 1"
+      },
+      {
+        "contract_type": 19,
+        "decoded_template_index": 9,
+        "career_slot": 2,
+        "slot_state_gate": "profile+0x1D",
+        "paired_challenge_contract_type": 14,
+        "scheduling_weeks": 4,
+        "rank_bounds": "zero-based rank 0 only",
+        "packed_type_word": "0x00090013",
+        "match_subtype": 9,
+        "confidence": "CONFIRMED standard title-defense contract for career slot 2"
+      }
+    ],
+    "challenge_defense_pairing": {
+      "confidence": "CONFIRMED for the three standard career-slot championships",
+      "pairs": [
+        {
+          "career_slot": 0,
+          "challenge_type": 15,
+          "challenge_subtype": 8,
+          "defense_type": 20,
+          "defense_subtype": 9
+        },
+        {
+          "career_slot": 1,
+          "challenge_type": 13,
+          "challenge_subtype": 8,
+          "defense_type": 18,
+          "defense_subtype": 9
+        },
+        {
+          "career_slot": 2,
+          "challenge_type": 14,
+          "challenge_subtype": 8,
+          "defense_type": 19,
+          "defense_subtype": 9
+        }
+      ],
+      "evidence": [
+        "Each pair shares the same persistent slot title-state byte: slot 0 profile+0x1C, slot 1 profile+0x1E, slot 2 profile+0x1D.",
+        "Challenge templates 15/13/14 are top-five-rank contracts with 16-20 week scheduling and subtype 8; paired defense templates 20/18/19 require rank 0, schedule four weeks out and use subtype 9.",
+        "The shared post-fight dispatch has paired branches for these contract types and the defense side reaches progression-record +0x17 increment paths, which GetMyCareerStatsInfo exposes as aiTitleBeltsDefended."
+      ],
+      "result_semantics_boundary": "Subtype 9 is proven for these standard title-defense templates. Belt retention/transfer still depends on the shared result-state and current-holder checks; subtype alone is not the transfer predicate."
+    },
+    "special_award_belt_contracts": {
+      "confidence": "CONFIRMED two separate special award/belt families with acquisition and repeat-defense bookkeeping; exact localized name of INFO_Awards_16 remains unresolved",
+      "contracts": [
+        {
+          "contract_type": 16,
+          "decoded_template_index": 30,
+          "match_subtype": 8,
+          "formatter_evidence": "INFO_Awards_16",
+          "state_byte": "profile+0x1F"
+        },
+        {
+          "contract_type": 21,
+          "decoded_template_index": 31,
+          "match_subtype": 9,
+          "formatter_evidence": "INFO_Awards_16",
+          "state_byte": "profile+0x1F"
+        },
+        {
+          "contract_type": 17,
+          "decoded_template_index": 29,
+          "match_subtype": 9,
+          "formatter_evidence": "FP_Everlast_Belt",
+          "state_byte": "profile+0x20"
+        },
+        {
+          "contract_type": 22,
+          "decoded_template_index": 20,
+          "match_subtype": 8,
+          "formatter_evidence": "FP_Everlast_Belt",
+          "state_byte": "profile+0x20"
+        }
+      ],
+      "boundary": "INFO_Awards_16's localized display wording is still unknown. The family structures and acquisition/repeat-defense bookkeeping are proven from the decoded template types and post-fight jump-table cases.",
+      "families": {
+        "info_awards_16": {
+          "public_identifier": "INFO_Awards_16",
+          "state_flag": "profile+0x1F",
+          "auxiliary_state": "profile+0x19",
+          "anniversary_or_deadline": "profile+0x134",
+          "acquisition_type": 16,
+          "repeat_or_defense_type": 21,
+          "result_behavior": [
+            "Type 16 enters the acquisition-only case at 0x0019B680: when the award state changes to held, it sets profile+0x1F, stores a one-year derived date at +0x134, sets +0x19, and increments the player progression-record +0x15 belts-won history.",
+            "Type 21 enters the paired case at 0x0019B708. If the award is not already in the compared held/result state it performs the same acquisition bookkeeping and +0x15 increment.",
+            "When the type-21 branch takes the already-held path at 0x0019B790, it refreshes +0x134, updates/clears +0x19 around the result bookkeeping, increments profile aggregate +0x38, adds the KO predicate to +0x3B, increments family-specific aggregate +0x3F, and increments player progression-record +0x17 belts-defended."
+          ]
+        },
+        "everlast_belt": {
+          "public_identifier": "FP_Everlast_Belt",
+          "state_flag": "profile+0x20",
+          "auxiliary_state": "profile+0x1A",
+          "anniversary_or_deadline": "profile+0x138",
+          "acquisition_type": 17,
+          "repeat_or_defense_type": 22,
+          "result_behavior": [
+            "Type 17 enters the acquisition-only case at 0x0019B858: when the belt state changes to held, it sets profile+0x20, stores a one-year derived date at +0x138, sets +0x1A, and increments player progression-record +0x15 belts-won history.",
+            "Type 22 enters the paired case at 0x0019B8E0. If the belt is not already in the compared held/result state it performs the same acquisition bookkeeping and +0x15 increment.",
+            "When the type-22 branch takes the already-held path at 0x0019B968, it refreshes +0x138, updates/clears +0x1A around the result bookkeeping, increments profile aggregate +0x38, adds the KO predicate to +0x3B, increments family-specific aggregate +0x40, and increments player progression-record +0x17 belts-defended."
+          ]
+        }
+      },
+      "persistent_title_boundary": "Types 16/17/21/22 are explicitly excluded from the standard persistent three-slot holder-transfer set in the later championship-result path; their ownership lives in special profile state rather than profile+0x50/+0x52/+0x54."
+    },
+    "opponent_selection": {
+      "confidence": "CONFIRMED ladder-slot selection in special/live-contract scheduler 0x001A4F50",
+      "scheduler": "0x001A4F50",
+      "common_path": [
+        "Loads the current player progression index from profile+0x4E as fighter A.",
+        "Resolves the active career-slot ranking ladder from profile+0x2A.",
+        "For non-type-25 contracts, reads live contract+0x2C and uses that value as the ranking-ladder slot index.",
+        "Loads the boxer progression-record index from ladder entry profile + active_slot*0xC8 + 0x2EA + live_contract[+0x2C]*4.",
+        "Passes that boxer as fighter B to 0x00194518 AssignCareerMatch."
+      ],
+      "template_field_mapping": "live contract+0x2C comes from fights.fnc template+0x1C",
+      "challenge_family": {
+        "contract_types": [
+          15,
+          13,
+          14
+        ],
+        "template_plus_0x1C": 0,
+        "selected_ladder_slot": 0,
+        "interpretation": "The standard title-challenge contracts schedule the player against ladder slot 0."
+      },
+      "defense_family": {
+        "contract_types": [
+          20,
+          18,
+          19
+        ],
+        "template_plus_0x1C": 1,
+        "selected_ladder_slot": 1,
+        "interpretation": "The standard title-defense contracts schedule the player against ladder slot 1, i.e. the highest challenger position beneath slot 0 in the sorted ladder."
+      },
+      "mandatory_challenger_boundary": {
+        "supported": "Retail hardwires standard player title defenses to ladder entry 1 and enforces per-slot title-expiry deadlines; an expired player-held title is transferred to ladder entry 1 and counted as a forfeiture.",
+        "not_yet_supported": "No rotating mandatory order, separate eliminator bracket, sanctioning-body layer, explicit refusal penalty distinct from expiry, or AI-vs-AI mandatory-title scheduler has been proven.",
+        "career2_implication": "Career Mode 2.0 can preserve the proven champion-vs-top-challenger baseline while adding explicit mandatory-challenger timing, eliminators, vacancies and AI title scheduling."
+      }
+    },
+    "mandatory_defense_baseline": {
+      "confidence": "CONFIRMED simple stock baseline; no separate eliminator system yet proven",
+      "defense_opponent": "Standard defense types 20/18/19 select ranking-ladder entry 1 through live contract+0x2C = 1 in 0x001A4F50.",
+      "expiry_enforcement": "0x0019DFE8 checks per-slot title deadlines and, on expiry, transfers the championship to the same ladder-entry-1 position while incrementing the player's forfeiture counter.",
+      "standard_slot_deadlines": {
+        "slot0": "profile+0x128",
+        "slot1": "profile+0x130",
+        "slot2": "profile+0x12C"
+      },
+      "implication": "Retail's standard player-title policy is champion vs the immediate top challenger, with a deadline-backed forfeiture path. More elaborate mandatory rotations/eliminators are not required to explain the recovered stock behavior.",
+      "boundary": "Complete title-aware contract dispatch has no additional dedicated eliminator family: type 3 is the initial/amateur championship; 13/14/15 are standard challenges; 18/19/20 are paired defenses; 16/17/21/22 are special award/belt paths. Generic fight templates remain generic and are not promoted to eliminators without title-aware evidence.",
+      "exact_deadline": "1 calendar year",
+      "deadline_proof": "Title-family result branches call 0x001A1280 with months=0, days=0, years=1, hours=0, minutes=0; 0x0019DFE8 later compares current career date against the stored per-slot deadline."
+    }
+  },
+  "explicit_eliminator_search": {
+    "confidence": "BOUNDED NEGATIVE RESULT",
+    "scope": [
+      "all 50 decoded fights.fnc templates",
+      "contract types 1..27 dispatched by 0x001A3FBC / GetIndividualContractInfo",
+      "0x001971A0 championship/award gate",
+      "all direct 0x00194518 AssignCareerMatch callers",
+      "tracked executable/resource strings in the repository"
+    ],
+    "finding": [
+      "No additional title-aware contract family exists beyond type 3, standard challenges 13/14/15, standard defenses 18/19/20, and special award/belt types 16/17/21/22.",
+      "No explicit eliminator or mandatory-challenger localization/string identifier has been recovered.",
+      "Standard defenses and title-expiry succession both hardwire ladder entry 1 as the relevant challenger/successor.",
+      "The normal AI-vs-AI matcher emits subtype 0, so it does not schedule stock title defenses or eliminators."
+    ],
+    "conclusion": "Retail FNR3's recoverable standard policy is a fixed champion-vs-top-challenger defense model with a one-calendar-year expiry/forfeiture backstop. A separate rotating mandatory-challenger/eliminator subsystem is not evidenced in the bounded contract/scheduler space and should be treated as a Career Mode 2.0 extension unless new evidence appears.",
+    "caution": "This is an absence result within the fully enumerated contract/title scheduling surfaces above, not a claim that the entire executable contains no unrelated concept that could later be repurposed."
+  },
+  "current_version_scope": {
+    "status": "LOCKED_BY_USER",
+    "fight_contracts": "IN_SCOPE",
+    "promoter_manager_relationship_mechanics": "DEFERRED_TO_NEXT_VERSION",
+    "instruction": "Continue fight-offer/contract work only where it does not require persistent manager/promoter systems."
+  }
+}

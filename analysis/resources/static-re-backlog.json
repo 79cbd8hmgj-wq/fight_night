@@ -3,7 +3,7 @@
   "revision": "ULUS10066-v1.00",
   "purpose": "Every STATICALLY_SOLVABLE and STATICALLY_AMBIGUOUS evidence question from analysis/reports/static-re-ceiling.json, each carrying a concrete named static avenue. Regenerated after Overhaul Alpha 1's targeted static RE (PR: Overhaul Alpha 1 -- Core Boxer + Fight Systems), which resolved program-04-04 (func_00186464's linked list) and partially advanced program-11-03 (judge weighting) as a direct byproduct of the minimum focused RE that milestone's own implementation work required -- not a renewed broad assessment pass. This file supersedes the narrower Task 10/11 analysis/resources/static-discovery-backlog.json for corpus-wide planning purposes; static-discovery-backlog.json is preserved unmodified. Per task policy, none of these may be moved to runtime-minimum-backlog.json until every named avenue below is exhausted.",
   "related_backlog": "analysis/resources/static-discovery-backlog.json (Task 10/11-scoped predecessor, still valid)",
-  "entry_count": 34,
+  "entry_count": 28,
   "entries": [
     {
       "id": "program-01-02",
@@ -31,50 +31,12 @@
       }
     },
     {
-      "id": "program-03-05",
-      "program_id": "program-03",
-      "subsystem": "Modules",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "Is the UI-script container format used by all .big screen packages (member types .apt/.const/.o/.msh) identified, and is there a proven mechanism connecting UI scripts to BOOT.BIN native functions?",
-      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's registration is later resolved/dispatched at script-call time (i.e. where the registered name string is looked up and its real implementation function invoked) -- this single mechanism gates nearly every UI-side lead opened by this delta pass (GetSelectBoxerInfo's real implementation, GetRecordBooksInfo's real implementation, etc.), so resolving it once would advance several other STATICALLY_SOLVABLE questions at once. Decoding the .apt bytecode format itself (to recover literal numeric constants such as the difficulty enum's 'm_arrValues') is a separate, larger undertaking not attempted this pass.",
-      "affected_features": [
-        "career-2",
-        "amateur",
-        "roster",
-        "divisions",
-        "generated-boxers",
-        "career-health",
-        "legacy"
-      ],
-      "sources": {
-        "code": [
-          "src/fnr3_re/ea_archive.py (reused, unmodified)"
-        ],
-        "functions": [
-          "func_0CDAC0",
-          "func_0CDA70"
-        ],
-        "ui_resources": [
-          "debugmenu.big",
-          "optionsettings.big",
-          "selectboxer.big",
-          "adhocrivals.big",
-          "careerfighthistory.big",
-          "recordbooks.big",
-          "genericbackground.big",
-          "internetmainmenu.big",
-          "mainmenu.big",
-          "tutorialoverlay.big"
-        ]
-      }
-    },
-    {
       "id": "program-04-03",
       "program_id": "program-04",
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
-      "remaining_static_work": "Disassemble func_0018654C (consumes func_001AD268's result); structurally analyze the payload tail specifically searching for a 9-field (Power/Speed/Agility/Stamina/Chin/Body/Heart/Cuts/Overall) stat block, now that the exact field set and order are known from selectBoxer.const; cross-check the +0x18 model against another xdb table's own consumer function.",
+      "remaining_static_work": "Resolved: name/resource fields 0x00-0x03, availability 0x04, field 0x05 as the source selector for normalized boxer codes carried by the named Replay event, hometown 0x06, nickname 0x07, weight 0x09, career timing 0x0D, packed 0x0E extraction, rating-mode 0x0F, ratings 0x10-0x18, stance 0x19, style 0x1A, skin tone/head-appearance 0x34-0x39 and hair-style resource token 0x71. Next: physical/biographical 0x08/0x0A-0x0C, exact 0x0E trait labels, remaining handedness/equipment, career/store and created-boxer semantics. Field 0x05 must not be treated as a commentary/audio ID without new evidence.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -84,12 +46,45 @@
       "sources": {
         "resource": "preload/db.viv!xdbboxr.adf",
         "functions": [
-          "func_001AD268",
-          "T_001D54A0",
-          "T_001E83E0"
+          "0x001D53F0",
+          "func_0018553C",
+          "func_001ACD40",
+          "func_001ACCAC",
+          "func_001AD180",
+          "func_001851CC",
+          "func_00185D84",
+          "0x00278B0C",
+          "func_0018600C",
+          "func_00278768",
+          "func_002787A0",
+          "T_00278ABC",
+          "func_00186284",
+          "func_001B0FE8",
+          "T_00185FA0",
+          "T_001860A0",
+          "func_00185F34",
+          "T_00186108",
+          "func_001857E4",
+          "T_00187434",
+          "func_00187548",
+          "func_0018A110",
+          "T_001E3434",
+          "T_001E62BC",
+          "T_001E76C4",
+          "func_0018ADCC",
+          "func_0010BB58",
+          "func_0010C9C8",
+          "func_003E5860",
+          "func_003E4A94",
+          "func_00185B30"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
+        ],
+        "evidence": [
+          "analysis/resources/xdbboxr-schema.json",
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       }
     },
@@ -98,8 +93,8 @@
       "program_id": "program-04",
       "subsystem": "Boxers",
       "status": "STATICALLY_SOLVABLE",
-      "question": "Which UI/menu screen(s) construct boxer-table queries, and what does func_001AF768's dual query (strides 5 and 0x28) feed?",
-      "remaining_static_work": "Search for callers of func_001AF768/T_0018E4F4; disassemble the 9 chained subsystem-init calls.",
+      "question": "What do func_001AF768's dual XDB field-classification queries (strides 5 and 0x28) feed inside the fight-session constructor?",
+      "remaining_static_work": "Disassemble the consumers of the fight-session +0x198C/+0x198E outputs and the remaining constructor init chain to identify what the stride-5 and stride-0x28 classifications represent.",
       "affected_features": [
         "roster",
         "career-2"
@@ -107,7 +102,11 @@
       "sources": {
         "functions": [
           "func_001AF768",
-          "T_0018E4F4"
+          "func_001AD268"
+        ],
+        "evidence": [
+          "analysis/resources/overhaul-alpha1-evidence.json",
+          "analysis/resources/xdb-schema-evidence.json"
         ]
       }
     },
@@ -115,16 +114,24 @@
       "id": "program-04-07",
       "program_id": "program-04",
       "subsystem": "Boxers",
-      "status": "STATICALLY_AMBIGUOUS",
+      "status": "STATICALLY_SOLVABLE",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
-      "remaining_static_work": "Search for a literal immediate 121 (0x79) used as an array-size bound or allocation size elsewhere in BOOT.BIN, independent of the header value itself. Also: reach GetSelectBoxerInfo's real implementation (see the func_00186464 entry above for the same registration-mechanism blocker) to observe what count value it actually computes and hands to iListLength.",
+      "remaining_static_work": "121 is field_count, 37 is the dynamic base record_count, and func_00186284 resolves boxer selectors by cumulative record position across registered tables. Rows 35/36 are Fabolous/Little Mac and are addressed by selector indices 35/36 despite field-0 values 74/75. Trace custom/generated boxer storage plus any independent allocation/save/UI consumer that could impose a total cumulative-selector cap; treat field 0 as a separate unresolved identity/resource key.",
       "affected_features": [
         "roster",
         "generated-boxers"
       ],
       "sources": {
-        "ui_resource": [
-          "selectboxer.big!selectBoxer.const"
+        "functions": [
+          "func_001AD21C",
+          "func_001AD180",
+          "func_00186284",
+          "0x001D77C8"
+        ],
+        "evidence": [
+          "analysis/resources/xdbboxr-schema.json",
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       }
     },
@@ -134,13 +141,25 @@
       "subsystem": "Fight",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the fight-session/context object's structure (fighter pointers, round state, result state)?",
-      "remaining_static_work": "Trace xrefs/callers of the DRONE_ tag referencing function (T_004D3104 for DRONE_CLINCH) upward to find the enclosing fight-loop/session structure.",
+      "remaining_static_work": "Debug ULES00270 now proves a boxer/fighter runtime controller constructed at 0x000409FC with a movement object at +0x1F4 and a 14-slot combat-state controller at +0x21C. The shared fighter tick 0x00041450 advances current combat state and movement state each tick. Next: transfer/match this object layout into ULUS10066 and trace the owner/container that invokes fighter virtual slot +0x104.",
       "affected_features": [
         "combat",
         "career-2",
         "amateur"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x000409FC",
+          "0x00034458",
+          "0x00034C98",
+          "0x00041450",
+          "0x00064158",
+          "0x00064220"
+        ],
+        "evidence": [
+          "analysis/resources/debug-fight-state-machine.json"
+        ]
+      }
     },
     {
       "id": "program-05-03",
@@ -148,11 +167,28 @@
       "subsystem": "Fight",
       "status": "STATICALLY_SOLVABLE",
       "question": "What are the fight lifecycle functions (init/round-start/round-end/result/cleanup)?",
-      "remaining_static_work": "Search for functions called from the exhibition/career fight-setup UI screens (see program-28 findings) that in turn call into the DRONE_-tag-referencing function region.",
+      "remaining_static_work": "Debug ULES00270 fight lifecycle is now substantially recovered: state1 initial setup -> state2 active fight; state3 timed KO moment; state4 round-end/between-round timer; state5 next-round reset; state6 knockdown sequence/count; state7 terminal fight end. Continue by transfer-matching lifecycle dispatcher 0x000801F8 and central two-boxer combat tick 0x00021F60 into ULUS10066, then verify original retail instructions/ABI for hook candidates.",
       "affected_features": [
         "combat"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x000801F8",
+          "0x0008000C",
+          "0x0007FEDC",
+          "0x00082228",
+          "0x0007FC20",
+          "0x0007FC84",
+          "0x0007FFA8",
+          "0x000827B8",
+          "0x0007FEC0",
+          "0x00021F60"
+        ],
+        "evidence": [
+          "analysis/resources/debug-fight-state-machine.json",
+          "analysis/resources/debug-combat-modifiers.json"
+        ]
+      }
     },
     {
       "id": "program-05-04",
@@ -175,11 +211,21 @@
       "subsystem": "Punches",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the exact hit-detection/collision pipeline and its player/AI convergence point?",
-      "remaining_static_work": "Disassemble the function referencing 'aiPunchesThrown' (T_001E2084) and trace its callers/callees toward the hit-resolution code.",
+      "remaining_static_work": "The prior aiPunchesThrown/T_001E2084 lead is ruled out as a direct combat owner: aiPunchesThrown belongs to the GetMyCareerStatsInfo front-end output-key cluster. Continue instead from the recovered DRONE_ATTACKING update 0x0005B58C and action-state transitions to locate punch execution and the shared player/AI hit-resolution path.",
       "affected_features": [
         "combat"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x0005B58C",
+          "0x0005C878",
+          "0x0005CD54",
+          "T_001E2084"
+        ],
+        "evidence": [
+          "analysis/resources/debug-fight-state-machine.json"
+        ]
+      }
     },
     {
       "id": "program-06-03",
@@ -199,13 +245,28 @@
       "subsystem": "Stamina",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the exact stamina cost/regeneration formula, its caps, and rating inputs?",
-      "remaining_static_work": "T_001D54A0/T_001E83E0 are ruled out as the formula's location (see corrected evidence above). The actual in-fight stamina consumption/regeneration code must be sought elsewhere -- e.g. via the fight-session/round-lifecycle functions still being traced under program-05, not via the boxer-rating-card UI accessors.",
+      "remaining_static_work": "Debug ULES00270 now exposes the original energy/stamina machinery: 0x00078794/0x00078C88/0x00078D1C compute attack costs via 0x0007A330, apply modifier ID 1 ('dec E cost for attacks'), and spend the adjusted amount through 0x00079E80; 0x00079DF4 is the matching add/recovery helper on physical-state+0x08; 0x0007C75C applies movement cost (ID 0), current E regen (ID 4) and current H regen (ID 5). Next: transfer-match these functions to ULUS10066 and finish naming the companion current/max E fields so a retail hook boundary can be verified.",
       "affected_features": [
         "combat",
         "divisions",
         "career-health"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x00078794",
+          "0x00078C88",
+          "0x00078D1C",
+          "0x0007A330",
+          "0x00079E80",
+          "0x00079DF4",
+          "0x0007C75C",
+          "0x00091E04"
+        ],
+        "evidence": [
+          "analysis/resources/debug-combat-modifiers.json",
+          "analysis/resources/debug-fight-state-machine.json"
+        ]
+      }
     },
     {
       "id": "program-07-03",
@@ -213,12 +274,24 @@
       "subsystem": "Stamina",
       "status": "STATICALLY_SOLVABLE",
       "question": "Is there a round-boundary stamina recovery mechanism, and is it distinct from in-round regeneration?",
-      "remaining_static_work": "Search for a round-transition function (likely shared with the round-state machine sought under program-05) that also touches the iStamina fields.",
+      "remaining_static_work": "Between-round recovery is now directly bounded in the debug build: fight reset -> 0x0009BB94 -> 0x0007854C, which uses modifier ID 16 'inc between round max E regen rate' and ID 5 health regen. The in-round path is separately bounded at 0x0007C75C using ID 4 'inc current E regen rate'. Next: resolve lifecycle state labels around 0x000801F8/0x0008000C and transfer-match both routines to retail.",
       "affected_features": [
         "combat",
         "career-health"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x0007854C",
+          "0x0007C75C",
+          "0x0009BB94",
+          "0x000801F8",
+          "0x0008000C"
+        ],
+        "evidence": [
+          "analysis/resources/debug-combat-modifiers.json",
+          "analysis/resources/debug-fight-state-machine.json"
+        ]
+      }
     },
     {
       "id": "program-08-03",
@@ -226,13 +299,28 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the health/vitality field structure, hit-resolution formula, and stun/dazed state machine?",
-      "remaining_static_work": "Disassemble T_001F2E00 (knockdowns) and T_002027F4/T_00205458 (3-KD rule) and trace backward to the health/damage state they read.",
+      "remaining_static_work": "Debug ULES00270 now exposes a concrete central damage path. 0x0007EB7C computes damage from a base 0x0007958C result and applies body/head reduction IDs 8/9, all-attack ID 20, punch-type IDs 21-24, lead/rear IDs 25/26 and rolling-power ID 27. The clean-punch caller at 0x00078A88 additionally applies ID 6 and forwards damage to 0x0007A198, which subtracts from clamped physical-state channels. Next: name those health/stun channels and trace 0x0007A198/0x0007A5D8 into knockdown state transitions, then transfer-match the formula to retail.",
       "affected_features": [
         "combat",
         "divisions",
         "career-health"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x0007EB7C",
+          "0x0007958C",
+          "0x00078A88",
+          "0x00078C38",
+          "0x0007A198",
+          "0x0007A5D8",
+          "0x0007E914",
+          "0x00091E04"
+        ],
+        "evidence": [
+          "analysis/resources/debug-combat-modifiers.json",
+          "analysis/resources/debug-fight-state-machine.json"
+        ]
+      }
     },
     {
       "id": "program-08-04",
@@ -240,12 +328,26 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "What triggers the KO/TKO decision path, and is the referee's stoppage decision statically traceable?",
-      "remaining_static_work": "Find the referencing function for astrTKOTime and trace its callers.",
+      "remaining_static_work": "Debug ULES00270 now bounds flash-KO and knockdown lifecycle: 0x0007D09C evaluates flash-KO chance (modifier IDs 45/46), success reaches severe physical reset 0x00079254, lifecycle state2/0x00082228 enters KO-moment or knockdown paths, state6/0x000827B8 controls the knockdown sequence, and terminal state7 is reached for stoppage/end conditions. Three-knockdown enforcement is CONFIRMED: 0x000BAB38 records stat 0x0F for the downed boxer and 0x0E for the scorer; state6 checks the per-round 0x0F count >=3 when the knockdown-rule option is enabled. Remaining static work: distinguish non-flash knockdown/TKO/referee-stoppage thresholds and transfer-match these boundaries to ULUS10066.",
       "affected_features": [
         "combat",
         "career-health"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "0x0007D09C",
+          "0x00079254",
+          "0x00082228",
+          "0x000827B8",
+          "0x0007FEC0",
+          "0x000BAB38",
+          "0x000BA748"
+        ],
+        "evidence": [
+          "analysis/resources/debug-fight-state-machine.json",
+          "analysis/resources/debug-combat-modifiers.json"
+        ]
+      }
     },
     {
       "id": "program-08-05",
@@ -253,7 +355,7 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "Beyond the already-proven '3-knockdown rule', does the retail options menu expose other named, distinct damage/stoppage rule toggles (auto-recovery, KO moment/highlight, fight stoppage, illegal blows, saved-by-the-bell)?",
-      "remaining_static_work": "Complete the bit-field decode of T_001D9A08/T_001DC5DC/T_001FB69C (struct offsets +0x15C/+0x19A8/+0x1955) and correlate each extracted bit-range, in order, against optionSettings.const's own toggle-declaration order (cpToggleSFX...cpToggleDifficulty...cpToggleKnockdownRule...cpToggleAutoRecovery...) to assign each named option its exact bit position and value range.",
+      "remaining_static_work": "Complete the bit-field decode of the +0x15C packed settings word in func_001D9958/func_001DC52C/func_001FB6B8 and correlate each extracted bit-range against optionSettings.const's toggle-declaration order. +0x19A8 is now resolved as a fight/session-mode field written by func_001AFFDC, not an options bitfield; separately resolve the byte flag/gate at +0x1955.",
       "affected_features": [
         "combat",
         "career-health"
@@ -263,11 +365,15 @@
           "optionsettings.big!optionSettings.const"
         ],
         "functions": [
-          "T_001D9A08",
-          "T_001DC5DC",
-          "T_001FB69C",
+          "func_001D9958",
+          "func_001DC52C",
+          "func_001FB6B8",
           "func_001D9870",
-          "func_001D98E4"
+          "func_001D98E4",
+          "func_001AFFDC"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       }
     },
@@ -370,38 +476,21 @@
       "subsystem": "AI",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the AI decision-update loop and action-selection logic?",
-      "remaining_static_work": "Disassemble func_00093C5C/func_00091D24 (the 'attack power' consumers) and trace outward to the decision loop.",
+      "remaining_static_work": "Prior 0x00093C5C/0x00091D24 'attack power consumer' lead is corrected: those are the AI modifier-object constructor/destructor. The 52-entry modifier array at high-level boxer+0x2BC is now decoded, including offense/energy/damage gameplay modifiers and evaluator 0x00091E04. Continue from state-transition/action-selection consumers and modifier readers, not from the constructor/destructor.",
       "affected_features": [
         "combat"
       ],
-      "sources": {}
-    },
-    {
-      "id": "program-13-02",
-      "program_id": "program-13",
-      "subsystem": "Weights",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "What are the exact weight-limit values (in-game units) for each of the 6 divisions?",
-      "remaining_static_work": "Disassemble func_0019527C/func_001B798C/T_001E9A58/T_00202170/T_00201BB4 to find where each maps a division index to a numeric weight boundary.",
-      "affected_features": [
-        "divisions",
-        "roster"
-      ],
-      "sources": {}
-    },
-    {
-      "id": "program-13-03",
-      "program_id": "program-13",
-      "subsystem": "Weights",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "Is the division count (6) a fixed compile-time constant with identifiable consumers that would need updating for new divisions (e.g. Bantamweight, Cruiserweight)?",
-      "remaining_static_work": "Disassemble the 5 referencing functions specifically looking for a literal 6 or 7 used as an array bound -- this would directly answer whether adding a division requires an executable patch versus only a data change.",
-      "affected_features": [
-        "divisions"
-      ],
       "sources": {
-        "ui_resource": [
-          "selectboxer.big!selectBoxer.const"
+        "functions": [
+          "0x00093C5C",
+          "0x00091D24",
+          "0x00091DF4",
+          "0x00091E04",
+          "0x00091E58"
+        ],
+        "evidence": [
+          "analysis/resources/debug-combat-modifiers.json",
+          "analysis/resources/debug-fight-state-machine.json"
         ]
       }
     },
@@ -457,78 +546,39 @@
       "sources": {}
     },
     {
-      "id": "program-16-07",
-      "program_id": "program-16",
-      "subsystem": "Career/save",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "Does a retail 'Records/Hall of Fame' legacy-tracking system exist (relevant to the planned legacy-systems overhaul feature)?",
-      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's native-function-name registration is dispatched at call time to reach GetRecordBooksInfo's real implementation and observe what record categories/limits it actually populates (e.g. is 'Top 10' a hard cap of exactly 10 entries).",
-      "affected_features": [
-        "legacy"
-      ],
-      "sources": {
-        "ui_resource": [
-          "recordbooks.big!recordBooks.const"
-        ],
-        "strings": [
-          "GetRecordBooksInfo@0x50cce0"
-        ],
-        "functions": [
-          "func_001EE218",
-          "func_001EE28C"
-        ]
-      }
-    },
-    {
-      "id": "program-28-02",
-      "program_id": "program-28",
-      "subsystem": "UI/commentary",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "Are the division-name UI strings (INFO_Division_N) served through the same localization indirection, or hardcoded per-screen?",
-      "remaining_static_work": "Disassemble T_000CE8A0 and the 5 division-string referencing functions to determine whether they share a call path.",
-      "affected_features": [
-        "divisions",
-        "roster"
-      ],
-      "sources": {}
-    },
-    {
       "id": "program-28-03",
       "program_id": "program-28",
       "subsystem": "UI/commentary",
-      "status": "STATICALLY_AMBIGUOUS",
+      "status": "STATICALLY_SOLVABLE",
       "question": "Is commentary lookup/ID data (audio triggers tied to fight events) statically evidenced?",
-      "remaining_static_work": "Disassemble T_001D9A08/T_001DC5DC/T_001FB69C fully (partial disassembly this pass only reached the bitfield-decode prologue) and separately locate and disassemble the function referencing 'Decision Announcement Script' before concluding whether commentary AUDIO selection (not just the on/off toggle) is statically reconstructable.",
+      "remaining_static_work": "The com* commentary dataset, common loader, 0x10-byte record ABI, and ID lookup are now resolved. Trace func_0013DDC4's TCC category/mask through downstream event construction to the ID consumed by func_0013CCA4, then identify the boxer-specific inputs that select those IDs.",
       "affected_features": [
         "career-2",
         "roster"
       ],
       "sources": {
         "strings": [
-          "Decision Announcement Script@0x4fa4e8",
-          "iDisplayCommentaryOption@0x50b330"
+          "comdat.big@0x506b84",
+          "comevt.evt@0x506b90",
+          "comhdr.big@0x506b9c",
+          "TCC = MULTI KD@0x506bd0",
+          "TCC = POOR PERFORMANCE@0x506be0",
+          "TCC = WASTED ENERGY@0x506bf8",
+          "TCC = BOXER DAMAGE@0x506c0c",
+          "TCC = BOXER RATING/STYLE@0x506c20"
         ],
         "functions": [
-          "T_001D9A08",
-          "T_001DC5DC",
-          "T_001FB69C"
+          "func_0013A6D0",
+          "func_001379B0",
+          "func_001379F4",
+          "func_0013CCA4",
+          "func_0013DDC4"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json",
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       }
-    },
-    {
-      "id": "program-29-04",
-      "program_id": "program-29",
-      "subsystem": "Budgets",
-      "status": "STATICALLY_SOLVABLE",
-      "question": "Is there identifiable free/padding space in BOOT.BIN or its BSS that could host new code/data without growing the module?",
-      "remaining_static_work": "Compute inter-section gaps from the now-exact section offset/size table and cross-reference against alignment requirements.",
-      "affected_features": [
-        "combat",
-        "career-2",
-        "roster",
-        "divisions"
-      ],
-      "sources": {}
     },
     {
       "id": "interface-audio-01",
@@ -536,11 +586,35 @@
       "subsystem": "Audio",
       "status": "STATICALLY_SOLVABLE",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
-      "remaining_static_work": "Trace the DRONE_ tag consumer functions and the Decision Announcement Script reference toward their audio-triggering call sites.",
+      "remaining_static_work": "The speech storage/lookup ABI is now resolved: AuSpeechManager +0x19C uses comdat.big/comevt.evt/comhdr.big and func_001379B0 resolves event IDs into record+4 data entries. Trace func_0013DDC4 and surrounding event construction to prove the final condition/boxer -> commentary-event-ID mapping.",
       "affected_features": [
         "roster"
       ],
-      "sources": {}
+      "sources": {
+        "functions": [
+          "func_0013A6D0",
+          "func_001379B0",
+          "func_001379F4",
+          "func_0013CCA4",
+          "func_0013DDC4",
+          "func_0013B410",
+          "func_00295788",
+          "func_0029598C",
+          "func_00295E24",
+          "func_00295EF0"
+        ],
+        "strings": [
+          "comdat.big@0x506b84",
+          "comevt.evt@0x506b90",
+          "comhdr.big@0x506b9c",
+          "trndat.big@0x506b3c",
+          "ancdat.big@0x506b60"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json",
+          "analysis/resources/fight-event-dispatch-evidence.json"
+        ]
+      }
     },
     {
       "id": "interface-renderer-01",

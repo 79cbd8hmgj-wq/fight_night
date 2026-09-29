@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "progression_record": {
+    "size_bytes": 52,
+    "confidence": "CONFIRMED by population-record iteration stride 0x34",
+    "relevant_hidden_fields": {
+      "+0x0E": "starting-rating archetype index",
+      "+0x0F": "natural rating-emphasis selector",
+      "+0x10": "signed emphasis magnitude",
+      "+0x11": "prime-age / age-curve center",
+      "+0x12": "coarse simulation-potential baseline",
+      "+0x13": "matchmaking/rest-style weekly countdown; exact public label unresolved"
+    }
+  },
+  "starting_rating_archetype": {
+    "field": "progression record+0x0E",
+    "source": "low nibble of packed xdbboxr field 0x0E",
+    "extractor": "0x00185468",
+    "confidence": "CONFIRMED",
+    "static_table": "0x0055C8A4",
+    "table_entries_used": 7,
+    "table_stride_bytes": 16,
+    "consumer": "0x0018FF8C",
+    "behavior": [
+      "0x0018FF8C indexes the static table by record+0x0E * 16.",
+      "Bytes 5..12 of the chosen row seed the eight directly trainable boxer ratings.",
+      "Those values become the persistent boxer Power/Speed/Agility/Stamina/Chin/Cuts/Heart/Body basis before later scaling/adjustment."
+    ],
+    "observed_raw_rows": [
+      {
+        "index": 0,
+        "ratings": [
+          17,
+          21,
+          21,
+          19,
+          16,
+          14,
+          14,
+          14
+        ]
+      },
+      {
+        "index": 1,
+        "ratings": [
+          19,
+          19,
+          19,
+          19,
+          16,
+          16,
+          14,
+          14
+        ]
+      },
+      {
+        "index": 2,
+        "ratings": [
+          21,
+          21,
+          14,
+          14,
+          19,
+          19,
+          14,
+          14
+        ]
+      },
+      {
+        "index": 3,
+        "ratings": [
+          21,
+          21,
+          15,
+          16,
+          16,
+          16,
+          16,
+          15
+        ]
+      },
+      {
+        "index": 4,
+        "ratings": [
+          16,
+          20,
+          19,
+          19,
+          16,
+          16,
+          14,
+          16
+        ]
+      },
+      {
+        "index": 5,
+        "ratings": [
+          19,
+          15,
+          16,
+          16,
+          19,
+          16,
+          16,
+          19
+        ]
+      },
+      {
+        "index": 6,
+        "ratings": [
+          20,
+          16,
+          15,
+          17,
+          20,
+          15,
+          16,
+          17
+        ]
+      }
+    ],
+    "rating_order_note": "The table consumer writes Power, Speed, Agility, Stamina, Chin, Cuts, Heart and Body storage channels. Power still uses the known paired persistent fields later in the boxer model.",
+    "implication": "Retail FNR3 already gives generated/career boxers a hidden natural starting-stat archetype. Career Mode 2.0 can use this as one input to scouting/natural-strength descriptions rather than generating all starting ratings independently."
+  },
+  "natural_rating_emphasis": {
+    "selector_field": "progression record+0x0F",
+    "magnitude_field": "progression record+0x10",
+    "sources": {
+      "selector": "middle nibble (bits 4..7) of packed xdbboxr field 0x0E via 0x0018549C",
+      "magnitude": "bits 8..11 of packed xdbboxr field 0x0E minus 5 via 0x001854DC"
+    },
+    "confidence": "CONFIRMED mechanism; original semantic labels unknown",
+    "consumer": "0x0018FF8C",
+    "selector_targets": {
+      "0": "Power",
+      "1": "Speed",
+      "2": "Agility",
+      "3": "Stamina",
+      "4": "Chin",
+      "5": "Cuts",
+      "6": "Heart",
+      "other": "Body"
+    },
+    "behavior": "The signed record+0x10 magnitude is added to the selected rating channel before the final rating-shaping/scaling stage.",
+    "implication": "The original career population has a compact hidden 'natural emphasis + amount' concept. It is useful as a seed for style proficiency or natural strengths, but it is not evidence of a per-attribute potential ceiling."
+  },
+  "age_performance_curve": {
+    "evaluator": "0x00193EF4",
+    "prime_age_field": "progression record+0x11",
+    "potential_baseline_field": "progression record+0x12",
+    "age_field": "progression record+0x09",
+    "confidence": "CONFIRMED mathematical behavior; 'potential' is used here only in the coarse simulation sense",
+    "formula": "value = clamp(0, 100, baseline + 25 * cos(pi * clamp(age - prime_age, -5, 5) / 5))",
+    "vfpu_proof": [
+      "The ordinary disassembler leaves 0x00193F90..0x00193FA0 undecoded.",
+      "Allegrex-aware Rabbitizer decodes them as mtv S400; vcst.s S401,VFPU_2_PI; vmul.s; vcos.s; mfv.",
+      "Combined with the scalar setup immediately before the VFPU block, this is the cosine term in the formula above."
+    ],
+    "generated_population_initialization": [
+      "One generated-record path chooses prime_age from approximately 20..35 and baseline from 0..74.",
+      "Named/imported boxer initialization uses prime_age=35 and baseline=75.",
+      "Another replacement-population path derives prime_age from the new boxer's current age plus a bounded random term, rather than using a single global peak age."
+    ],
+    "consumers": [
+      "AI retirement/inactivation evaluator 0x00195990",
+      "AI-vs-AI fight simulation/probability logic inside 0x0019E790"
+    ],
+    "interpretation": [
+      "record+0x11 is the center of an age-driven prime/decline curve, not a starting-age field.",
+      "record+0x12 controls the curve's overall quality level. At prime age, the curve reaches baseline+25 before 0..100 clamping.",
+      "This is a coarse hidden simulation-potential system: it changes how strong/successful an AI career boxer is as they approach and leave their prime."
+    ],
+    "limitation": "The scalar baseline is not a per-rating potential ceiling and does not directly govern the player's individual Power/Speed/etc. training caps."
+  },
+  "weekly_countdown": {
+    "field": "progression record+0x13",
+    "confidence": "CONFIRMED countdown behavior; exact public semantic name unresolved",
+    "initialization": "One generated-population path initializes it to RNG % 10 + 3.",
+    "periodic_update": "0x00194320 decrements every nonzero +0x13 once per weekly world tick.",
+    "matchmaking_use": "0x00195564 rejects records with nonzero +0x13 when creating population matchups.",
+    "conclusion": "This is a temporary scheduling/cooldown gate, not a hidden long-term potential value."
+  },
+  "career2_relevance": {
+    "existing_concepts_that_can_be_reused": [
+      "natural starting-rating archetype",
+      "single natural stat emphasis and magnitude",
+      "individual prime-age center",
+      "coarse hidden career-performance/potential baseline",
+      "age-driven rise/decline",
+      "weekly cooldown before matchmaking"
+    ],
+    "new_data_still_required": [
+      "per-attribute potential ceilings/ranges",
+      "technical learning rate",
+      "physical-growth projection",
+      "coach relationship and gym history",
+      "amateur tournament/ranking/title history beyond the existing fight-history ring",
+      "long-term injury/health history if Career Mode 2.0 models it persistently"
+    ],
+    "implementation_direction": "Preserve the original coarse AI-world traits for compatibility and expand them into the richer Career Mode 2.0 development model. Do not overload record+0x12 with nine independent potentials or repurpose the archetype/emphasis fields; they already have active retail semantics."
+  },
+  "next_static_step": "Trace the save-body serializer far enough to identify an explicit extensible/versioned block or append boundary for new Career Mode 2.0 fields. The existing 30,000-byte save-body capacity and zero-filled tail alone are not proof that unobserved bytes are safe storage."
+}

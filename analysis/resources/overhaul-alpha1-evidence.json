@@ -12,26 +12,34 @@
       "title": "Fight/match-context global singleton (accessor + constructor + partial field layout)",
       "original_owner": "BOOT.BIN, program-05 (Fight)",
       "source_function_or_data": "func_001B3EA8 (accessor), func_001AF768 (constructor)",
-      "reconstructed_behavior": "func_001B3EA8 is a lazily-initialized singleton accessor: tests a flag word at ELF virtual 0x000081F0, and on first call sets the flag and calls func_001AF768(0x000081F8) to construct the singleton object, then always returns 0x000081F8. func_001AF768 -- previously misread by an earlier pass as a 'UI/menu-construction routine' -- is this singleton's lazy constructor, confirmed this pass by 3 independent call sites (T_001F2E00 fight-totals, T_001F7248 judging scorecard, and the prior pass's T_001D9A08 options-bitfield decoder) all reaching it through func_001B3EA8, none of which are the boxer-select screen.",
+      "reconstructed_behavior": "func_001B3EA8 is a lazily-initialized singleton accessor: tests a flag word at ELF virtual 0x000081F0, and on first call sets the flag and calls func_001AF768(0x000081F8) to construct the singleton object, then always returns 0x000081F8. func_001AF768 -- previously misread by an earlier pass as a 'UI/menu-construction routine' -- is this singleton's lazy constructor, confirmed this pass by 3 independent call sites (T_001F2E00 fight-totals, T_001F7248 judging scorecard, and the prior pass's func_001D9958 options-bitfield decoder) all reaching it through func_001B3EA8, none of which are the boxer-select screen.",
       "confidence": "PROBABLE",
       "replacement_hook_boundary": "None established this pass. func_001B3EA8's return address (a fixed pointer, not the flag test itself) is the most plausible future hook point for reading fight-session state, but was not proven safe to patch.",
       "patch_location": null,
       "expected_original_bytes": null,
       "new_behavior": "None implemented as a binary patch. fnr3_re.overhaul.fight_session.PROVEN_LAYOUT documents these addresses/offsets as a reference for future patch work.",
-      "affected_programs_features": ["program-05", "combat", "career-2"]
+      "affected_programs_features": [
+        "program-05",
+        "combat",
+        "career-2"
+      ]
     },
     {
       "id": "alpha1-02",
-      "title": "Fight-session singleton: two consecutive per-corner boxer-object pointer fields",
+      "title": "Fight-session singleton: two consecutive per-corner boxer selection ID/index fields",
       "original_owner": "BOOT.BIN, program-05 (Fight) / program-04 (Boxers)",
-      "source_function_or_data": "singleton + 0x19B0, singleton + 0x19B4; read by T_001F2E00 and T_001F7248",
-      "reconstructed_behavior": "Both T_001F2E00 (fight totals) and T_001F7248 (judging scorecard) read singleton+0x19B0 and singleton+0x19B4 as two consecutive word fields, each immediately passed to func_186284 (a 'resolve boxer display info from pointer' callback observed identically at both sites). Interpreted as the left/right (or boxer-A/boxer-B) corner's boxer-object pointer.",
-      "confidence": "PROBABLE",
-      "replacement_hook_boundary": "None established. Reading these fields would require either runtime access (out of scope for this pass) or locating the write site (inside func_001AF768's still-undisassembled 9-subsystem-init chain).",
+      "source_function_or_data": "singleton + 0x19B0, singleton + 0x19B4; read by T_001F2E00 and T_001F7248; write site resolved in ULES00270 cross-build via func_001B00B4",
+      "reconstructed_behavior": "CORRECTED by follow-up cross-build RE (PR #37): +0x19B0/+0x19B4 are numeric boxer selection IDs/indices, not boxer-object pointers. DEBUG_OnAdvance passes iBox0/iBox1 directly to func_001B00B4(session, corner, boxer_id); that setter writes the numeric value at +0x19B0 + corner*4 (and mirrors it at +0x19B8 + corner*4). Existing retail readers T_001F2E00 and T_001F7248 pass these stored values to func_00186284. Disassembly of func_00186284 shows its second argument is an index used to walk boxer-table instance/count space and resolve the selected boxer. The earlier pointer interpretation is superseded.",
+      "confidence": "PROBABLE (retail read sites + matching-address ULES00270 write/resolver chain)",
+      "replacement_hook_boundary": "func_001B00B4 is now the strongest bounded setter boundary for per-corner boxer selection. No binary patch is authored here.",
       "patch_location": null,
       "expected_original_bytes": null,
-      "new_behavior": "None. Documented as fnr3_re.overhaul.fight_session.OFFSET_BOXER_PTR_LEFT/RIGHT.",
-      "affected_programs_features": ["program-05", "program-04", "combat"]
+      "new_behavior": "None. Documented as fnr3_re.overhaul.fight_session.OFFSET_BOXER_ID_LEFT/RIGHT plus SET_BOXER_SELECTION_FUNC.",
+      "affected_programs_features": [
+        "program-05",
+        "program-04",
+        "combat"
+      ]
     },
     {
       "id": "alpha1-03",
@@ -44,7 +52,10 @@
       "patch_location": null,
       "expected_original_bytes": null,
       "new_behavior": "None (a corrected understanding, not new behavior). Recorded to update analysis/reports/static-re-ceiling.json's program-04-04 entry.",
-      "affected_programs_features": ["program-04", "roster"]
+      "affected_programs_features": [
+        "program-04",
+        "roster"
+      ]
     },
     {
       "id": "alpha1-04",
@@ -57,7 +68,11 @@
       "patch_location": null,
       "expected_original_bytes": null,
       "new_behavior": "None. Documented as fnr3_re.overhaul.fight_stats.STAT_PUNCHES_THROWN/STAT_PUNCHES_HIT/STAT_KNOCKDOWNS.",
-      "affected_programs_features": ["program-06", "program-08", "combat"]
+      "affected_programs_features": [
+        "program-06",
+        "program-08",
+        "combat"
+      ]
     },
     {
       "id": "alpha1-05",
@@ -70,7 +85,10 @@
       "patch_location": null,
       "expected_original_bytes": null,
       "new_behavior": "fnr3_re.overhaul.fight_stats.punch_accuracy_percent() reproduces this formula exactly, including the truncation and zero-sentinel behavior, with unit tests covering both.",
-      "affected_programs_features": ["program-06", "combat"]
+      "affected_programs_features": [
+        "program-06",
+        "combat"
+      ]
     },
     {
       "id": "alpha1-06",
@@ -83,33 +101,48 @@
       "patch_location": null,
       "expected_original_bytes": null,
       "new_behavior": "fnr3_re.overhaul.judging implements a new (not retail-reconstructed) 10-point-must scoring formula, applied identically per judge by default, with an explicit optional per-judge bias parameter left at 0.0 pending the still-open func_08A02C sub-question.",
-      "affected_programs_features": ["program-11", "combat", "career-2", "amateur"]
+      "affected_programs_features": [
+        "program-11",
+        "combat",
+        "career-2",
+        "amateur"
+      ]
     },
     {
       "id": "alpha1-07",
       "title": "Shared native-function registration registry (deeper trace of func_0CDAC0/func_0CDA70)",
       "original_owner": "BOOT.BIN, program-03 (Modules) / program-28 (UI)",
       "source_function_or_data": "func_0CDAC0 -> func_0CFE08, func_0CDA70 -> func_0CF9C4; both read a shared global registry pointer at ELF virtual 0x005436D8",
-      "reconstructed_behavior": "Both previously-known registration trampolines (func_0CDAC0, func_0CDA70) reduce to two distinct 122-instruction registration entry points (func_0CFE08, func_0CF9C4) that share one global registry object pointer, loaded from a fixed address (0x005436D8). This confirms a single, shared 'native symbol registry' rather than two unrelated mechanisms, and narrows -- but does not yet close -- the remaining gap: the call-by-name DISPATCH side (the APT bytecode interpreter's 'invoke native function by name' opcode handler) was not located this pass. This is why GetSelectBoxerInfo's real implementation (needed for program-04's roster-count and boxer-ID-mapping questions) remains unreached.",
-      "confidence": "PROBABLE for the shared-registry structure; the dispatch/lookup side remains CANDIDATE/unresolved.",
-      "replacement_hook_boundary": "None established -- this is exactly the blocker Section B asked to resolve 'far enough to reach the actual native implementations'; it was resolved one level further (registration is now fully understood) but not all the way to dispatch.",
+      "reconstructed_behavior": "Both previously-known registration trampolines (func_0CDAC0, func_0CDA70) reduce to two distinct 122-instruction registration entry points (func_0CFE08, func_0CF9C4) that share one global registry object pointer, loaded from a fixed address (0x005436D8). This confirms a single, shared 'native symbol registry' rather than two unrelated mechanisms, and narrows -- but does not yet close -- the remaining gap: the call-by-name DISPATCH side (the APT bytecode interpreter's 'invoke native function by name' opcode handler) was not located this pass. This is why GetSelectBoxerInfo's real implementation (needed for program-04's roster-count and boxer-ID-mapping questions) remains unreached. FOLLOW-UP (PR #37): the previously-open dispatch side was subsequently resolved: func_000D024C is the FSCommand dispatcher and func_000D041C is the LoadVariables dispatcher, each looking up the registered name and indirectly invoking the matched target. See analysis/resources/debug-build-aip-dispatch.json.",
+      "confidence": "PROBABLE; registration and dispatch sides are both now statically mapped in follow-up PR #37.",
+      "replacement_hook_boundary": "No patch required. The former call-by-name dispatch blocker is resolved in follow-up PR #37.",
       "patch_location": null,
       "expected_original_bytes": null,
-      "new_behavior": "None yet. This is the single most valuable remaining static-RE target for a future pass -- see docs/overhaul/alpha1/README.md's blockers list.",
-      "affected_programs_features": ["program-03", "program-04", "program-28", "roster"]
+      "new_behavior": "None. Follow-up dispatch evidence is recorded in analysis/resources/debug-build-aip-dispatch.json and docs/decomp/packages/aip-native-dispatch/README.md.",
+      "affected_programs_features": [
+        "program-03",
+        "program-04",
+        "program-28",
+        "roster"
+      ]
     },
     {
       "id": "alpha1-08",
-      "title": "Boxer 9-stat rating schema tied to a single confirmed owning function pair; T_001D54A0/T_001E83E0 corrected to UI-only (not the in-fight stamina formula)",
-      "original_owner": "BOOT.BIN, program-04 (Boxers) / program-07 (Stamina)",
-      "source_function_or_data": "T_001D54A0, T_001E83E0 (both proven UI native-function registration trampolines, not readers)",
-      "reconstructed_behavior": "All 9 proven boxer rating-stat field name strings (iPower, iSpeed, iAgility, iStamina, iChin, iBody, iHeart, iCuts, iOverall -- selectboxer.big!selectBoxer.const, NUM_STATS-bounded) exist as BOOT.BIN strings, each appearing twice, both instances owned by the same function pair. This pass's disassembly of func_001D537C/func_001D5438 (the GetSelectBoxerInfo registration functions, immediately adjacent to T_001D54A0 in the address space) confirms the shared 'register native function under this name for this screen class' pattern (see alpha1-07) -- T_001D54A0/T_001E83E0 are this same pattern applied to the 9 stat names, i.e. UI property registration, not a reader of xdbboxr.adf's payload bytes. This corrects the prior pass's more cautious framing into an explicit finding: the in-fight stamina cost/regeneration formula is NOT in these two functions and must be sought elsewhere.",
+      "title": "Boxer 9-stat SelectBoxer output schema: real UpdateSelectBoxerInfo reader recovered",
+      "original_owner": "BOOT.BIN, program-04 (Boxers) / SelectBoxer AIP bridge",
+      "source_function_or_data": "0x001D53F0 UpdateSelectBoxerInfo; rating helper func_0018553C; schema-binding helper func_001ACD40; overall helper func_001D50F4",
+      "reconstructed_behavior": "CORRECTED by follow-up PR #37. 0x001D54A0 is not a standalone registration trampoline; it lies inside the real UpdateSelectBoxerInfo handler that begins at 0x001D53F0. The handler parses iBoxerID/iCorner and emits the nine SelectBoxer ratings. Its rating-source map is: Power = slot 10, which averages slots 0/1 (internal schema field IDs 0x10/0x11); Speed = slot 2 -> field 0x12; Agility = slot 3 -> 0x13; Stamina = slot 4 -> 0x14; Chin = slot 5 -> 0x15; Body = slot 6 -> 0x18; Heart = slot 7 -> 0x16; Cuts = slot 8 -> 0x17. iOverall is computed through func_001D50F4 rather than read as one direct raw field. The old statement that T_001D54A0 was UI-only registration is superseded. The second stat-string copy near 0x001E83E0 still requires an independent owning-function boundary trace before assigning semantics.",
       "confidence": "PROBABLE",
-      "replacement_hook_boundary": "None for the original per-record storage (still unresolved, see alpha1-09). A neutral replacement boundary (an ID-keyed override table) is implemented instead -- see fnr3_re.overhaul.boxer_model.",
+      "replacement_hook_boundary": "0x001D53F0 is now a concrete read/output boundary for SelectBoxer rating presentation; raw xdb byte offsets are still unresolved.",
       "patch_location": null,
       "expected_original_bytes": null,
-      "new_behavior": "fnr3_re.overhaul.boxer_model.BoxerRatings (9 fields, proven order) plus fnr3_re.overhaul.boxer_model.BoxerRatingOverrideTable (the replacement boundary).",
-      "affected_programs_features": ["program-04", "program-07", "roster", "generated-boxers"]
+      "new_behavior": "Existing BoxerRatings abstraction remains valid in field order, but its evidence provenance is upgraded from name-only UI constants to a real native reader/accessor chain.",
+      "affected_programs_features": [
+        "program-04",
+        "program-07",
+        "roster",
+        "generated-boxers"
+      ]
     },
     {
       "id": "alpha1-09",
@@ -122,7 +155,11 @@
       "patch_location": null,
       "expected_original_bytes": null,
       "new_behavior": "None -- blocked. Listed explicitly in docs/overhaul/alpha1/README.md and analysis/resources/static-re-backlog.json.",
-      "affected_programs_features": ["program-04", "roster", "generated-boxers"]
+      "affected_programs_features": [
+        "program-04",
+        "roster",
+        "generated-boxers"
+      ]
     }
   ]
 }

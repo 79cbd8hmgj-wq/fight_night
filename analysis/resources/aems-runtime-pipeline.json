@@ -1,0 +1,315 @@
+{
+  "schema_version": 1,
+  "title": "FNR3 PSP generic-event to AEMS runtime pipeline",
+  "source_revision": "ULES00270 review/debug BOOT.BIN",
+  "source_sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+  "confidence": "CONFIRMED for control/dataflow and layouts unless individually marked",
+  "relocation_context": {
+    "program_segment_1_vaddr": "0x0058A8A8",
+    "note": "The state-table addresses below are PSP-relocated references targeting program segment 1. Raw pre-relocation offsets are retained for reproducibility."
+  },
+  "generic_event_subscription": {
+    "subscriber_builder": "0x0049B61C",
+    "listener_callback": "0x0049B564",
+    "generic_event_resolver": "func_003E4A94",
+    "generic_listener_attach": "func_003E5938",
+    "speech_evt_registration": "0x0049AE38 -> 0x0049AD50 -> 0x0049B61C",
+    "subscription_entry": {
+      "size": "0x20",
+      "fields": {
+        "+0x00..+0x07": "generic named-event descriptor {name pointer, 32-bit hash}",
+        "+0x08..+0x0F": "8-byte generic event handle storage",
+        "+0x10..+0x1F": "generic event listener node",
+        "+0x18": "listener callback = 0x0049B564",
+        "+0x1C": "packed 4-byte AEMS mapping key"
+      }
+    },
+    "mapping_key_packer": {
+      "function": "0x0049702C",
+      "layout": "little-endian 32-bit: +0x00 u16 token/key, +0x02 u8 selector B, +0x03 u8 selector A",
+      "note": "0x0049B61C constructs +0x1C through this helper from parsed EVT fields."
+    },
+    "callback_packet_builder": {
+      "function": "0x0049B564",
+      "behavior": [
+        "resolves the listener's packed mapping key through 0x004970EC",
+        "reads mapping-record +0x0B as the number of 32-bit gameplay-payload words required by this mapping",
+        "allocates 4 + payload_words*4 bytes through the registered AEMS allocator",
+        "copies the 4-byte mapping key to packet +0x00",
+        "copies exactly payload_words words from the generic named-event payload to packet +0x04",
+        "submits ownership to 0x004974CC; failed submission frees the packet immediately"
+      ]
+    }
+  },
+  "admission_scheduler": {
+    "submit_function": "0x004974CC",
+    "state_pre_relocation": "0x0003CE78",
+    "state_runtime_vaddr": "0x005C7720",
+    "group_count": 8,
+    "admitted_slot_count": 16,
+    "state_layout": {
+      "+0x000..+0x01F": "8 x u32 active-packet counts, one per AEMS group",
+      "+0x020..+0x03F": "8 x s32 current/selected admitted-slot indices; -1 means none",
+      "+0x040": "start of 16 admitted-slot records",
+      "admitted_slot_stride": "0x10"
+    },
+    "admitted_slot_record": {
+      "size": "0x10",
+      "fields": {
+        "+0x00": "scheduler time/tick captured from 0x0049B528 (behavior confirmed; exact time-unit name unresolved)",
+        "+0x04": "u16 sequence/generation value used to order events sharing a time value",
+        "+0x06": "active flag",
+        "+0x07": "AEMS group index 0..7",
+        "+0x08": "resolved AEMS mapping-record pointer",
+        "+0x0C": "owned copied mapping/gameplay-event packet pointer"
+      }
+    },
+    "behavior": [
+      "rejects reentrant submission through a global guard",
+      "resolves packet +0x00 mapping key through 0x004970EC",
+      "retrieves the AEMS group index via 0x00497140 and chooses one of 16 admitted slots with 0x00497364",
+      "stores scheduler ordering data, mapping pointer and packet ownership in the selected slot",
+      "increments the owning group's active count and records its current slot",
+      "if mapping-record byte +0x0A bit 5 is set, immediately invokes the group's processing path at 0x00497E48"
+    ],
+    "release_function": "0x00497CA4",
+    "release_behavior": [
+      "frees the owned packet if present",
+      "clears slot active state",
+      "clears the group's current-slot index if this slot was current",
+      "decrements the group's active count without allowing it to remain negative"
+    ]
+  },
+  "decoder_contexts": {
+    "state_pre_relocation": "0x000180A8",
+    "state_runtime_vaddr": "0x005A2950",
+    "context_count": 8,
+    "context_stride": "0xA0",
+    "init_all": "0x00499C74",
+    "reset_one": "0x00499BD0",
+    "build_one": "0x00499CEC",
+    "execute_one": "0x00499E64",
+    "active_test": "0x00499E44",
+    "context_layout": {
+      "+0x00": "resolved AEMS mapping-record pointer",
+      "+0x04": "selected parsed AEMS event/variant object pointer",
+      "+0x08": "selected variant/index byte",
+      "+0x09": "active flag",
+      "+0x0A": "number of 12-byte execution descriptors, derived from selected object byte +0x02 >> 2",
+      "+0x0B": "mapping-record gameplay-payload word count (source for owned packet-copy allocation)",
+      "+0x0C": "owned copy of the mapping/gameplay packet",
+      "+0x10": "start of up to 12 execution descriptors",
+      "execution_descriptor_stride": "0x0C"
+    },
+    "execution_descriptor": {
+      "size": "0x0C",
+      "confidence": "CONFIRMED",
+      "fields": {
+        "+0x00": "interned event/object token ID (CONFIRMED); 0x0049A5C0 copies this directly to AuSpeechManager request +0x00",
+        "+0x04": "signed cached index into the global 8-byte {token ID, parsed object pointer} interner table; -1 means unresolved/stale and 0x00496AF0 refreshes it",
+        "+0x06": "signed optional block displacement; -1 means no extra block displacement",
+        "+0x08": "u16 byte-range entry selector passed to 0x0049B480"
+      },
+      "token_cache_dataflow": [
+        "0x0049A5C0 uses descriptor +0x04 as an index into the global interner table at 0x005769D0.",
+        "It compares the table entry's token ID against descriptor +0x00.",
+        "On mismatch it calls 0x00496AF0(token_id), which linearly resolves the correct table index, then caches that index back into descriptor +0x04.",
+        "The table entry's parsed object pointer is then used with descriptor +0x08 to decode the selected byte range."
+      ],
+      "block_displacement": [
+        "0x0049B480 returns the selected entry's byte start and byte length.",
+        "The parsed object's block scale is (byte +0x07 + 1) << 8.",
+        "When descriptor +0x06 != -1, 0x0049A5C0 adds descriptor+0x06 * block_scale to the byte start.",
+        "The resulting relative byte start becomes AuSpeechManager request +0x04."
+      ]
+    }
+  },
+  "packet_to_decoder": {
+    "evaluator": "0x0049A104",
+    "confidence": "CONFIRMED as the admitted-packet mapping/condition evaluator; exact original symbol unknown",
+    "behavior": [
+      "re-resolves the packet's 4-byte mapping key and AEMS group",
+      "evaluates mapping conditions and selects parsed event/variant objects",
+      "builds temporary execution-descriptor data",
+      "calls 0x00499CEC to materialize the owning group's 0xA0 decoder context",
+      "may create no active decoder context when mapping/conditions reject the packet"
+    ],
+    "group_processing": "0x00497E48",
+    "sequence": [
+      "obtain group's current admitted slot",
+      "reset the group's existing decoder context with 0x00499BD0",
+      "evaluate the admitted packet through 0x0049A4F0 / 0x0049A104",
+      "release the admitted slot with 0x00497CA4",
+      "if a decoder context became active, execute it through 0x00499E64"
+    ]
+  },
+  "decoder_to_speech": {
+    "executor": "0x00499E64",
+    "sequence": [
+      "reconstructs the 4-byte mapping key from the decoder context's owned packet",
+      "runs AEMS state/update helpers 0x0049AFB4 and 0x004999EC",
+      "calls 0x0049A5C0 with the resolved mapping record, selected event/variant object and mapping key",
+      "0x0049A5C0 constructs the already-recovered 0x20-byte AEMS->AuSpeechManager requests and invokes the registered speech callback",
+      "updates per-group execution accounting and resets the decoder context through 0x00499BD0"
+    ],
+    "speech_request_producer": "0x0049A5C0",
+    "downstream": "0x00137888 AuSpeechManager callback -> category 0/1/2 com/anc/trn routing -> speech-bank event record -> bank byte range"
+  },
+  "end_to_end_path": [
+    "Fight Night generic named gameplay event",
+    "generic event listener installed from .evt data",
+    "0x0049B564 mapping packet builder",
+    "0x004974CC 8-group / 16-slot admission scheduler",
+    "0x0049A104 mapping/condition evaluator",
+    "0x00499CEC 8-way decoder-context builder",
+    "0x00499E64 decoder executor",
+    "0x0049A5C0 AEMS speech-request producer",
+    "0x00137888 AuSpeechManager callback",
+    "com/anc/trn event record lookup",
+    "speech data bank byte range playback"
+  ],
+  "unresolved_boundary": [
+    "Individual comevt.evt / ancevt.evt / trnevt.evt subscription names and their exact payload-word requirements are external-data facts not recoverable from BOOT.BIN alone.",
+    "The semantic names of several mapping-condition fields and execution-descriptor fields remain unresolved.",
+    "Exact spoken-clip identity for a given gameplay event requires the corresponding speech .evt/.hdr/.big data or a runtime capture."
+  ],
+  "provenance": [
+    "Derived from static disassembly and PSP relocation records in the user-provided ULES00270 debug/review BOOT.BIN.",
+    "No executable or commercial resource bytes are committed."
+  ],
+  "parsed_evt_object": {
+    "confidence": "CONFIRMED for field offsets and observed uses; semantic labels are conservative",
+    "header_validation": {
+      "+0x00": "must equal 0x03",
+      "+0x01": "must equal 0x12",
+      "validator": "0x0049AD50"
+    },
+    "fields": {
+      "+0x02": "packed count/format byte used by parsed sub-object traversal; exact aggregate semantic unresolved",
+      "+0x04": "relative offset from EVT object base to 0x20-byte generic-event subscription table",
+      "+0x08": "selector byte A; paired with +0x09 to identify one of 8 registered AEMS groups",
+      "+0x09": "selector byte B; 0x00497190 also exposes this byte as group-associated context",
+      "+0x0B": "subscription-installed flag; 0x0049B61C exits when nonzero and sets it to 1 after attaching all listeners",
+      "+0x10": "u16 generic-event subscription count",
+      "+0x12": "u8 count of a secondary per-EVT state-byte array",
+      "+0x18": "start of u16 subscription-to-mapping index list"
+    },
+    "subscription_table": {
+      "base_formula": "evt + *(u32 *)(evt+0x04)",
+      "entry_size": "0x20",
+      "count": "*(u16 *)(evt+0x10)",
+      "string_rebase": "entry+0x00 initially contains a relative name offset; 0x0049B61C adds end_of_subscription_table and writes the absolute pointer back in place",
+      "mapping_token_resolution": [
+        "for subscription i, read u16 index = *(evt+0x18+i*2)",
+        "mapping_record_offset = index * 4",
+        "read u16 mapping token from evt + mapping_record_offset",
+        "pack that token with evt selector bytes +0x08/+0x09 through 0x0049702C"
+      ]
+    },
+    "secondary_state_array": {
+      "location": "evt +0x18 + align4(subscription_count*2)",
+      "count": "evt+0x12",
+      "reset_function": "0x0049ACC0",
+      "reset_value": "0xFF",
+      "note": "0x0049ACC0 resets this byte array for every registered EVT object in the selected AEMS group/category. Exact state semantics remain unresolved."
+    },
+    "group_registry": {
+      "pre_relocation": "0x0003CE38",
+      "runtime_vaddr": "0x005C76E0",
+      "entry_count": 8,
+      "entry_size": 8,
+      "fields": {
+        "+0x00": "parsed EVT object pointer",
+        "+0x04": "AEMS group/category index"
+      },
+      "register_function": "0x0049AD50",
+      "lookup_by_selectors": "0x00497090",
+      "category_lookup": "0x00497140",
+      "duplicate_rule": "0x0049AD50 rejects registration when another installed object has the same +0x08/+0x09 selector-byte pair",
+      "speech_groups": {
+        "0": "commentary EVT/bank",
+        "1": "announcer EVT/bank",
+        "2": "training EVT/bank"
+      }
+    }
+  },
+  "mapping_record_model": {
+    "confidence": "CONFIRMED for byte/field uses; probability interpretation at +0x09 is PROBABLE",
+    "lookup": {
+      "function": "0x004970EC",
+      "algorithm": [
+        "unpack the 4-byte mapping key",
+        "select the registered EVT object by selector bytes",
+        "scan the EVT object's +0x18 u16 index list",
+        "for each index, address evt + index*4 and compare the record's first u16 against the requested mapping token",
+        "return the matching mapping-record pointer"
+      ]
+    },
+    "fields": {
+      "+0x00": "u16 mapping token/key (CONFIRMED)",
+      "+0x02": "u16 admitted-packet lifetime/expiry window in the scheduler's time units (CONFIRMED arithmetic; exact time unit unresolved)",
+      "+0x04": "u16 admission priority/rank used when all 16 scheduler slots are occupied (CONFIRMED ordering behavior)",
+      "+0x06": "count controlling a leading u16 variable table before the condition-clause region; exact semantic label unresolved",
+      "+0x07": "count of 3-byte condition clauses evaluated by 0x0049B108 (CONFIRMED)",
+      "+0x08": "field not yet semantically bounded",
+      "+0x09": "signed random-acceptance threshold: 0x004974CC draws an integer 0..99 using 0x0049AB4C(100,-1) and rejects when threshold < draw (CONFIRMED); -1 rejects all, 0 accepts only draw 0, >=99 accepts all draws",
+      "+0x0A": "flags; bit 0 affects evaluator behavior and bit 5 forces immediate scheduler processing (CONFIRMED)",
+      "+0x0B": "number of 32-bit words copied from the generic gameplay-event payload into the AEMS packet (CONFIRMED)",
+      "+0x0C...": "variable tables/condition data"
+    },
+    "condition_region": {
+      "evaluator": "0x0049B108",
+      "start_formula": "mapping + 0x0C + align4((mapping+0x06)*2)",
+      "clause_size": 3,
+      "clause_count": "mapping+0x07",
+      "observed_clause_fields": {
+        "byte +0": "condition opcode/value passed as callback argument 1",
+        "byte +1": "payload-word selector; 0 means no payload word, nonzero selects a 32-bit word from the copied gameplay payload",
+        "byte +2": "present in each 3-byte clause; exact consumer meaning not yet proven"
+      },
+      "condition_callback": {
+        "registration": "0x004981C4",
+        "fight_night_callback": "0x00137824",
+        "companion_callback": "0x00137874",
+        "note": "0x0049B108 calls the registered +0x04 callback and records positive vs negative results into separate bitmasks. The exact original semantic names of these two callbacks remain unproven."
+      }
+    },
+    "scheduler_use": {
+      "expiry": "0x00497364 compares current_scheduler_time - slot_time against existing mapping +0x02 and releases expired slots",
+      "priority": "when no free/expired slot exists, 0x00497364 compares the new mapping +0x04 priority with existing slots in the same group to choose an eviction candidate",
+      "threshold": "0x0049AB4C(100,-1) returns a PRNG-backed bounded integer 0..99; 0x004974CC rejects when signed mapping+0x09 < random_draw, proving +0x09 is a probabilistic acceptance threshold"
+    }
+  },
+  "global_event_object_interner": {
+    "confidence": "CONFIRMED",
+    "table_pointer_global": "0x005769D0",
+    "next_token_global": "0x005769D4",
+    "capacity_global": "0x005769D8",
+    "used_count_global": "0x005769DC",
+    "entry_size": 8,
+    "entry_fields": {
+      "+0x00": "monotonically assigned token ID",
+      "+0x04": "parsed event/object pointer"
+    },
+    "registration_function": "0x00496F20",
+    "token_to_index_function": "0x00496AF0",
+    "registration_behavior": [
+      "0x00496F20 finds/inserts the parsed object in the sorted interner table.",
+      "It writes the current next-token value to entry +0x00 and the object pointer to +0x04.",
+      "It increments next-token and used-count and returns the assigned token ID.",
+      "AuSpeechManager stores that returned token in each 16-byte speech-bank record +0x00."
+    ],
+    "implication": "The same token namespace crosses the parser, decoder context, AEMS request and AuSpeechManager speech-bank lookup."
+  },
+  "random_selection": {
+    "prng_core": "0x0049A860",
+    "bounded_selector": "0x0049AB4C",
+    "confidence": "CONFIRMED for range behavior",
+    "behavior": [
+      "0x0049A860 advances a multiword PRNG state and returns a 32-bit pseudorandom value.",
+      "0x0049AB4C(range, exclude) scales the PRNG high 16 bits into 0..range-1.",
+      "When exclude == -1, it returns that bounded result directly.",
+      "The admission path calls 0x0049AB4C(100,-1), therefore the admission draw is exactly 0..99."
+    ]
+  }
+}

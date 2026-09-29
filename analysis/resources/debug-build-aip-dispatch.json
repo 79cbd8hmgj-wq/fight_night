@@ -1,0 +1,3314 @@
+{
+  "schema_version": 1,
+  "title": "FNR3 PSP debug-build AIP native dispatch cross-map",
+  "retail_revision": {
+    "id": "ULUS10066-v1.00",
+    "boot_sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+    "source": "analysis/reports/static-re-ceiling.json"
+  },
+  "debug_reference": {
+    "id": "ULES00270 review/debug build",
+    "boot_sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "boot_size": 7270752,
+    "elf_entry": "0x0034DF24",
+    "section_count": 62,
+    "text": {
+      "address": "0x00000000",
+      "size": "0x004F64A4"
+    },
+    "data": {
+      "address": "0x0052DD40",
+      "size": "0x0005C760"
+    },
+    "bss": {
+      "address": "0x005923C0",
+      "size": "0x000355A4"
+    },
+    "note": "Reference binary is not tracked; only derived non-expressive metadata is committed."
+  },
+  "cross_build_layout": {
+    "confidence": "PROBABLE",
+    "findings": [
+      "Debug and retail BOOT.BIN have identical .text, .data, and .bss sizes.",
+      "The debug build uses the same key AIP/UI function address family already present in the retail static map, allowing direct address-level cross-reference for the bounded functions below.",
+      "The debug ELF retains additional relocation/development metadata but no conventional .symtab/.strtab or DWARF .debug_* sections."
+    ]
+  },
+  "aip_dispatch": {
+    "confidence": "PROBABLE",
+    "manager_global": "0x005436D8",
+    "registration": {
+      "func_000CDA70": "register FSCommand handler",
+      "func_000CDAC0": "register LoadVariables handler",
+      "func_000CDA9C": "unregister FSCommand handler",
+      "func_000CDAEC": "unregister LoadVariables handler",
+      "func_000CF9C4": "insert/register node in FSCommand handler BST",
+      "func_000CFE08": "insert/register node in LoadVariables handler BST"
+    },
+    "dispatch": {
+      "func_000D024C": "FSCommand dispatch: parse name, search FS handler BST, indirect-call matched handler; returns handled/not-handled result",
+      "func_000D041C": "LoadVariables dispatch: parse name, search LV handler BST, indirect-call matched handler, return produced result",
+      "func_000D066C": "diagnostic dump of FSHandler and LVHandler lists"
+    },
+    "handler_node_layout": {
+      "size": "0x14",
+      "fields": {
+        "+0x00": "left child",
+        "+0x04": "right child",
+        "+0x08": "handler-name string pointer",
+        "+0x0C": "handler target/object pointer",
+        "+0x10": "auxiliary integer; registration glue passes -1"
+      }
+    },
+    "diagnostic_strings": [
+      "<< AIP >> FSCommand received: \"%s\"",
+      "<< AIP >> WARNING! No FS handler found for \"%s\"",
+      "<< AIP >> LoadVariables received: \"%s\"",
+      "<< AIP >> WARNING! No LV handler found for \"%s\"",
+      "<< AIP >> FSHandler list:",
+      "<< AIP >> LVHandler list:"
+    ]
+  },
+  "debug_menu_binding": {
+    "confidence": "PROBABLE",
+    "registration_glue_range": "0x001CEC48-0x001CECB8",
+    "unregister_glue_range": "0x001CECBC-0x001CECFC",
+    "handlers": {
+      "GetStartScreenFromMain": "LoadVariables",
+      "DEBUG_GetDebugMenuData": "LoadVariables",
+      "DEBUG_OnAdvance": "FSCommand",
+      "DEBUG_OnRealFE": "FSCommand"
+    },
+    "resource": "menu/debugmenu.big",
+    "members": [
+      "debugMenu.apt",
+      "debugMenu.const"
+    ],
+    "implication": "The debug-menu APT can retrieve menu data through DEBUG_GetDebugMenuData and invoke action callbacks through DEBUG_OnAdvance / DEBUG_OnRealFE. The exact APT bytecode call sites remain to be decoded.",
+    "handler_descriptors": {
+      "initialization_range": "0x001CF2D8-0x001CF39C",
+      "global_slots": {
+        "0x0055F3CC": {
+          "name": "GetStartScreenFromMain",
+          "descriptor": "0x00581D54",
+          "implementation": "0x001CED00"
+        },
+        "0x0055F3C0": {
+          "name": "DEBUG_GetDebugMenuData",
+          "descriptor": "0x00581D64",
+          "implementation": "0x001CED2C"
+        },
+        "0x0055F3C4": {
+          "name": "DEBUG_OnAdvance",
+          "descriptor": "0x00581D74",
+          "implementation": "0x001CF1A0"
+        },
+        "0x0055F3C8": {
+          "name": "DEBUG_OnRealFE",
+          "descriptor": "0x00581D84",
+          "implementation": "0x001CF2A0"
+        }
+      },
+      "note": "The static initializer stores descriptor addresses into the globals consumed by the registration glue; each descriptor's +0x0C function pointer identifies the concrete handler implementation."
+    },
+    "data_producer": {
+      "function": "0x001CED2C",
+      "confidence": "PROBABLE",
+      "outputs": {
+        "iNumElements": 3,
+        "aBoxNames": [
+          "TL_Select_Boxer",
+          "TL_Select_Boxer",
+          "TL_Select_Venue"
+        ],
+        "selectable_arrays": [
+          "aBoxStrings0 / aBoxIDs0",
+          "aBoxStrings1 / aBoxIDs1",
+          "aBoxStrings2 / aBoxIDs2"
+        ],
+        "aDefaultIDs": [
+          25,
+          17,
+          9
+        ]
+      },
+      "behavior": [
+        "Enumerates boxer candidates for the first two selectors and builds paired display-string / numeric-ID arrays.",
+        "Enumerates venue candidates for the third selector using Venue_%d-style keys.",
+        "Publishes three default numeric IDs."
+      ]
+    },
+    "on_advance": {
+      "function": "0x001CF1A0",
+      "confidence": "PROBABLE",
+      "parsed_fields": [
+        "iBox0",
+        "iBox1",
+        "iBox2"
+      ],
+      "behavior": [
+        "Reads the three selected IDs from the AIP request.",
+        "Obtains the fight-session singleton through func_001B3EA8.",
+        "Applies the first two values through the two-corner boxer-selection path.",
+        "Applies the third value through a separate fight-session selection path consistent with the venue selector.",
+        "Runs the subsequent fight/front-end transition sequence."
+      ]
+    },
+    "on_real_fe": {
+      "function": "0x001CF2A0",
+      "confidence": "PROBABLE",
+      "arguments": {
+        "command": "ChangeScreen",
+        "target": "_root",
+        "screen": "MAINMENU"
+      },
+      "behavior": "Routes back to the normal front end/main menu."
+    }
+  },
+  "provenance": [
+    "Static disassembly of the user-provided ULES00270 debug/review BOOT.BIN.",
+    "Cross-checked against the existing ULUS10066-v1.00 retail address/evidence map in this repository.",
+    "No copyrighted executable bytes are stored in this artifact."
+  ],
+  "fight_session_quick_fight_chain": {
+    "confidence": "PROBABLE",
+    "entry_handler": "0x001CF1A0 (DEBUG_OnAdvance)",
+    "parsed_fields": [
+      "iBox0",
+      "iBox1",
+      "iBox2"
+    ],
+    "sequence": [
+      "func_001B3EA8() -> fight-session singleton",
+      "func_001B00B4(session, 0, iBox0) -> set corner-0 boxer numeric ID/index",
+      "func_001B00B4(session, 1, iBox1) -> set corner-1 boxer numeric ID/index",
+      "func_001B00A0(session, iBox2) -> set venue ID/index",
+      "func_001B01BC(session, 0, 0, 1) -> additional per-corner/control assignment; exact semantics not yet proven",
+      "func_001AFFDC(session, 1) -> set fight/session mode",
+      "func_000D7FB0(); func_000D8028() -> subsequent front-end/fight transition path"
+    ],
+    "setters": {
+      "func_001B00B4": {
+        "signature": "(session, corner, boxer_id)",
+        "valid_corner_range": "0..1",
+        "writes": [
+          "+0x19B0 + corner*4",
+          "+0x19B8 + corner*4"
+        ],
+        "semantics": "numeric boxer selection ID/index; NOT a boxer-object pointer",
+        "corroboration": "func_00186284 consumes the stored value as an index while resolving boxer-table entries"
+      },
+      "func_001B00A0": {
+        "signature": "(session, venue_id)",
+        "validation": "signed venue_id < 12",
+        "writes": [
+          "+0x19AC"
+        ],
+        "semantics": "venue selection ID/index"
+      },
+      "func_001AFFDC": {
+        "signature": "(session, mode)",
+        "validation": "signed mode < 9; otherwise stores -1",
+        "writes": [
+          "+0x19A8"
+        ],
+        "semantics": "fight/session mode enum",
+        "observed_modes": {
+          "1": "developer debug quick-fight path",
+          "4": "career-adjacent call site (strong context, exact enum label not yet promoted)",
+          "6": "multiplayer/network call sites",
+          "7": "alternate shared-network setup path; exact distinction from mode 6 unresolved",
+          "8": "sparring-adjacent call site (strong context, exact enum label not yet promoted)"
+        }
+      }
+    },
+    "additional_fields": {
+      "+0x19B8/+0x19BC": "mirrored per-corner boxer IDs; distinction from +0x19B0/+0x19B4 unresolved",
+      "+0x19C0/+0x19C4": "written by func_001B01BC; likely per-corner assignment/control state, exact semantics unresolved",
+      "+0x19C8/+0x19CC": "nibble-packed per-corner values written by func_001B0180; exact semantics unresolved",
+      "+0x19E0": "participates in func_001B01BC assignment tracking; exact semantics unresolved"
+    },
+    "correction": "Existing project evidence that described +0x19B0/+0x19B4 as boxer-object pointers is superseded by the setter+resolver chain above."
+  },
+  "select_boxer_native_map": {
+    "confidence": "PROBABLE",
+    "registration_glue_range": "0x001D52CC-0x001D5384",
+    "unregister_glue_range": "0x001D5388-0x001D53EC",
+    "initializer_range": "0x001D92FC-0x001D934C",
+    "handlers": {
+      "GetSelectBoxerInfo": {
+        "channel": "LoadVariables",
+        "global": "0x0055F5E0",
+        "descriptor": "0x00581EB4",
+        "implementation": "0x001D77C8"
+      },
+      "UpdateSelectBoxerInfo": {
+        "channel": "LoadVariables",
+        "global": "0x0055F5E4",
+        "descriptor": "0x00581EC4",
+        "implementation": "0x001D53F0"
+      },
+      "LoadSelectBoxer": {
+        "channel": "FSCommand",
+        "global": "0x0055F5E8",
+        "descriptor": "0x00581ED4",
+        "implementation": "0x001D56AC"
+      },
+      "GetCornerInfo": {
+        "channel": "LoadVariables",
+        "global": "0x0055F5F4",
+        "descriptor": "0x00581EE4",
+        "implementation": "0x001D8CE8"
+      },
+      "SetCornerSide": {
+        "channel": "FSCommand",
+        "global": "0x0055F5F8",
+        "descriptor": "0x00581F14",
+        "implementation": "0x001D5974"
+      },
+      "SetSelectBoxerInfo": {
+        "channel": "FSCommand",
+        "global": "0x0055F5EC",
+        "descriptor": "0x00581EF4",
+        "implementation": "0x001D87E0"
+      },
+      "UpdateRandomBoxerInfo": {
+        "channel": "FSCommand",
+        "global": "0x0055F5F0",
+        "descriptor": "0x00581F04",
+        "implementation": "0x001D57FC"
+      }
+    },
+    "get_select_boxer_info": {
+      "implementation": "0x001D77C8",
+      "fixed_weight_class_count": 6,
+      "fixed_count_evidence": [
+        "literal sltiu < 6 switch at 0x001D7D58",
+        "literal sltiu < 6 switch at 0x001D8170",
+        "global 0x005608D0 initialized to 6",
+        "six explicitly-named AIP arrays are populated"
+      ],
+      "division_arrays": [
+        {
+          "weight_class_enum": 0,
+          "name": "aHeavyWeightID",
+          "start_global": "0x0056090C",
+          "end_global": "0x00560910",
+          "count_global": "0x00560914",
+          "initial_range": [
+            0,
+            6
+          ],
+          "initial_count": 7
+        },
+        {
+          "weight_class_enum": 1,
+          "name": "aLightHeavyWeightID",
+          "start_global": "0x00560918",
+          "end_global": "0x0056091C",
+          "count_global": "0x00560920",
+          "initial_range": [
+            7,
+            10
+          ],
+          "initial_count": 4
+        },
+        {
+          "weight_class_enum": 2,
+          "name": "aMiddleWeightID",
+          "start_global": "0x00560924",
+          "end_global": "0x00560928",
+          "count_global": "0x0056092C",
+          "initial_range": [
+            11,
+            17
+          ],
+          "initial_count": 7
+        },
+        {
+          "weight_class_enum": 3,
+          "name": "aWelterWeightID",
+          "start_global": "0x00560930",
+          "end_global": "0x00560934",
+          "count_global": "0x00560938",
+          "initial_range": [
+            18,
+            24
+          ],
+          "initial_count": 7
+        },
+        {
+          "weight_class_enum": 4,
+          "name": "aLightWeightID",
+          "start_global": "0x0056093C",
+          "end_global": "0x00560940",
+          "count_global": "0x00560944",
+          "initial_range": [
+            25,
+            30
+          ],
+          "initial_count": 6
+        },
+        {
+          "weight_class_enum": 5,
+          "name": "aFeatherWeightID",
+          "start_global": "0x00560948",
+          "end_global": "0x0056094C",
+          "count_global": "0x00560950",
+          "initial_range": [
+            31,
+            34
+          ],
+          "initial_count": 4
+        }
+      ],
+      "stock_selectable_ids": "0..34 inclusive across six divisions (35 entries in the initial range table)",
+      "output_names": [
+        "aDefaultRightBoxer",
+        "aDefaultLeftBoxer",
+        "iDefaultLeftWeightClass",
+        "iDefaultRightWeightClass",
+        "iCurrentRightDefault",
+        "iCurrentLeftDefault",
+        "iCustomBoxerID",
+        "strCustomBoxerName",
+        "iCustomBoxerWeightClass"
+      ],
+      "roster_cap_note": "The handler contains no 121-entry roster cap. It builds six lists from per-division start/end globals. This does not by itself prove that the database/save architecture can exceed 121 records.",
+      "weight_class_enum_order": [
+        "Heavyweight",
+        "Light Heavyweight",
+        "Middleweight",
+        "Welterweight",
+        "Lightweight",
+        "Featherweight"
+      ],
+      "random_selection_corroboration": "SetSelectBoxerInfo at 0x001D87E0 uses the same enum order and chooses random IDs as start + (rng % count), directly confirming the start/count table semantics."
+    },
+    "update_select_boxer_info": {
+      "implementation": "0x001D53F0",
+      "parsed_inputs": [
+        "iBoxerID",
+        "iCorner"
+      ],
+      "behavior": "When a concrete boxer ID is supplied, builds/resolves that boxer and publishes the nine SelectBoxer rating properties. When iBoxerID == -1 it follows the current-corner/current-boxer path instead.",
+      "rating_outputs": {
+        "iPower": "rating accessor slot 10; average of slots 0 and 1, which resolve schema field IDs 0x10 and 0x11",
+        "iSpeed": "rating accessor slot 2 -> schema field ID 0x12",
+        "iAgility": "rating accessor slot 3 -> schema field ID 0x13",
+        "iStamina": "rating accessor slot 4 -> schema field ID 0x14",
+        "iChin": "rating accessor slot 5 -> schema field ID 0x15",
+        "iBody": "rating accessor slot 6 -> schema field ID 0x18",
+        "iHeart": "rating accessor slot 7 -> schema field ID 0x16",
+        "iCuts": "rating accessor slot 8 -> schema field ID 0x17",
+        "iOverall": "computed by func_001D50F4 from expanded boxer data and weight class; not emitted as a direct raw schema field in this handler"
+      },
+      "helper_chain": [
+        "func_00185114 initializes the temporary boxer/data accessor",
+        "func_0018553C resolves rating slots",
+        "func_001ACD40 binds an internal schema field ID to the accessor",
+        "func_001D50F4 computes iOverall"
+      ],
+      "function_boundary_correction": "0x001D54A0 is an instruction inside UpdateSelectBoxerInfo, not a standalone native-registration function. The registration glue is 0x001D52CC-0x001D5384."
+    }
+  },
+  "boxer_identity_followup": {
+    "confidence": "PROBABLE/CONFIRMED as noted",
+    "selector_model": "func_00186284 proves the boxer value used by SelectBoxer/fight-session code is a cumulative record-position selector across registered boxer-table instances. It does not use xdbboxr field 0.",
+    "xdbboxr": {
+      "field_0": "secondary boxer/resource identity key; exact role unresolved. Prior 'global boxer ID' interpretation is superseded.",
+      "field_1": "last/surname/display family name (CONFIRMED; func_001851CC name composer)",
+      "field_2": "first/given name (CONFIRMED; func_001851CC name composer)",
+      "field_3": "short CRO/resource stem (PROBABLE)",
+      "field_4": "base/default availability predicate (CONFIRMED behavior; bonus unlock semantics PROBABLE)",
+      "field_6": "xdbhmtwn hometown key/reference (CONFIRMED)",
+      "field_7": "xdbalias nickname/alias key/reference (CONFIRMED)",
+      "field_9": "boxer weight used by exact six-division classifier (CONFIRMED)"
+    },
+    "bonus_records": [
+      "cumulative selector/index 35 -> physical row 35 -> FABOLOUS -> field0 secondary ID 74 -> CRO stem fabo",
+      "cumulative selector/index 36 -> physical row 36 -> LITTLE MAC -> field0 secondary ID 75 -> CRO stem spun"
+    ],
+    "availability": "func_001B0FE8 accepts field4>0 directly; when field4==0 it special-cases selector 35 through a session/object unlock bitset at +0x1C4. T_001B2648 sets bits in that same bitset.",
+    "custom_created_boxer_note": "The SelectBoxer custom-created-boxer output path is separate and emits iCustomBoxerID/strCustomBoxerName/iCustomBoxerWeightClass from session/custom state, so rows 35/36 are not created-boxer placeholders."
+  },
+  "debug_elf_symbol_harvest": {
+    "confidence": "CONFIRMED unless individually marked PROBABLE",
+    "binary": {
+      "id": "ULES00270 review/debug BOOT.BIN",
+      "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+      "size": 7270752,
+      "elf_class": "ELF32 little-endian MIPS/Allegrex",
+      "elf_type": "processor-specific 0xFFA0 PSP relocatable executable form",
+      "entry": "0x0034DF24",
+      "section_count": 62,
+      "module_name": "FightNight",
+      "note": "Binary is not tracked; this block contains derived metadata only."
+    },
+    "relocation_inventory": {
+      "entry_size": 8,
+      "total_records": 178126,
+      "sections": {
+        ".rel.text": 152464,
+        ".rel.lib.ent": 1,
+        ".rel.lib.stub": 84,
+        ".rel.rodata.sceModuleInfo": 4,
+        ".rel.rodata.sceResident": 5,
+        ".rel.rodata": 8232,
+        ".rel.data": 13791,
+        ".rel.eh_frame": 1,
+        ".rel.cplinit": 536,
+        ".rel.psp_lib_markimport_": 5,
+        ".rel.linkonce.d": 3003
+      },
+      "implication": "The debug ELF retains unusually rich relocation metadata even though conventional symbol/debug sections are absent; address/reference reconstruction should exploit these relocations."
+    },
+    "conventional_debug_sections": {
+      "symtab": false,
+      "strtab": false,
+      "dwarf_debug_sections": false,
+      "note": "No conventional .symtab/.strtab or .debug_* sections were observed. Source/assert strings and relocations are therefore the primary symbol-recovery evidence."
+    },
+    "psp_import_libraries": [
+      "Kernel_Library",
+      "InterruptManager",
+      "sceNetResolver",
+      "sceNetApctl",
+      "sceNetInet",
+      "scePower",
+      "sceNetAdhocctl",
+      "sceNetAdhoc",
+      "sceMpeg",
+      "sceAtrac3plus",
+      "sceAudio",
+      "sceSasCore",
+      "sceGe_user",
+      "sceCtrl",
+      "sceSuspendForUser",
+      "UtilsForUser",
+      "ThreadManForUser",
+      "SysMemUserForUser",
+      "StdioForUser",
+      "ModuleMgrForUser",
+      "LoadExecForUser",
+      "IoFileMgrForUser",
+      "sceNet",
+      "sceWlanDrv",
+      "sceUtility",
+      "sceRtc",
+      "sceUmdUser",
+      "sceDisplay"
+    ],
+    "source_paths": [
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\AIP\\\\aip.cpp",
+        "file_offset": "0x004FAE34",
+        "vaddr": "0x004FAD34",
+        "xrefs": [
+          {
+            "instruction": "0x000CE8D4",
+            "function": "T_000CE8A0",
+            "source_line": 1492,
+            "assert_expression": "s_pfnGetLocalizedString",
+            "confidence": "CONFIRMED",
+            "implication": "Directly source-attributes T_000CE8A0 to boxing/AIP/aip.cpp; its null-callback assertion is the existing localization indirection lead."
+          }
+        ]
+      },
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\fe\\\\feplayer.cpp",
+        "file_offset": "0x0050A0F4",
+        "vaddr": "0x00509FF4",
+        "xrefs": [
+          {
+            "instruction": "0x001C66F0",
+            "function": "func_001C6658",
+            "source_line": 3270,
+            "assert_expression": "texture_file",
+            "confidence": "PROBABLE function boundary; CONFIRMED source/assert xref",
+            "implication": "Source-attributes the containing FE-player routine and ties it to a texture_file allocation/load failure path."
+          }
+        ]
+      },
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\fe_psp\\\\aptextobj\\\\source\\\\Animation\\\\AnimationUtils.h",
+        "file_offset": "0x0050FE08",
+        "vaddr": "0x0050FD08",
+        "xrefs": [
+          {
+            "instruction": "0x002228CC",
+            "function": "func_0022284C",
+            "source_line": 74,
+            "assert_expression": "myPointer"
+          },
+          {
+            "instruction": "0x00222A18",
+            "function": "func_00222998",
+            "source_line": 74,
+            "assert_expression": "myPointer"
+          },
+          {
+            "instruction": "0x00222B6C",
+            "function": "func_00222AE4",
+            "source_line": 74,
+            "assert_expression": "myPointer"
+          },
+          {
+            "instruction": "0x00222CD4",
+            "function": "func_00222C4C",
+            "source_line": 74,
+            "assert_expression": "myPointer"
+          }
+        ],
+        "confidence": "PROBABLE function boundaries; CONFIRMED source/assert xrefs",
+        "implication": "Four PSP front-end animation helper routines instantiate the same AnimationUtils.h line-74 myPointer assertion."
+      },
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\hud\\\\fui\\\\fuitccgame.cpp",
+        "file_offset": "0x00510354",
+        "vaddr": "0x00510254",
+        "xrefs": [
+          {
+            "instruction": "0x00241378",
+            "function": "func_002412BC",
+            "source_line": 554,
+            "assert_expression": "damageText"
+          },
+          {
+            "instruction": "0x0024158C",
+            "function": "func_002414B8",
+            "source_line": 623,
+            "assert_expression": "layout"
+          }
+        ],
+        "confidence": "PROBABLE function boundaries; CONFIRMED source/assert xrefs",
+        "implication": "Source-attributes two HUD/FUI routines and anchors their debug assertions to damageText and layout."
+      },
+      {
+        "path": "E:\\\\muon\\\\boxing\\\\main\\\\game\\\\source\\\\boxing\\\\pocketdj\\\\PocketDJFightNight.cpp",
+        "file_offset": "0x0051B1BC",
+        "vaddr": "0x0051B0BC",
+        "xrefs": [
+          {
+            "instruction": "0x002958CC",
+            "function": "func_00295788",
+            "source_line": 126,
+            "assert_expression": "!\\\"pocketdj not inited!\\\"",
+            "implication": "func_00295788 allocates/constructs an EATrax::Player object, stores it in the PocketDJ global slot, validates initialization, and destroys/clears it on failure; behavior supports a PROBABLE PocketDJ initialization/create semantic."
+          },
+          {
+            "instruction": "0x00295E5C",
+            "function": "func_00295E24",
+            "source_line": 182,
+            "assert_expression": "player"
+          },
+          {
+            "instruction": "0x00295F24",
+            "function": "func_00295EF0",
+            "source_line": 225,
+            "assert_expression": "player"
+          }
+        ],
+        "confidence": "PROBABLE function boundaries; CONFIRMED source/assert xrefs",
+        "implication": "Directly source-attributes three audio/PocketDJ routines, materially strengthening these addresses as the audio-specific path for interface-audio work."
+      },
+      {
+        "path": "E:/MyWork/Perforce/depot/project/Apt/5.02.01-250/source/AptAuxEAGLREAL/AptAuxEAGLREAL.cpp",
+        "file_offset": "0x00525314",
+        "vaddr": "0x00525214",
+        "xref_count": 25,
+        "xref_range": "0x003DDD78-0x003E1D9C",
+        "confidence": "CONFIRMED source xrefs; individual nearest-prologue boundaries remain PROBABLE",
+        "notable_asserts": [
+          "nRetVal >= 0",
+          "pASFLUT && pASFLUT[0] == 'A' && pASFLUT[1] == 'S' && pASFLUT[2] == 'F' && pASFLUT[3] == 'T'",
+          "modelTARList.GetNumTARs() == 1",
+          "strlen(szFileName) < 250",
+          "i != pLevel->soundData.nSounds",
+          "i != nMaskModels",
+          "pShape != NULL",
+          "gnTarNumberForBatchDraw == -1",
+          "gnTarNumberForBatchDraw >= 0",
+          "pCurrentPool->nDeadStrings < DEADSTRINGPERFRAME",
+          "gnNumDelayedReleasePointers < pCurrentAptAuxParams->iMaxStringCount && \"Increase the size of AptAuxInit Param -> iMaxStringCount at initialization\"",
+          "i != MAX_NUM_ASYNC_LOADS"
+        ],
+        "implication": "Provides a strong middleware attribution band for APT/EAGLREAL code so it can be separated from Fight Night gameplay logic during symbol recovery."
+      },
+      {
+        "path": "E:/MyWork/Perforce/depot/project/Apt/5.02.01-250/source/AptAuxEAGLREAL/aptrealfont.cpp",
+        "file_offset": "0x00525B08",
+        "vaddr": "0x00525A08",
+        "xref_count": 9,
+        "xref_range": "0x003E2058-0x003E392C",
+        "confidence": "CONFIRMED source xrefs; individual nearest-prologue boundaries remain PROBABLE",
+        "notable_asserts": [
+          "false",
+          "gLevelInfo",
+          "allocStrings",
+          "gpDelayedReleasePointers",
+          "!\"not enough characters allocated for strings - set up AIP::Init with more characters!\\n\"",
+          "allocStrings == NULL",
+          "gpDelayedReleasePointers == NULL"
+        ],
+        "implication": "Identifies the adjacent APT real-font implementation region as middleware rather than title-specific Fight Night logic."
+      }
+    ],
+    "methodology": [
+      "File offsets and loaded virtual addresses were derived from the ELF section mapping; the relevant allocatable sections have a 0x100 file-offset bias.",
+      "Code xrefs were independently recovered from Allegrex LUI + ADDIU/ORI address constructions in .text.",
+      "Containing function starts marked PROBABLE were bounded by the nearest standard negative stack-frame prologue and checked against surrounding return/prologue structure.",
+      "Assert line numbers and expressions were recovered from the argument setup at each source-path xref."
+    ]
+  },
+  "pocketdj_function_boundary_corrections": {
+    "confidence": "CONFIRMED",
+    "reason": "Direct Allegrex disassembly shows the previously cited addresses are interior instructions, not function entries.",
+    "corrections": [
+      {
+        "stale_reference": "func_00295738",
+        "actual_instruction": "0x00295738: lw $s1, 0x24($sp)",
+        "containing_function_start": "0x00295448",
+        "note": "0x00295738 is in the epilogue of the function that starts at 0x00295448; it cannot be a function entry."
+      },
+      {
+        "stale_reference": "func_00295DD4",
+        "actual_instruction": "0x00295DD4: xor $a3, $s1, $v1",
+        "containing_function_start": "0x00295CD0",
+        "note": "0x00295DD4 is in a live basic block after a call and before the function epilogue."
+      },
+      {
+        "stale_reference": "func_00295EA0",
+        "actual_instruction": "0x00295EA0: sb $v0, 0x7111($a1)",
+        "containing_function_start": "0x00295E24",
+        "note": "0x00295EA0 is inside the source-attributed PocketDJFightNight.cpp routine starting at 0x00295E24."
+      }
+    ],
+    "replacement_audio_source_anchors": [
+      "func_00295788 -> PocketDJFightNight.cpp line 126, assert !\"pocketdj not inited!\"",
+      "func_00295E24 -> PocketDJFightNight.cpp line 182, assert player",
+      "func_00295EF0 -> PocketDJFightNight.cpp line 225, assert player"
+    ]
+  },
+  "pocketdj_semantic_anchors": {
+    "confidence": "CONFIRMED behavior unless otherwise noted",
+    "service_callback": {
+      "function": "0x00341768",
+      "inferred_name": "ServiceSceCallbacks",
+      "name_evidence": [
+        "ServiceSceCallbacks() -> Suspending PocketDJ",
+        "ServiceSceCallbacks() -> Unlocking volatile memory!",
+        "ServiceSceCallbacks() -> Resuming PocketDJ",
+        "ServiceSceCallbacks() -> Locking volatile memory!"
+      ],
+      "behavior": "PSP callback/service state machine that sequences PocketDJ suspend/resume around volatile-memory transitions."
+    },
+    "pocketdj": {
+      "func_00295788": {
+        "source": "PocketDJFightNight.cpp:126",
+        "semantic": "PocketDJ/EATrax player create-or-initialize routine",
+        "confidence": "PROBABLE semantic; CONFIRMED source attribution",
+        "evidence": [
+          "Allocates 0x174 bytes tagged by string EATrax::Player.",
+          "Calls func_423AB8 on the new object with the routine's three incoming arguments.",
+          "Stores the object at global 0x00567124.",
+          "Calls func_423C10 to validate/initialize it.",
+          "On failure triggers the PocketDJFightNight.cpp:126 assert !\"pocketdj not inited!\", destroys the object through func_423B58(..., 3), and clears the global."
+        ]
+      },
+      "func_0029594C": {
+        "semantic": "PocketDJ/EATrax player teardown/clear routine",
+        "confidence": "PROBABLE",
+        "evidence": [
+          "Loads global player pointer 0x00567124.",
+          "Calls func_423B58(player, 3).",
+          "Clears 0x00567124, mirror 0x00573A24, and state byte 0x00567128."
+        ]
+      },
+      "func_0029598C": {
+        "semantic": "PocketDJ/EATrax player getter",
+        "confidence": "CONFIRMED behavior",
+        "evidence": "Leaf routine returns global 0x00567124; 50 direct JAL call sites were observed in .text."
+      },
+      "func_00295E24": {
+        "source": "PocketDJFightNight.cpp:182",
+        "semantic": "PocketDJ suspend path",
+        "confidence": "CONFIRMED behavior",
+        "evidence": "ServiceSceCallbacks at 0x00341768 logs `ServiceSceCallbacks() -> Suspending PocketDJ` immediately before its sole direct call to 0x00295E24."
+      },
+      "func_00295EF0": {
+        "source": "PocketDJFightNight.cpp:225",
+        "semantic": "PocketDJ resume path",
+        "confidence": "CONFIRMED behavior",
+        "evidence": "ServiceSceCallbacks at 0x00341768 logs `ServiceSceCallbacks() -> Resuming PocketDJ` immediately before its sole direct call to 0x00295EF0."
+      }
+    }
+  },
+  "pocketdj_lifecycle": {
+    "confidence": "CONFIRMED for suspend/resume call context; PROBABLE for init/shutdown semantic labels",
+    "service_callback_function": {
+      "address": "0x00341768",
+      "proposed_name": "ServiceSceCallbacks",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "The function materializes four literal debug strings: 'ServiceSceCallbacks() -> Suspending PocketDJ', '... Unlocking volatile memory!', '... Resuming PocketDJ', and '... Locking volatile memory!'.",
+        "Immediately after printing the suspend message it calls 0x00295E24.",
+        "Immediately after printing the resume message it calls 0x00295EF0."
+      ]
+    },
+    "functions": {
+      "0x00295788": {
+        "proposed_name": "PocketDJ_InitOrCreatePlayer",
+        "confidence": "PROBABLE",
+        "evidence": [
+          "Called from the game initialization sequence at 0x001BAF64 only when the PocketDJ singleton getter 0x0029598C returns null.",
+          "Allocates/constructs a player object, stores it at global 0x00567124, and asserts at PocketDJFightNight.cpp:126 if creation fails.",
+          "The assert expression is !\"pocketdj not inited!\"."
+        ]
+      },
+      "0x0029594C": {
+        "proposed_name": "PocketDJ_ShutdownOrDestroyPlayer",
+        "confidence": "PROBABLE",
+        "evidence": [
+          "Called during the complementary shutdown sequence when the singleton exists.",
+          "Calls 0x00423B58(player, 3), then clears global 0x00567124 and associated state."
+        ]
+      },
+      "0x0029598C": {
+        "proposed_name": "PocketDJ_GetPlayer",
+        "confidence": "CONFIRMED",
+        "evidence": "Leaf getter that returns global 0x00567124."
+      },
+      "0x00295E24": {
+        "proposed_name": "PocketDJ_Suspend",
+        "confidence": "CONFIRMED",
+        "source_line": 182,
+        "evidence": [
+          "Source-attributed to PocketDJFightNight.cpp line 182 with assert expression 'player'.",
+          "ServiceSceCallbacks calls it immediately after the literal 'Suspending PocketDJ' diagnostic."
+        ]
+      },
+      "0x00295EF0": {
+        "proposed_name": "PocketDJ_Resume",
+        "confidence": "CONFIRMED",
+        "source_line": 225,
+        "evidence": [
+          "Source-attributed to PocketDJFightNight.cpp line 225 with assert expression 'player'.",
+          "ServiceSceCallbacks calls it immediately after the literal 'Resuming PocketDJ' diagnostic."
+        ]
+      }
+    }
+  },
+  "pocketdj_init_descriptor": {
+    "confidence": "CONFIRMED for address/config layout; callback semantics are intentionally unresolved unless noted",
+    "builder_function": "0x00295788",
+    "stack_descriptor_range": "sp+0x20..sp+0x5C",
+    "function_pointer_slots": [
+      {
+        "offset": "+0x20",
+        "target": "0x00295FD8"
+      },
+      {
+        "offset": "+0x24",
+        "target": "0x00295FFC"
+      },
+      {
+        "offset": "+0x28",
+        "target": "0x00296018"
+      },
+      {
+        "offset": "+0x2C",
+        "target": "0x00296034"
+      },
+      {
+        "offset": "+0x30",
+        "target": "0x00295FD8",
+        "note": "duplicate of +0x20"
+      },
+      {
+        "offset": "+0x34",
+        "target": "0x00295FFC",
+        "note": "duplicate of +0x24"
+      },
+      {
+        "offset": "+0x38",
+        "target": "0x00296018",
+        "note": "duplicate of +0x28"
+      },
+      {
+        "offset": "+0x3C",
+        "target": "0x00296034",
+        "note": "duplicate of +0x2C"
+      },
+      {
+        "offset": "+0x40",
+        "target": "0x00295CD0",
+        "note": "5-way callback/state switch; case 1 emits EATrax_GoToScreen with /_root and MAINMENU"
+      },
+      {
+        "offset": "+0x44",
+        "target": "0x0029606C",
+        "note": "updates a 0..3 state/index and writes a 3-word table-selected result; exact semantic label unresolved"
+      },
+      {
+        "offset": "+0x48",
+        "target": "0x00296050",
+        "note": "thin wrapper returning func_0026E674(); consumed by 0x0029606C as a random 2-bit selector source"
+      }
+    ],
+    "data_slots": [
+      {
+        "offset": "+0x4C",
+        "value_source": "global 0x00567114",
+        "initial_value": "0x0051B098",
+        "string": "eatrax/"
+      },
+      {
+        "offset": "+0x50",
+        "value_source": "global 0x00567118",
+        "initial_value": "0x0051B0A0",
+        "string": "eavis"
+      },
+      {
+        "offset": "+0x54",
+        "value_source": "global 0x0056711C",
+        "initial_value": "0x0051B0A8",
+        "string": "EATrax::Player"
+      },
+      {
+        "offset": "+0x58",
+        "value": "0.0f"
+      },
+      {
+        "offset": "+0x5C",
+        "value": "0x00064000"
+      }
+    ],
+    "construction_sequence": [
+      "0x00295788 first builds this descriptor and passes it through 0x00427910.",
+      "It then allocates 0x174 bytes using the game's allocator with the EATrax::Player tag context.",
+      "On successful allocation it invokes 0x00423AB8 with the three caller-supplied arguments plus zero as an additional argument.",
+      "The resulting player pointer is stored in global 0x00567124.",
+      "A post-create validity check at 0x00423C10 triggers the PocketDJFightNight.cpp:126 assertion if initialization is not valid."
+    ]
+  },
+  "language_and_commentary_display": {
+    "confidence": "CONFIRMED",
+    "language_global": "0x005604AC",
+    "language_helpers": {
+      "func_00206C48": "leaf getter for 0x005604AC",
+      "func_0020719C": "setter for 0x005604AC",
+      "func_0020715C": {
+        "semantic": "language enum -> display-name string",
+        "mapping": {
+          "1": "English",
+          "2": "French",
+          "other": "Unknown"
+        }
+      }
+    },
+    "display_commentary_predicate": {
+      "function": "func_001B1CFC",
+      "aip_field": "iDisplayCommentaryOption",
+      "behavior": [
+        "If language != French (enum 2), returns true.",
+        "If language == French, returns boolean(session->field_0x160 bit 19)."
+      ],
+      "setter": {
+        "function": "func_001B21FC",
+        "field": "session +0x160",
+        "bit": 19,
+        "dirty_flag": "session +0x1920 = 1"
+      },
+      "callsites": [
+        "0x0013D040",
+        "0x001D9B4C",
+        "0x001DA084",
+        "0x001DC5A0",
+        "0x001DCA38",
+        "0x001FB908"
+      ],
+      "correction": "Bit 19 of session +0x160 is a display/gating flag for the Commentary option in the French-language path; it is NOT established as the commentary on/off setting itself."
+    },
+    "evidence": [
+      "func_0020715C returns literal strings English/French/Unknown for enum values 1/2/other.",
+      "func_001B1CFC compares the language global against 2 before reading session +0x160 bit 19.",
+      "func_001B21FC clears/sets exactly bit 19 of session +0x160 and marks session +0x1920 dirty.",
+      "Options handlers pass func_001B1CFC's boolean result to the AIP property iDisplayCommentaryOption."
+    ]
+  },
+  "audio_static_map": {
+    "confidence": "CONFIRMED for strings/xrefs/object offsets; semantic labels PROBABLE where stated",
+    "au_speech_manager": {
+      "func_00137BA0": {
+        "inferred_name": "AuSpeechManager::InitStream",
+        "confidence": "PROBABLE name, CONFIRMED diagnostic attribution",
+        "diagnostic": "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !",
+        "diagnostic_vaddr": "0x00506AC8",
+        "diagnostic_xref": "0x00137BF0-0x00137BF8",
+        "behavior": "allocates/initializes a stream buffer at object +0x17C and reports the named out-of-memory diagnostic on failure"
+      }
+    },
+    "core_bank_initializer": {
+      "function": "func_00128EB4",
+      "semantic": "fight/frontend audio-bank initialization/attachment routine",
+      "confidence": "PROBABLE semantic; CONFIRMED bank/object-offset mapping",
+      "banks": [
+        {
+          "name": "cctrl.abk",
+          "object_offset": "0xC4",
+          "string_vaddr": "0x00506778",
+          "load_call": "0x00128F90-0x00128F94"
+        },
+        {
+          "name": "pmenu.abk",
+          "object_offset": "0xE8",
+          "string_vaddr": "0x00506784",
+          "load_call": "0x00129008-0x0012900C"
+        },
+        {
+          "name": "steps.abk",
+          "object_offset": "0x100",
+          "string_vaddr": "0x00506790",
+          "load_call": "0x00129080-0x00129084"
+        },
+        {
+          "name": "bell.abk",
+          "object_offset": "0xDC",
+          "string_vaddr": "0x0050679C",
+          "load_call": "0x001290F8-0x001290FC"
+        },
+        {
+          "name": "GSfx.abk",
+          "object_offset": "0xD0",
+          "string_vaddr": "0x005067A8",
+          "load_call": "0x00129170-0x00129174"
+        },
+        {
+          "name": "Punches.abk",
+          "object_offset": "0x154",
+          "string_vaddr": "0x005067B4",
+          "load_call": "0x001291E8-0x001291EC"
+        },
+        {
+          "name": "falls.abk",
+          "object_offset": "0x178",
+          "string_vaddr": "0x005067C0",
+          "load_call": "0x00129260-0x00129264"
+        },
+        {
+          "name": "Blocks.abk",
+          "object_offset": "0x184",
+          "string_vaddr": "0x005067CC",
+          "load_call": "0x001292D8-0x001292DC"
+        },
+        {
+          "name": "cmomets.abk",
+          "object_offset": "0xB8",
+          "string_vaddr": "0x005067D8",
+          "load_call": "0x00129350-0x00129354"
+        },
+        {
+          "name": "rplyst.abk",
+          "object_offset": "0x19C",
+          "string_vaddr": "0x005067E4",
+          "load_call": "0x001293C8-0x001293CC"
+        },
+        {
+          "name": "rplysfx.abk",
+          "object_offset": "0x190",
+          "string_vaddr": "0x005067F0",
+          "load_call": "0x00129440-0x00129444"
+        },
+        {
+          "name": "replay.abk",
+          "object_offset": "0xF4",
+          "string_vaddr": "0x005067FC",
+          "load_call": "0x001294B8-0x001294BC"
+        }
+      ]
+    },
+    "additional_bank_families": {
+      "func_00132F90": [
+        "trng.abk",
+        "cvsmall.abk",
+        "cflust.abk",
+        "csmall.abk",
+        "cfairst.abk",
+        "cvicest.abk",
+        "cmed.abk",
+        "celest.abk",
+        "csakost.abk",
+        "cminist.abk",
+        "clarge.abk",
+        "clst.abk",
+        "rplysfx.abk"
+      ],
+      "func_00133884": [
+        "chant_PSP_CaB%03d.abk",
+        "chant_PSP_Lic%03d.abk",
+        "Chant_PSP_Gen%03d.abk"
+      ],
+      "func_00133B9C": [
+        "Gsmall.abk",
+        "Gmed.abk",
+        "Glarge.abk"
+      ],
+      "func_00133ED8": [
+        "MVenue.abk"
+      ],
+      "observed_unassigned_string": "IntroMusic_%02d.abk"
+    },
+    "standalone_bank_anchor": {
+      "fe_sfx.abk": {
+        "string_vaddr": "0x0050674C",
+        "referencing_function": "func_00126F6C",
+        "xref": "0x00126FCC-0x00126FD8"
+      }
+    },
+    "note": "These bank names and exact code references provide a concrete static path for tracing boxer/event commentary selection into the audio subsystem without assuming that the generic Replay event payload is itself commentary data."
+  },
+  "audio_manager_ownership": {
+    "confidence": "CONFIRMED structural ownership; exact C++ method names are inferred only where diagnostics name them",
+    "managers": {
+      "AuController": {
+        "singleton_global": "0x0055A6AC",
+        "singleton_accessor": "func_00107988",
+        "allocation_size": "0x8C",
+        "constructor": "func_001077A8",
+        "init": {
+          "function": "func_001079F4",
+          "confidence": "PROBABLE exact method name from diagnostics",
+          "diagnostics": [
+            "AuController::Init() -- Out of Memory creating soundlibbuffer !",
+            "AuController::InitAudio() -- Snd::System::Init() FAILED !"
+          ],
+          "behavior": "allocates/stores the soundlib buffer at +0x20, initializes the underlying sound system, and marks object byte +0x5A initialized"
+        }
+      },
+      "AuAemsManager": {
+        "singleton_global": "0x0055A990",
+        "singleton_accessor": "func_00126D3C",
+        "allocation_size": "0x350",
+        "constructor": "func_00128C1C",
+        "core_bank_initialization": "func_00128EB4",
+        "bank_slot_helper": {
+          "func_00126A18": "loads/creates an AEM bank/module into a small slot structure; emits AuAemsManager::Init() failure diagnostics",
+          "func_00126AD4": "attaches/registers an already-created bank handle into a slot; emits the same SNDAEMS_addmodulebank diagnostic on failure",
+          "func_00126B2C": "releases/clears a bank slot"
+        },
+        "destructor_evidence": "The destructor path iterates 0x0C-byte bank slots from object +0x7C through +0x19C and releases them with func_001269BC/func_00126B2C-family helpers."
+      },
+      "AuSpeechManager": {
+        "singleton_global": "0x0055AA90",
+        "singleton_accessor": "func_00137B34",
+        "allocation_size": "0x1E8",
+        "constructor": "func_0013AA94",
+        "init_stream": {
+          "function": "func_00137BA0",
+          "diagnostic": "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !",
+          "stream_buffer_field": "+0x17C"
+        },
+        "registered_event_bridge": {
+          "callback": "func_00137888",
+          "callback_registration": "0x0013ADCC-0x0013ADDC",
+          "registration_constant": "0x8CA0",
+          "event_processor": "func_0013CCA4",
+          "flow": "func_00137888 obtains the AuSpeechManager singleton through func_00137B34 and forwards its event argument to func_0013CCA4."
+        },
+        "commentary_language_gate": {
+          "location": "func_0013CCA4 @ 0x0013D024-0x0013D04C",
+          "behavior": "The speech-event processor checks language via func_00206C48. For French (enum 2) it calls func_001B1CFC and abandons this processing branch if the predicate is false; non-French bypasses this check.",
+          "implication": "The +0x160 bit-19 predicate is not merely UI metadata: in the French path it gates a real AuSpeechManager event-processing branch. Its exact user-facing on/off meaning is still not promoted beyond the proven iDisplayCommentaryOption/gating role."
+        }
+      }
+    }
+  },
+  "named_diagnostic_anchors": {
+    "audio": [
+      {
+        "function": "func_001079F4",
+        "strings": [
+          "AuController::Init() -- Out of Memory creating soundlibbuffer !",
+          "AuController::InitAudio() -- Snd::System::Init() FAILED !"
+        ]
+      },
+      {
+        "function": "func_00126A18",
+        "strings": [
+          "AuAemsManager::Init() -- Failed AEM Bank Load!",
+          "AuAemsManager::Init() -- Failed SNDAEMS_addmodulebank!"
+        ]
+      },
+      {
+        "function": "func_00126AD4",
+        "strings": [
+          "AuAemsManager::Init() -- Failed SNDAEMS_addmodulebank!"
+        ]
+      },
+      {
+        "function": "func_00137BA0",
+        "strings": [
+          "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !"
+        ]
+      }
+    ],
+    "event_stack": [
+      {
+        "function": "func_000CBE74",
+        "string": "EventStackBase::Alloc - Event too large (%u bytes)"
+      },
+      {
+        "function": "func_000CC00C",
+        "string": "EventStackBase::FreeOldest - Attempting to free space in an empty event stack"
+      }
+    ],
+    "network_frontend": [
+      {
+        "function": "func_00252AD8",
+        "string": "QueueNetworkEvent:: %d / skipping lower priority event"
+      },
+      {
+        "function": "func_00252BE8",
+        "string": "OnNetworkStateChange:: %d"
+      },
+      {
+        "function": "func_00252E24",
+        "string": "HandleQueuedNetworkEvent:: ..."
+      },
+      {
+        "function": "func_0025312C",
+        "string": "DismissNetworkEvent:: %d"
+      },
+      {
+        "function": "func_0025339C",
+        "string": "InternalCheckFlowArgs::Network update enabled"
+      },
+      {
+        "function": "func_00265ECC",
+        "string": "InetInitFlow::generic screen ready"
+      },
+      {
+        "function": "func_00265F34",
+        "string": "InetInitFlow::NetConfigResults %d"
+      }
+    ],
+    "note": "Entries are source/diagnostic attribution anchors. A diagnostic containing Class::Method is strong naming evidence for the containing routine, but exact C++ method promotion remains conservative where one routine contains diagnostics for multiple named methods."
+  },
+  "speech_dataset_architecture": {
+    "confidence": "CONFIRMED for file names, object offsets, loader/record layout, and commentary-dataset use; trainer/announcer labels are PROBABLE expansions of trn/anc",
+    "datasets": [
+      {
+        "manager_offset": "+0x1B0",
+        "kind": 2,
+        "inferred_role": "trainer speech (PROBABLE)",
+        "data_big": "trndat.big",
+        "event_file": "trnevt.evt",
+        "header_big": "trnhdr.big",
+        "init_call": "0x0013AEAC-0x0013AEC4"
+      },
+      {
+        "manager_offset": "+0x188",
+        "kind": 1,
+        "inferred_role": "announcer speech (PROBABLE)",
+        "data_big": "ancdat.big",
+        "event_file": "ancevt.evt",
+        "header_big": "anchdr.big",
+        "init_call": "0x0013AF04-0x0013AF1C"
+      },
+      {
+        "manager_offset": "+0x19C",
+        "kind": 0,
+        "inferred_role": "commentary speech",
+        "confidence": "CONFIRMED by use on the commentary/language-gated speech-event branch",
+        "data_big": "comdat.big",
+        "event_file": "comevt.evt",
+        "header_big": "comhdr.big",
+        "init_call": "0x0013AF5C-0x0013AF74",
+        "live_lookup_use": "func_0013CCA4 @ 0x0013D0E0-0x0013D104"
+      }
+    ],
+    "common_loader": {
+      "function": "func_0013A6D0",
+      "calling_convention_observed": {
+        "a0": "pointer to 0x14-byte dataset descriptor",
+        "a1": "dataset kind (0/1/2 in the three AuSpeechManager calls)",
+        "a2": ".evt filename",
+        "a3": "header .big filename",
+        "t0": "built data-big path",
+        "t1": "load/ownership flag (1 in these initializers)"
+      },
+      "descriptor_layout": {
+        "+0x00": "loaded event/resource handle; passed with dataset kind to func_0049AE38",
+        "+0x04": "record count, obtained from func_00360B38(header_handle)",
+        "+0x08": "allocated record array; record stride 0x10",
+        "+0x0C": "loaded header resource/handle",
+        "+0x10": "load/ownership flag copied from t1"
+      },
+      "record_layout": {
+        "+0x00": "record/event key ID from func_00496F20(header_entry)",
+        "+0x04": "resolved data-big entry handle/offset from func_0033AAEC(data_big_handle, derived_path)",
+        "+0x08": "header entry pointer/object from func_003609D8(header_handle,index)",
+        "+0x0C": "variant/class value: 1 when derived path contains `001`, otherwise 2"
+      },
+      "path_logic": [
+        "func_00360C2C extracts a record path/name from the header.",
+        "The `_Clone` suffix is recognized/stripped when present.",
+        "`.dat` is appended before looking the entry up in the data-big resource.",
+        "The literal substring `001` selects variant/class 1; otherwise the record receives 2."
+      ]
+    },
+    "lookup_helpers": {
+      "func_001379B0": {
+        "semantic": "dataset ID -> record +0x04 data handle/offset",
+        "behavior": [
+          "Uses record[0].key as the base ID and normally computes index = requested_id - base_id.",
+          "When debug flag 0x0055A693 is nonzero it uses the requested ID directly as the index.",
+          "Rejects negative/out-of-range indexes with -1.",
+          "Uses 0x10-byte record stride and returns record +0x04."
+        ]
+      },
+      "func_001379F4": {
+        "semantic": "dataset ID -> record +0x0C variant/class",
+        "behavior": [
+          "Computes requested_id - first_record_key.",
+          "Rejects negative/out-of-range indexes with -1.",
+          "Uses 0x10-byte record stride and returns record +0x0C."
+        ]
+      }
+    },
+    "commentary_event_resolution": {
+      "function": "func_0013CCA4",
+      "range": "0x0013D024-0x0013D104",
+      "evidence": [
+        "The function enters a speech-processing branch after the French-only func_001B1CFC gate.",
+        "At 0x0013D0E0 it loads the incoming event ID from event+0x00.",
+        "At 0x0013D0E8 it calls func_001379B0 with AuSpeechManager +0x19C, the comdat/comevt/comhdr dataset.",
+        "It loads event+0x04, adds that value to the resolved record +0x04 result, and passes the resulting address/offset to func_00483AAC."
+      ],
+      "implication": "The com* dataset is a concrete commentary speech database, and incoming speech event IDs are resolved through its 16-byte record table before audio dispatch."
+    },
+    "tcc_commentary_selector": {
+      "function": "func_0013DDC4",
+      "semantic": "large commentary/TCC condition classifier/selector",
+      "confidence": "PROBABLE semantic; CONFIRMED diagnostic strings and fight-stat dependencies",
+      "diagnostics": [
+        {
+          "string": "TCC = MULTI KD",
+          "xref": "0x0013E724-0x0013E730"
+        },
+        {
+          "string": "TCC = POOR PERFORMANCE",
+          "xref": "0x0013E7EC-0x0013E7FC"
+        },
+        {
+          "string": "TCC = WASTED ENERGY",
+          "xrefs": [
+            "0x0013E8B4-0x0013E8C4",
+            "0x0013E9E4-0x0013E9F4"
+          ]
+        },
+        {
+          "string": "TCC = BOXER DAMAGE",
+          "xref": "0x0013EAFC-0x0013EB08"
+        },
+        {
+          "string": "TCC = BOXER RATING/STYLE",
+          "xref": "0x0013F124-0x0013F130"
+        }
+      ],
+      "evidence": [
+        "The routine consumes fight/player state and statistics from multiple objects.",
+        "It selects bitmask/category values under the named TCC diagnostics.",
+        "The BOXER RATING/STYLE branch directly constructs boxer accessors through func_00185114 using current fight-session corner boxer IDs."
+      ],
+      "next_step": "Trace the selected TCC category/mask through the remainder of func_0013DDC4 into the event ID ultimately consumed by func_0013CCA4."
+    },
+    "subtitle_anchor": {
+      "function": "func_0013B410",
+      "diagnostic": "SUBTITLE ID = %d",
+      "xref": "0x0013B878-0x0013B888",
+      "evidence": "Formats/logs the current speech object's +0x10 ID before forwarding the generated text through the adjacent display/UI object path.",
+      "confidence": "CONFIRMED diagnostic anchor; exact subtitle UI method names unresolved"
+    }
+  },
+  "speech_bank_architecture": {
+    "confidence": "CONFIRMED for bank/category routing; filename semantic expansions use the literal prefixes",
+    "manager_region": {
+      "singleton_or_factory": "0x00137B34",
+      "constructor": "0x0013AA94",
+      "init_stream": "0x00137BA0",
+      "initialization_or_bank_setup": "0x0013AC78",
+      "request_dispatch_wrapper": "0x00137888",
+      "request_router": "0x0013CCA4",
+      "tcc_selection_routine": "0x0013DDC4"
+    },
+    "stream_init": {
+      "function": "0x00137BA0",
+      "evidence": "Direct xref to literal 'AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !' at 0x00506AC8.",
+      "behavior": "Allocates/stores the speech stream buffer; failure path emits the named AuSpeechManager diagnostic."
+    },
+    "bank_setup": {
+      "function": "0x0013AC78",
+      "evidence": [
+        "Calls 0x00137BA0 before configuring the speech-bank structures.",
+        "Builds and passes three distinct filename triples through helper 0x0013A6D0.",
+        "The three helpers are stored in separate manager substructures at +0x188, +0x19C, and +0x1B0."
+      ],
+      "banks": [
+        {
+          "category_id": 2,
+          "structure_offset": "+0x1B0",
+          "data": "trndat.big",
+          "events": "trnevt.evt",
+          "header": "trnhdr.big",
+          "semantic_label": "training speech",
+          "confidence": "PROBABLE semantic expansion of literal trn prefix; routing itself CONFIRMED"
+        },
+        {
+          "category_id": 1,
+          "structure_offset": "+0x188",
+          "data": "ancdat.big",
+          "events": "ancevt.evt",
+          "header": "anchdr.big",
+          "semantic_label": "announcer speech",
+          "confidence": "PROBABLE semantic expansion of literal anc prefix; routing itself CONFIRMED"
+        },
+        {
+          "category_id": 0,
+          "structure_offset": "+0x19C",
+          "data": "comdat.big",
+          "events": "comevt.evt",
+          "header": "comhdr.big",
+          "semantic_label": "commentary speech",
+          "confidence": "PROBABLE semantic expansion of literal com prefix; routing itself CONFIRMED"
+        }
+      ],
+      "shared_loader": {
+        "function": "0x0013A6D0",
+        "confidence": "PROBABLE",
+        "behavior": "Initializes one speech-bank substructure from the event/header filenames plus a composed data-file path and category parameter."
+      }
+    },
+    "request_routing": {
+      "wrapper": "0x00137888",
+      "router": "0x0013CCA4",
+      "category_field": "request +0x10",
+      "category_mapping": {
+        "0": {
+          "bank": "com*",
+          "data_path_xref": "0x0013D0DC -> comdat.big",
+          "structure": "manager +0x19C"
+        },
+        "1": {
+          "bank": "anc*",
+          "data_path_xref": "0x0013CEA4 -> ancdat.big",
+          "structure": "manager +0x188"
+        },
+        "2": {
+          "bank": "trn*",
+          "data_path_xref": "0x0013D4C0 -> trndat.big",
+          "structure": "manager +0x1B0"
+        }
+      },
+      "invalid_categories": "Values >= 3 fall out without selecting one of the three speech banks.",
+      "additional_request_fields": {
+        "+0x00": "used as an event/index-like value inside the selected bank; exact semantic name not yet promoted",
+        "+0x04": "used as an additive offset/index after bank lookup; exact semantic name not yet promoted",
+        "+0x0C": "16-bit subtype/flag compared against special constants in routing paths",
+        "+0x10": "CONFIRMED speech category selector 0/1/2"
+      }
+    },
+    "event_selection": {
+      "confidence": "CONFIRMED for event identity/registration/dispatch; payload field semantics remain partially unresolved",
+      "correction": "Earlier evidence labeled 0x0013DDC4 as a TCC event selector because it contains 'TCC = ...' diagnostics. Relocation-aware analysis proves this routine dispatches the named NISAdvice event instead. The actual TCC event is emitted separately by the main AuSpeechManager update path at 0x0013B410.",
+      "nis_advice": {
+        "producer": "0x0013DDC4",
+        "event_handle_pre_relocation": "0x00020FB0",
+        "event_handle_runtime_vaddr": "0x005AB858",
+        "descriptor": "0x0055AAD0",
+        "name": "NISAdvice",
+        "hash": "0x08654C54",
+        "evidence": [
+          "0x0013F1F8 loads the relocated event handle, then 0x0013F20C calls func_003E5860 with the payload at sp+0x18C.",
+          "Failure fallback at 0x0013F220 calls func_003E4A94 with descriptor 0x0055AAD0.",
+          "Descriptor 0x0055AAD0 is the {name,hash} pair NISAdvice / 0x08654C54.",
+          "PSP HI16/LO16 relocation records at the handle load target program segment 1; adding raw 0x20FB0 to segment-1 vaddr 0x0058A8A8 resolves the handle to 0x005AB858 in BSS."
+        ],
+        "condition_debug_labels": [
+          "TCC = MULTI KD",
+          "TCC = POOR PERFORMANCE",
+          "TCC = WASTED ENERGY",
+          "TCC = BOXER DAMAGE",
+          "TCC = BOXER RATING/STYLE"
+        ],
+        "interpretation": "TCC-labelled gameplay conditions feed construction of a NISAdvice event. The acronym TCC itself remains unexpanded."
+      },
+      "tcc_event": {
+        "producer_region": "0x0013B410 main AuSpeechManager update path",
+        "dispatch_site": "0x0013BBE0",
+        "event_handle_pre_relocation": "0x00020FC0",
+        "event_handle_runtime_vaddr": "0x005AB868",
+        "descriptor": "0x0055AAE0",
+        "name": "TCC",
+        "hash": "0x74184C54",
+        "payload_stack": "sp+0xAC",
+        "payload_words": 3,
+        "payload_construction": [
+          "sp+0xAC <- $19",
+          "sp+0xB0 <- $20",
+          "sp+0xB4 <- result of func_001086B0(...)"
+        ],
+        "note": "The three payload fields are directly observed but are not given semantic names yet."
+      }
+    }
+  },
+  "named_event_registry": {
+    "confidence": "CONFIRMED",
+    "registration_function": "0x001106CC",
+    "resolver_or_registration_api": "func_003E4A94",
+    "dispatcher": "func_003E5860",
+    "descriptor_layout": "{ +0x00 name pointer, +0x04 32-bit name hash }",
+    "handle_storage": "8-byte per-event handle objects relocated into segment-1/BSS storage",
+    "relocation_rule_used_here": "PSP HI16/LO16 records identify program segment 1 as the address base. Segment-1 vaddr is 0x0058A8A8; raw handle offsets below are added to it.",
+    "entries": [
+      {
+        "name": "RefCountDown",
+        "hash": "0x761C4C54",
+        "descriptor_vaddr": "0x0055AAC8",
+        "handle_pre_relocation": "0x00020FA8",
+        "handle_runtime_vaddr": "0x005AB850"
+      },
+      {
+        "name": "NISAdvice",
+        "hash": "0x08654C54",
+        "descriptor_vaddr": "0x0055AAD0",
+        "handle_pre_relocation": "0x00020FB0",
+        "handle_runtime_vaddr": "0x005AB858"
+      },
+      {
+        "name": "OnplayAdvice",
+        "hash": "0x38FE4C54",
+        "descriptor_vaddr": "0x0055AAD8",
+        "handle_pre_relocation": "0x00020FB8",
+        "handle_runtime_vaddr": "0x005AB860"
+      },
+      {
+        "name": "TCC",
+        "hash": "0x74184C54",
+        "descriptor_vaddr": "0x0055AAE0",
+        "handle_pre_relocation": "0x00020FC0",
+        "handle_runtime_vaddr": "0x005AB868"
+      },
+      {
+        "name": "StartOfRound",
+        "hash": "0x7A4F4C54",
+        "descriptor_vaddr": "0x0055AAE8",
+        "handle_pre_relocation": "0x00020FC8",
+        "handle_runtime_vaddr": "0x005AB870"
+      },
+      {
+        "name": "RefClinch",
+        "hash": "0x1DD04C54",
+        "descriptor_vaddr": "0x0055AAF0",
+        "handle_pre_relocation": "0x00020FD0",
+        "handle_runtime_vaddr": "0x005AB878"
+      },
+      {
+        "name": "RefStoppage",
+        "hash": "0x089E4C54",
+        "descriptor_vaddr": "0x0055AAF8",
+        "handle_pre_relocation": "0x00020FD8",
+        "handle_runtime_vaddr": "0x005AB880"
+      },
+      {
+        "name": "BlockedPunch",
+        "hash": "0x20216F4F",
+        "descriptor_vaddr": "0x0055AB00",
+        "handle_pre_relocation": "0x00020FE0",
+        "handle_runtime_vaddr": "0x005AB888"
+      },
+      {
+        "name": "BoxerDamage",
+        "hash": "0x5EFA6F4F",
+        "descriptor_vaddr": "0x0055AB08",
+        "handle_pre_relocation": "0x00020FE8",
+        "handle_runtime_vaddr": "0x005AB890"
+      },
+      {
+        "name": "CelebrationSequence",
+        "hash": "0x39806F4F",
+        "descriptor_vaddr": "0x0055AB10",
+        "handle_pre_relocation": "0x00020FF0",
+        "handle_runtime_vaddr": "0x005AB898"
+      },
+      {
+        "name": "LackOfAction",
+        "hash": "0x36F06F4F",
+        "descriptor_vaddr": "0x0055AB18",
+        "handle_pre_relocation": "0x00020FF8",
+        "handle_runtime_vaddr": "0x005AB8A0"
+      },
+      {
+        "name": "MissedPunch",
+        "hash": "0x09A46F4F",
+        "descriptor_vaddr": "0x0055AB20",
+        "handle_pre_relocation": "0x00021000",
+        "handle_runtime_vaddr": "0x005AB8A8"
+      },
+      {
+        "name": "PunchCombos",
+        "hash": "0x0E526F4F",
+        "descriptor_vaddr": "0x0055AB28",
+        "handle_pre_relocation": "0x00021008",
+        "handle_runtime_vaddr": "0x005AB8B0"
+      },
+      {
+        "name": "PunchLanded",
+        "hash": "0x324F6F4F",
+        "descriptor_vaddr": "0x0055AB30",
+        "handle_pre_relocation": "0x00021010",
+        "handle_runtime_vaddr": "0x005AB8B8"
+      },
+      {
+        "name": "Replay",
+        "hash": "0x28D86F4F",
+        "descriptor_vaddr": "0x0055AB38",
+        "handle_pre_relocation": "0x00020FA0",
+        "handle_runtime_vaddr": "0x005AB848"
+      },
+      {
+        "name": "UpdateStatus",
+        "hash": "0x1FD36F4F",
+        "descriptor_vaddr": "0x0055AB40",
+        "handle_pre_relocation": "0x00021018",
+        "handle_runtime_vaddr": "0x005AB8C0"
+      },
+      {
+        "name": "BoxerFatigue",
+        "hash": "0x49406F4F",
+        "descriptor_vaddr": "0x0055AB48",
+        "handle_pre_relocation": "0x00021020",
+        "handle_runtime_vaddr": "0x005AB8C8"
+      },
+      {
+        "name": "TauntingResult",
+        "hash": "0x59AB6F4F",
+        "descriptor_vaddr": "0x0055AB50",
+        "handle_pre_relocation": "0x00021028",
+        "handle_runtime_vaddr": "0x005AB8D0"
+      },
+      {
+        "name": "FeintingResult",
+        "hash": "0x70046F4F",
+        "descriptor_vaddr": "0x0055AB58",
+        "handle_pre_relocation": "0x00021030",
+        "handle_runtime_vaddr": "0x005AB8D8"
+      },
+      {
+        "name": "ClinchingResult",
+        "hash": "0x13716F4F",
+        "descriptor_vaddr": "0x0055AB60",
+        "handle_pre_relocation": "0x00021038",
+        "handle_runtime_vaddr": "0x005AB8E0"
+      },
+      {
+        "name": "Trapped",
+        "hash": "0x32496F4F",
+        "descriptor_vaddr": "0x0055AB68",
+        "handle_pre_relocation": "0x00021040",
+        "handle_runtime_vaddr": "0x005AB8E8"
+      },
+      {
+        "name": "BoxerRoundHistory",
+        "hash": "0x1ED36F4F",
+        "descriptor_vaddr": "0x0055AB70",
+        "handle_pre_relocation": "0x00021048",
+        "handle_runtime_vaddr": "0x005AB8F0"
+      },
+      {
+        "name": "CareerMode",
+        "hash": "0x185A6F4F",
+        "descriptor_vaddr": "0x0055AB78",
+        "handle_pre_relocation": "0x00021050",
+        "handle_runtime_vaddr": "0x005AB8F8"
+      },
+      {
+        "name": "Knockdown",
+        "hash": "0x69746F4F",
+        "descriptor_vaddr": "0x0055AB80",
+        "handle_pre_relocation": "0x00021058",
+        "handle_runtime_vaddr": "0x005AB900"
+      },
+      {
+        "name": "IllegalBlows",
+        "hash": "0x738A6F4F",
+        "descriptor_vaddr": "0x0055AB88",
+        "handle_pre_relocation": "0x00021060",
+        "handle_runtime_vaddr": "0x005AB908"
+      },
+      {
+        "name": "RAFightIntroFlyIn",
+        "hash": "0x2F7621D9",
+        "descriptor_vaddr": "0x0055AB90",
+        "handle_pre_relocation": "0x00021068",
+        "handle_runtime_vaddr": "0x005AB910"
+      },
+      {
+        "name": "RAFightIntroSegment4",
+        "hash": "0x1EA821D9",
+        "descriptor_vaddr": "0x0055AB98",
+        "handle_pre_relocation": "0x00021070",
+        "handle_runtime_vaddr": "0x005AB918"
+      },
+      {
+        "name": "RAFightIntroSegment5",
+        "hash": "0x05EA21D9",
+        "descriptor_vaddr": "0x0055ABA0",
+        "handle_pre_relocation": "0x00021078",
+        "handle_runtime_vaddr": "0x005AB920"
+      },
+      {
+        "name": "RAFightResultSegment1",
+        "hash": "0x1B8521D9",
+        "descriptor_vaddr": "0x0055ABA8",
+        "handle_pre_relocation": "0x00021080",
+        "handle_runtime_vaddr": "0x005AB928"
+      },
+      {
+        "name": "RAFightResultSegment2",
+        "hash": "0x324C21D9",
+        "descriptor_vaddr": "0x0055ABB0",
+        "handle_pre_relocation": "0x00021088",
+        "handle_runtime_vaddr": "0x005AB930"
+      }
+    ],
+    "dispatcher_semantics": [
+      "func_003E4A94 resolves/registers an event handle from its name/hash descriptor.",
+      "func_003E5860 accepts the resolved event-handle object plus caller payload and invokes registered listeners.",
+      "func_003E4A84 resets/invalidates an event handle by writing -3 to its +0x04 state field."
+    ],
+    "correction": "Replay is deliberately bound out of numerical sequence: raw handle 0x20FA0 -> Replay, then 0x20FA8 -> RefCountDown. After PunchLanded (0x21010), the sequence resumes at UpdateStatus (0x21018). Never derive handle addresses from descriptor index alone; use initializer 0x001106CC."
+  },
+  "speech_bank_record_model": {
+    "confidence": "CONFIRMED for bank/record layout, interned event IDs, base data-file byte offsets, AEMS relative byte ranges, and request routing; record+0x0C consumer meaning remains unresolved",
+    "initializer": "0x0013A6D0",
+    "lookup_by_event_id": "0x001379B0",
+    "alternate_record_accessor": "0x001379F4",
+    "bank_object": {
+      "size_minimum": "0x14",
+      "fields": {
+        "+0x00": "loaded data/resource object or pointer; exact type unresolved",
+        "+0x04": "record count (CONFIRMED: bounds the record loop and lookup)",
+        "+0x08": "pointer to 16-byte record array (CONFIRMED)",
+        "+0x0C": "parsed event/header source object used to enumerate records",
+        "+0x10": "byte flag copied from initializer mode parameter"
+      }
+    },
+    "event_record": {
+      "size": "0x10",
+      "fields": {
+        "+0x00": "interned/registered event-key ID returned by 0x00496F20 (CONFIRMED)",
+        "+0x04": "base byte offset of the canonicalized per-event .dat entry within the selected speech data bank, returned by 0x0033AAEC (CONFIRMED by downstream file-offset storage)",
+        "+0x08": "pointer to the source parsed event-key object returned by 0x003609D8 (CONFIRMED)",
+        "+0x0C": "1 when the canonicalized record name contains '001', otherwise 2; exact consumer meaning unresolved (CONFIRMED construction, UNKNOWN semantics)"
+      }
+    },
+    "lookup_algorithm": [
+      "records = bank+0x08",
+      "base_id = records[0].field_0",
+      "relative = requested_event_id - base_id (unless the debug/global override byte forces direct indexing)",
+      "require 0 <= relative < bank.record_count",
+      "record = records + relative*0x10",
+      "0x001379B0 returns record+0x04",
+      "0x001379F4 returns record+0x0C"
+    ],
+    "request_to_bank_selection": {
+      "request_size_minimum": "0x14",
+      "fields": {
+        "+0x00": "event ID passed to 0x001379B0",
+        "+0x04": "variant/sub-index added to the +0x04 lookup result before playback/selection",
+        "+0x0C": "16-bit subtype/flag; special values observed include 0x0008, 0x1DD0 and 0x4021 on guarded paths",
+        "+0x10": "speech bank category: 0=com, 1=anc, 2=trn"
+      },
+      "direct_examples": [
+        "category 1 path: 0x0013CEB0 looks up request+0x00 in manager+0x188 and 0x0013CEBC adds request+0x04",
+        "category 0 path: 0x0013D0E8 looks up request+0x00 in manager+0x19C and 0x0013D0F4 adds request+0x04",
+        "category 2 path: 0x0013D4DC/0x0013D578 looks up request+0x00 in the training bank and adds request+0x04"
+      ]
+    },
+    "implication": "The .evt families can be reverse-engineered as structured record sources: the runtime does not merely hash arbitrary names at playback time; it builds a bounded 16-byte record table and performs deterministic ID-relative lookup.",
+    "helper_identifications": {
+      "0x004A9A0C": "strcpy (CONFIRMED)",
+      "0x004A9A50": "strlen (CONFIRMED)",
+      "0x004A9944": "strcat (CONFIRMED)",
+      "0x004A9D60": "strstr (CONFIRMED)"
+    },
+    "event_key_interner": {
+      "function": "0x00496F20",
+      "proposed_name": "RegisterEventKeyToken",
+      "confidence": "PROBABLE name; CONFIRMED behavior",
+      "globals": {
+        "0x005769D0": "sorted 8-byte {token_id, object_pointer} table",
+        "0x005769D4": "next monotonically increasing token ID",
+        "0x005769D8": "table capacity",
+        "0x005769DC": "used entry count"
+      },
+      "behavior": [
+        "0x00496F20 binary-searches/insertion-locates the parsed object through 0x004966F0, whose comparison uses the object's first two 16-bit fields.",
+        "If insertion is allowed, it shifts later 8-byte entries, stores the parsed object pointer, assigns the current next-token value, increments next-token and used-count, and returns the assigned token.",
+        "The bank loader stores this returned token at record+0x00."
+      ]
+    },
+    "record_name_canonicalization": {
+      "behavior": [
+        "0x00360C2C copies the per-record parsed string into a local buffer using the confirmed strcpy helper.",
+        "If strstr(name, '_Clone') succeeds, the loader truncates the string at the start of '_Clone'.",
+        "It appends '.dat'.",
+        "It passes that canonicalized .dat name through 0x0033AAEC against the loaded speech-data resource and stores the returned base byte offset at record+0x04.",
+        "It separately checks strstr(name, '001') and writes record+0x0C = 1 when present, otherwise 2."
+      ],
+      "implication": "Speech event records resolve canonical data-entry names to base indices during initialization instead of resolving filenames from scratch on every playback request."
+    },
+    "request_to_playback": {
+      "full_path_construction": "base speech directory from 0x0033BBC8(3) + '/' + selected bank data filename",
+      "bank_data_filenames": {
+        "0": "comdat.big",
+        "1": "ancdat.big",
+        "2": "trndat.big"
+      },
+      "final_byte_offset": "record.base_data_offset (+0x04) + request.relative_byte_offset (+0x04)",
+      "playback_wrapper": "0x00483AAC",
+      "playback_core": "0x004837A4",
+      "lower_file_open_path": "0x004C242C / 0x004C254C",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "Each bank branch calls 0x001379B0 with request+0x00, adds request+0x04 to the returned record+0x04 value, then calls 0x00483AAC.",
+        "0x00483AAC forwards to 0x004837A4 with the selected bank pathname and the resulting value.",
+        "0x004837A4 passes pathname + resulting value to 0x004C242C/0x004C254C.",
+        "0x004C242C copies the pathname into its file/resource object and stores the resulting value at object+0x118, where the adjacent code treats it as a file position/offset.",
+        "The alternate 0x004C254C path walks linked file extents to adjust the same offset across segmented storage."
+      ]
+    },
+    "subtitle_debug_field": {
+      "manager_offset": "+0x10",
+      "diagnostic": "SUBTITLE ID = %d",
+      "xref": "0x0013B878-0x0013B894",
+      "confidence": "CONFIRMED that manager+0x10 is the value displayed as SUBTITLE ID; exact queue/current-position semantics remain unresolved",
+      "note": "The update routine shifts a 10-word range at +0x10..+0x34 before consuming/displaying +0x10, so avoid prematurely naming the entire array as current-only state."
+    }
+  },
+  "aems_speech_request_abi": {
+    "confidence": "CONFIRMED for callback registration, producer, field offsets and downstream use; several producer-side source-field semantics remain intentionally generic",
+    "callback_registration": {
+      "initializer": "0x0013AC78",
+      "registration_call": "0x0013ADD0-0x0013ADDC",
+      "registration_function": "0x00498260",
+      "callback": "0x00137888",
+      "manager_context": "manager+0x148",
+      "constant_argument": "0x00008CA0",
+      "implication": "AuSpeechManager does not invent the request structure locally; its wrapper is installed as a callback into the generic AEMS/event subsystem."
+    },
+    "callback_invocation": {
+      "producer_function": "0x0049A5C0",
+      "caller": "0x00499E64 (call at 0x00499EEC)",
+      "invocation_site": "0x0049A7F4-0x0049A800",
+      "callback_argument": "sp+0x10",
+      "request_size_minimum": "0x20",
+      "implication": "The generic AEMS decoder builds the request on its stack and calls 0x00137888 with a pointer to that request."
+    },
+    "request_layout": {
+      "+0x00": {
+        "construction": "source record +0x00 -> request +0x00",
+        "downstream_use": "0x0013CCA4 / 0x001379B0 use it as the speech-bank event ID",
+        "semantic": "event ID",
+        "confidence": "CONFIRMED"
+      },
+      "+0x04": {
+        "construction": "byte start output from 0x0049B480 plus optional source halfword +0x06 * block_scale",
+        "downstream_use": "added to the speech event record's base .dat byte offset before playback",
+        "semantic": "relative byte offset",
+        "confidence": "CONFIRMED"
+      },
+      "+0x08": {
+        "construction": "byte-length output from 0x0049B480",
+        "downstream_use": "accumulated by the generic AEMS producer; not directly consumed by the currently mapped AuSpeechManager playback branches",
+        "semantic": "byte length/span",
+        "confidence": "CONFIRMED"
+      },
+      "+0x0C": {
+        "construction": "16-bit value copied from the source packet/object",
+        "downstream_use": "AuSpeechManager compares this subtype/flag against special constants on guarded paths",
+        "semantic": "16-bit subtype/flag",
+        "confidence": "CONFIRMED"
+      },
+      "+0x0E": {
+        "construction": "associated signed 16-bit value copied from source+0x02",
+        "downstream_use": "not yet assigned a stable semantic name",
+        "semantic": "associated signed 16-bit AEMS field",
+        "confidence": "CONFIRMED construction"
+      },
+      "+0x10": {
+        "construction": "value from the descriptor/matching context selected by 0x00497090",
+        "downstream_use": "0x0013CCA4 routes 0=com*, 1=anc*, 2=trn*",
+        "semantic": "speech bank category",
+        "confidence": "CONFIRMED"
+      },
+      "+0x14": {
+        "construction": "unsigned 16-bit value from source/descriptor +0x02",
+        "downstream_use": "not yet bounded",
+        "semantic": "AEMS-derived 16-bit field",
+        "confidence": "CONFIRMED construction"
+      },
+      "+0x18": {
+        "construction": "byte copied from source header +0x09",
+        "downstream_use": "not yet bounded",
+        "semantic": "AEMS-derived byte field",
+        "confidence": "CONFIRMED construction"
+      },
+      "+0x1C": {
+        "construction": "for the first emitted request: (source byte +0x0A >> 5) & 1; subsequent requests receive 0",
+        "downstream_use": "not yet bounded",
+        "semantic": "first-request boolean flag",
+        "confidence": "CONFIRMED construction"
+      }
+    },
+    "category_source": {
+      "selector": "0x00497090",
+      "input_matching": "matches source bytes +0x02/+0x03 against candidate descriptor bytes +0x09/+0x08",
+      "selected_entry": "returns a descriptor entry whose +0x04 value becomes request+0x10",
+      "implication": "The com/anc/trn category is encoded by the generic event descriptor mapping before the speech callback executes."
+    },
+    "variant_decoder": {
+      "function": "0x0049B480",
+      "proposed_name": "DecodeAemsByteRange",
+      "confidence": "PROBABLE name; CONFIRMED range arithmetic",
+      "input_shape": {
+        "+0x04 low 7 bits": "extra bytes per entry; entry stride is (value & 0x7F) + 2",
+        "+0x05": "entry count",
+        "+0x07": "block-scale byte; byte scale = (value + 1) << 8",
+        "+0x08": "final/end position in scale units used for the last entry",
+        "+0x0C...": "variable-size entries beginning with a big-endian 16-bit position value"
+      },
+      "outputs": {
+        "first": "byte start offset = entry_position_units * ((byte_7 + 1) << 8)",
+        "second": "byte length = next_entry_position_bytes - start; for the last entry, object+0x08 supplies the end position"
+      },
+      "producer_adjustment": "0x0049A5C0 optionally adds source halfword +0x06 * block_scale to the first output before storing request+0x04.",
+      "request_fields": {
+        "+0x04": "relative byte offset within the canonical speech event .dat entry",
+        "+0x08": "byte length/span of the selected AEMS range"
+      },
+      "corroboration": [
+        "0x0049A5C0 accumulates the second output across emitted requests before passing the total to 0x00498CC0.",
+        "AuSpeechManager adds request+0x04 to the event record's base .dat byte offset before the lower audio/file layer stores the final offset."
+      ]
+    },
+    "generic_aems_registration": {
+      "function": "0x00498260",
+      "confidence": "CONFIRMED initialization/registration role; exact original symbol name unknown",
+      "behavior": [
+        "stores the callback pointer supplied by AuSpeechManager",
+        "stores the manager/context argument and constant 0x8CA0",
+        "invokes generic setup helpers 0x0049AA94, 0x00499C74 and 0x0049A5B4",
+        "initializes additional tables/registries through 0x00497250, 0x00498130, 0x00496510 and 0x004972BC",
+        "sets an initialized/magic state used by the generic event subsystem"
+      ]
+    },
+    "neighboring_callback_registrations": [
+      {
+        "registration_function": "0x004980C4",
+        "callbacks": [
+          {
+            "address": "0x001375D0",
+            "proposed_name": "AEMS_AllocAdapter",
+            "confidence": "CONFIRMED behavior",
+            "evidence": [
+              "0x004980C4 stores it as the callback invoked by 0x004980D8.",
+              "Generic AEMS callers pass a requested byte size to 0x004980D8, use the returned pointer as writable storage, and later release that same pointer through 0x00498104.",
+              "0x001375D0 forwards the requested size to 0x0033C950 and returns the resulting pointer."
+            ]
+          },
+          {
+            "address": "0x001375F4",
+            "proposed_name": "AEMS_FreeAdapter",
+            "confidence": "CONFIRMED behavior",
+            "evidence": [
+              "0x004980C4 stores it as the callback invoked by 0x00498104.",
+              "Generic AEMS call sites pass pointers previously obtained through the allocation callback.",
+              "0x001375F4 forwards the pointer to 0x00365984."
+            ]
+          }
+        ]
+      },
+      {
+        "registration_function": "0x004981C4",
+        "callbacks": [
+          "0x00137824",
+          "0x00137874"
+        ],
+        "semantics": "state/notification pair; exact meaning unresolved"
+      },
+      {
+        "registration_function": "0x00498210",
+        "callbacks": [
+          "0x00137480"
+        ],
+        "semantics": "complex event-state callback; exact public role unresolved"
+      }
+    ]
+  },
+  "au_aems_manager": {
+    "confidence": "CONFIRMED for singleton allocation/constructor/init identity and fixed-bank filenames/manager offsets; helper names marked PROBABLE where original C++ symbols are absent",
+    "singleton_factory": {
+      "function": "0x00126D3C",
+      "proposed_name": "AuAemsManager_GetOrCreate",
+      "confidence": "PROBABLE name; CONFIRMED behavior",
+      "singleton_global": "0x0055A990",
+      "allocation_size": "0x350",
+      "constructor": "0x00128C1C",
+      "behavior": "Returns the existing singleton or allocates 0x350 bytes, calls 0x00128C1C, stores the result in 0x0055A990, and returns it."
+    },
+    "constructor": {
+      "function": "0x00128C1C",
+      "proposed_name": "AuAemsManager_ctor",
+      "confidence": "PROBABLE name; CONFIRMED constructor role",
+      "evidence": [
+        "Called only on the freshly allocated 0x350-byte singleton object in 0x00126D3C.",
+        "Initializes the manager's linked-list/container member at +0x78.",
+        "Initializes a repeated run of 0x0C-byte bank wrapper objects at +0x7C through +0x19C using 0x001269A4.",
+        "Clears the manager state fields and returns the original object pointer."
+      ]
+    },
+    "init": {
+      "function": "0x00128EB4",
+      "proposed_name": "AuAemsManager_Init",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "Reached from the manager state transition at 0x00126E08.",
+        "Constructs the core AEMS path from the game's audio base directory, '/', and literal 'coreaems.viv'.",
+        "Loads the core resource into manager+0x28.",
+        "Loads fixed .abk modules from that core resource into dedicated 0x0C-byte manager bank wrappers.",
+        "The associated bank-load helper emits the literal diagnostics 'AuAemsManager::Init() -- Failed AEM Bank Load!' and 'AuAemsManager::Init() -- Failed SNDAEMS_addmodulebank!'."
+      ],
+      "fixed_banks": [
+        {
+          "filename": "cctrl.abk",
+          "manager_offset": "+0xC4"
+        },
+        {
+          "filename": "pmenu.abk",
+          "manager_offset": "+0xE8"
+        },
+        {
+          "filename": "steps.abk",
+          "manager_offset": "+0x100"
+        },
+        {
+          "filename": "bell.abk",
+          "manager_offset": "+0xDC"
+        },
+        {
+          "filename": "GSfx.abk",
+          "manager_offset": "+0xD0"
+        },
+        {
+          "filename": "Punches.abk",
+          "manager_offset": "+0x154"
+        },
+        {
+          "filename": "falls.abk",
+          "manager_offset": "+0x178"
+        },
+        {
+          "filename": "Blocks.abk",
+          "manager_offset": "+0x184"
+        },
+        {
+          "filename": "cmomets.abk",
+          "manager_offset": "+0xB8"
+        },
+        {
+          "filename": "rplyst.abk",
+          "manager_offset": "+0x19C"
+        },
+        {
+          "filename": "rplysfx.abk",
+          "manager_offset": "+0x190"
+        },
+        {
+          "filename": "replay.abk",
+          "manager_offset": "+0xF4"
+        }
+      ],
+      "followup_loader": {
+        "function": "0x00132F90",
+        "confidence": "CONFIRMED that it is called by AuAemsManager_Init after fixed-bank setup; exact original name unresolved",
+        "role": "Loads venue/context-dependent AEMS banks selected from game/fight state."
+      }
+    },
+    "bank_wrapper": {
+      "size": "0x0C",
+      "initializer": "0x001269A4",
+      "release_or_destructor": "0x001269BC",
+      "fields": {
+        "+0x00": "loaded bank/resource pointer",
+        "+0x04": "SNDAEMS module-bank handle; initialized to -1",
+        "+0x08": "ownership/loaded byte flag"
+      },
+      "load_helper": {
+        "function": "0x00126A18",
+        "proposed_name": "AuAemsManager_LoadAemBank",
+        "confidence": "PROBABLE name; CONFIRMED failure diagnostics and module-handle behavior",
+        "behavior": [
+          "Ensures the underlying AEM bank resource is loaded.",
+          "Calls the lower AEMS module-bank registration routine and stores its returned handle at wrapper+0x04.",
+          "Emits the named AuAemsManager::Init bank-load diagnostic if the resource load fails.",
+          "Emits the named SNDAEMS_addmodulebank diagnostic if module-bank registration returns a negative result."
+        ]
+      },
+      "attach_loaded_helper": {
+        "function": "0x00126AD4",
+        "confidence": "CONFIRMED behavior",
+        "behavior": "Attaches an already resolved loaded-bank pointer to the wrapper, registers it with the same lower AEMS module-bank routine, stores the handle, and marks the wrapper state."
+      }
+    },
+    "core_resource": {
+      "filename": "coreaems.viv",
+      "manager_offset": "+0x28",
+      "path_construction": "audio base path + '/' + coreaems.viv"
+    },
+    "context_dependent_banks": {
+      "confidence": "CONFIRMED for numeric venue routing, filenames, wrapper offsets, chant filename selection, and weight-class G-bank selection; proposed helper names remain PROBABLE",
+      "venue_loader": {
+        "function": "0x00132F90",
+        "proposed_name": "AuAemsManager_LoadVenueBanks",
+        "confidence": "PROBABLE name; CONFIRMED routing",
+        "venue_source": "fight-session singleton via 0x001B3EA8; numeric venue ID at session+0x19AC",
+        "valid_selector_domain": "existing fight-session setter independently bounds venue IDs to 0..11",
+        "routes": [
+          {
+            "venue_ids": [
+              0,
+              1
+            ],
+            "banks": [
+              {
+                "filename": "trng.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              2
+            ],
+            "banks": [
+              {
+                "filename": "cvsmall.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "cflust.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              3
+            ],
+            "banks": [
+              {
+                "filename": "csmall.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "cfairst.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              4
+            ],
+            "banks": [
+              {
+                "filename": "csmall.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "cvicest.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              5
+            ],
+            "banks": [
+              {
+                "filename": "cmed.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "cminist.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              6
+            ],
+            "banks": [
+              {
+                "filename": "cmed.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "celest.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              7
+            ],
+            "banks": [
+              {
+                "filename": "cmed.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "csakost.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              8
+            ],
+            "banks": [
+              {
+                "filename": "clarge.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "clst.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              9
+            ],
+            "banks": [
+              {
+                "filename": "clarge.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "clst.abk",
+                "manager_offset": "+0xAC"
+              }
+            ]
+          },
+          {
+            "venue_ids": [
+              10,
+              11
+            ],
+            "banks": [
+              {
+                "filename": "clarge.abk",
+                "manager_offset": "+0xA0"
+              },
+              {
+                "filename": "clst.abk",
+                "manager_offset": "+0xAC"
+              }
+            ],
+            "note": "This case also enters an additional rplysfx.abk-related flow; exact destination/ownership is intentionally not promoted until fully bounded."
+          }
+        ],
+        "note": "No human-readable venue names are assigned here; only the numeric IDs and literal bank filenames are statically proven."
+      },
+      "boxer_chant_loader": {
+        "function": "0x00133884",
+        "proposed_name": "AuAemsManager_LoadBoxerChants",
+        "confidence": "PROBABLE name; CONFIRMED behavior",
+        "resource_container": "chants.viv",
+        "manager_resource_offset": "+0x2C",
+        "active_venue_gate": "returns for ordinary nonnegative venue IDs below 3; chant load path is entered for venue >=3 (negative/exception path also reaches the loader)",
+        "boxer_identity_input": {
+          "source": "resolved boxer code from func_0010C9C8",
+          "xdb_origin": "xdbboxr field 0x05 feeds func_0010C9C8's bounded boxer-code mapping",
+          "chant_normalizer": "0x001278C0"
+        },
+        "filename_rules": [
+          {
+            "condition": "normalized chant ID < 500",
+            "format": "chant_PSP_Lic%03d.abk"
+          },
+          {
+            "condition": "normalized chant ID >= 500",
+            "format": "chant_PSP_CaB%03d.abk"
+          },
+          {
+            "condition": "selected per-boxer bank absent",
+            "format": "Chant_PSP_Gen%03d.abk",
+            "id_rule": "100 + (func_0026E674() & 7), i.e. 100..107"
+          }
+        ],
+        "corner_storage": [
+          {
+            "corner": 0,
+            "loaded_resource_pointer": "manager+0x30",
+            "bank_wrapper": "manager+0x88"
+          },
+          {
+            "corner": 1,
+            "loaded_resource_pointer": "manager+0x34",
+            "bank_wrapper": "manager+0x94"
+          }
+        ],
+        "implication": "The normalized value ultimately sourced from xdbboxr field 0x05 participates in boxer-specific crowd/audio presentation identity. It is not evidence of a raw commentary-line ID."
+      },
+      "chant_id_normalizer": {
+        "function": "0x001278C0",
+        "proposed_name": "NormalizeBoxerChantId",
+        "confidence": "PROBABLE name; CONFIRMED mapping",
+        "mapping": [
+          "0x1FE..0x203 -> input + 2",
+          "0x204 -> 0x207",
+          "0x205 -> 0x208",
+          "0x206 -> -1",
+          "0x207..0x20B -> input + 6",
+          "0x20C..0x211 -> -1",
+          "0x212 -> 0x20F",
+          "0x213 -> 0x206",
+          "0x214 -> 0x209",
+          "0x215 -> 0x20B",
+          "0x216 -> 0x20C",
+          "0x217 -> 0x212",
+          "0x218..0x21A -> -1",
+          "outside 0x1FE..0x21A -> unchanged"
+        ],
+        "note": "The exact business meaning of the remapped numeric namespace beyond chant-bank selection is not promoted."
+      },
+      "weight_class_g_bank_loader": {
+        "function": "0x00133B9C",
+        "proposed_name": "AuAemsManager_LoadWeightClassGBanks",
+        "confidence": "PROBABLE name; CONFIRMED six-class routing",
+        "boxer_resolution": "reads selected boxer IDs from fight-session +0x19B0 + corner*4, resolves boxer data via 0x00185114, and obtains the six-class enum via 0x0018600C",
+        "routes": [
+          {
+            "weight_class_enum": 0,
+            "existing_class": "Heavyweight",
+            "bank": "Glarge.abk",
+            "manager_wrapper": "+0x148"
+          },
+          {
+            "weight_class_enum": [
+              1,
+              2
+            ],
+            "existing_classes": [
+              "Light Heavyweight",
+              "Middleweight"
+            ],
+            "bank": "Gmed.abk",
+            "manager_wrapper": "+0x13C"
+          },
+          {
+            "weight_class_enum": [
+              3,
+              4,
+              5
+            ],
+            "existing_classes": [
+              "Welterweight",
+              "Lightweight",
+              "Featherweight"
+            ],
+            "bank": "Gsmall.abk",
+            "manager_wrapper": "+0x130"
+          }
+        ],
+        "note": "The literal Gsmall/Gmed/Glarge filenames are proven. Do not expand the 'G' prefix to a semantic word without further evidence."
+      }
+    }
+  },
+  "actor_aems_bridge": {
+    "confidence": "CONFIRMED for event-object fields, AuAemsManager call boundary, and negative-result diagnostic; owning actor/entity class remains unresolved",
+    "callback_function": "0x00329614",
+    "owning_region_tag": "actor",
+    "input_event_object": {
+      "+0x00": "signed 16-bit AEMS event code",
+      "+0x08": "32-bit event parameter",
+      "+0x0C": "32-bit event parameter",
+      "+0x10": "32-bit event parameter",
+      "+0x18": "float X/world-position component",
+      "+0x1C": "float Y/world-position component",
+      "+0x20": "float Z/world-position component"
+    },
+    "bridge_chain": [
+      "0x00329614 extracts the event code, three event parameters, and world-position vector from the actor/entity event object.",
+      "It obtains/creates the higher-level game audio object through 0x00107988.",
+      "It forwards the event through 0x00108158.",
+      "0x00108158 obtains the AuAemsManager singleton through 0x00126D3C and calls 0x00129844.",
+      "If the bridge result is negative, 0x00329614 emits the literal diagnostic 'Unsupported AEMS Event' through the owning object's virtual logger."
+    ],
+    "semantic_boundary": "This proves an actor/entity -> AuAemsManager positional-event bridge. The exact actor-side class name is not assigned without stronger source/RTTI evidence."
+  },
+  "aems_event_dispatch": {
+    "confidence": "CONFIRMED for descriptor/code derivation, dispatcher role, and direct switch coverage; individual handler semantics follow retained event names",
+    "dispatcher": "0x00129844",
+    "proposed_name": "AuAemsManager_DispatchEvent",
+    "call_signature_shape": "(manager, signed int16 event_code, position/vector pointer, scalar/default 1000, param8, paramC, param10)",
+    "behavior": [
+      "Sign-extends the 16-bit AEMS event code and dispatches through a large comparison tree.",
+      "Uses manager+0x24 and a global disable/state byte as early gates.",
+      "Accepts positional/default-vector handling through 0x00127328 when the supplied vector matches the static default vector.",
+      "Returns 0 on the normal completed path and 1 on the observed early-disabled/uninitialized path in this build.",
+      "No negative return assignment was found inside 0x00129844, making the actor-side 'Unsupported AEMS Event' negative-result check a defensive boundary rather than evidence of a normal unsupported-case return in this build."
+    ],
+    "descriptor_encoding": {
+      "layout": "{ +0x00 name pointer, +0x04 32-bit hash }",
+      "hash_low16": "0x48DF for all 193 recovered descriptors",
+      "event_code": "upper 16 bits of the descriptor hash",
+      "example": {
+        "name": "C_KnockOut_cheer",
+        "hash": "0x1CCE48DF",
+        "event_code": "0x1CCE",
+        "dispatcher_case": "0x0012AECC"
+      }
+    },
+    "registry_stats": {
+      "descriptor_count": 193,
+      "unique_event_code_count": 193,
+      "hash_code_collisions": 0,
+      "directly_handled_by_0x00129844": 131,
+      "not_directly_handled_by_0x00129844": 62
+    },
+    "category_summary": {
+      "NIS": {
+        "descriptors": 4,
+        "directly_handled": 4
+      },
+      "character": {
+        "descriptors": 17,
+        "directly_handled": 16
+      },
+      "control/state": {
+        "descriptors": 23,
+        "directly_handled": 0
+      },
+      "crowd": {
+        "descriptors": 23,
+        "directly_handled": 11
+      },
+      "entrance": {
+        "descriptors": 8,
+        "directly_handled": 7
+      },
+      "environment": {
+        "descriptors": 33,
+        "directly_handled": 28
+      },
+      "exertion": {
+        "descriptors": 10,
+        "directly_handled": 7
+      },
+      "mat/footwork": {
+        "descriptors": 12,
+        "directly_handled": 11
+      },
+      "menu": {
+        "descriptors": 3,
+        "directly_handled": 1
+      },
+      "other": {
+        "descriptors": 4,
+        "directly_handled": 3
+      },
+      "punch": {
+        "descriptors": 18,
+        "directly_handled": 17
+      },
+      "replay menu": {
+        "descriptors": 7,
+        "directly_handled": 4
+      },
+      "ring": {
+        "descriptors": 6,
+        "directly_handled": 6
+      },
+      "scene": {
+        "descriptors": 4,
+        "directly_handled": 3
+      },
+      "training": {
+        "descriptors": 21,
+        "directly_handled": 13
+      }
+    },
+    "representative_resolved_cases": [
+      {
+        "code": "0x1CCE",
+        "name": "C_KnockOut_cheer",
+        "handler": "0x0012AECC"
+      },
+      {
+        "code": "0x2CB0",
+        "name": "C_FightDecision",
+        "handler": "0x0012BA9C"
+      },
+      {
+        "code": "0x465F",
+        "name": "C_Chant",
+        "handler": "0x0012B25C"
+      },
+      {
+        "code": "0x5D54",
+        "name": "C_BooEvent",
+        "handler": "0x0012ADD8"
+      },
+      {
+        "code": "0x1310",
+        "name": "PnchSfx_StraightHead",
+        "handler": "0x0012E334"
+      },
+      {
+        "code": "0x0943",
+        "name": "PnchSfx_HookBody",
+        "handler": "0x0012E7C0"
+      },
+      {
+        "code": "0x7254",
+        "name": "PnchSfx_KO",
+        "handler": "0x0012F1B0"
+      },
+      {
+        "code": "0x10E0",
+        "name": "ExrtSfx_PunchThrown",
+        "handler": "0x0012F71C"
+      },
+      {
+        "code": "0x3F97",
+        "name": "ExrtSfx_PunchRecieve",
+        "handler": "0x0012F790"
+      },
+      {
+        "code": "0x0D48",
+        "name": "ChrctrSfx_BreathHeavy",
+        "handler": "0x00130EF0"
+      },
+      {
+        "code": "0x3C1C",
+        "name": "Sce_Replay",
+        "handler": "0x0012A748"
+      },
+      {
+        "code": "0x1374",
+        "name": "Sce_ReplayMoment",
+        "handler": "0x0012A538"
+      },
+      {
+        "code": "0x1A88",
+        "name": "NIS_Intro",
+        "handler": "0x0012A7F8"
+      },
+      {
+        "code": "0x7838",
+        "name": "NIS_Corner",
+        "handler": "0x0012B68C"
+      },
+      {
+        "code": "0x02BD",
+        "name": "Intro_Music_PSP",
+        "handler": "0x00131214"
+      },
+      {
+        "code": "0x045D",
+        "name": "MenuSfx_TCCBeep",
+        "handler": "0x0012FCA4"
+      }
+    ],
+    "registry_artifact": "analysis/resources/aems-event-code-registry.json"
+  },
+  "generic_event_to_aems_bridge": {
+    "confidence": "CONFIRMED for subscription layout, callback signature, payload copy, and submit ownership behavior; exact original symbol names are unknown",
+    "bank_subscription_builder": {
+      "function": "0x0049B61C",
+      "proposed_name": "AEMS_RegisterGenericEventSubscriptions",
+      "source_object_requirements": [
+        "input object != NULL",
+        "input+0x04 points/offsets to its parsed event-entry block",
+        "input+0x0B is a one-byte already-registered flag",
+        "input+0x10 is the subscription/event count",
+        "input+0x18 contains per-entry 16-bit context-key selectors"
+      ],
+      "per_event_entry_size": "0x20",
+      "per_event_entry_layout": {
+        "+0x00": "generic-event descriptor name pointer; rebased in-place against the parsed string/base area",
+        "+0x04": "descriptor hash/second descriptor word",
+        "+0x08..+0x0F": "8-byte generic-event handle storage",
+        "+0x10..+0x1F": "generic-event listener node",
+        "+0x18": "listener callback pointer = 0x0049B564",
+        "+0x1C": "listener context = packed 32-bit mapping key from 0x0049702C"
+      },
+      "registration_sequence": [
+        "For each 0x20-byte event entry, descriptor name pointer at +0x00 is rebased in-place.",
+        "func_003E4A94(entry+0x08, entry+0x00) resolves/registers the generic named event.",
+        "Listener callback 0x0049B564 is stored at listener+0x08 (entry+0x18).",
+        "0x0049702C packs the source object's two category bytes plus a per-entry 16-bit selector into a 32-bit mapping key stored at listener+0x0C (entry+0x1C).",
+        "func_003E5938(entry+0x08, entry+0x10) inserts the listener into that generic event handle.",
+        "After all entries are subscribed, input+0x0B is set to 1."
+      ]
+    },
+    "generic_event_listener_abi": {
+      "registration_wrapper": "func_003E5938",
+      "insertion_core": "0x003E5980",
+      "dispatcher_wrapper": "func_003E5860",
+      "dispatch_core": "0x003E58A8",
+      "listener_node_layout": {
+        "+0x00": "next listener",
+        "+0x04": "previous/backlink used by insertion",
+        "+0x08": "callback function",
+        "+0x0C": "callback context"
+      },
+      "callback_signature": "callback(event_payload, listener_context)",
+      "evidence": "0x003E58A8 walks the event listener list, loads callback from +0x08 and context from +0x0C, then jalr callback with a0=caller payload and a1=context."
+    },
+    "aems_event_callback": {
+      "function": "0x0049B564",
+      "proposed_name": "AEMS_GenericEventCallback",
+      "inputs": {
+        "a0": "generic event payload",
+        "a1": "32-bit listener mapping key/context"
+      },
+      "mapping_resolution": {
+        "function": "0x004970EC",
+        "behavior": [
+          "Treats the 32-bit listener key as packed {u16 selector, u8 category-B, u8 category-A}.",
+          "0x00497090 matches the two category bytes against one of up to eight registered AEMS mapping descriptors.",
+          "0x00497048 then searches the matched descriptor's indexed 16-bit selector table.",
+          "Returns the matched AEMS record/object or NULL."
+        ]
+      },
+      "packet_construction": [
+        "Copies the 4-byte listener mapping key into a local canonical key.",
+        "Resolves that key through 0x004970EC.",
+        "Reads byte +0x0B from the resolved record and allocates (record+0x0B)*4 + 4 bytes through the AEMS allocation adapter 0x004980D8.",
+        "Writes the 4-byte mapping key as packet word 0.",
+        "Copies the generic event payload into packet+0x04 for exactly (record+0x0B)*4 bytes.",
+        "Submits the allocated packet through 0x004974CC.",
+        "If 0x004974CC returns false, frees the packet immediately through 0x00498104; on success ownership transfers to the AEMS processing state."
+      ],
+      "implication": "This is the direct static bridge from Fight Night's named gameplay-event bus into the AEMS event engine. AEMS banks subscribe by generic event name, then the listener callback converts each fired gameplay payload into an AEMS command packet keyed by the parsed AEMS mapping context."
+    },
+    "aems_packet_submitter": {
+      "function": "0x004974CC",
+      "proposed_name": "AEMS_SubmitEventPacket",
+      "confidence": "PROBABLE name; CONFIRMED acceptance/ownership behavior",
+      "observations": [
+        "Uses the packet's first packed key to resolve an AEMS record through 0x004970EC.",
+        "Rejects NULL/unresolvable packets and clears its reentrancy guard before returning false.",
+        "On success assigns the packet into one of sixteen internal 0x10-byte active slots rooted at 0x0004CE78 before returning true.",
+        "Stores the resolved record and packet pointer into the selected active slot.",
+        "The caller 0x0049B564 only frees the packet when this function returns false, proving successful submission transfers packet ownership."
+      ],
+      "note": "The exact scheduler/voice semantics of the sixteen active slots remain unresolved; do not call them voices/channels until their consumers are traced."
+    },
+    "architectural_implication": "The previously separate generic named-event registry and AEMS descriptor registry are now proven to be connected at runtime. The remaining speech problem is downstream mapping/content: identify which subscribed gameplay events and AEMS mapping records eventually generate category 0/1/2 AuSpeechManager requests and which comevt/ancevt/trnevt records they select."
+  },
+  "speech_evt_subscription_bridge": {
+    "confidence": "CONFIRMED",
+    "speech_bank_loader": "0x0013A6D0",
+    "aems_object_registration_wrapper": "0x0049AE38",
+    "aems_mapping_registration": "0x0049AD50",
+    "generic_event_subscription_builder": "0x0049B61C",
+    "proof": [
+      "0x0013A6D0 loads/parses the .evt object into bank+0x00 and then calls 0x0049AE38(bank+0x00, speech_category) at 0x0013A79C.",
+      "0x0049AE38 first calls 0x0049AD50(object, category) to install the parsed object in the global up-to-eight-slot AEMS mapping table, then unconditionally calls 0x0049B61C(object) to register all of its named-event listeners.",
+      "The three direct callers of 0x0013A6D0 pass category 2 for trnevt.evt, category 1 for ancevt.evt, and category 0 for comevt.evt.",
+      "Therefore the commentary, announcer and training .evt objects themselves contain/drive AEMS mappings that subscribe directly to Fight Night generic named gameplay events."
+    ],
+    "category_calls": [
+      {
+        "call_site": "0x0013AEC0",
+        "bank_object": "manager+0x1B0",
+        "category": 2,
+        "event_file": "trnevt.evt",
+        "header_file": "trnhdr.big",
+        "data_file": "trndat.big"
+      },
+      {
+        "call_site": "0x0013AF18",
+        "bank_object": "manager+0x188",
+        "category": 1,
+        "event_file": "ancevt.evt",
+        "header_file": "anchdr.big",
+        "data_file": "ancdat.big"
+      },
+      {
+        "call_site": "0x0013AF70",
+        "bank_object": "manager+0x19C",
+        "category": 0,
+        "event_file": "comevt.evt",
+        "header_file": "comhdr.big",
+        "data_file": "comdat.big"
+      }
+    ],
+    "aems_mapping_table": {
+      "base": "0x0004CE38 pre-relocation/global data family",
+      "capacity": 8,
+      "entry_size": "0x08",
+      "entry_fields": {
+        "+0x00": "parsed AEMS/.evt object pointer",
+        "+0x04": "category value supplied by caller"
+      },
+      "registration_behavior": "0x0049AD50 validates the parsed object header, derives its category-key bytes, avoids duplicate key registration, stores {object, category} in a free slot, and clears per-entry selector state through 0x0049ACC0 when registration fails/collides.",
+      "lookup_connection": "0x00497090 searches this same up-to-eight-entry mapping table by two key bytes; the matched entry's object/category data is then used by 0x004970EC and downstream AEMS request processing."
+    },
+    "architectural_implication": "The remaining commentary problem is no longer identifying which AEMS objects can feed speech. The three speech .evt objects are explicitly registered as AEMS event sources/subscribers with category 0/1/2. Remaining work is to map individual .evt subscriptions and payload schemas through the AEMS active-state processor to the already-recovered AuSpeechManager byte-range request."
+  },
+  "aems_to_auspeech_active_state_bridge": {
+    "confidence": "CONFIRMED for call chain and category values; proposed helper names are descriptive, not original symbols",
+    "speech_callback_registration": {
+      "site": "0x0013ADD0-0x0013ADDC",
+      "registered_callback": "0x00137888",
+      "manager_context": "manager+0x148",
+      "constant": "0x00008CA0",
+      "registrar": "0x00498260",
+      "registrar_storage": {
+        "0x0004CE20": "callback pointer (raw/pre-relocation data address family)",
+        "0x0004CE18": "manager/context pointer",
+        "0x0004CE34": "constant/config value"
+      }
+    },
+    "auspeech_update_calls": {
+      "region": "0x0013BCFC-0x0013BD10",
+      "calls": [
+        {
+          "site": "0x0013BCFC",
+          "function": "0x00497EE8",
+          "category": 0
+        },
+        {
+          "site": "0x0013BD04",
+          "function": "0x00497EE8",
+          "category": 1
+        },
+        {
+          "site": "0x0013BD0C",
+          "function": "0x00497EE8",
+          "category": 2
+        }
+      ],
+      "interpretation": "AuSpeechManager explicitly services the three already-proven speech categories every update when its gating conditions allow."
+    },
+    "processing_chain": [
+      {
+        "function": "0x00497EE8",
+        "proposed_name": "AEMS_ProcessCategory",
+        "confidence": "PROBABLE name; CONFIRMED category-processing role",
+        "behavior": "Accepts category 0..7, checks whether that category has immediately processable or selectable active state, and reaches 0x00499E64 for the category when a request is ready."
+      },
+      {
+        "function": "0x00499E64",
+        "proposed_name": "AEMS_ProcessReadyCategory",
+        "confidence": "PROBABLE name; CONFIRMED downstream call chain",
+        "behavior": [
+          "Requires a live per-category state at the 0xA0-byte category-state block family rooted at raw 0x000180A8.",
+          "Copies the active packet's first packed mapping key into a local 4-byte key.",
+          "Runs mapping/state preparation through 0x0049AFB4 and 0x004999EC.",
+          "Calls 0x0049A5C0(active_object_0, active_object_4, &mapping_key).",
+          "Updates per-category bookkeeping and then clears/resets the processed category state through 0x00499BD0."
+        ]
+      },
+      {
+        "function": "0x0049A5C0",
+        "proposed_name": "AEMS_BuildAndDispatchRequests",
+        "confidence": "PROBABLE name; CONFIRMED request construction and callback invocation",
+        "behavior": [
+          "Resolves the mapping key with 0x00497090 and derives the selected mapping object/category.",
+          "Walks the decoded AEMS range entries for the active packet.",
+          "For each emitted entry calls 0x0049B480 to compute relative byte start and byte length.",
+          "Builds the already-recovered 0x20-byte request at sp+0x10.",
+          "Loads the globally registered callback from raw 0x0004CE20 and jalr-calls it at 0x0049A7FC with a0=sp+0x10.",
+          "The callback stored there by AuSpeechManager is exactly 0x00137888."
+        ]
+      }
+    ],
+    "continuous_path": [
+      "Fight Night named gameplay event fires via func_003E5860.",
+      "AEMS listener 0x0049B564 receives (gameplay payload, AEMS mapping context).",
+      "0x0049B564 builds a mapping-key + payload packet and submits it via 0x004974CC.",
+      "Accepted packet becomes AEMS active-state data.",
+      "AuSpeechManager update explicitly services AEMS categories 0, 1 and 2 through 0x00497EE8.",
+      "Ready category processing reaches 0x00499E64 -> 0x0049A5C0.",
+      "0x0049A5C0 turns decoded AEMS ranges into the 0x20-byte request ABI and invokes the registered AuSpeechManager callback 0x00137888.",
+      "0x00137888 forwards that request into the already-recovered AuSpeechManager bank router, which maps category 0/1/2 to com/anc/trn and final speech-bank byte ranges."
+    ],
+    "architectural_implication": "The runtime architecture from named gameplay event to AuSpeechManager request is now statically continuous. What BOOT.BIN alone still does not reveal is the full content of the external comevt.evt/ancevt.evt/trnevt.evt mappings needed to enumerate each event's exact speech IDs/variants."
+  },
+  "career_history_recordbooks_handlers": {
+    "confidence": "CONFIRMED for registration order, concrete handler addresses, output keys, page bound and 10-entry loop; individual record-page semantic labels inherit the decoded UI localization keys",
+    "registration": {
+      "function": "0x001EE168",
+      "channel": "LoadVariables via func_000CDAC0",
+      "unregister": "0x001EE1DC",
+      "handlers": [
+        {
+          "name": "GetCareerHistoryInfo",
+          "global": "0x0055FF78",
+          "implementation": "0x001EE220"
+        },
+        {
+          "name": "GetAdhocRivalsUserInfo",
+          "global": "0x0055FF7C",
+          "implementation": "0x001EE558"
+        },
+        {
+          "name": "GetAdhocRivalsInfo",
+          "global": "0x0055FF80",
+          "implementation": "0x001EE808"
+        },
+        {
+          "name": "GetRecordBooksInfo",
+          "global": "0x0055FF84",
+          "implementation": "0x001EEA3C"
+        }
+      ],
+      "descriptor_function_pointers": [
+        "0x001EE220",
+        "0x001EE558",
+        "0x001EE808",
+        "0x001EEA3C"
+      ]
+    },
+    "career_history": {
+      "implementation": "0x001EE220",
+      "output_keys": [
+        "iClass",
+        "iCurrentClass",
+        "aFightNumber",
+        "astrOpponentName",
+        "astrFightResult",
+        "aRoundsLasted",
+        "astrTKOTime"
+      ],
+      "correction": "The BOOT.BIN xref to astrTKOTime is inside GetCareerHistoryInfo. It is a UI/output property for stored fight history, not evidence of the underlying KO/TKO/referee-stoppage decision routine."
+    },
+    "record_books": {
+      "implementation": "0x001EEA3C",
+      "input_key": "iPage",
+      "output_keys": [
+        "astrNames",
+        "astrStatColumn1",
+        "astrStatColumn2"
+      ],
+      "page_count": 6,
+      "page_selector_range": "0..5",
+      "page_bound_instruction": "0x001EEC58: sltiu < 6",
+      "hard_output_entry_cap": 10,
+      "loop_bound_instruction": "0x001EEDE4: slti < 0x0A; 0x001EEDE8 loops while true",
+      "ui_localization_categories": [
+        "$TL_Boxing_Hall_Of_Fame",
+        "$TL_Most_Career_Earnings",
+        "$TL_Most_Wins",
+        "$TL_Fastest_KOs",
+        "$TL_Most_KOs",
+        "$TL_Top_10"
+      ],
+      "ui_column_keys": [
+        "$T_Record",
+        "$T_Boxer",
+        "$T_KOs",
+        "$T_KO_Time",
+        "$T_Wins",
+        "$T_Earnings",
+        "$T_Career",
+        "$T_Rank"
+      ],
+      "implication": "The retail records/Hall-of-Fame UI is a six-page native-backed system and each requested page emits at most exactly 10 rows. This resolves the previous question of whether 'Top 10' was merely a label or an executable hard bound."
+    }
+  },
+  "drone_fight_state_tables": {
+    "confidence": "CONFIRMED for state-name getters, table addresses and function-pointer contents; exact original class/method names beyond the retained DRONE strings are not claimed",
+    "discovery": [
+      "Each retained DRONE_* state name is returned by a tiny dedicated code function.",
+      "Each name-getter appears in a repeated .data function-pointer table with a destructor/cleanup-like entry immediately before it and state-specific/shared methods after it.",
+      "The tables share stable common method slots, establishing a common polymorphic fight-state interface rather than unrelated string helpers."
+    ],
+    "states": [
+      {
+        "name": "DRONE_ATTACKING",
+        "name_getter": "0x004D2E7C",
+        "table": "0x0057BC78",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2E48",
+          "0x004D2E7C",
+          "0x0005B58C",
+          "0x00058904",
+          "0x00058A34",
+          "0x00058988",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x000588AC",
+          "0x000588B4",
+          "0x00058840",
+          "0x000589BC"
+        ]
+      },
+      {
+        "name": "DRONE_TAUNTING",
+        "name_getter": "0x004D2EBC",
+        "table": "0x0057BD00",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2E88",
+          "0x004D2EBC",
+          "0x00059230",
+          "0x00059200",
+          "0x004D2EC8",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x000591BC",
+          "0x000592B0"
+        ]
+      },
+      {
+        "name": "DRONE_ILLEGAL_PUNCH",
+        "name_getter": "0x004D2F04",
+        "table": "0x0057BD88",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2ED0",
+          "0x004D2F04",
+          "0x000593B0",
+          "0x00059380",
+          "0x004D2F10",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x000592D0",
+          "0x00059430"
+        ]
+      },
+      {
+        "name": "DRONE_SIGNATURE_PUNCH",
+        "name_getter": "0x004D2F4C",
+        "table": "0x0057BE10",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2F18",
+          "0x004D2F4C",
+          "0x000594E4",
+          "0x00059564",
+          "0x004D2F58",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x00059438",
+          "0x00059594"
+        ]
+      },
+      {
+        "name": "DRONE_FEINTING",
+        "name_getter": "0x004D2F94",
+        "table": "0x0057BE98",
+        "slot_count": 16,
+        "methods": [
+          "0x004D2F60",
+          "0x004D2F94",
+          "0x0005C878",
+          "0x0005969C",
+          "0x004D2FA0",
+          "0x004D2FA8",
+          "0x000597A8",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x000588AC",
+          "0x000588B4",
+          "0x000595B4",
+          "0x0005974C"
+        ]
+      },
+      {
+        "name": "DRONE_COUNTER_PUNCH",
+        "name_getter": "0x004D2FB0",
+        "table": "0x0057BF20",
+        "slot_count": 19,
+        "methods": [
+          "0x0005CC84",
+          "0x004D2FB0",
+          "0x0005CD54",
+          "0x0005CF30",
+          "0x004D2FBC",
+          "0x004D1A14",
+          "0x0005D05C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005CD04",
+          "0x0005D014",
+          "0x0005D0BC",
+          "0x0005D14C",
+          "0x0005D294"
+        ]
+      },
+      {
+        "name": "DRONE_DEFENDING",
+        "name_getter": "0x004D302C",
+        "table": "0x0057C050",
+        "slot_count": 17,
+        "methods": [
+          "0x004D2FF8",
+          "0x004D302C",
+          "0x0005F41C",
+          "0x0005F650",
+          "0x004D1A0C",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005F6C0",
+          "0x0005F788",
+          "0x0005F724"
+        ]
+      },
+      {
+        "name": "DRONE_DEFEND_PREPARE",
+        "name_getter": "0x004D306C",
+        "table": "0x0057C0E0",
+        "slot_count": 16,
+        "methods": [
+          "0x004D3038",
+          "0x004D306C",
+          "0x0005F9F0",
+          "0x0005F9A4",
+          "0x004D1A0C",
+          "0x004D1A14",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005F898",
+          "0x0005FA00"
+        ]
+      },
+      {
+        "name": "DRONE_BREAKCLINCH",
+        "name_getter": "0x004D30AC",
+        "table": "0x0057C168",
+        "slot_count": 16,
+        "methods": [
+          "0x004D3078",
+          "0x004D30AC",
+          "0x0005FA18",
+          "0x004D30B8",
+          "0x004D30C8",
+          "0x004D30C0",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005FA08",
+          "0x0005FA64"
+        ]
+      },
+      {
+        "name": "DRONE_CLINCH",
+        "name_getter": "0x004D3104",
+        "table": "0x0057C1F0",
+        "slot_count": 16,
+        "methods": [
+          "0x004D30D0",
+          "0x004D3104",
+          "0x0005FBB4",
+          "0x0005FB08",
+          "0x004D3118",
+          "0x004D3110",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x0005FA84",
+          "0x0005FC58"
+        ]
+      },
+      {
+        "name": "DRONE_STATE_IDLE",
+        "name_getter": "0x004D3154",
+        "table": "0x0057C278",
+        "slot_count": 16,
+        "methods": [
+          "0x004D3120",
+          "0x004D3154",
+          "0x00061B50",
+          "0x004D3168",
+          "0x004D1A0C",
+          "0x004D3170",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D3160",
+          "0x004D3178",
+          "0x00061B0C",
+          "0x00061B58"
+        ]
+      },
+      {
+        "name": "DRONE_KNOCKDOWN_ATTACK",
+        "name_getter": "0x004D3180",
+        "table": "0x0057C300",
+        "slot_count": 16,
+        "methods": [
+          "0x00061CA0",
+          "0x004D3180",
+          "0x00061E08",
+          "0x00061D0C",
+          "0x004D319C",
+          "0x004D31A4",
+          "0x004D1A1C",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x004D1A24",
+          "0x004D318C",
+          "0x004D3194",
+          "0x00061CD4",
+          "0x00062184"
+        ]
+      },
+      {
+        "name": "DRONE_MOVEMENT",
+        "name_getter": "0x004D31AC",
+        "table": "0x0057C388",
+        "slot_count": 16,
+        "methods": [
+          "0x000641D4",
+          "0x004D31AC",
+          "0x00064220",
+          "0x00064218",
+          "0x004D1A0C",
+          "0x004D1A14",
+          "0x00064394",
+          "0x0004257C",
+          "0x000425E0",
+          "0x00042694",
+          "0x000426C4",
+          "0x00064338",
+          "0x004D1A2C",
+          "0x004D1A34",
+          "0x00064208",
+          "0x00064210"
+        ]
+      }
+    ],
+    "shared_interface_observations": {
+      "name_getter_slot": 1,
+      "broadly_shared_slots": {
+        "7": "0x0004257C",
+        "8": "0x000425E0",
+        "9": "0x00042694",
+        "10": "0x000426C4"
+      },
+      "common_base_methods": [
+        "0x004D1A0C",
+        "0x004D1A14",
+        "0x004D1A1C",
+        "0x004D1A24",
+        "0x004D1A2C",
+        "0x004D1A34"
+      ],
+      "implication": "The DRONE names correspond to a polymorphic fight-state family with a stable shared interface and state-specific method slots. Transition/update semantics can now be recovered by comparing the state-specific functions rather than searching the entire executable."
+    },
+    "clinch_example": {
+      "table": "0x0057C1F0",
+      "state_specific_methods": [
+        "0x0005FBB4",
+        "0x0005FB08",
+        "0x0005FA84",
+        "0x0005FC58"
+      ],
+      "observed_state_fields": {
+        "+0x18": "owned/linked fighter-state object used by func_03EC10",
+        "+0x1C": "object whose +0x128 field feeds func_028D78",
+        "+0x28": "byte/counter state used by clinch/defend-prep helpers",
+        "+0x2C": "stored comparison threshold/value",
+        "+0x30": "one-shot/state flag",
+        "+0x34": "countdown/state counter"
+      },
+      "note": "Field semantics are observations from the state-specific methods and are not yet promoted to gameplay-facing names."
+    }
+  },
+  "debug_elf_padding_map": {
+    "confidence": "CONFIRMED",
+    "load_segments": [
+      {
+        "index": 0,
+        "vaddr": "0x00000000",
+        "file_offset": "0x00000100",
+        "file_size": "0x0058A8A4",
+        "mem_size": "0x0058A8A4",
+        "flags": "R E"
+      },
+      {
+        "index": 1,
+        "vaddr": "0x0058A8A8",
+        "file_offset": "0x0058A9A8",
+        "file_size": "0x00007AF4",
+        "mem_size": "0x0003D0BC",
+        "flags": "RW"
+      }
+    ],
+    "file_backed_inter_section_gaps": [
+      {
+        "range": "0x004F748C-0x004F74BF",
+        "size": 52,
+        "between": ".rodata.sceNid -> .rodata",
+        "bytes": "all zero",
+        "mapped_segment": 0,
+        "note": "Largest file-backed alignment gap; segment 0 is executable. Large enough only for a very small trampoline/stub, not substantive overhaul code."
+      },
+      {
+        "range": "0x0052DD30-0x0052DD3F",
+        "size": 16,
+        "between": ".rodata -> .data",
+        "bytes": "all zero",
+        "mapped_segment": 0,
+        "note": "Tiny file-backed alignment gap."
+      },
+      {
+        "range": "0x0058A8A4-0x0058A8A7",
+        "size": 4,
+        "between": ".dtors / end of LOAD[0] -> .cplinit / start of LOAD[1]",
+        "bytes": "all zero",
+        "note": "Cross-segment alignment gap; not useful as a practical code/data cave."
+      }
+    ],
+    "zero_fill_gap_before_bss": {
+      "range": "0x0059239C-0x005923BF",
+      "size": 36,
+      "cause": ".linkonce.d ends at segment-1 file-backed end; .bss begins at 0x005923C0",
+      "backing": "not file-backed; zero-filled by segment memory extent",
+      "mapped_segment": 1,
+      "flags": "RW",
+      "note": "Potential tiny runtime scratch space only if deliberately addressed; not a file patch cave and not executable under the ELF segment flags."
+    },
+    "reference_check": "A direct aligned-address scan found no code/data references to addresses inside the two usable file-backed padding ranges. The only literal occurrence for 0x0058A8A4 is ELF program-header metadata, not a gameplay reference.",
+    "conclusion": "BOOT.BIN has no substantial inter-section free region. The largest directly patchable mapped padding is 52 bytes, followed by 16 bytes. Larger overhaul code/data will require repurposing proven-dead content, extending/rebuilding the module, or an explicit injected allocation/overlay strategy rather than relying on linker padding."
+  },
+  "localization_paths": {
+    "confidence": "CONFIRMED",
+    "aip_callback_path": {
+      "wrapper": "0x000CE8A0",
+      "source": "boxing/AIP/aip.cpp line 1492",
+      "callback_global": "0x005436D4",
+      "retained_assert_name": "s_pfnGetLocalizedString",
+      "behavior": "Asserts the callback pointer is present, then indirect-calls it with the requested key. This is an AIP-specific swappable localization callback."
+    },
+    "shared_game_localization_path": {
+      "formatter": "0x00206F90",
+      "chain": [
+        "0x00206F90 -> 0x00206EB0",
+        "0x00206EB0 -> 0x002071B4",
+        "0x002071B4 -> 0x00206BA8",
+        "0x00206BA8 -> 0x002069DC"
+      ],
+      "key_hash": "0x0020692C",
+      "hashed_index_lookup": "0x00206980",
+      "localized_string_resolver": "0x00206A74 -> 0x00366750 against global localization object 0x005604A0",
+      "debug_key_display_flag": "0x005604A8",
+      "behavior": "Hashes a localization key, binary-searches the shared localization index, resolves the localized string from the global localization resource, then formats/copies it for the caller. A debug flag can instead expose the key text."
+    },
+    "division_name_proof": {
+      "keys": [
+        "INFO_Division_1",
+        "INFO_Division_2",
+        "INFO_Division_3",
+        "INFO_Division_4",
+        "INFO_Division_5",
+        "INFO_Division_6",
+        "INFO_Division_Unknown"
+      ],
+      "key_families_observed_at": [
+        "0x00507D90 family",
+        "0x00509270 family",
+        "0x0050C804 family",
+        "0x0050DB18 family"
+      ],
+      "representative_code_regions": [
+        "0x00195310-0x0019539C",
+        "0x001B7BC4-0x001B7CCC",
+        "0x001E9A98-family",
+        "0x00202378-0x00202630"
+      ],
+      "final_key_consumer": "0x00206F90",
+      "conclusion": "Division labels are not hardcoded final display text. They are localization keys fed through the shared game-wide localization subsystem. They do not route through the AIP-specific s_pfnGetLocalizedString callback at 0x000CE8A0."
+    },
+    "architectural_implication": "FNR3 PSP exposes at least two distinct localization entry paths: an AIP callback indirection and a shared global localization database/formatter. UI reverse-engineering should not conflate them."
+  }
+}

@@ -247,3 +247,118 @@ def test_convenience_operations_decode_confirmed_response_shapes(
     resume_ticket = client.resume()
     assert resume_ticket == 7
     assert client.backtrace() == (0x08B44FC0, 0x08B488DC)
+
+
+def test_passive_and_memory_breakpoint_helpers_use_ppsspp_protocol(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, fake_socket = _client(
+        monkeypatch,
+        [
+            _server_text({"event": "version", "ticket": 1}),
+            _server_text({"event": "client.config.set", "ticket": 2}),
+            _server_text({"event": "cpu.breakpoint.add", "ticket": 3}),
+            _server_text({"event": "cpu.breakpoint.update", "ticket": 4}),
+            _server_text({"event": "memory.breakpoint.add", "ticket": 5}),
+            _server_text({"event": "memory.breakpoint.remove", "ticket": 6}),
+        ],
+    )
+
+    client.add_exec_breakpoint(
+        0x089B3768,
+        pause=False,
+        log=True,
+        condition="a0 != 0",
+        log_format="FNR3OH|fight_session_constructor|pc={pc}|a0={a0}",
+    )
+    client.update_exec_breakpoint(
+        0x089B3768,
+        pause=True,
+        log=False,
+        condition="a0 == 1",
+        log_format="FNR3OH|fight_session_constructor|pc={pc}",
+    )
+    client.add_memory_breakpoint(
+        0x08D98574,
+        4,
+        pause=True,
+        log=True,
+        read=False,
+        write=True,
+        change=True,
+        condition="pc != 0",
+        log_format="FNR3OH|bank_write|pc={pc}",
+    )
+    client.remove_memory_breakpoint(0x08D98574, 4)
+
+    payloads = []
+    for frame in fake_socket.sent[3:]:
+        opcode, payload = _decode_client_frame(frame)
+        assert opcode == 0x1
+        payloads.append(json.loads(payload))
+
+    assert payloads[0] == {
+        "event": "cpu.breakpoint.add",
+        "ticket": 3,
+        "address": 0x089B3768,
+        "enabled": False,
+        "log": True,
+        "condition": "a0 != 0",
+        "logFormat": "FNR3OH|fight_session_constructor|pc={pc}|a0={a0}",
+    }
+    assert payloads[1] == {
+        "event": "cpu.breakpoint.update",
+        "ticket": 4,
+        "address": 0x089B3768,
+        "enabled": True,
+        "log": False,
+        "condition": "a0 == 1",
+        "logFormat": "FNR3OH|fight_session_constructor|pc={pc}",
+    }
+    assert payloads[2] == {
+        "event": "memory.breakpoint.add",
+        "ticket": 5,
+        "address": 0x08D98574,
+        "size": 4,
+        "enabled": True,
+        "log": True,
+        "read": False,
+        "write": True,
+        "change": True,
+        "condition": "pc != 0",
+        "logFormat": "FNR3OH|bank_write|pc={pc}",
+    }
+    assert payloads[3] == {
+        "event": "memory.breakpoint.remove",
+        "ticket": 6,
+        "address": 0x08D98574,
+        "size": 4,
+    }
+
+
+def test_breakpoint_helpers_reject_invalid_ranges_before_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client, fake_socket = _client(
+        monkeypatch,
+        [
+            _server_text({"event": "version", "ticket": 1}),
+            _server_text({"event": "client.config.set", "ticket": 2}),
+        ],
+    )
+    sent_before = len(fake_socket.sent)
+
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="address"):
+        client.add_exec_breakpoint(-1)
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="positive size"):
+        client.add_memory_breakpoint(0x1000, 0)
+    with pytest.raises(ppsspp_debugger.PpssppDebuggerError, match="must watch"):
+        client.add_memory_breakpoint(
+            0x1000,
+            4,
+            read=False,
+            write=False,
+            change=False,
+        )
+
+    assert len(fake_socket.sent) == sent_before

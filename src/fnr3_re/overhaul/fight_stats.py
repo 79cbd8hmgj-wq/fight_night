@@ -15,9 +15,12 @@ immediates at each call site):
 
 - ``STAT_PUNCHES_THROWN = 0``
 - ``STAT_PUNCHES_HIT = 1``
-- ``STAT_KNOCKDOWNS = 0xE`` (14) -- called with ``boxer_slot`` passed as an
-  immediate 0/1 rather than the loop variable used for the punch stats,
-  but the same accessor function and calling convention.
+- ``STAT_KNOCKDOWNS = 0xE`` (14) -- knockdowns scored.
+- ``STAT_KNOCKDOWNS_SUFFERED = 0xF`` (15) -- the complementary downed-boxer
+  counter.  ``0x000BAB38`` increments 0x0F for the knocked-down boxer and
+  0x0E for the scoring boxer in the same knockdown-recording operation.
+  The fight lifecycle then queries the per-round 0x0F value and stops the
+  fight at >=3 when the three-knockdown-rule option is enabled.
 
 Two further IDs (``0x10``, ``0x11``) are called in the same loop body
 immediately after IDs 0/1 but were not connected to any displayed UI field
@@ -56,6 +59,7 @@ from __future__ import annotations
 STAT_PUNCHES_THROWN = 0x00
 STAT_PUNCHES_HIT = 0x01
 STAT_KNOCKDOWNS = 0x0E
+STAT_KNOCKDOWNS_SUFFERED = 0x0F
 
 #: Observed at the same call site as the punches-thrown/hit pair but not
 #: connected to any displayed field this pass. Do not assume meaning.

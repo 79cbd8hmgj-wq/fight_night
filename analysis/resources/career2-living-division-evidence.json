@@ -1,0 +1,1434 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "weekly_world_advance": {
+    "function": "0x00195430",
+    "proposed_name": "AdvanceCareerWorldOneWeek",
+    "confidence": "CONFIRMED seven-day world-advance behavior; proposed name is descriptive",
+    "behavior": [
+      "Copies persistent profile date from profile+0x9C.",
+      "Constructs a seven-day interval and adds it to the copied date.",
+      "When profile+0x121 is nonzero, calls 0x00194320, 0x0019E790 and 0x00195DC0 before committing the new date.",
+      "Writes the advanced packed date back to profile+0x9C.",
+      "Calls 0x0019472C/0x001943C0 housekeeping after the update."
+    ],
+    "implication": "The retail career already has a weekly world-tick boundary suitable for Career Mode 2.0 calendar/world simulation."
+  },
+  "population_model": {
+    "record_getter": "0x001928F0(career,index)",
+    "current_player_index": "profile+0x4E",
+    "default_active_ladder_sizes": {
+      "initial_amateur_division_0": 20,
+      "professional_or_other_division_paths": 50
+    },
+    "confidence": "CONFIRMED three persistent career rank-class slots mapped onto six absolute weight classes, table dimensions and record access",
+    "correction": "profile+0x2A is the working career rank-class slot (0..2), not a direct six-weight-class index. profile+0x2B is the committed/player-slot shadow: explicit player slot switches synchronize both fields, while background initialization/world processing can temporarily change only +0x2A. profile+0x2D..+0x2F map the three persistent slots to the six absolute retail weight classes.",
+    "evidence": [
+      "0x0019527C stores the requested slot to profile+0x2A and +0x2B, then calls 0x001929C4 before switching on its returned value 0..5 for INFO_Division_1 through INFO_Division_6.",
+      "0x001929C4 returns profile[0x2D + slot], directly proving the three slot-to-absolute-class mapping bytes.",
+      "0x0019CFF8 initializes exactly three title/rank-class slots and 0x0019DFE8 bootstraps slot 0, slot 1 and slot 2.",
+      "The three 0xC8-byte ranking ladders are rooted at profile+0x2E8, +0x3B0 and +0x478.",
+      "A provenance-filtered whole-executable writer inventory found direct career-profile writes to +0x2B only in the explicit slot setter (0x001952C0), matchmaking resynchronization (+0x2B = +0x2A at 0x001955C0), and career initialization (+0x2B = 0 at 0x0019D5A0).",
+      "During career initialization, +0x2B remains 0 while +0x2A is deliberately cycled 1 -> 2 -> 0 at 0x0019D5C8/0x0019D5F8/0x0019D618 to process all three slot ladders.",
+      "The title-expiry/world-update routine 0x0019DFE8 likewise writes working +0x2A for individual slot processing without corresponding +0x2B writes."
+    ],
+    "rank_class_shadow_field": "profile+0x2B",
+    "career_slot_to_absolute_weight_class": {
+      "fields": [
+        "profile+0x2D",
+        "profile+0x2E",
+        "profile+0x2F"
+      ],
+      "getter": "0x001929C4(career,slot) -> profile[0x2D + slot]",
+      "persistent_slot_count": 3,
+      "absolute_weight_class_count": 6,
+      "confidence": "CONFIRMED"
+    },
+    "working_rank_class_slot_field": "profile+0x2A",
+    "committed_player_slot_shadow_field": "profile+0x2B"
+  },
+  "annual_aging": {
+    "function": "0x00195810",
+    "proposed_name": "AdvancePopulationAges",
+    "confidence": "CONFIRMED annual increment behavior; proposed name is descriptive",
+    "age_field": "progression record+0x09",
+    "birthday_or_month_source": "progression record+0x1C",
+    "behavior": [
+      "Loops the non-player population, skipping the player's current progression record.",
+      "Builds a calendar date from record+0x1C modulo 12 plus the current calendar year.",
+      "Tests whether that anniversary/birthday boundary falls between the previous and newly advanced dates.",
+      "When crossed, increments progression record+0x09 by one."
+    ],
+    "implication": "The retail living world already ages AI boxer records as the weekly calendar crosses their annual date."
+  },
+  "retirement_or_inactivation": {
+    "function": "0x00195990",
+    "proposed_name": "EvaluatePopulationRetirement",
+    "confidence": "CONFIRMED that it evaluates age/record/performance and marks population records inactive; retirement is the strongest semantic interpretation",
+    "active_flag": "progression record+0x00 (0 active; function can write 1 to remove/inactivate)",
+    "inputs": [
+      "record+0x09 age-like field",
+      "record+0x11 baseline/starting-age-like field",
+      "record+0x05/+0x06/+0x07 wins/losses/draws",
+      "record+0x04 rank",
+      "career-length/performance helper 0x00193EF4",
+      "RNG"
+    ],
+    "hard_or_observed_conditions": [
+      "Requires more than seven completed fights before most checks.",
+      "Immediately marks the record inactive when record+0x09 reaches at least 45.",
+      "Can mark inactive after at least 21 losses.",
+      "Uses win percentage, age/career-span-like values and a random check for additional inactivation decisions."
+    ],
+    "exclusions": [
+      "skips the player's current record",
+      "skips at least two other protected/special boxer indices drawn from profile state"
+    ],
+    "implication": "AI boxer retirement/turnover already exists and can be expanded with health, accumulated damage, titles, form and comeback logic rather than invented from zero."
+  },
+  "due_fight_simulation": {
+    "function": "0x0019E790",
+    "proposed_name": "SimulateDuePopulationFights",
+    "confidence": "CONFIRMED scheduled non-player fight/result simulation; proposed name is descriptive",
+    "caller": "0x001954B8 inside weekly world advance 0x00195430",
+    "scheduling_fields": {
+      "+0x28": "packed scheduled date/time object used to determine whether a population record is due",
+      "+0x24": "packed opponent/match assignment data cleared after the bout",
+      "confidence": "CONFIRMED scheduling use; exact bit layout of +0x24 remains unresolved"
+    },
+    "result_fields": {
+      "+0x05": "wins (CONFIRMED by Career Central format and simulated winner increment)",
+      "+0x06": "losses (CONFIRMED by Career Central format and simulated loser increment)",
+      "+0x07": "draws (CONFIRMED by Career Central format and simulated draw increment)",
+      "+0x08": "KOs (CONFIRMED by Career Central format and stoppage-result increment)",
+      "+0x04": "zero-based rank, read repeatedly by simulation/progression logic"
+    },
+    "behavior": [
+      "Loops the career population and selects records whose scheduled date has become due.",
+      "Decodes the scheduled opponent/match assignment.",
+      "Separates player-involved/special cases from non-player matchups.",
+      "Uses fighter rank/performance state and RNG to choose outcomes for simulated non-player bouts.",
+      "Updates wins, losses, draws and KO-related counters.",
+      "Calls 0x00192E38 with the two fighters' ranks and career phase to derive a rank-gap-dependent progression magnitude.",
+      "Calls the shared 0x0019AAAC progression/result routine—the same routine used by the real player post-fight path.",
+      "Clears scheduled fight fields +0x24/+0x28 after processing."
+    ],
+    "significance": "Retail FNR3 already simulates scheduled AI-vs-AI career fights and feeds them through the same wider progression machinery used after player fights."
+  },
+  "rank_gap_progression": {
+    "function": "0x00192E38",
+    "proposed_name": "GetRankProgressionMagnitude",
+    "confidence": "CONFIRMED rank-pair/phase-dependent magnitude behavior; proposed name is descriptive",
+    "inputs": [
+      "fighter A zero-based rank",
+      "fighter B zero-based rank",
+      "career phase boolean"
+    ],
+    "behavior": [
+      "On the initial/amateur side returns a fixed magnitude of 4.",
+      "On the post-initial/professional side varies the magnitude by rank bands/gaps, returning values including 4, 6, 8, 10 and 12.",
+      "Called from the AI bout simulator before subsequent record/progression updates."
+    ],
+    "implication": "The original living world already adjusts progression according to opponent/ranking context rather than only incrementing a static ladder."
+  },
+  "weekly_countdown_decay": {
+    "function": "0x00194320",
+    "confidence": "CONFIRMED weekly post-fight availability/recovery countdown",
+    "field": "progression record+0x13",
+    "behavior": [
+      "Once per weekly world tick, decrements nonzero record+0x13 for every population entry.",
+      "0x00195564 rejects records with nonzero +0x13 from both sides of normal AI matchmaking.",
+      "Player and AI post-fight paths write freshly computed values to +0x13 immediately after clearing the completed fight assignment.",
+      "Population initialization/replacement also initializes this field."
+    ],
+    "semantic_boundary": "The field is confirmed as a post-fight availability/cooldown counter. Static evidence does not show a persistent injury type, body-region diagnosis or medical severity encoded in +0x13 itself."
+  },
+  "population_maintenance": {
+    "orchestrator": "0x00195DC0",
+    "subroutines": [
+      "0x00195810",
+      "0x00195990",
+      "0x0019EFD0"
+    ],
+    "confidence": "CONFIRMED weekly population maintenance role; detailed replacement semantics partially unresolved",
+    "evidence": [
+      "Called immediately after due-fight simulation during the weekly world advance.",
+      "Runs age advancement first, then retirement/inactivation evaluation, then 0x0019EFD0 population maintenance/replacement.",
+      "Further event/calendar housekeeping follows for specific calendar states."
+    ],
+    "replacement_candidate": "0x0019EFD0",
+    "replacement_evidence": [
+      "Scans roster/career boxer sources and progression records.",
+      "Initializes inactive/new progression records, including active flag, rank, counters, schedule fields and several generated/randomized values.",
+      "Avoids duplicate boxer identities and the player slot.",
+      "Runs once each weekly world-maintenance cycle."
+    ],
+    "interpretation": "0x0019EFD0 appears to replenish or initialize career-population entries as slots become available; exact original method name and every source-table rule remain unresolved."
+  },
+  "no_op_correction": {
+    "function": "0x00194724",
+    "behavior": "literal no-op: jr $ra; nop",
+    "callers": [
+      "0x00021318",
+      "0x001B7058"
+    ],
+    "consequence": "Do not treat 0x00194724 as a ranking/progression updater. Its second caller is outside the career post-fight path, so it is not currently promoted as a Career-specific extension hook."
+  },
+  "career2_relevance": {
+    "already_present": [
+      "weekly calendar advancement",
+      "AI boxer aging",
+      "AI boxer retirement/inactivation",
+      "AI-vs-AI scheduled bouts",
+      "AI fight result generation",
+      "persistent AI records",
+      "rank-context progression",
+      "population replacement/maintenance",
+      "persistent reciprocal upcoming-fight assignments",
+      "AI matchup generation for unscheduled population records",
+      "matchmaking retry/rotation state",
+      "post-fight ranking-score recomputation",
+      "automatic rank synchronization from sorted ladder order",
+      "current belt-holder presentation in the division ranking UI",
+      "separate title wins/defenses/losses/forfeitures statistics",
+      "trophy/award owner and defense-count presentation",
+      "persistent current title-holder identity consumed by rankings",
+      "post-fight title transfer and title win/loss accounting",
+      "persistent title-defense counters consumed by trophy UI",
+      "player title won/lost/defended/forfeited career statistics",
+      "three persistent career rank-class ladders mapped onto six absolute weight classes",
+      "persistent three-slot current and previous championship holders",
+      "shared fight-result championship transfer with won/lost/defended/forfeited accounting",
+      "regular AI matchmaking uses only subtype-0 non-title assignments",
+      "paired player title-challenge and title-defense contracts for all three career championship slots",
+      "persistent subtype-9 title-defense scheduling",
+      "post-fight title-defense accounting through progression record+0x17",
+      "three career-slot championship ownership model mapped onto six absolute weight classes",
+      "separate professional title-challenge contracts (13/14/15, subtype 8)",
+      "separate professional title-defense contracts (18/19/20, subtype 9)",
+      "confirmed title-defense statistic increments on progression record+0x17",
+      "title-defense expiry deadlines for the three standard player championship slots",
+      "automatic title forfeiture with progression +0x18 accounting",
+      "forfeiture succession to ladder entry 1/top challenger",
+      "rank/age-scaled post-fight availability cooldown",
+      "weekly recovery/availability countdown that blocks matchmaking",
+      "persistent post-fight availability/recovery cooldown",
+      "rank/age-shaped recovery duration shared by player and AI fight results",
+      "fixed three-slot career weight-class window centered on the boxer base class",
+      "logical switching between base, one-lower and one-higher weight classes"
+    ],
+    "extension_targets": [
+      "mandatory challengers/eliminators",
+      "form/reputation",
+      "comeback from retirement",
+      "visible upcoming-fight schedule and historical title movement",
+      "surface record+0x24/+0x28 match assignments as upcoming-fight cards",
+      "AI/non-player championship scheduling policy",
+      "mandatory challengers/eliminators and vacancy succession",
+      "AI title-challenge/title-defense scheduling policy",
+      "true body-weight gain/cut mechanics synchronized with persistent boxer+0x6C"
+    ],
+    "next_static_step": [
+      "Do not continue recovery/injury or staff/promoter/manager work in this version.",
+      "Continue only current-version living-division work required for AI fights, rankings, titles, weight-class movement, retirement and save integration."
+    ]
+  },
+  "match_descriptor": {
+    "record_fields": {
+      "+0x28": {
+        "meaning": "packed scheduled-match date",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "0x00194518 writes the supplied packed date into fighter progression record+0x28.",
+          "0x0019E790 constructs a date object from record+0x28 and compares it against the current world date before processing the bout.",
+          "0x0019E790 requires the stored date word to be nonzero before treating the record as a scheduled fight."
+        ]
+      },
+      "+0x24": {
+        "meaning": "overloaded match descriptor / unscheduled matchmaking seed",
+        "confidence": "CONFIRMED dual-use behavior",
+        "scheduled_use": "When +0x28 is nonzero, this word is decoded as the packed matchup/result descriptor.",
+        "unscheduled_use": "When +0x28 is zero, 0x00195564 uses the low byte as a rotating opponent-search seed and increments the word when it fails to find a matchup."
+      }
+    },
+    "packer": {
+      "function": "0x001A1DCC",
+      "confidence": "CONFIRMED",
+      "layout": {
+        "bits 16-30": "15-bit opponent progression-record index",
+        "bits 8-15": "8-bit match/fight subtype supplied by the scheduler/contract path; exact public label unresolved",
+        "bits 4-7": "4-bit result/state code",
+        "bits 0-3": "4-bit secondary result/state code",
+        "bit 31": "not set by the packer"
+      },
+      "formula": "packed = ((opponent_index & 0x7FFF) << 16) | ((subtype & 0xFF) << 8) | ((code_a & 0xF) << 4) | (code_b & 0xF)"
+    },
+    "opponent_index_proof": {
+      "consumer": "0x0019E790",
+      "extraction_site": "0x0019E858-0x0019E874",
+      "behavior": "Extracts (packed >> 16) & 0x7FFF and immediately uses it as the other population-record index.",
+      "confidence": "CONFIRMED"
+    },
+    "post_fight_metadata": {
+      "consumer": "0x0019E790",
+      "extraction_site": "0x0019EA94-0x0019EAC8",
+      "behavior": "Extracts bits 8-15, 4-7 and 0-3 and passes them into shared progression/result routine 0x0019AAAC together with the two fighter indices.",
+      "confidence": "CONFIRMED structure; semantic labels for the three compact fields remain unresolved"
+    },
+    "reciprocal_descriptor": {
+      "function": "0x001A24C4",
+      "confidence": "CONFIRMED reciprocal/perspective conversion role",
+      "behavior": [
+        "Replaces the packed opponent index with the other fighter's progression index.",
+        "Preserves the 8-bit subtype and low 4-bit secondary code.",
+        "Transforms result code 2<->7, 3<->8, 4<->9, 5<->10 and 6<->11; codes 0 and 1 remain unchanged.",
+        "0x00194518 uses this helper when writing the reciprocal schedule descriptor to the second fighter."
+      ]
+    },
+    "result_code_semantics": {
+      "confidence": "CONFIRMED win/loss/draw classes and KO-counting subset; exact public names of the individual win methods remain unresolved",
+      "packed_field": "bits 4..7 of progression record+0x24 match descriptor",
+      "predicates": {
+        "0x001A2400": "true exactly for codes 2..6; these increment progression record+0x05 (wins)",
+        "0x001A2430": "true exactly for codes 7..11; these increment progression record+0x06 (losses)",
+        "0x001A2460": "true exactly for code 1; this increments progression record+0x07 (draws)",
+        "0x001A248C": "true exactly for codes 2 or 3; these increment progression record+0x08 (KOs)"
+      },
+      "codes": {
+        "0": "unset/no resolved result",
+        "1": "draw",
+        "2..6": "win classes from the descriptor's current fighter perspective",
+        "7..11": "reciprocal loss classes / opponent-win classes"
+      },
+      "reciprocal_pairs": {
+        "0": 0,
+        "1": 1,
+        "2": 7,
+        "3": 8,
+        "4": 9,
+        "5": 10,
+        "6": 11,
+        "7": 2,
+        "8": 3,
+        "9": 4,
+        "10": 5,
+        "11": 6
+      },
+      "ko_counting_codes": {
+        "winning_perspective": [
+          2,
+          3
+        ],
+        "reciprocal_losing_perspective": [
+          7,
+          8
+        ],
+        "boundary": "Codes 2 and 3 both count toward the winner's KO statistic. Static evidence here does not yet distinguish their exact public method labels (for example KO versus another stoppage class)."
+      },
+      "proof": [
+        "0x0019C638..0x0019C6C8 applies the four predicates to progression record bytes +0x05 through +0x08 respectively.",
+        "Those four progression bytes were independently recovered as wins, losses, draws and KOs.",
+        "0x001A24C4 maps the 12-value result code through the exact reciprocal table above when the match descriptor is viewed from the other fighter's perspective."
+      ]
+    }
+  },
+  "match_assignment": {
+    "function": "0x00194518",
+    "proposed_name": "AssignCareerMatch",
+    "confidence": "CONFIRMED scheduling role; proposed name is descriptive",
+    "arguments": {
+      "a0": "career object",
+      "a1": "fighter A progression index",
+      "a2": "fighter B progression index",
+      "a3": "8-bit match/fight subtype source",
+      "t0 / fifth arg": "packed scheduled-match date"
+    },
+    "behavior": [
+      "Writes the scheduled date to fighter A record+0x28.",
+      "Builds fighter A's packed descriptor with fighter B as the opponent and stores it at record+0x24.",
+      "For normal two-population-record matchups, writes the same date to fighter B and creates the reciprocal descriptor through 0x001A24C4.",
+      "Contains special handling when one side is the current player or when specific career/fight mode conditions are active.",
+      "Calls 0x001943C0 after the assignment to mark/refresh career state."
+    ],
+    "callers": [
+      "0x00195564 population matchmaking refresh",
+      "0x001FF4AC accepted player-contract scheduling",
+      "0x001A5248/0x001A532C/0x001A5414/0x001A54AC/0x001A54FC/0x001A5548 contract/special-career scheduling paths"
+    ],
+    "player_contract_example": {
+      "call_site": "0x001FF4AC",
+      "fighter_a": "current player progression index from profile+0x4E",
+      "fighter_b": "selected opponent index from profile+0x166",
+      "subtype": "signed 16-bit contract/live-record field +0x36, truncated by packer to 8 bits",
+      "date": "future contract date previously computed by adding contract weeks * 7 to profile+0x9C"
+    }
+  },
+  "population_matchmaking_refresh": {
+    "function": "0x00195564",
+    "proposed_name": "RefreshPopulationMatchups",
+    "confidence": "CONFIRMED matchmaking behavior; proposed name is descriptive",
+    "correction": "Earlier checkpoint described this as a weekly-only scheduler. It is a general matchmaking refresh with multiple callers. A career time-advance loop at 0x00194D98 calls it before each 0x00195430 weekly world tick, but other contract/career transitions call it directly as well.",
+    "behavior": [
+      "Copies the current packed career date into local date objects.",
+      "Iterates a phase/pool-dependent population ordering table, with 20 entries on the initial/amateur side and up to 50 on the nonzero/post-initial side in the default path.",
+      "Skips the player's current progression index.",
+      "Rejects population records whose +0x13 periodic/cooldown field is nonzero.",
+      "Rejects population records that already have a nonzero scheduled date at +0x28.",
+      "Uses unscheduled record+0x24 as a rotating search seed to vary where opponent scanning begins.",
+      "Scans candidate opponents while skipping the player, cooldown-busy records and already-scheduled records.",
+      "Applies additional compatibility/proximity logic through 0x00193EF4 and the population-order position before accepting a pair.",
+      "Calls 0x00194518 to create the reciprocal match assignment when a compatible pair is found.",
+      "If no opponent is found, increments the unscheduled +0x24 search seed."
+    ],
+    "time_advance_integration": {
+      "caller_region": "0x00194D98",
+      "flow": "RefreshPopulationMatchups -> AdvanceCareerWorldOneWeek (0x00195430) -> compare world date to target -> repeat",
+      "significance": "Long calendar advances repeatedly refresh unscheduled matchups before advancing/simulating the next week."
+    },
+    "implication": "The retail game already has a reusable AI matchmaking API plus persistent upcoming-match storage. Career Mode 2.0 can replace the compatibility policy and surface these scheduled descriptors in an 'Upcoming Fights' UI instead of creating scheduling infrastructure from scratch."
+  },
+  "division_ranking_ladder": {
+    "confidence": "CONFIRMED",
+    "base": "profile+0x2E8",
+    "stride_per_division_bytes": 200,
+    "max_entries_per_division": 50,
+    "entry_size_bytes": 4,
+    "entry_layout": {
+      "+0x00": "u16 ranking/sort score",
+      "+0x02": "s16 boxer progression-record index"
+    },
+    "boxer_index_addressing_note": "For career slot s, boxer-index halfwords are at profile + 0x2EA + s*0xC8 + ladder_position*4. The slot's public weight class is profile[0x2D+s].",
+    "synchronizer": {
+      "function": "0x0019472C",
+      "proposed_name": "SynchronizeDivisionRanks",
+      "confidence": "CONFIRMED behavior; proposed name is descriptive",
+      "behavior": [
+        "Chooses an active ladder length of 20 for the initial amateur-side division-0 path and 50 for professional/other paths.",
+        "Calls 0x00197604 to reorder the current division's ranking entries.",
+        "Iterates the ordered entries.",
+        "Reads each boxer progression index from entry+0x02.",
+        "Gets that boxer progression record through 0x001928F0.",
+        "Writes the loop position directly to progression record+0x04, proving +0x04 is the zero-based displayed rank."
+      ]
+    },
+    "sorter": {
+      "function": "0x00197604",
+      "proposed_name": "SortDivisionRankingEntries",
+      "confidence": "CONFIRMED behavior; proposed name is descriptive",
+      "comparator": "0x001923E8",
+      "behavior": [
+        "Operates on the same 4-byte ranking entries.",
+        "Compares the u16 score values at entry+0x00.",
+        "Swaps the entire {score, boxer_index} pair when reordering is required.",
+        "Therefore the persistent ladder order is driven by the u16 ranking score rather than boxer index."
+      ]
+    },
+    "score_recompute": {
+      "function": "0x00196628",
+      "proposed_name": "RecomputeCareerRankingScore",
+      "confidence": "CONFIRMED score calculation/storage role; proposed name is descriptive",
+      "inputs_from_progression_record": [
+        "+0x01 flag/state byte",
+        "+0x05 wins",
+        "+0x06 losses",
+        "+0x07 draws",
+        "+0x08 KOs",
+        "+0x09 age-like field",
+        "+0x11 baseline/starting-age-like field"
+      ],
+      "outputs": [
+        "stores computed score to progression record+0x20",
+        "finds the boxer's current division-ladder slot through 0x00192B28",
+        "stores the same u16 score to that ladder entry+0x00"
+      ],
+      "caller_context": [
+        "0x0019E790 calls it for both fighters after a simulated AI-vs-AI bout.",
+        "The formula includes record, KO/performance and age/career-span inputs plus phase/player special cases."
+      ],
+      "boundary": "The mathematical formula is statically recovered as an implementation, but it is not yet normalized into a human-readable ranking model because several auxiliary constants/flags remain semantically unnamed."
+    },
+    "significance": [
+      "The retail career persists three ordered rank-class ladders at once, each mapped to one of six absolute weight classes.",
+      "AI fight simulation recomputes ranking scores, sorts the affected slot ladder, and synchronizes each boxer's public zero-based rank.",
+      "The six named classes are the absolute class namespace; they are not six simultaneous 0xC8 ladder banks in this profile.",
+      "Career Mode 2.0 can extend this three-slot moving career-window model rather than inventing a separate ranking store."
+    ],
+    "persistent_career_slot_count": 3,
+    "absolute_weight_class_count": 6,
+    "slot_to_weight_class": "profile[0x2D + slot], via 0x001929C4",
+    "ladder_bases": {
+      "slot_0": "profile+0x2E8",
+      "slot_1": "profile+0x3B0",
+      "slot_2": "profile+0x478"
+    }
+  },
+  "championship_frontend_surfaces": {
+    "confidence": "CONFIRMED front-end/native-interface contract, persistent current/previous title-holder storage, title transfer, and player title counters",
+    "ranking_screen": {
+      "resource": "careermodefe1/careerranks.big",
+      "native_interface": "GetRankingInformation",
+      "fields": [
+        "iRank_Class",
+        "aCurrentBeltHolders"
+      ],
+      "ui_evidence": [
+        "mcBelt",
+        "six division-specific rank-screen titles"
+      ],
+      "implication": "The rankings screen emits belt-holder status from the active one of three persistent career slot ladders; that slot maps to one of six absolute weight classes."
+    },
+    "career_stats_screen": {
+      "resource": "careermodefe1/mycareerstats.big",
+      "native_interface": "GetMyCareerStatsInfo",
+      "fields": [
+        "aiTitleBeltsWon",
+        "aiTitleBeltsDefended",
+        "aiTitleBeltsLost",
+        "aiTitleBeltsForfeited"
+      ],
+      "labels": [
+        "$ST_Belts_Won",
+        "$ST_Belts_Defended",
+        "$ST_Belts_Lost",
+        "$ST_Belts_Forfeited"
+      ],
+      "implication": "Career statistics separately track title wins, defenses, losses and forfeitures rather than exposing only one generic title count."
+    },
+    "trophy_case": {
+      "resources": [
+        "careermodefe1/careertrophycase.big",
+        "careermodefe1/viewaward.big"
+      ],
+      "native_interfaces": [
+        "GetTrophyCaseInfo",
+        "GetTrophyInfo",
+        "GetViewAwardInfo"
+      ],
+      "fields": [
+        "aTrophyIDs",
+        "aTrophyTypes",
+        "iTrophyID",
+        "strTrophyName",
+        "strTrophyOwner",
+        "strTimesDefended"
+      ],
+      "implication": "Award/trophy records carry an explicit owner and defense count, providing a second title-history presentation path distinct from the current-belt-holder array."
+    },
+    "executable_string_addresses": {
+      "GetMyCareerStatsInfo": "BOOT.BIN string @ 0x50BC58",
+      "aiTitleBeltsWon": "BOOT.BIN string @ 0x50BCC8",
+      "aiTitleBeltsDefended": "BOOT.BIN string @ 0x50BCD8",
+      "aiTitleBeltsLost": "BOOT.BIN string @ 0x50BCF0",
+      "GetTrophyCaseInfo": "BOOT.BIN string @ 0x50D798",
+      "GetTrophyInfo": "BOOT.BIN string @ 0x50D7AC"
+    },
+    "boundary": "Current/previous holder storage, title transfer, won/lost/defended/forfeited progression counters, the three standard player challenge/defense pairs, and the two special award/belt acquisition-defense families are mapped. The complete title-aware contract/scheduler surface also yields a bounded negative result for any separate stock eliminator/rotating-mandatory subsystem.",
+    "mandatory_challenger_eliminator_boundary": {
+      "confidence": "BOUNDED NEGATIVE RESULT, reconciled from career2-contract-evidence.json",
+      "scope": [
+        "all 50 decoded fights.fnc templates",
+        "contract types 1..27 dispatched by 0x001A3FBC / GetIndividualContractInfo",
+        "0x001971A0 championship/award gate",
+        "all direct 0x00194518 AssignCareerMatch callers",
+        "tracked executable/resource strings"
+      ],
+      "stock_policy": [
+        "Standard title-defense types 20/18/19 select ranking-ladder entry 1 through live contract+0x2C = 1.",
+        "The per-slot title deadline is exactly one calendar year.",
+        "0x0019DFE8 transfers an expired player-held title to the same ladder-entry-1 challenger and increments progression record+0x18 belts forfeited.",
+        "Normal AI-vs-AI matchmaking emits subtype 0 rather than the subtype-8/9 title challenge/defense assignments."
+      ],
+      "not_evidenced": [
+        "rotating mandatory challenger order",
+        "separate eliminator bracket or title-aware eliminator contract family",
+        "sanctioning-body layer",
+        "explicit refusal penalty distinct from deadline expiry",
+        "AI-vs-AI mandatory-title scheduler"
+      ],
+      "career2_boundary": "Treat richer mandatory challengers, eliminators, vacancies, refusal consequences, and AI title scheduling as Career Mode 2.0 extensions layered on the proven champion-vs-top-challenger baseline."
+    },
+    "next_static_step": [
+      "Bound whether any separate AI/non-player championship scheduler exists outside the normal subtype-0 population matcher.",
+      "If no such path exists among the complete AssignCareerMatch caller set, lock AI title-challenge/title-defense scheduling as a Career Mode 2.0 extension."
+    ]
+  },
+  "championship_state": {
+    "confidence": "CONFIRMED current-holder lookup, title-transfer writer, player title counters and title-defense counter updates; exact public names for several title slots remain unresolved",
+    "current_holder_lookup": {
+      "ranking_handler": "0x001E29A0",
+      "proof_region": "0x001E2CE0-0x001E2D14",
+      "storage": "s16 current_holder[slot] at profile+0x50 + slot*2, slot 0..2",
+      "value": "s16 boxer/progression index for the title holder used by the current division ranking screen",
+      "ui_output": "aCurrentBeltHolders",
+      "behavior": [
+        "The handler reads active career slot profile+0x2A.",
+        "It indexes that slot's ladder, gets each ranked boxer index, and compares it against current_holder[slot] at profile+0x50+slot*2.",
+        "The equality result is emitted through aCurrentBeltHolders, proving this three-halfword bank is current championship ownership."
+      ]
+    },
+    "transfer_writer": {
+      "function": "0x00196DC4",
+      "proposed_name": "TransferCareerTitleSlot",
+      "confidence": "CONFIRMED title-transfer/accounting role; proposed name is descriptive",
+      "core_writes": [
+        "old_holder = current_holder[slot] = *(s16 *)(profile + 0x50 + 2*slot)",
+        "previous_holder[slot] = *(s16 *)(profile + 0x56 + 2*slot) = old_holder",
+        "current_holder[slot] = new_holder"
+      ],
+      "accounting": [
+        "Uses 0x00192930 to reach the new holder's slot-specific career record and increments record+0x15 = title belts won.",
+        "When the displaced holder is valid, reaches that holder's corresponding record and increments record+0x16 = title belts lost."
+      ],
+      "observed_callers": [
+        "0x00197DAC path @ 0x001984F0",
+        "0x00198574 path @ 0x00198A08",
+        "post-result path @ 0x0019CCB0/0x0019CD4C/0x0019CD68",
+        "career transition/simulation path 0x0019DFE8 @ 0x0019E0D4/0x0019E27C/0x0019E428"
+      ],
+      "boundary": "The bank ambiguity is resolved: there are exactly three current-holder halfwords at +0x50/+0x52/+0x54 and three previous-holder halfwords at +0x56/+0x58/+0x5A, matching the three persistent career slots."
+    },
+    "player_title_counters": {
+      "provider": "GetMyCareerStatsInfo handler T_001E2084",
+      "source_record": "current player record returned by 0x001928F0",
+      "fields": {
+        "+0x15": "title belts won",
+        "+0x16": "title belts lost",
+        "+0x17": "title belts defended",
+        "+0x18": "title belts forfeited"
+      },
+      "ui_keys": {
+        "+0x15": "aiTitleBeltsWon",
+        "+0x16": "aiTitleBeltsLost",
+        "+0x17": "aiTitleBeltsDefended",
+        "+0x18": "aiTitleBeltsForfeited"
+      },
+      "confidence": "CONFIRMED by direct GetMyCareerStatsInfo dataflow"
+    },
+    "defense_tracking": {
+      "shared_result_function": "0x0019AAAC",
+      "confidence": "CONFIRMED defense-count updates",
+      "behavior": [
+        "Multiple title-result branches increment one of profile bytes +0x3C, +0x3D, +0x3E, +0x3F or +0x40.",
+        "The same branches increment current-player record+0x17, the GetMyCareerStatsInfo title-defense counter.",
+        "The trophy/view-award provider reads these profile bytes when formatting strTimesDefended, independently corroborating their title-defense-count role."
+      ],
+      "observed_profile_counters": [
+        "profile+0x3C",
+        "profile+0x3D",
+        "profile+0x3E",
+        "profile+0x3F",
+        "profile+0x40"
+      ],
+      "boundary": "A sixth defense-counter byte has not yet been proven; do not extrapolate profile+0x41 as a title-defense count from adjacency alone."
+    },
+    "trophy_case_crosscheck": {
+      "function": "0x001FE1E4",
+      "behavior": [
+        "Uses strTrophyOwner and strTimesDefended.",
+        "Reads title-holder halfwords from the +0x50/+0x56 title-state area.",
+        "Reads profile bytes in the +0x3C..+0x40 range for defense-count presentation.",
+        "Resolves holder boxer names through the same career boxer/weight-class helpers used by rankings and career stats."
+      ],
+      "significance": "The rankings screen, fight-result logic, player stats and trophy case now converge on the same persistent title state rather than four unrelated UI-only counters."
+    },
+    "post_fight_connection": {
+      "result_region": "0x0019CB00-0x0019CDA0",
+      "gate_helper": "0x001971A0",
+      "transfer_calls": "0x00196DC4",
+      "finding": "The normal player post-fight path conditionally invokes the title-transfer writer after checking current title-holder identity, career state/type ranges and a title-gate helper. This closes the persistent fight-result -> title-state update edge.",
+      "boundary": "The career-state/type values that select title fights are still numeric and are not yet assigned public contract names."
+    },
+    "persistent_holder_layout": {
+      "current": [
+        "profile+0x50",
+        "profile+0x52",
+        "profile+0x54"
+      ],
+      "previous": [
+        "profile+0x56",
+        "profile+0x58",
+        "profile+0x5A"
+      ],
+      "slot_count": 3,
+      "absolute_class_mapping": "profile+0x2D..+0x2F"
+    }
+  },
+  "ai_championship_scheduling": {
+    "confidence": "CONFIRMED for the regular AI matcher and all direct AssignCareerMatch callers; no retail AI-vs-AI subtype-8 title assignment found",
+    "assign_match_function": "0x00194518",
+    "direct_caller_inventory": [
+      "0x00195564 regular population matchmaking",
+      "0x001A4F50 special/live-contract scheduler (call sites 0x001A5248/0x001A532C/0x001A5414/0x001A54AC/0x001A54FC/0x001A5548)",
+      "0x001FF384 accepted player-contract handler (call site 0x001FF490)"
+    ],
+    "regular_ai_matchmaker": {
+      "function": "0x00195564",
+      "subtype_register": "$fp",
+      "initialization": "0x001955D4 sets $fp = 0",
+      "assignment_call": "0x00195758 passes $a3 = $fp to 0x00194518",
+      "finding": "Every match created by the normal AI population matcher uses match subtype 0, not championship subtype 8."
+    },
+    "special_contract_scheduler": {
+      "function": "0x001A4F50",
+      "player_index": "profile+0x4E loaded into $s3",
+      "subtype": "live contract +0x36 loaded into $s4",
+      "finding": "Its title-family scheduling calls use the current player index as fighter A and the contract-defined opponent as fighter B; title contracts 13/14/15 therefore remain player-facing subtype-8 assignments."
+    },
+    "accepted_player_contract": {
+      "call_site": "0x001FF490",
+      "player_index": "profile+0x4E",
+      "opponent": "profile+0x166",
+      "subtype": "live selected contract +0x36",
+      "finding": "For title templates 13/14/15 this schedules subtype 8."
+    },
+    "implication": [
+      "The stock AI-vs-AI world scheduler does not create championship descriptors.",
+      "The recovered title-transfer writer is used by player/post-result and title/bootstrap paths, but no direct due-AI-fight title-transfer caller was found.",
+      "Career Mode 2.0 therefore needs an explicit AI title-bout policy if championships are to change hands independently of the player."
+    ],
+    "boundary": "This is a bounded executable conclusion from the complete direct caller inventory of AssignCareerMatch. It does not claim that no unrelated code can ever mutate title-holder state outside the recovered scheduling/result paths."
+  },
+  "championship_ownership": {
+    "confidence": "CONFIRMED three persistent career-slot champions, transfer helper, and title-history bookkeeping",
+    "current_champion_slots": {
+      "base": "profile+0x50",
+      "stride_bytes": 2,
+      "count": 3,
+      "fields": [
+        "profile+0x50",
+        "profile+0x52",
+        "profile+0x54"
+      ],
+      "value": "s16 progression-record index",
+      "formula": "current_champion[slot] = *(s16 *)(profile + 0x50 + slot*2), slot 0..2",
+      "evidence": [
+        "0x00196DC4 doubles a1 and reads/writes profile+0x50+a1*2 while copying the displaced holder to profile+0x56+a1*2.",
+        "The normal post-fight title-transfer callsites pass profile+0x2A, already proven to be the active logical career slot 0..2.",
+        "GetRankingInformation uses profile+0x2A when comparing a ranked boxer against profile+0x50+slot*2."
+      ]
+    },
+    "previous_champion_slots": {
+      "base": "profile+0x56",
+      "stride_bytes": 2,
+      "count": 3,
+      "fields": [
+        "profile+0x56",
+        "profile+0x58",
+        "profile+0x5A"
+      ],
+      "value": "s16 previous champion progression-record index",
+      "formula": "previous_champion[slot] = *(s16 *)(profile + 0x56 + slot*2), slot 0..2",
+      "evidence": [
+        "0x00196DC4 copies the old profile+0x50+slot*2 holder into profile+0x56+slot*2 before installing the new holder.",
+        "Treating these as six-element arrays would make current slot 3 at profile+0x56 overlap previous slot 0, contradicting the transfer routine and the established three-slot career window."
+      ]
+    },
+    "transfer_function": {
+      "function": "0x00196DC4",
+      "proposed_name": "TransferCareerTitleSlot",
+      "arguments": {
+        "a0": "career object",
+        "a1": "logical career title slot 0..2",
+        "a2": "new champion progression-record index"
+      },
+      "behavior": [
+        "Computes slot*2.",
+        "Copies current champion slot (+0x50) to previous champion slot (+0x56).",
+        "Writes the supplied boxer progression index to the current champion slot (+0x50).",
+        "Updates per-slot title-history/state at profile+0x21+slot.",
+        "Increments the incoming champion progression record+0x15 and, when a previous holder exists, the displaced champion record+0x16 through 0x00192930."
+      ],
+      "absolute_weight_class_mapping": "profile+0x2D..+0x2F maps logical slots 0..2 onto the six absolute retail weight-class values.",
+      "boundary": "Exact public meanings of every profile+0x21+slot title-history state remain unresolved."
+    },
+    "ranking_ui_confirmation": {
+      "function_region": "0x001E2B70-0x001E2D18",
+      "behavior": "Ranking UI uses active logical slot profile+0x2A for both the active ladder and profile+0x50+slot*2 champion comparison, then resolves that slot's absolute class through 0x001929C4."
+    },
+    "correction": "A transient six-holder-array interpretation was rejected. profile+0x50 and profile+0x56 are adjacent three-entry current/previous arrays; interpreting both as six entries causes impossible overlap. The six-value concept belongs to the absolute weight-class enum reached through the three-slot mapping, not to six simultaneous career title-holder slots."
+  },
+  "championship_contract_dispatch": {
+    "confidence": "CONFIRMED challenge/defense contract families for the three persistent career title slots; special award-belt types remain separate",
+    "current_contract_type_field": "profile+0x80",
+    "championship_or_award_gate": {
+      "function": "0x001971A0",
+      "true_for_types": [
+        3,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22
+      ],
+      "false_for_types": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "note": "Types outside the switch range also return false."
+    },
+    "initial_amateur_championship": {
+      "contract_type": 3,
+      "template_index": 0,
+      "career_side": "initial/amateur side (template phase bit selects profile+0x121 == 0)",
+      "scheduling_weeks": 12,
+      "match_subtype": 4,
+      "title_transfer": true,
+      "interpretation": "CONFIRMED initial/amateur championship-transfer contract; exact localized public wording remains unresolved"
+    },
+    "professional_title_challenges": [
+      {
+        "contract_type": 15,
+        "career_slot": 0,
+        "template_index": 4,
+        "rank_bounds": "0..4",
+        "scheduling_weeks": 18,
+        "match_subtype": 8,
+        "state_field": "profile+0x1C"
+      },
+      {
+        "contract_type": 13,
+        "career_slot": 1,
+        "template_index": 6,
+        "rank_bounds": "0..4",
+        "scheduling_weeks": 20,
+        "match_subtype": 8,
+        "state_field": "profile+0x1E"
+      },
+      {
+        "contract_type": 14,
+        "career_slot": 2,
+        "template_index": 8,
+        "rank_bounds": "0..4",
+        "scheduling_weeks": 16,
+        "match_subtype": 8,
+        "state_field": "profile+0x1D"
+      }
+    ],
+    "professional_title_defenses": [
+      {
+        "contract_type": 20,
+        "career_slot": 0,
+        "template_index": 5,
+        "rank_bounds": "0..0",
+        "scheduling_weeks": 4,
+        "match_subtype": 9,
+        "state_field": "profile+0x1C",
+        "defense_counter_increment": "0x0019B324..0x0019B33C -> player progression record+0x17"
+      },
+      {
+        "contract_type": 18,
+        "career_slot": 1,
+        "template_index": 7,
+        "rank_bounds": "0..0",
+        "scheduling_weeks": 4,
+        "match_subtype": 9,
+        "state_field": "profile+0x1E",
+        "defense_counter_increment": "0x0019B4C4..0x0019B4DC -> player progression record+0x17"
+      },
+      {
+        "contract_type": 19,
+        "career_slot": 2,
+        "template_index": 9,
+        "rank_bounds": "0..0",
+        "scheduling_weeks": 4,
+        "match_subtype": 9,
+        "state_field": "profile+0x1D",
+        "defense_counter_increment": "0x0019B664..0x0019B67C -> player progression record+0x17"
+      }
+    ],
+    "challenge_defense_proof": [
+      "Types 13/14/15 are slot-specific, require top-five rank 0..4, schedule subtype 8, and participate in championship transfer.",
+      "Types 18/19/20 pair with the same three slots, require rank 0, schedule four weeks out with subtype 9, and their post-fight branches increment progression-record+0x17 (aiTitleBeltsDefended).",
+      "The paired type layout therefore distinguishes title-challenge/acquisition contracts from title-defense contracts without relying on localization-string guesses."
+    ],
+    "special_award_belt_types": {
+      "types": [
+        16,
+        17,
+        21,
+        22
+      ],
+      "families": {
+        "16/21": {
+          "identifier": "INFO_Awards_16",
+          "state_flag": "profile+0x1F",
+          "auxiliary_state": "profile+0x19",
+          "derived_date": "profile+0x134",
+          "acquisition_type": 16,
+          "repeat_or_defense_type": 21
+        },
+        "17/22": {
+          "identifier": "FP_Everlast_Belt",
+          "state_flag": "profile+0x20",
+          "auxiliary_state": "profile+0x1A",
+          "derived_date": "profile+0x138",
+          "acquisition_type": 17,
+          "repeat_or_defense_type": 22
+        }
+      },
+      "bookkeeping": [
+        "Acquisition branches increment player progression record+0x15 (belts won).",
+        "Already-held repeat branches for types 21/22 increment player progression record+0x17 (belts defended), profile+0x38, KO-derived profile+0x3B, and family-specific +0x3F or +0x40.",
+        "These contracts do not replace profile+0x50/+0x52/+0x54 persistent career-title holders."
+      ],
+      "confidence": "CONFIRMED result bookkeeping; exact localized wording for INFO_Awards_16 remains unresolved"
+    },
+    "ai_scheduling_boundary": "Regular AI matchmaking 0x00195564 emits subtype 0 only. No stock AI-vs-AI subtype-8 challenge or subtype-9 defense scheduler has been found among direct AssignCareerMatch callers.",
+    "unresolved": [
+      "Separate mandatory-challenger/eliminator contract or policy beyond the proven ladder-entry-1 defense/succession rule, if any.",
+      "Exact localized public wording for several numeric title/award types."
+    ],
+    "next_static_step": [
+      "Trace s2/s7/s4 setup feeding 0x0019CC20..0x0019CD68 and label the player-title-acquisition, player-title-loss and non-player/special transfer branches precisely.",
+      "Resolve profile+0x66/+0x68/+0x6A title-state counters and the special award/belt result paths for contract types 16/17/21/22.",
+      "Then close championship result semantics and move to persistent injury/recovery semantics."
+    ]
+  },
+  "packed_career_date_arithmetic": {
+    "function": "0x001A1280",
+    "proposed_name": "AddPackedCareerDateComponents",
+    "confidence": "CONFIRMED packed layout and component-add behavior; proposed name is descriptive",
+    "packed_layout": {
+      "bits 0-5": "minute (0..59 normalization)",
+      "bits 6-10": "hour (0..23 normalization)",
+      "bits 11-15": "day of month",
+      "bits 16-19": "month (1..12 normalization)",
+      "bits 20-31": "year (12-bit)"
+    },
+    "delta_inputs": {
+      "a1": "months",
+      "a2": "days",
+      "a3": "years",
+      "t0": "hours",
+      "t1": "minutes"
+    },
+    "normalization": [
+      "minutes >= 60 carry into hours",
+      "hours >= 24 carry into days",
+      "months beyond 12 carry into years",
+      "day/month rollover is normalized with helper 0x001A0EA4"
+    ],
+    "title_deadline_call_pattern": {
+      "arguments": "months=0, days=0, years=1, hours=0, minutes=0",
+      "result": "the standard title/award deadline is created exactly one calendar year after the source career date",
+      "confidence": "CONFIRMED from the repeated 0x0019AAAC title-family deadline creation calls"
+    }
+  },
+  "post_fight_availability_cooldown": {
+    "function": "0x00192410",
+    "proposed_name": "ComputePostFightAvailabilityCooldown",
+    "confidence": "CONFIRMED cooldown calculation/storage role; proposed name is descriptive",
+    "output": "u8 value stored to progression record+0x13",
+    "inputs": [
+      "career object",
+      "boxer progression-record index",
+      "u8 post-fight random/base budget supplied by the caller"
+    ],
+    "formula_structure": [
+      "Reads zero-based rank from progression record+0x04.",
+      "Reads age/current-year-like value from +0x09 and baseline/starting-age-like value from +0x11.",
+      "Clamps their difference to -5..+5 and applies a cosine-shaped career-age factor.",
+      "Combines that factor with a rank-derived multiplier and a +2 floor term.",
+      "Returns ceil(base_budget / derived_factor)."
+    ],
+    "caller_evidence": [
+      "Player post-fight paths generate a random base in 20..39 or 20..79 before calling 0x00192410 and storing the result to +0x13.",
+      "The AI-vs-AI simulator uses the same helper and the same 20-based random ranges before writing +0x13.",
+      "The exact branch-to-result-label mapping of the 20..39 versus 20..79 ranges is not yet named."
+    ],
+    "availability_effect": [
+      "Normal AI matchmaking skips any boxer whose +0x13 is nonzero.",
+      "The weekly world tick decrements the counter toward zero.",
+      "Therefore the value directly controls how many weekly world advances a boxer remains unavailable for ordinary matchmaking after a bout."
+    ],
+    "injury_boundary": "This is stock recovery/rest availability, not yet evidence of a persistent injury/medical-condition model. A richer injury system remains a Career Mode 2.0 extension target."
+  },
+  "persistent_injury_boundary": {
+    "confidence": "CONFIRMED static boundary for shipped persistent-career behavior; dynamic/indirect injury use is not claimed impossible",
+    "stock_persistent_recovery": {
+      "field": "progression record+0x13",
+      "role": "weekly post-fight availability/recovery cooldown",
+      "behavior": [
+        "Written after player and AI fights using 0x00192410 ComputePostFightAvailabilityCooldown.",
+        "Blocks normal matchmaking while nonzero.",
+        "Decrements once per weekly world tick toward zero.",
+        "Does not encode a proven injury body region, diagnosis, or medical severity."
+      ]
+    },
+    "injury_modifier_registry": {
+      "name_table": "0x0053C708",
+      "factor_table": "0x0053C7D8",
+      "id_12": "dec chance for injury",
+      "id_13": "inc opp chance for injury",
+      "string_vaddrs": [
+        "0x004F9ECC",
+        "0x004F9EE4"
+      ],
+      "proof": [
+        "The two injury-name pointers are at 0x0053C738 and 0x0053C73C; subtracting 12*4 and 13*4 independently reconstructs the same 52-entry name-table base 0x0053C708.",
+        "The retail modifier API bodies at 0x00091DF4/0x00091E04/0x00091E58 match the previously recovered modifier system and 0x00091E04 directly indexes factor table 0x0053C7D8."
+      ]
+    },
+    "direct_call_inventory": {
+      "total_direct_modifier_api_calls": 64,
+      "statically_recovered_immediate_ids": 62,
+      "unresolved_nonlocal_id_calls": 2,
+      "id_12_direct_calls": 0,
+      "id_13_direct_calls": 0,
+      "used_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        33,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51
+      ],
+      "cross_evidence_for_two_nonlocal_calls": [
+        "0x0007C80C belongs to the recovered continuous physical-state tick and is already mapped to modifier ID 0 (movement energy cost).",
+        "0x00082228 is the recovered KO-moment evaluator using duration modifiers 32/33; its paired direct calls account for the remaining non-immediate modifier-ID path."
+      ],
+      "career_region_direct_calls": 0
+    },
+    "conclusion": "Retail contains explicit injury-chance modifier labels in the combat modifier registry, but the recovered direct-call graph does not consume IDs 12/13 and Career Mode does not directly call the modifier API. The only proven persistent post-fight health availability state is the generic +0x13 recovery cooldown. A persistent diagnosis/severity/body-region injury system should therefore remain a Career Mode 2.0 extension unless later runtime or indirect-call evidence proves otherwise.",
+    "overhaul_boundary": "Layer explicit medical injuries and severity over the proven recovery cooldown rather than renaming +0x13 itself as an injury record.",
+    "next_static_step": "No further injury/recovery RE or implementation in the current Career Mode 2.0 version.",
+    "project_status": "EVIDENCE_PRESERVED__DEFERRED_TO_NEXT_VERSION_BY_USER"
+  },
+  "career_weight_class_window": {
+    "confidence": "CONFIRMED three-slot career weight-class window and logical slot switching",
+    "initialization": {
+      "function": "0x0019CFF8",
+      "evidence": [
+        "0x0019D3CC calls 0x0018600C on the career boxer and stores the returned absolute class at profile+0x2D.",
+        "If that class is below 5, profile+0x2F is initialized to class+1; when class==5 it receives sentinel 7.",
+        "If that class is above 0, profile+0x2E is initialized to class-1; when class==0 it receives sentinel 7."
+      ],
+      "slot_layout": {
+        "slot 0 / profile+0x2D": "boxer's classified base/current absolute weight class",
+        "slot 1 / profile+0x2E": "one absolute class lower, or sentinel 7 at the lower boundary",
+        "slot 2 / profile+0x2F": "one absolute class higher, or sentinel 7 at the upper boundary"
+      },
+      "valid_absolute_classes": "0..5",
+      "boundary_sentinel": 7
+    },
+    "slot_getter": {
+      "function": "0x001929C4",
+      "behavior": "Returns profile[0x2D + slot]."
+    },
+    "active_slot_switch": {
+      "function": "0x0019527C",
+      "behavior": [
+        "Receives a logical career slot and copies it to profile+0x2A and profile+0x2B.",
+        "Uses 0x001929C4 to resolve that slot to an absolute weight class for presentation/session state.",
+        "Does not rewrite profile+0x2D..+0x2F or persistent boxer weight +0x6C."
+      ],
+      "direct_caller_boundary": "The recovered direct callers are in 0x001A4F50, which invokes 0x0019527C with slot 0, 1 or 2 while processing special/live contract scheduling."
+    },
+    "write_inventory_boundary": {
+      "finding": "In the bounded career-code scan 0x00190000..0x00210000, all direct SB writes to profile+0x2D/+0x2E/+0x2F occur in the 0x0019CFF8 initialization path.",
+      "implication": "Stock career class movement is represented by switching among a fixed three-slot window around the boxer's classified base division, rather than continuously rewriting the slot-to-class mapping."
+    },
+    "physical_weight_boundary": {
+      "field": "persistent boxer+0x6C",
+      "finding": "The actual numeric weight field is mapped and mutable in boxer/create-physique code, but the recovered career slot-switch function does not modify it.",
+      "implication": "A Career Mode 2.0 system that models genuine gaining/cutting body weight must explicitly coordinate +0x6C with slot/class state; the stock career transition path alone is a logical division switch."
+    }
+  },
+  "weight_class_movement": {
+    "confidence": "CONFIRMED three-slot adjacent-class window initialization and active-slot switching; exact contract-type-to-slot policy remains partially unresolved",
+    "slot_window_initialization": {
+      "function": "0x0019CFF8",
+      "proof_region": "0x0019D3B0-0x0019D424",
+      "player_weight_classifier": "0x0018600C",
+      "absolute_class_enum": {
+        "0": "Heavyweight",
+        "1": "Light Heavyweight",
+        "2": "Middleweight",
+        "3": "Welterweight",
+        "4": "Lightweight",
+        "5": "Featherweight",
+        "7": "unavailable/out-of-window sentinel"
+      },
+      "persistent_mapping": {
+        "slot_0": "profile+0x2D = player's classified current/base class",
+        "slot_1": "profile+0x2E = slot_0 - 1 (one class heavier), or 7 at Heavyweight",
+        "slot_2": "profile+0x2F = slot_0 + 1 (one class lighter), or 7 at Featherweight"
+      },
+      "evidence": [
+        "0x0019D3CC calls 0x0018600C and stores its class result to profile+0x2D.",
+        "0x0019D3E4..0x0019D404 sets profile+0x2F to base+1 except base class 5, where it writes sentinel 7.",
+        "0x0019D40C..0x0019D424 sets profile+0x2E to base-1 except base class 0, where it writes sentinel 7."
+      ]
+    },
+    "active_slot_switching": {
+      "function": "0x0019527C",
+      "proposed_name": "SetCommittedCareerWeightClassSlot",
+      "active_fields": [
+        "profile+0x2A working slot",
+        "profile+0x2B committed/player-slot shadow"
+      ],
+      "slot_to_class_getter": "0x001929C4(career,slot) -> profile[0x2D+slot]",
+      "scheduler": "0x001A4F50",
+      "evidence": [
+        "0x001A4F50 snapshots profile+0x2A into s5.",
+        "At 0x001A5198 it switches to slot 0 only when the current slot is not 0.",
+        "At 0x001A527C it switches to slot 1 only when the current slot is not 1.",
+        "At 0x001A5364 it switches to slot 2 only when the current slot is not 2.",
+        "After a switch the scheduler resolves the target slot ladder opponent and schedules through 0x00194518.",
+        "The setter is the only proven normal path that writes the requested slot to both +0x2A and +0x2B; background career processing writes only +0x2A.",
+        "0x00195564 copies +0x2A into +0x2B before normal population matchmaking, explicitly resynchronizing the working slot with the committed/player slot."
+      ],
+      "contract_marker": "When a slot change occurs, the selected/live contract byte +0x02 is set to 1 before 0x0019527C; exact public meaning remains unresolved.",
+      "working_vs_shadow_boundary": {
+        "confidence": "CONFIRMED from provenance-filtered direct career-profile writer inventory",
+        "working_slot": "profile+0x2A",
+        "committed_player_slot_shadow": "profile+0x2B",
+        "synchronized_use": "Explicit player-facing slot changes through 0x0019527C write the same requested slot to both fields.",
+        "background_use": [
+          "Career initialization pins +0x2B to slot 0 while cycling +0x2A through slots 1, 2, then 0 to initialize/process each ladder.",
+          "The title-expiry/world-update path 0x0019DFE8 selects individual slots through +0x2A without changing +0x2B."
+        ],
+        "matchmaking_resync": "0x00195564 copies +0x2A to +0x2B before normal population matchmaking.",
+        "implication": "A +0x2A/+0x2B mismatch marks off-committed-slot/background slot processing, not an ordinary synchronized player slot state."
+      }
+    },
+    "persistence_boundary": {
+      "bounded_scan": "Direct SB writes to profile+0x2D/+0x2E/+0x2F in career/front-end code were found only in the initialization region above; later code reads these mappings.",
+      "implication": "Recovered stock movement changes the active logical slot rather than rewriting boxer weight or rebuilding the three slot mappings.",
+      "title_note": "The slot-switch path does not immediately call the title-transfer/forfeiture writer. Standard title forfeiture remains separately enforced by the one-year deadline path 0x0019DFE8."
+    },
+    "career2_implication": [
+      "Retail's compatibility baseline is a fixed three-class window centered on the player's starting class.",
+      "Expanding Career Mode 2.0 beyond adjacent classes requires extending/remapping the three-slot persistence model, not merely changing one division byte.",
+      "Current boxer weight at persistent boxer+0x6C can still drive a richer natural/walking-weight model independently of the stock active-slot selector."
+    ]
+  },
+  "championship_result_path": {
+    "confidence": "CONFIRMED player-becomes-holder/player-displaced title-transfer branches plus a background/off-committed-slot transfer path; exact public result-method labels and profile counter names remain unresolved",
+    "transfer_callee": "0x00196DC4",
+    "post_fight_region": "0x0019CB00-0x0019CDA0",
+    "confirmed_calls": [
+      {
+        "call_site": "0x0019CCB0",
+        "title_slot_source": "profile+0x2A",
+        "new_champion_source": "s2",
+        "proven_role": "player-becomes-holder branch",
+        "gate": "outer title-result path is active; current holder equals s7; result is not draw; profile+0x2A equals profile+0x2B; s2 equals player progression index profile+0x4E; 0x001971A0 accepts the contract type; standard title types transfer while special award/belt types 16/17/21/22 take a no-transfer bookkeeping branch"
+      },
+      {
+        "call_site": "0x0019CD4C",
+        "title_slot_source": "profile+0x2A",
+        "new_champion_source": "s2",
+        "proven_role": "player-displaced branch",
+        "gate": "current holder equals s7 and s7 equals player progression index profile+0x4E while s2 is the other participant; result is not draw; profile+0x2A equals profile+0x2B; 0x001971A0 accepts the contract type; standard title types transfer the slot to s2",
+        "post_effect": "profile+0x6A is reset to zero immediately after the standard-title transfer"
+      },
+      {
+        "call_site": "0x0019CD68",
+        "title_slot_source": "profile+0x2A",
+        "new_champion_source": "s2",
+        "proven_role": "background/off-committed-slot transfer branch",
+        "gate": "profile+0x2A working slot differs from profile+0x2B committed/player-slot shadow, so the shared handler's s4 synchronization flag is zero; this bypasses the normal player-identity and 0x001971A0 contract-family checks and transfers the working title slot directly to s2"
+      }
+    ],
+    "observed_preconditions": [
+      "The shared result handler stores s4 = (profile+0x2A == profile+0x2B) at 0x0019AB24-0x0019AB38; this is an exact active-slot/shadow synchronization flag.",
+      "The handler preserves its participant inputs as s2 = original a1 and s7 = original a2 from 0x0019C638/0x0019C618 through the championship-transfer region; there is no internal s2/s7 swap in 0x0019C610-0x0019CD70.",
+      "The player progression-record index is read directly from profile+0x4E for the player-identity checks.",
+      "The synchronized player-becomes-holder branch requires s2 == profile+0x4E while the current title holder at profile+0x50+slot*2 equals s7.",
+      "The synchronized player-displaced branch requires the current holder s7 == profile+0x4E while s2 is the other participant.",
+      "The s4==0 branch is now bounded as off-committed-slot/background processing: +0x2A is the working slot and +0x2B is the committed/player-slot shadow; the branch bypasses player-specific contract checks before calling 0x00196DC4."
+    ],
+    "participant_roles": {
+      "s2": "Original a1 participant (stack+0x368) and the normalized result owner. If the working descriptor is loss-class, 0x001A24C4 reciprocates it before progression stats are applied to s2; every championship transfer in this region installs s2 as the new holder.",
+      "s7": "Original a2 participant (stack+0x36A). The title-result path requires the current slot champion to equal s7 before any ordinary championship transfer is considered.",
+      "s4": "Reloaded from stack+0x37C, written from (profile+0x2A working slot == profile+0x2B committed/player-slot shadow). It is a slot-synchronization flag, not a boxer identity.",
+      "career_player": "profile+0x4E progression-record index",
+      "confidence": "CONFIRMED from 0x0019AAAC argument capture, 0x0019AB24-0x0019AB38 slot-state setup, 0x0019C610-0x0019C7C0 result normalization/stat writes, and 0x0019CC20-0x0019CD68 transfer control flow"
+    },
+    "transfer_cases": {
+      "player_wins_persistent_title": {
+        "call_site": "0x0019CCB0",
+        "conditions": [
+          "current champion for active slot == s7",
+          "result is not draw",
+          "profile+0x2A == profile+0x2B",
+          "career player profile+0x4E == s2",
+          "0x001971A0 title-family gate is true",
+          "contract type is one of 3, 13, 14, 15, 18, 19, 20"
+        ],
+        "effect": "TransferCareerTitleSlot(active slot, s2), making the career player the new persistent slot champion.",
+        "special_type_boundary": "Types 16, 17, 21 and 22 pass the broad title-family gate but do not call the persistent slot-transfer helper on this branch; they follow special award/belt bookkeeping instead."
+      },
+      "player_loses_persistent_title": {
+        "call_site": "0x0019CD4C",
+        "conditions": [
+          "current champion for active slot == s7",
+          "result is not draw",
+          "profile+0x2A == profile+0x2B",
+          "career player profile+0x4E == s7",
+          "0x001971A0 title-family gate is true",
+          "contract type is one of 3, 13, 14, 15, 18, 19, 20"
+        ],
+        "effect": "TransferCareerTitleSlot(active slot, s2), transferring the persistent title from the career player to the opposing winner; profile+0x6A is then cleared.",
+        "special_type_boundary": "Types 16, 17, 21 and 22 do not transfer the persistent career-title slot here."
+      },
+      "background_or_non_player_title_transfer": {
+        "call_site": "0x0019CD68",
+        "conditions": [
+          "current champion for working slot == s7",
+          "result is not draw",
+          "either profile+0x2A working slot != profile+0x2B committed/player-slot shadow or the career player is neither s2 nor s7"
+        ],
+        "effect": "TransferCareerTitleSlot(working slot, s2) without the player-specific contract-family gate.",
+        "boundary": "The +0x2A != +0x2B side is proven background/off-committed-slot processing from the direct writer inventory. The separate case where neither participant is the career player remains a non-player title result."
+      }
+    },
+    "unresolved": [
+      "Resolve the semantics of profile+0x66, profile+0x68 and profile+0x6A through proven generic-accessor/serialization callers or runtime evidence; direct UI/report access has been ruled out.",
+      "Distinguish the exact public result-method labels within code pairs 2/3 versus 4/5/6 and their reciprocal 7..11 values if needed."
+    ],
+    "contract_type_gate": {
+      "field": "profile+0x80",
+      "writer_evidence": "0x001A4F50 writes the resolved live-contract type into profile+0x80 immediately before AssignCareerMatch.",
+      "helper": "0x001971A0",
+      "true_for_types": [
+        3,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22
+      ],
+      "false_for_types": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outside_switch_range": "false",
+      "grouped_semantics": {
+        "3": "initial/amateur championship-transfer contract",
+        "13/14/15": "standard professional title challenges",
+        "18/19/20": "paired standard professional title defenses",
+        "16/17/21/22": "special award/belt contracts"
+      },
+      "confidence": "CONFIRMED exact truth set and contract-family mapping"
+    },
+    "title_bookkeeping": {
+      "transfer": "0x00196DC4 changes the slot holder; it increments incoming champion progression record+0x15 (belts won) and displaced holder record+0x16 (belts lost).",
+      "successful_standard_defense": "The paired defense result branches for contract types 20/18/19 increment player progression record+0x17 (belts defended) without requiring a holder transfer.",
+      "expiry_forfeiture": "0x0019DFE8 is a separate one-calendar-year expiry path; it transfers the slot to ladder entry 1 and increments the player's progression record+0x18 (belts forfeited).",
+      "confidence": "CONFIRMED transfer/defense/forfeiture separation and player-win/player-loss/non-player transfer roles; profile-level +0x66/+0x68/+0x6A counter names remain unresolved.",
+      "profile_level_counters": "profile+0x66/+0x68/+0x6A are now behaviorally bounded as above, but their exact UI/stat names remain intentionally unassigned."
+    },
+    "match_subtypes": {
+      "type 3": 4,
+      "types 13/14/15": 8,
+      "types 18/19/20": 9,
+      "type 16": 8,
+      "type 17": 9,
+      "type 21": 9,
+      "type 22": 8,
+      "persistence": "AssignCareerMatch stores the subtype in progression record+0x24 bits 8..15.",
+      "confidence": "CONFIRMED from decoded fights.fnc templates and AssignCareerMatch dataflow"
+    },
+    "result_predicates": {
+      "0x001A2400": "win-class predicate for the descriptor's current fighter perspective (codes 2..6)",
+      "0x001A2430": "loss-class/opponent-win predicate (codes 7..11)",
+      "0x001A2460": "draw predicate (code 1)",
+      "0x001A248C": "KO-counting win subset (codes 2 or 3)",
+      "confidence": "CONFIRMED from exact predicate bodies, reciprocal table and progression-record stat writers"
+    },
+    "participant_role_resolution": {
+      "shared_handler": "0x0019AAAC",
+      "preserved_inputs": {
+        "s2": "original a1 participant progression index, reloaded from stack+0x368",
+        "s7": "original a2 participant progression index, reloaded from stack+0x36A"
+      },
+      "synchronization_flag": "s4 = 1 exactly when profile+0x2A == profile+0x2B; otherwise 0",
+      "live_caller": "0x001B7038 passes a1=s3 and a2=s6 after its own participant/result preparation. Static evidence does not require globally naming a1/a2 as winner/loser because the shared handler identifies the player explicitly through profile+0x4E at the title-transfer branches.",
+      "boundary": "The result-method code still determines win/loss/draw statistics separately; the championship branch roles above are proven from holder/player identity tests and the actual holder mutation, not inferred from a global winner/loser register convention."
+    },
+    "profile_title_counters": {
+      "profile+0x66": {
+        "behavior": "initialized/reset to zero; incremented on the synchronized player-becomes-holder/title-acquisition branch, and also incremented for special award/belt types 16/17/21/22 where no persistent career-title-slot transfer occurs",
+        "exact_public_name": "unresolved"
+      },
+      "profile+0x68": {
+        "behavior": "initialized/reset to zero; incremented when the synchronized title-result path has s2 == player and the player is already the current holder, with 0x001971A0 accepting the contract type",
+        "exact_public_name": "unresolved"
+      },
+      "profile+0x6A": {
+        "behavior": "initialized/reset to zero; incremented alongside profile+0x68 on that current-holder path; reset to zero immediately after the synchronized standard-title player-displaced transfer at 0x0019CD4C",
+        "exact_public_name": "unresolved",
+        "bounded_inference": "its increment-while-holder/reset-on-displacement behavior is consistent with a current-reign/streak quantity, but that label is not yet proven"
+      },
+      "ui_boundary": {
+        "confidence": "CONFIRMED negative identification",
+        "canonical_title_history_ui": "GetMyCareerStatsInfo/career-stats rendering at 0x001E26F4-0x001E2808 reads progression-record +0x15/+0x16/+0x17/+0x18 for belts won/lost/defended/forfeited.",
+        "exclusion": "The recovered career-stats title region does not read profile+0x66, profile+0x68, or profile+0x6A. Those profile-level halfwords are therefore not the canonical aiTitleBeltsWon/aiTitleBeltsLost/aiTitleBeltsDefended/aiTitleBeltsForfeited values.",
+        "implication": "Keep +0x66/+0x68/+0x6A as separate career-level title state/counters until an independent reader proves their public meaning."
+      },
+      "direct_reader_boundary": {
+        "confidence": "CONFIRMED for direct career+0x3C provenance",
+        "whole_executable_offset_scan": "31 raw LH/LHU hits at +0x66/+0x68/+0x6A appeared across multiple structures; several are demonstrably unrelated and therefore cannot be used as semantic evidence by offset alone.",
+        "proven_direct_profile_reads": [
+          "0x0019C850 -> profile+0x68",
+          "0x0019C860 -> profile+0x6A",
+          "0x0019CCA0 -> profile+0x66",
+          "0x0019CCBC -> profile+0x66",
+          "0x0019CCDC -> profile+0x66"
+        ],
+        "provenance_rule": "Each proven read uses a base register whose nearest defining load is LW profile, 0x3C(career).",
+        "result": "All five proven direct reads are inside the already-mapped post-fight title-result path. No independent direct UI/report reader of profile+0x66/+0x68/+0x6A was found.",
+        "caveat": "Generic accessor/serialization paths may receive an already-resolved profile pointer indirectly; those require separate caller/dataflow proof before assigning names."
+      }
+    },
+    "slot_synchronization_model": {
+      "confidence": "CONFIRMED",
+      "working_slot": "profile+0x2A",
+      "committed_player_slot_shadow": "profile+0x2B",
+      "equality": "Normal synchronized player-facing slot state.",
+      "mismatch": "Background/off-committed-slot processing, proven during career initialization and title-expiry/world updates.",
+      "direct_writer_boundary": "Proven +0x2B career-profile writes are limited to explicit synchronized slot switching, matchmaking resynchronization from +0x2A, and initialization to slot 0; background multi-slot processing changes +0x2A alone."
+    },
+    "special_award_belt_result_bookkeeping": {
+      "confidence": "CONFIRMED",
+      "info_awards_16_family": {
+        "acquisition_type": 16,
+        "repeat_or_defense_type": 21,
+        "state_flag": "profile+0x1F",
+        "auxiliary_state": "profile+0x19",
+        "one_year_derived_date": "profile+0x134",
+        "acquisition_history": "player progression+0x15 belts won",
+        "repeat_history": "player progression+0x17 belts defended",
+        "family_repeat_aggregate": "profile+0x3F"
+      },
+      "everlast_belt_family": {
+        "acquisition_type": 17,
+        "repeat_or_defense_type": 22,
+        "state_flag": "profile+0x20",
+        "auxiliary_state": "profile+0x1A",
+        "one_year_derived_date": "profile+0x138",
+        "acquisition_history": "player progression+0x15 belts won",
+        "repeat_history": "player progression+0x17 belts defended",
+        "family_repeat_aggregate": "profile+0x40"
+      },
+      "common_repeat_aggregates": [
+        "profile+0x38 increments",
+        "profile+0x3B adds the 0x001A248C KO-counting predicate"
+      ],
+      "persistent_holder_effect": "none; later championship transfer logic explicitly keeps types 16/17/21/22 out of the standard three-slot holder-transfer set"
+    }
+  },
+  "mandatory_challenger_boundary": {
+    "confidence": "CONFIRMED bounded static boundary across recovered contract scheduling, AssignCareerMatch callers, and championship succession; indirect/runtime-only policy is not claimed impossible",
+    "shipped_policy": {
+      "player_title_defenses": "Professional defense contract types 18/19/20 are the paired subtype-9 title-defense templates and require rank 0.",
+      "ai_matchmaking": "Regular AI population matchmaking 0x00195564 assigns subtype 0 only; it does not schedule subtype-8 title challenges or subtype-9 title defenses.",
+      "vacancy_or_forfeiture": "The one-calendar-year title-expiry path 0x0019DFE8 forfeits the player title and transfers the working title slot to ladder entry 1/top challenger.",
+      "special_award_belts": "Contract types 16/17/21/22 are separately proven award/belt families and do not provide a mandatory-challenger or eliminator scheduler."
+    },
+    "direct_scheduler_boundary": {
+      "assign_match_function": "0x00194518",
+      "complete_direct_callers": [
+        "0x00195564 regular population matchmaking",
+        "0x001A4F50 special/live-contract scheduler",
+        "0x001FF384 accepted player-contract handler"
+      ],
+      "result": "No separate direct AI championship, mandatory-challenger, or eliminator assignment path is present among the complete direct AssignCareerMatch caller inventory."
+    },
+    "semantic_search_boundary": {
+      "executable_terms_checked": [
+        "mandatory",
+        "eliminator",
+        "challenger",
+        "contender",
+        "title shot",
+        "championship"
+      ],
+      "result": "No explicit mandatory-challenger/eliminator/title-shot policy string was recovered from the executable semantic scan.",
+      "caveat": "Absence of a display/debug string alone is not proof; the scheduler/caller inventory provides the stronger boundary."
+    },
+    "conclusion": "Retail FNR3 PSP does not evidence a separate mandatory-challenger/eliminator scheduling system beyond rank-0 player defenses and one-year vacancy/forfeiture succession to ladder entry 1. Rich mandatory-challenger/eliminator logic and autonomous AI title scheduling remain Career Mode 2.0 extension features.",
+    "overhaul_boundary": [
+      "Build mandatory-challenger/eliminator policy on top of the proven three-slot ladder/title ownership model.",
+      "Use AssignCareerMatch for scheduled title bouts and TransferCareerTitleSlot for ownership changes.",
+      "Do not label any existing retail field or contract family as 'mandatory challenger' without new evidence."
+    ]
+  },
+  "current_version_scope": {
+    "status": "LOCKED_BY_USER",
+    "deferred_to_next_version": [
+      "recovery/injury expansion beyond already-recovered retail cooldown evidence",
+      "trainer/cutman systems",
+      "manager/promoter systems"
+    ],
+    "instruction": "Preserve existing evidence, but perform no further RE or implementation work on these systems in the current Career Mode 2.0 version."
+  }
+}

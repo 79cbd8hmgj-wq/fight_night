@@ -164,8 +164,8 @@
       "program_id": "program-03",
       "subsystem": "Modules",
       "question": "Is the UI-script container format used by all .big screen packages (member types .apt/.const/.o/.msh) identified, and is there a proven mechanism connecting UI scripts to BOOT.BIN native functions?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "A THIRD resource/code-dispatch mechanism was found this delta pass, distinct from the bitmask dispatcher and the data-driven registry table above. Each of this pass's 11 newly-added .big files (10 BIGF-format, all uncompressed members) contains a .apt (compiled UI-script bytecode) and a paired .const member. The .const format was fully decoded: a fixed 20-byte signature 'Apt constant file\\x1a\\x00\\x00', followed by 3 LE u32 fields (a size/pool field, an entry `count`, and a `header_len`=0x20), followed by `count` (tag=1,string_offset) pairs, followed by a flat NUL-terminated string pool holding every identifier/constant name the compiled .apt bytecode references (totals observed this pass: 890/862/17/126/534/10/144/126/113/397 names across the 10 files). Separately, EVERY 'GetXxxInfo'/'SetXxxInfo'/'DEBUG_GetXxxData'-style native-function name found this pass (GetSelectBoxerInfo, GetOptionsSettings, DEBUG_GetDebugMenuData, GetAdhocRivalsInfo/GetAdhocRivalsUserInfo, GetCareerHistoryInfo, GetRecordBooksInfo, etc.) is owned in BOOT.BIN by a small (~20-50 instruction) function that does nothing but call a SHARED pair of functions, func_0CDAC0/func_0CDA70, repeatedly, once per native name, each call passing (name_string_ptr, screen_class_string_ptr, -1). This is proven, by structure, to be a generic 'register native function under this name for this UI screen class' mechanism used identically by every one of the 11 files' native accessors -- these small functions are registration glue, not the data-producing implementations themselves.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "The existing APT/.const registration evidence is now connected to the actual AIP dispatch path by static cross-build analysis. func_0CDA70 registers FSCommand handlers and func_0CDAC0 registers LoadVariables handlers; func_0CDA9C/func_0CDAEC unregister the corresponding families. func_0D024C is the FSCommand dispatcher and func_0D041C is the LoadVariables dispatcher: each parses the requested native name, searches its handler BST, and indirect-calls the matched registered target. func_0D066C exposes the diagnostic FS/LV handler-list path. The 0x14-byte handler nodes contain left/right links at +0x0/+0x4, name pointer +0x8, target/object +0xC, and auxiliary integer +0x10. For the developer debug menu, DEBUG_GetDebugMenuData is registered on the LoadVariables channel while DEBUG_OnAdvance and DEBUG_OnRealFE are registered on the FSCommand channel. This resolves the previously named program-03-05 blocker without runtime evidence. Exact .apt bytecode decoding remains a separate resource-format task.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -181,7 +181,14 @@
         ],
         "functions": [
           "func_0CDAC0",
-          "func_0CDA70"
+          "func_0CDA70",
+          "func_0CDA9C",
+          "func_0CDAEC",
+          "func_0CF9C4",
+          "func_0CFE08",
+          "func_0D024C",
+          "func_0D041C",
+          "func_0D066C"
         ],
         "ui_resources": [
           "debugmenu.big",
@@ -194,10 +201,16 @@
           "internetmainmenu.big",
           "mainmenu.big",
           "tutorialoverlay.big"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
+        ],
+        "docs": [
+          "docs/decomp/packages/aip-native-dispatch/README.md"
         ]
       },
-      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's registration is later resolved/dispatched at script-call time (i.e. where the registered name string is looked up and its real implementation function invoked) -- this single mechanism gates nearly every UI-side lead opened by this delta pass (GetSelectBoxerInfo's real implementation, GetRecordBooksInfo's real implementation, etc.), so resolving it once would advance several other STATICALLY_SOLVABLE questions at once. Decoding the .apt bytecode format itself (to recover literal numeric constants such as the difficulty enum's 'm_arrValues') is a separate, larger undertaking not attempted this pass.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "None for the bounded native-registration-to-dispatch question. Decoding .apt bytecode itself remains a separate static task and is not required to establish the BOOT.BIN native dispatch mechanism.",
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-03-05"
@@ -232,10 +245,10 @@
     {
       "program_id": "program-04",
       "subsystem": "Boxers",
-      "question": "Is xdbboxr.adf's header word0 genuinely a per-entry count consumed by executable code?",
+      "question": "What do xdbboxr.adf header words 0 and 1 represent, and are they consumed by executable code?",
       "status": "STATICALLY_RESOLVED",
-      "confidence": "PROBABLE",
-      "evidence": "func_001AD268 reads word0 from the singleton's payload and uses it directly as a scanning-loop bound.",
+      "confidence": "CONFIRMED",
+      "evidence": "CORRECTED by follow-up static RE. word0=121 is the field/column count, not the boxer-record count. func_001ACCAC bounds field_id against word0 and func_001AD268 scans exactly word0 packed 2-bit field-type entries. word1=37 is the base-table record count: func_001AD21C returns word1 and func_001AD180 bounds record_index against it, then computes the selected row using stride word0*2. The old interpretation of 121 as a per-boxer record count is superseded.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -244,7 +257,14 @@
       ],
       "sources": {
         "functions": [
-          "func_001AD268"
+          "func_001ACCAC",
+          "func_001AD268",
+          "func_001AD21C",
+          "func_001AD180"
+        ],
+        "evidence": [
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/xdbboxr-schema.json"
         ]
       },
       "remaining_static_work": null,
@@ -257,7 +277,7 @@
       "subsystem": "Boxers",
       "question": "What is xdbboxr.adf's exact per-record field layout (name, rating, weight, division, stance, handedness, appearance, hair, shorts, hometown, career-eligibility, rivals, training, store-unlock, created-boxer data)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "A packed 2-bit-per-entry flags array was proven at payload offset +0x18 (121 entries, ~31 bytes); the byte range past it (offset ~0x37 through the payload's 9704 bytes) has not been structurally analyzed. NEW this delta pass: selectboxer.big!selectBoxer.const (decoded 'Apt constant file' UI-script constant pool, entries 144-154) names exactly 9 boxer rating-stat fields in a fixed order -- iPower, iSpeed, iAgility, iStamina, iChin, iBody, iHeart, iCuts, iOverall -- bounded by a matching NUM_STATS constant. All 9 names (not just iStamina, previously the only one checked) are proven to exist as BOOT.BIN strings, each appearing twice and both instances owned by the SAME function pair T_001D54A0/T_001E83E0 (cross-checked this pass: iPower@0x50aecc/0x50c6ac, iSpeed@0x50aed4/0x50c6b4, iAgility@0x50aedc/0x50c6bc, iChin@0x50aef4/0x50c6d4, iBody@0x50aefc/0x50c6dc, iHeart@0x50af04/0x50c6e4, iCuts@0x50af0c/0x50c6ec, iOverall@0x50af14/0x50c6f4). This gives the per-record schema question a concrete, named, ordered 9-field candidate list to search for in the payload tail, where none existed before.",
+      "evidence": "The generic XDB layout is resolved far enough to map concrete boxer fields. xdbboxr.adf has a 24-byte header, 121 fields, 37 base records, a 31-byte 2-bit-per-field type map at +0x18, and a row-major token matrix at +0x38 with 0xF2-byte rows. Generic accessors prove type 0=inline signed int16, type 1=string/byte pool, type 2=int32 pool, type 3=float pool. UpdateSelectBoxerInfo at 0x001D53F0 maps Power fields 0x10/0x11, Speed 0x12, Agility 0x13, Stamina 0x14, Chin 0x15, Heart 0x16, Cuts 0x17 and Body 0x18; iOverall is computed by func_001D50F4. Name composition resolves field 1=surname/family name and field 2=first/given name; field 3 is a short CRO/resource stem. CORRECTION: field 0 is not the global SelectBoxer/fight-session boxer selector. func_00186284 proves that selector is a cumulative record-position index across registered boxer tables and never consults field 0; rows 35/36 are selected as indices 35/36 even though their field-0 values are 74/75. Field 0 is therefore a secondary/resource identity number with exact role still unresolved. Field 4 is the base/default availability flag: func_00185D84 returns field4>0, the 35-entry stock-list builder consumes that predicate, and func_001B0FE8 falls back to a +0x1C4 unlock bitset for selector 35 when field4 is zero. Field 6 is a confirmed hometown foreign-key into xdbhmtwn.adf; field 7 is a confirmed nickname/alias foreign-key into xdbalias.adf; field 9 is the confirmed boxer-weight field used by the exact six-division classifier. Compact helpers also expose field 0x0D as high-byte+1900 plus low-byte components and field 0x0E as three nibble components, but those packed semantics are not yet named. Two further boxer fields are now confirmed through cross-table accessor chains. Field 0x06 is the xdbhmtwn.adf record ID: T_00185FA0/T_001860A0 read boxer field 6, enter the hometown accessor path at func_001A9020, and retrieve hometown record fields; decoded references land within the 63-record hometown table and expose O_Home_* localization keys. Field 0x07 is the xdbalias.adf nickname record ID: func_00185F34/T_00186108 read boxer field 7, enter the alias accessor path at func_00185008, and retrieve alias fields; decoded references land within the 76-record alias table and expose ST_Nick_* keys. Field 0x0F is also behaviorally resolved: func_001857E4 reads it as a mode gate. When zero, the game's displayed/effective rating path scales rating fields 0x10-0x18 through the boxer's weight class and D_FLT_0055E280 before clamping to 10..100; when nonzero, the alternate path uses the raw/base rating accessor and clamps directly. T_00187434/func_00187548 take complementary branches on this flag. All 37 tracked base rows currently store zero, so the exact boxer category/source that sets a nonzero value remains open. Field 0x05 is now resolved one level further and a prior speech/audio classification is corrected. func_00185B30 reads field 0x05; func_0010C9C8 uses it as a bounded 76-entry source selector and returns a normalized boxer code, with a fallback through field 0x07's alias-linked path for unmapped cases. func_0010BB58 runs that normalizer for both active boxers, writes the two results into payload offsets +0x14/+0x18, and dispatches the payload through func_003E5860. On first-use failure it registers/resolves descriptor D_0055AB38 via func_003E4A94; that descriptor is named 'Replay'. Therefore field 0x05 is proven to feed boxer identity/profile codes into the Replay event path. It is not proven to be a commentary/speech/audio ID.",
       "affected_features": [
         "career-2",
         "amateur",
@@ -267,16 +287,53 @@
       "sources": {
         "resource": "preload/db.viv!xdbboxr.adf",
         "functions": [
-          "func_001AD268",
-          "T_001D54A0",
-          "T_001E83E0"
+          "0x001D53F0 (UpdateSelectBoxerInfo)",
+          "func_0018553C",
+          "func_001ACD40",
+          "func_001ACCAC",
+          "func_001AD180",
+          "func_001D50F4",
+          "func_001851CC",
+          "func_00185D84",
+          "0x00278B0C",
+          "T_00278ABC",
+          "func_00278768",
+          "func_002787A0",
+          "func_00186284",
+          "func_001B0FE8",
+          "T_001B2648",
+          "func_001AF728",
+          "T_00185FA0",
+          "T_001860A0",
+          "func_001A9020",
+          "func_00185F34",
+          "T_00186108",
+          "func_00185008",
+          "func_001853F0",
+          "func_00185434",
+          "func_00185468",
+          "func_0018549C",
+          "func_001854DC",
+          "func_001857E4",
+          "T_00187434",
+          "func_00187548",
+          "func_00185B30",
+          "func_0010C9C8",
+          "func_0010BB58",
+          "func_003E5860",
+          "func_003E4A94"
         ],
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
+        ],
+        "evidence": [
+          "analysis/resources/xdbboxr-schema.json",
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       },
-      "remaining_static_work": "Disassemble func_0018654C (consumes func_001AD268's result); structurally analyze the payload tail specifically searching for a 9-field (Power/Speed/Agility/Stamina/Chin/Body/Heart/Cuts/Overall) stat block, now that the exact field set and order are known from selectBoxer.const; cross-check the +0x18 model against another xdb table's own consumer function.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Mapped so far: name/resource fields 0x00-0x03; base availability 0x04; Replay-event identity selector 0x05; hometown 0x06; nickname/alias 0x07; weight 0x09/division classifier; packed career timing 0x0D; packed trait components 0x0E; rating-mode behavior 0x0F; ratings 0x10-0x18; stance 0x19; style 0x1A; skin tone and several head-appearance fields 0x34-0x39; hair-style resource token 0x71. Continue with physical/biographical fields 0x08/0x0A-0x0C, exact 0x0E trait names, remaining handedness/equipment, career/store and created-boxer semantics. The exact authored name/downstream interpretation of the normalized Replay code remains open but must not be conflated with commentary.",
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-03"
@@ -333,9 +390,9 @@
     {
       "program_id": "program-04",
       "subsystem": "Boxers",
-      "question": "Which UI/menu screen(s) construct boxer-table queries, and what does func_001AF768's dual query (strides 5 and 0x28) feed?",
+      "question": "What do func_001AF768's dual XDB field-classification queries (strides 5 and 0x28) feed inside the fight-session constructor?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "func_001AF768 queries the boxer singleton twice via func_001AD268 with two different output strides, then chains 9 further subsystem-init calls.",
+      "evidence": "func_001AF768 is now proven to be the fight-session singleton constructor, not a UI/menu-construction routine. It calls func_001AD268 twice with caller-chosen output strides 5 and 0x28 and stores the resulting classifier/output state in the session near +0x198C/+0x198E before chaining further subsystem initialization.",
       "affected_features": [
         "roster",
         "career-2"
@@ -343,11 +400,15 @@
       "sources": {
         "functions": [
           "func_001AF768",
-          "T_0018E4F4"
+          "func_001AD268"
+        ],
+        "evidence": [
+          "analysis/resources/overhaul-alpha1-evidence.json",
+          "analysis/resources/xdb-schema-evidence.json"
         ]
       },
-      "remaining_static_work": "Search for callers of func_001AF768/T_0018E4F4; disassemble the 9 chained subsystem-init calls.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Disassemble the consumers of the +0x198C/+0x198E outputs and the remaining constructor init chain to identify what the stride-5 and stride-0x28 classifications represent.",
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-06"
@@ -356,19 +417,29 @@
       "program_id": "program-04",
       "subsystem": "Boxers",
       "question": "Is there a fixed maximum roster/boxer-database record count?",
-      "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "xdbboxr.adf's header word0=121 is proven to be consumed as a count by real code, but whether 121 is a hard compiled maximum (vs. simply 'however many rows this specific database currently has') was not established -- no bounds-check or fixed-size array declaration referencing 121 as a compile-time constant was located. This delta pass inspected selectboxer.big!selectBoxer.const (397 named constants) specifically for a UI-authored boxer-count cap: none was found -- no MAX_BOXER/MAX_ROSTER-style constant exists in this file (a full MAX_/NUM_ scan across all 10 newly-added .const pools found only MAX_WEIGHTCLASS/NUM_STATS in selectboxer.big and generic display-pagination constants MAX_VISIBLE_ROWS/MAX_NUM_GROUPS/MAX_NUM_COLUMNS elsewhere, none of which bound the boxer roster itself). This is a genuine negative result, not just an absence of a positive one: it rules out one of the four originally-listed interpretations ('a UI-authored maximum') as unsupported by this file, though it cannot rule out an executable-side or save-format-side cap. selectBoxer.const does confirm the UI receives an explicit 'iListLength'/'iEndList' pair alongside 'objBoxerIDs' and a distinct 'bHasCustom' flag, consistent with the boxer list being handed to the UI as a native-supplied, already-counted array rather than a UI-enumerated fixed-size table.",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "The former 121-entry roster-cap hypothesis is disproven: 121 is xdbboxr.adf's field_count, while word1=37 is its base record_count and is read dynamically by func_001AD21C/func_001AD180. func_00186284 proves the boxer selector used by fight/session/UI code is a cumulative record-position index across registered boxer table instances: it subtracts each table's dynamic record_count and passes the residual index to func_001AD180. It does not lookup xdbboxr field 0. Normal stock SelectBoxer ranges cover selector indices 0-34; physical base rows 35 and 36 are Fabolous and Little Mac. Their field-0 values are 74/75, proving only that field 0 is a separate secondary identity/resource key, not that their selector indices are 74/75. No fixed total roster maximum is established.",
       "affected_features": [
         "roster",
         "generated-boxers"
       ],
       "sources": {
-        "ui_resource": [
-          "selectboxer.big!selectBoxer.const"
+        "functions": [
+          "func_001AD21C",
+          "func_001AD180",
+          "func_00186284",
+          "0x001D77C8 (GetSelectBoxerInfo)",
+          "func_001851CC",
+          "func_001B0FE8"
+        ],
+        "evidence": [
+          "analysis/resources/xdbboxr-schema.json",
+          "analysis/resources/xdb-schema-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Search for a literal immediate 121 (0x79) used as an array-size bound or allocation size elsewhere in BOOT.BIN, independent of the header value itself. Also: reach GetSelectBoxerInfo's real implementation (see the func_00186464 entry above for the same registration-mechanism blocker) to observe what count value it actually computes and hands to iListLength.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Trace the created/custom-boxer table/save path and any independent allocation/serialization consumer that could impose a fixed cap across the cumulative registered-table selector space. Determine field 0's secondary/resource-ID role separately; do not use it as the roster selector.",
+      "confidence": "CONFIRMED for dynamic cumulative selector mechanics; fixed total maximum remains open.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-04-07"
@@ -378,8 +449,8 @@
       "subsystem": "Fight",
       "question": "Does a named, string-evidenced 'combat event' tagging system exist that could anchor a fight-event API reconstruction?",
       "status": "STATICALLY_RESOLVED",
-      "confidence": "PROBABLE",
-      "evidence": "DRONE_-prefixed event tag strings found this session: DRONE_KNOCKDOWN_ATTACK, DRONE_BREAKCLINCH, DRONE_CLINCH, DRONE_ILLEGAL_PUNCH, DRONE_SIGNATURE_PUNCH, DRONE_COUNTER_PUNCH -- consistent with a replay-camera trigger system keyed to fight events.",
+      "confidence": "CONFIRMED",
+      "evidence": "DRONE_-prefixed event tag strings found this session: DRONE_KNOCKDOWN_ATTACK, DRONE_BREAKCLINCH, DRONE_CLINCH, DRONE_ILLEGAL_PUNCH, DRONE_SIGNATURE_PUNCH, DRONE_COUNTER_PUNCH -- consistent with a replay-camera trigger system keyed to fight events. Follow-up PR #37 moves this beyond string-only evidence: func_0010BB58 builds a per-fight-event payload with two boxer-specific normalized codes and dispatches it through generic dispatcher func_003E5860. If needed it registers descriptor D_0055AB38 via func_003E4A94; D_0055AB38 is the named event `Replay` (hash 0x28D86F4F). Neighboring descriptor names include RefClinch, RefStoppage, BlockedPunch, BoxerDamage, CelebrationSequence, LackOfAction, MissedPunch, PunchCombos, UpdateStatus, BoxerFatigue, TauntingResult, FeintingResult, ClinchingResult, Trapped and BoxerRoundHistory. This proves a named fight-event dispatch layer rather than merely suggesting one from DRONE_ strings.",
       "affected_features": [
         "combat"
       ],
@@ -388,6 +459,14 @@
           "DRONE_KNOCKDOWN_ATTACK@0x4f9aa0",
           "DRONE_CLINCH@0x4f9a64",
           "DRONE_ILLEGAL_PUNCH@0x4f9968"
+        ],
+        "functions": [
+          "func_0010BB58",
+          "func_003E5860",
+          "func_003E4A94"
+        ],
+        "evidence": [
+          "analysis/resources/fight-event-dispatch-evidence.json"
         ]
       },
       "remaining_static_work": null,
@@ -639,13 +718,29 @@
       "subsystem": "Damage",
       "question": "What triggers the KO/TKO decision path, and is the referee's stoppage decision statically traceable?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "astrTKOTime suggests a timer-based TKO mechanism exists; not traced to its consuming function this session.",
+      "evidence": "astrTKOTime suggests a timer-based TKO mechanism exists; not traced to its consuming function this session. Follow-up debug-ELF xref analysis rules out astrTKOTime as the stoppage-decision lead: its direct code xref is inside GetCareerHistoryInfo at 0x001EE220, where astrTKOTime is emitted alongside astrFightResult and aRoundsLasted as stored career-history UI data. This is a read/display path, not the underlying KO/TKO/referee decision.",
       "affected_features": [
         "combat",
         "career-health"
       ],
-      "remaining_static_work": "Find the referencing function for astrTKOTime and trace its callers.",
-      "sources": {},
+      "remaining_static_work": "Do not pursue astrTKOTime further. Trace the actual fight-state producers around the named RefStoppage/Knockdown/IllegalBlows generic events and the fight-session result setters/consumers to locate the KO/TKO/referee-stoppage decision path.",
+      "sources": {
+        "functions": [
+          "0x001EE220"
+        ],
+        "strings": [
+          "astrTKOTime",
+          "astrFightResult",
+          "aRoundsLasted",
+          "RefStoppage",
+          "Knockdown",
+          "IllegalBlows"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json",
+          "analysis/resources/fight-event-dispatch-evidence.json"
+        ]
+      },
       "confidence": "CANDIDATE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
@@ -656,7 +751,7 @@
       "subsystem": "Damage",
       "question": "Beyond the already-proven '3-knockdown rule', does the retail options menu expose other named, distinct damage/stoppage rule toggles (auto-recovery, KO moment/highlight, fight stoppage, illegal blows, saved-by-the-bell)?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "optionsettings.big!optionSettings.const (decoded this delta pass) names a full 17-entry gameplay-rules toggle list, including 5 not previously evidenced in any pass: cpToggleIllegalBlows, cpToggleSavedByBell, cpToggleAutoRecovery, cpToggleKOMoment, cpToggleFightStoppage (alongside the already-known cpToggleKnockdownRule and the cutman/commentary/rounds toggles tracked elsewhere). 'AutoRecovery' in particular is new, direct evidence that a stun/knockdown recovery mechanic distinct from ordinary stamina regeneration is a real, named, player-toggleable retail rule -- not previously evidenced. None of these 5 toggle-widget names were found as raw strings anywhere in BOOT.BIN's own string table (only 'M_3_Knockdown_Rule' was), consistent with the project's established finding that option-widget internal names and their underlying native-accessor field names differ; the underlying native accessor is 'GetOptionsSettings'/'SetOptionsSettings' (owned by func_001D9870/func_001D98E4, themselves registration trampolines) plus three functions -- T_001D9A08, T_001DC5DC, T_001FB69C -- that each reference both 'aDefaultSettings' and 'iDisplayCommentaryOption', and were shown by partial disassembly of T_001D9A08 to decode a PACKED 32-BIT BITFIELD (multiple 1-2-4-bit sub-fields extracted via shift+mask from a settings word at struct-offset +0x15C, plus related bitfields at +0x19A8/+0x1955) rather than one scalar field per option. This proves the retail options/rules storage format is bit-packed, a significant new structural fact relevant to program-16 (career/save, if this structure is part of the persisted profile) and program-29 (budgets), but the exact bit-position-to-option-name mapping was not completed this pass.",
+      "evidence": "optionsettings.big!optionSettings.const names a full 17-entry gameplay-rules toggle list, including cpToggleIllegalBlows, cpToggleSavedByBell, cpToggleAutoRecovery, cpToggleKOMoment, cpToggleFightStoppage and the previously-known knockdown/cutman/commentary/round toggles. The underlying native accessor family is GetOptionsSettings/SetOptionsSettings. func_001D9958/func_001DC52C/func_001FB6B8 decode a packed 32-bit settings word at fight-session offset +0x15C. FOLLOW-UP cross-build RE corrects an earlier interpretation: +0x19A8 is not another options bitfield. func_001AFFDC writes it as a bounded fight/session mode enum (valid signed values <9, otherwise -1), and the debug quick-fight path writes mode 1. func_001D9958 uses +0x19A8 as a mode gate while decoding/serving options. Offset +0x1955 remains a separate byte flag/gate. Thus the retail options storage remains bit-packed at +0x15C, while +0x19A8 selects context/mode-dependent behavior.",
       "affected_features": [
         "combat",
         "career-health"
@@ -666,15 +761,19 @@
           "optionsettings.big!optionSettings.const"
         ],
         "functions": [
-          "T_001D9A08",
-          "T_001DC5DC",
-          "T_001FB69C",
+          "func_001D9958",
+          "func_001DC52C",
+          "func_001FB6B8",
           "func_001D9870",
-          "func_001D98E4"
+          "func_001D98E4",
+          "func_001AFFDC"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Complete the bit-field decode of T_001D9A08/T_001DC5DC/T_001FB69C (struct offsets +0x15C/+0x19A8/+0x1955) and correlate each extracted bit-range, in order, against optionSettings.const's own toggle-declaration order (cpToggleSFX...cpToggleDifficulty...cpToggleKnockdownRule...cpToggleAutoRecovery...) to assign each named option its exact bit position and value range.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Complete the bit-field decode of the +0x15C packed settings word in func_001D9958/func_001DC52C/func_001FB6B8 and correlate each extracted bit-range against optionSettings.const's toggle-declaration order. Treat +0x19A8 only as the now-resolved session-mode gate; separately determine the role of byte +0x1955.",
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-08-05"
@@ -981,15 +1080,24 @@
       "program_id": "program-13",
       "subsystem": "Weights",
       "question": "What are the exact weight-limit values (in-game units) for each of the 6 divisions?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "The 6 division labels are proven to exist and be consumed by real code; the numeric weight-limit values themselves were not located or disassembled this session.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "Resolved through the generic XDB accessor plus SelectBoxer call path. func_0018600C reads xdbboxr field 0x09 as a signed int16 weight and maps it directly to the six SelectBoxer weight-class enum values. Exact branches are: weight <127 -> Featherweight (enum 5); 127-135 -> Lightweight (4); 136-147 -> Welterweight (3); 148-168 -> Middleweight (2); 169-190 -> Light Heavyweight (1); 191-280 -> Heavyweight (0); >=281 -> invalid/-1. GetSelectBoxerInfo calls this classifier at 0x001D7D28 and then applies the proven <6 weight-class bound. Retail table values independently fit the mapping, including Pacquiao=125 and Morales=126.",
       "affected_features": [
         "divisions",
         "roster"
       ],
-      "remaining_static_work": "Disassemble func_0019527C/func_001B798C/T_001E9A58/T_00202170/T_00201BB4 to find where each maps a division index to a numeric weight boundary.",
-      "sources": {},
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "sources": {
+        "functions": [
+          "func_0018600C",
+          "0x001D77C8 (GetSelectBoxerInfo)"
+        ],
+        "resource": "preload/db.viv!xdbboxr.adf field 0x09",
+        "evidence": [
+          "analysis/resources/xdbboxr-schema.json"
+        ]
+      },
+      "confidence": "CONFIRMED",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-13-02"
@@ -998,18 +1106,29 @@
       "program_id": "program-13",
       "subsystem": "Weights",
       "question": "Is the division count (6) a fixed compile-time constant with identifiable consumers that would need updating for new divisions (e.g. Bantamweight, Cruiserweight)?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "6 divisions plus an 'Unknown' fallback is strong, repeated evidence of a fixed enum; whether the number 6 (or 7 counting Unknown) appears as a literal array-size/loop-bound immediate in the 5 referencing functions was not checked. NEW this delta pass: selectboxer.big!selectBoxer.const independently corroborates the count of 6 from a completely different resource (a UI screen, not BOOT.BIN's own INFO_Division_N localization keys) -- it names exactly 6 selectable weight-class toggle values, in order, as literal string constants: $O_Featherweight, $O_Lightweight, $O_Welterweight, $O_Middleweight, $O_Light_Heavy, $O_Heavyweight, alongside a companion MAX_WEIGHTCLASS constant and 6 matching per-division ID array names (m_aFeatherWeightID, m_aLightWeightID, m_aWelterWeightID, m_aMiddleWeightID, m_aLightHeavyWeightID, m_aHeavyWeightID). Two independent resources (BOOT.BIN's own INFO_Division_1..6 localization keys, and this UI screen's named division-toggle list) now agree exactly on 6 divisions with no Bantamweight/Cruiserweight among them -- this substantially strengthens (but, per this project's discipline, does not by itself prove) that 6 is a genuine fixed design maximum in the retail game, not an artifact of the current xdbboxr.adf population.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "The real GetSelectBoxerInfo handler at 0x001D77C8 contains explicit six-way weight-class control flow: literal unsigned bounds of 6 at 0x001D7D58 and 0x001D8170, plus global 0x005608D0 initialized to 6. It populates exactly six named per-division boxer-ID arrays. Tracing which array receives each range gives the executable enum/order: 0 Heavyweight IDs 0-6 (7), 1 Light Heavyweight 7-10 (4), 2 Middleweight 11-17 (7), 3 Welterweight 18-24 (7), 4 Lightweight 25-30 (6), 5 Featherweight 31-34 (4). SetSelectBoxerInfo at 0x001D87E0 independently uses the same six-way enum and selects random IDs as start + (rng % count), corroborating the range/count semantics. Six is therefore an executable-level bound in the SelectBoxer path.",
       "affected_features": [
         "divisions"
       ],
       "sources": {
         "ui_resource": [
           "selectboxer.big!selectBoxer.const"
+        ],
+        "functions": [
+          "0x001D77C8 (GetSelectBoxerInfo)",
+          "0x001D87E0 (SetSelectBoxerInfo)"
+        ],
+        "globals": [
+          "0x005608D0",
+          "0x0056090C-0x00560950"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Disassemble the 5 referencing functions specifically looking for a literal 6 or 7 used as an array bound -- this would directly answer whether adding a division requires an executable patch versus only a data change.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "confidence": "PROBABLE",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-13-03"
@@ -1161,8 +1280,8 @@
       "program_id": "program-16",
       "subsystem": "Career/save",
       "question": "Does a retail 'Records/Hall of Fame' legacy-tracking system exist (relevant to the planned legacy-systems overhaul feature)?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "recordbooks.big!recordBooks.const (decoded this delta pass) names a full record-book category list as localization keys: '$TL_Boxing_Hall_Of_Fame', '$TL_Most_Career_Earnings', '$TL_Most_Wins', '$TL_Fastest_KOs', '$TL_Most_KOs', '$TL_Top_10', plus column headers '$T_Record'/'$T_Boxer'/'$T_KOs'/'$T_KO_Time'/'$T_Wins'/'$T_Earnings'/'$T_Career'/'$T_Rank'. This directly proves a retail Hall-of-Fame/records-book legacy system exists, driven by a native 'GetRecordBooksInfo' accessor (BOOT.BIN string owners func_001EE218/func_001EE28C -- the same registration-trampoline pair as GetCareerHistoryInfo/GetAdhocRivalsInfo/GetAdhocRivalsUserInfo above, confirming all four list-screen native accessors funnel through one shared registrar). The real implementation behind the registered name was not located this pass.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "The native AIP bridge is now resolved through the concrete GetRecordBooksInfo implementation at 0x001EEA3C. Registration function 0x001EE168 binds GetCareerHistoryInfo / GetAdhocRivalsUserInfo / GetAdhocRivalsInfo / GetRecordBooksInfo in order to concrete implementations 0x001EE220 / 0x001EE558 / 0x001EE808 / 0x001EEA3C. GetRecordBooksInfo reads iPage and emits astrNames, astrStatColumn1 and astrStatColumn2. Its selector is explicitly bounded to six pages (0..5; sltiu < 6 at 0x001EEC58), and its output loop has a literal hard cap of exactly 10 entries (slti < 0x0A at 0x001EEDE4, loop at 0x001EEDE8). This matches the decoded recordBooks.const categories including Hall of Fame, Most Career Earnings, Most Wins, Fastest KOs, Most KOs and Top 10.",
       "affected_features": [
         "legacy"
       ],
@@ -1175,11 +1294,16 @@
         ],
         "functions": [
           "func_001EE218",
-          "func_001EE28C"
+          "func_001EE28C",
+          "0x001EE168",
+          "0x001EEA3C"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Trace how func_0CDAC0/func_0CDA70's native-function-name registration is dispatched at call time to reach GetRecordBooksInfo's real implementation and observe what record categories/limits it actually populates (e.g. is 'Top 10' a hard cap of exactly 10 entries).",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "confidence": "CONFIRMED",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-16-07"
@@ -1217,15 +1341,36 @@
       "program_id": "program-28",
       "subsystem": "UI/commentary",
       "question": "Are the division-name UI strings (INFO_Division_N) served through the same localization indirection, or hardcoded per-screen?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "Both the division strings (program-13) and s_pfnGetLocalizedString were found independently this session; no code path connecting them was traced.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "Direct disassembly separates two localization mechanisms. T_000CE8A0 is source-attributed to boxing/AIP/aip.cpp and indirect-calls callback global 0x005436D4, whose retained assert label is s_pfnGetLocalizedString. By contrast, all inspected INFO_Division_1..6/Unknown selector branches feed the selected key into shared formatter 0x00206F90. That path resolves through 0x00206EB0 -> 0x002071B4 -> 0x00206BA8 -> 0x002069DC; 0x002069DC hashes the key with 0x0020692C, resolves it through shared index lookup 0x00206980 and global localization resource 0x005604A0 via 0x00206A74/0x00366750. Therefore division labels are localized shared-resource keys, not hardcoded final text and not consumers of the AIP-specific s_pfnGetLocalizedString callback.",
       "affected_features": [
         "divisions",
         "roster"
       ],
-      "remaining_static_work": "Disassemble T_000CE8A0 and the 5 division-string referencing functions to determine whether they share a call path.",
-      "sources": {},
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "sources": {
+        "functions": [
+          "0x000CE8A0",
+          "0x00206F90",
+          "0x00206EB0",
+          "0x002071B4",
+          "0x00206BA8",
+          "0x002069DC",
+          "0x0020692C",
+          "0x00206980",
+          "0x00206A74",
+          "0x00366750"
+        ],
+        "strings": [
+          "s_pfnGetLocalizedString",
+          "INFO_Division_1..6",
+          "INFO_Division_Unknown"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
+        ]
+      },
+      "confidence": "CONFIRMED",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-28-02"
@@ -1234,25 +1379,61 @@
       "program_id": "program-28",
       "subsystem": "UI/commentary",
       "question": "Is commentary lookup/ID data (audio triggers tied to fight events) statically evidenced?",
-      "status": "STATICALLY_AMBIGUOUS",
-      "evidence": "'Decision Announcement Script' was found, suggesting a scripted commentary/announcement system exists, but no commentary ID table or lookup function was located or disassembled this session -- it is unclear whether commentary selection is table-driven (statically reconstructable) or driven by a runtime state machine whose branch conditions were not traced. NEW this delta pass: optionsettings.big!optionSettings.const proves commentary is a player-toggleable rule ('cpToggleCommentary', localized as '$M_Commentary') backed by a real executable field, 'iDisplayCommentaryOption', found in BOOT.BIN at 3 separate string-table locations, each owned by a DIFFERENT function -- T_001D9A08, T_001DC5DC, T_001FB69C -- the same 3 functions also shown (see program-08's new bitfield finding) to read a packed options bitfield and reference 'aDefaultSettings'. This is a concrete, narrower lead than 'Decision Announcement Script' was: it connects the commentary toggle directly to 3 named, disassemblable functions, though it still does not show whether the commentary AUDIO SELECTION itself (as opposed to the on/off toggle) is table-driven.",
+      "status": "STATICALLY_SOLVABLE",
+      "evidence": "The commentary speech-data architecture is now directly evidenced. AuSpeechManager initializes three datasets through func_0013A6D0: trndat/trnevt/trnhdr at +0x1B0 (trainer role PROBABLE), ancdat/ancevt/anchdr at +0x188 (announcer role PROBABLE), and comdat/comevt/comhdr at +0x19C. The com* dataset is CONFIRMED as commentary by live static use inside func_0013CCA4: after the French-only iDisplayCommentaryOption gate, the incoming event ID at event+0x00 is resolved through func_001379B0(manager+0x19C), event+0x04 is added to the resolved record value, and the result is passed into the audio dispatch path. The common loader builds 16-byte records containing a key ID, resolved data entry, header-entry pointer, and 1/2 variant. func_0013DDC4 is a large fight-stat-driven TCC classifier with diagnostics MULTI KD, POOR PERFORMANCE, WASTED ENERGY, BOXER DAMAGE, and BOXER RATING/STYLE. What remains unresolved is the final mapping from fight/TCC conditions and boxer identity to the exact commentary event IDs.",
       "affected_features": [
         "career-2",
         "roster"
       ],
       "sources": {
         "strings": [
+          "iDisplayCommentaryOption@0x50b330",
+          "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !@0x506ac8",
+          "PocketDJFightNight.cpp@0x51b0bc",
           "Decision Announcement Script@0x4fa4e8",
-          "iDisplayCommentaryOption@0x50b330"
+          "rplyst.abk@0x5067e4",
+          "replay.abk@0x5067fc",
+          "comdat.big@0x506b84",
+          "comevt.evt@0x506b90",
+          "comhdr.big@0x506b9c",
+          "trndat.big@0x506b3c",
+          "ancdat.big@0x506b60",
+          "TCC = MULTI KD@0x506bd0",
+          "TCC = POOR PERFORMANCE@0x506be0",
+          "TCC = WASTED ENERGY@0x506bf8",
+          "TCC = BOXER DAMAGE@0x506c0c",
+          "TCC = BOXER RATING/STYLE@0x506c20",
+          "SUBTITLE ID = %d@0x506bbc"
         ],
         "functions": [
-          "T_001D9A08",
-          "T_001DC5DC",
-          "T_001FB69C"
+          "func_000B065C",
+          "func_001B1CFC",
+          "func_001B21FC",
+          "func_00128EB4",
+          "func_00137BA0",
+          "func_00206C48",
+          "func_0020715C",
+          "func_0020719C",
+          "func_00295788",
+          "func_0029598C",
+          "func_00295E24",
+          "func_00295EF0",
+          "func_0010BB58",
+          "func_003E5860",
+          "func_0013A6D0",
+          "func_001379B0",
+          "func_001379F4",
+          "func_0013CCA4",
+          "func_0013DDC4",
+          "func_0013B410"
+        ],
+        "evidence": [
+          "analysis/resources/fight-event-dispatch-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json"
         ]
       },
-      "remaining_static_work": "Disassemble T_001D9A08/T_001DC5DC/T_001FB69C fully (partial disassembly this pass only reached the bitfield-decode prologue) and separately locate and disassemble the function referencing 'Decision Announcement Script' before concluding whether commentary AUDIO selection (not just the on/off toggle) is statically reconstructable.",
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Trace the category/mask selected by func_0013DDC4 through its downstream event construction into the event ID consumed by func_0013CCA4, then correlate those IDs with boxer-specific inputs and the com* record keys. The dataset and record-lookup architecture itself is now resolved.",
+      "confidence": "CONFIRMED for com* commentary dataset, loader/lookup record structure, and event-ID resolution; PROBABLE for TCC classifier semantics; final condition/boxer -> commentary-event-ID mapping remains open.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-28-03"
@@ -1263,7 +1444,7 @@
       "question": "Are the boxer-selection/roster-browser UI screens identified?",
       "status": "STATICALLY_RESOLVED",
       "confidence": "PROBABLE",
-      "evidence": "RESOLVED this delta pass: selectboxer.big is the boxer-selection screen itself, confirmed by its own screen-title localization key 'TL_Select_Boxer' and its full UI script (selectBoxer.apt/.const/.o/.msh, BIGF archive, 4 members). Its native data accessor is 'GetSelectBoxerInfo' (BOOT.BIN @0x50ae30), alongside companion accessors 'UpdateSelectBoxerInfo' (@0x50ae44), 'LoadSelectBoxer' (@0x50ae5c), and 'SetSelectBoxerInfo' (@0x50ae8c) -- all four owned by the same registration-trampoline pair func_001D537C/func_001D5438. The screen exposes a Red/Blue two-corner selection model (SelectBoxerRedID/SelectBoxerBlueID, iCornerID) with per-corner weight-class filtering across the 6 proven divisions, a Random-boxer option (bIsRandomBoxer/randBoxer), and Custom/created-boxer support (iCustomBoxerID/strCustomBoxerName/iCustomBoxerWeightClass, also found directly in BOOT.BIN at 0x50b0a4/0x50b0c8, owned by the large T_001D7878 function). This directly answers the original question (yes, identified: selectboxer.big) and additionally establishes a fully-named schema for what the screen consumes/produces, useful for program-04's roster/created-boxer questions above. func_001AF768's own screen identity (whether it is this screen or a different one) is still not determined -- see the remaining program-04 entry on that function.",
+      "evidence": "selectboxer.big is the boxer-selection screen (TL_Select_Boxer; selectBoxer.apt/.const/.o/.msh). Follow-up PR #37 maps its AIP natives through the now-resolved dispatch layer to concrete handlers: GetSelectBoxerInfo -> 0x001D77C8, UpdateSelectBoxerInfo -> 0x001D53F0, LoadSelectBoxer -> 0x001D56AC, SetSelectBoxerInfo -> 0x001D87E0, GetCornerInfo -> 0x001D8CE8, SetCornerSide -> 0x001D5974, and UpdateRandomBoxerInfo -> 0x001D57FC. The screen exposes Red/Blue corner selection, six executable-bounded weight classes, random boxer support, and custom/created-boxer fields. GetSelectBoxerInfo builds the six stock boxer-ID ranges; UpdateSelectBoxerInfo resolves real rating data; SetSelectBoxerInfo uses the same weight-class range table for random selection. Earlier notes treating these as registration-only leads are superseded. func_001AF768 is independently resolved as the fight-session constructor, not a SelectBoxer UI constructor.",
       "affected_features": [
         "roster",
         "career-2",
@@ -1280,9 +1461,17 @@
           "iCustomBoxerWeightClass@0x50b0c8"
         ],
         "functions": [
-          "func_001D537C",
-          "func_001D5438",
-          "T_001D7878"
+          "0x001D77C8",
+          "0x001D53F0",
+          "0x001D56AC",
+          "0x001D87E0",
+          "0x001D8CE8",
+          "0x001D5974",
+          "0x001D57FC"
+        ],
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json",
+          "analysis/resources/xdbboxr-schema.json"
         ]
       },
       "remaining_static_work": null,
@@ -1357,17 +1546,21 @@
       "program_id": "program-29",
       "subsystem": "Budgets",
       "question": "Is there identifiable free/padding space in BOOT.BIN or its BSS that could host new code/data without growing the module?",
-      "status": "STATICALLY_SOLVABLE",
-      "evidence": "Section boundaries are exactly known (this pass); whether any inter-section gaps or over-aligned padding regions are large enough to be useful was not analyzed.",
+      "status": "STATICALLY_RESOLVED",
+      "evidence": "Exact ELF section/segment gap analysis proves there is no substantial inter-section code/data cave. File-backed mapped zero padding exists only at 0x004F748C-0x004F74BF (52 bytes, between .rodata.sceNid and .rodata), 0x0052DD30-0x0052DD3F (16 bytes, between .rodata and .data), and 0x0058A8A4-0x0058A8A7 (4 bytes between LOAD segments). A separate 36-byte zero-fill range 0x0059239C-0x005923BF precedes .bss inside RW LOAD[1] but is not file-backed. Direct aligned-address scanning found no gameplay/code references into the two usable file-backed padding ranges. The 52-byte executable-segment gap could host only a tiny trampoline/stub; meaningful overhaul code/data requires a different injection/rebuild strategy.",
       "affected_features": [
         "combat",
         "career-2",
         "roster",
         "divisions"
       ],
-      "remaining_static_work": "Compute inter-section gaps from the now-exact section offset/size table and cross-reference against alignment requirements.",
-      "sources": {},
-      "confidence": "CANDIDATE",
+      "remaining_static_work": null,
+      "sources": {
+        "evidence": [
+          "analysis/resources/debug-build-aip-dispatch.json"
+        ]
+      },
+      "confidence": "CONFIRMED",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "program-29-04"
@@ -1377,13 +1570,118 @@
       "subsystem": "Audio",
       "question": "Is the audio/commentary interface ABI (what a new/replacement boxer or division needs to supply to trigger commentary or sound) identified?",
       "status": "STATICALLY_SOLVABLE",
-      "evidence": "'Decision Announcement Script' and the DRONE_ event tags suggest audio/commentary is event-triggered, but the actual ABI boundary (what data a caller must supply) was not traced.",
+      "evidence": "The audio/commentary runtime chain is now statically continuous from Fight Night named gameplay events through AEMS into AuSpeechManager. Parsed AEMS/speech .evt objects subscribe named events through 0x0049B61C; generic dispatcher func_003E5860 invokes callback 0x0049B564, which converts the gameplay payload into an AEMS packet and submits it via 0x004974CC. The speech-specific .evt loader 0x0013A6D0 proves categories 0/1/2 are comevt/ancevt/trnevt. AuSpeechManager initialization at 0x0013ADD0-0x0013ADDC registers callback 0x00137888 through 0x00498260. Its update routine then explicitly calls 0x00497EE8 for categories 0, 1 and 2 at 0x0013BCFC/0x0013BD04/0x0013BD0C. Ready category processing reaches 0x00499E64 -> 0x0049A5C0; 0x0049A5C0 decodes byte ranges through 0x0049B480, builds the recovered 0x20-byte request, and at 0x0049A7FC indirect-calls the exact callback stored by AuSpeechManager. 0x00137888 then enters the recovered com/anc/trn bank router and final byte-range playback. Therefore there is no longer an unidentified executable bridge between gameplay events and speech. The remaining unknown is primarily content/schema enumeration inside the external comevt.evt/ancevt.evt/trnevt.evt (+ related hdr/data) resources: which named subscriptions and payload fields select which event IDs/variants/spoken clips.",
       "affected_features": [
         "roster"
       ],
-      "remaining_static_work": "Trace the DRONE_ tag consumer functions and the Decision Announcement Script reference toward their audio-triggering call sites.",
-      "sources": {},
-      "confidence": "CANDIDATE",
+      "remaining_static_work": "Obtain or extract comevt.evt, ancevt.evt and trnevt.evt (plus their matching hdr/data files where needed) and parse their 0x20-byte AEMS subscription entries using the now-proven executable layouts. Map each descriptor name/hash, packed mapping key, payload-word count, event record, base data offset and AEMS relative byte range to exact spoken clips. BOOT.BIN-side control flow from gameplay event to AuSpeechManager is already resolved and should not be retraced.",
+      "sources": {
+        "functions": [
+          "func_0010BB58",
+          "func_003E5860",
+          "func_003E4A94",
+          "func_000B065C",
+          "func_00295788",
+          "func_0029598C",
+          "func_00295E24",
+          "func_00295EF0",
+          "0x00341768",
+          "func_00137BA0",
+          "func_00128EB4",
+          "func_00132F90",
+          "func_0013A6D0",
+          "func_001379B0",
+          "func_001379F4",
+          "func_0013CCA4",
+          "func_0013DDC4",
+          "func_0013B410",
+          "0x0013A6D0",
+          "0x0013AC78",
+          "0x0013CCA4",
+          "0x0013DDC4",
+          "0x0013B410",
+          "0x00498260",
+          "0x0049A5C0",
+          "0x0049B480",
+          "0x00137888",
+          "0x001379B0",
+          "0x00483AAC",
+          "0x004837A4",
+          "0x004C242C",
+          "0x004C254C",
+          "0x00126D3C",
+          "0x00128C1C",
+          "0x00128EB4",
+          "0x00126A18",
+          "0x00132F90",
+          "0x00133884",
+          "0x00133B9C",
+          "0x00129844",
+          "0x00131374",
+          "0x00329614",
+          "0x00108158",
+          "0x0049B61C",
+          "0x0049B564",
+          "func_003E5938",
+          "0x003E5980",
+          "0x003E58A8",
+          "0x0049702C",
+          "0x004970EC",
+          "0x004974CC",
+          "0x0049AE38",
+          "0x0049AD50",
+          "0x0013ADD0",
+          "0x00497EE8",
+          "0x00499E64",
+          "0x0049A7FC"
+        ],
+        "strings": [
+          "PocketDJFightNight.cpp@0x51b0bc",
+          "Decision Announcement Script@0x4fa4e8",
+          "AuSpeechManager::InitStream() -- Out of Memory creating stream_buffer !@0x506ac8",
+          "rplyst.abk@0x5067e4",
+          "replay.abk@0x5067fc",
+          "comdat.big@0x506b84",
+          "comevt.evt@0x506b90",
+          "comhdr.big@0x506b9c",
+          "trndat.big@0x506b3c",
+          "trnevt.evt@0x506b48",
+          "trnhdr.big@0x506b54",
+          "ancdat.big@0x506b60",
+          "ancevt.evt@0x506b6c",
+          "anchdr.big@0x506b78",
+          "comdat.big",
+          "comevt.evt",
+          "comhdr.big",
+          "ancdat.big",
+          "ancevt.evt",
+          "anchdr.big",
+          "trndat.big",
+          "trnevt.evt",
+          "trnhdr.big",
+          "NISAdvice",
+          "TCC",
+          "TCC = MULTI KD",
+          "TCC = POOR PERFORMANCE",
+          "TCC = WASTED ENERGY",
+          "TCC = BOXER DAMAGE",
+          "TCC = BOXER RATING/STYLE",
+          "coreaems.viv",
+          "Unsupported AEMS Event",
+          "chant_PSP_Lic%03d.abk",
+          "chant_PSP_CaB%03d.abk",
+          "Chant_PSP_Gen%03d.abk",
+          "Gsmall.abk",
+          "Gmed.abk",
+          "Glarge.abk"
+        ],
+        "evidence": [
+          "analysis/resources/fight-event-dispatch-evidence.json",
+          "analysis/resources/debug-build-aip-dispatch.json",
+          "analysis/resources/aems-event-code-registry.json"
+        ]
+      },
+      "confidence": "CONFIRMED for the complete executable-side gameplay-event -> generic-event -> AEMS packet -> category processing -> AuSpeechManager request -> com/anc/trn bank byte-range chain; exact external speech-resource event/clip enumeration remains STATICALLY_SOLVABLE.",
       "runtime_necessary": false,
       "minimum_runtime_experiment": null,
       "id": "interface-audio-01"
@@ -1407,9 +1705,9 @@
     }
   ],
   "counts_overall": {
-    "STATICALLY_RESOLVED": 29,
-    "STATICALLY_SOLVABLE": 30,
-    "STATICALLY_AMBIGUOUS": 4,
+    "STATICALLY_RESOLVED": 35,
+    "STATICALLY_SOLVABLE": 26,
+    "STATICALLY_AMBIGUOUS": 2,
     "RUNTIME_ESSENTIAL": 0
   },
   "counts_by_program": {
@@ -1426,15 +1724,15 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "program-03": {
-      "STATICALLY_RESOLVED": 3,
-      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_RESOLVED": 4,
+      "STATICALLY_SOLVABLE": 1,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "program-04": {
       "STATICALLY_RESOLVED": 4,
-      "STATICALLY_SOLVABLE": 2,
-      "STATICALLY_AMBIGUOUS": 1,
+      "STATICALLY_SOLVABLE": 3,
+      "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "program-05": {
@@ -1486,26 +1784,26 @@
       "RUNTIME_ESSENTIAL": 0
     },
     "program-13": {
-      "STATICALLY_RESOLVED": 1,
-      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_RESOLVED": 3,
+      "STATICALLY_SOLVABLE": 0,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "program-16": {
-      "STATICALLY_RESOLVED": 3,
-      "STATICALLY_SOLVABLE": 4,
+      "STATICALLY_RESOLVED": 4,
+      "STATICALLY_SOLVABLE": 3,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "program-28": {
-      "STATICALLY_RESOLVED": 2,
+      "STATICALLY_RESOLVED": 3,
       "STATICALLY_SOLVABLE": 1,
-      "STATICALLY_AMBIGUOUS": 1,
+      "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "program-29": {
-      "STATICALLY_RESOLVED": 3,
-      "STATICALLY_SOLVABLE": 1,
+      "STATICALLY_RESOLVED": 4,
+      "STATICALLY_SOLVABLE": 0,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
@@ -1524,63 +1822,63 @@
   },
   "counts_by_feature": {
     "career-2": {
-      "STATICALLY_RESOLVED": 14,
-      "STATICALLY_SOLVABLE": 9,
-      "STATICALLY_AMBIGUOUS": 2,
+      "STATICALLY_RESOLVED": 16,
+      "STATICALLY_SOLVABLE": 8,
+      "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "amateur": {
-      "STATICALLY_RESOLVED": 12,
-      "STATICALLY_SOLVABLE": 7,
+      "STATICALLY_RESOLVED": 13,
+      "STATICALLY_SOLVABLE": 6,
       "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "roster": {
-      "STATICALLY_RESOLVED": 12,
-      "STATICALLY_SOLVABLE": 8,
-      "STATICALLY_AMBIGUOUS": 3,
+      "STATICALLY_RESOLVED": 16,
+      "STATICALLY_SOLVABLE": 6,
+      "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "divisions": {
-      "STATICALLY_RESOLVED": 9,
-      "STATICALLY_SOLVABLE": 7,
+      "STATICALLY_RESOLVED": 14,
+      "STATICALLY_SOLVABLE": 2,
       "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "generated-boxers": {
-      "STATICALLY_RESOLVED": 10,
+      "STATICALLY_RESOLVED": 11,
       "STATICALLY_SOLVABLE": 3,
-      "STATICALLY_AMBIGUOUS": 2,
+      "STATICALLY_AMBIGUOUS": 1,
       "RUNTIME_ESSENTIAL": 0
     },
     "career-health": {
-      "STATICALLY_RESOLVED": 7,
-      "STATICALLY_SOLVABLE": 10,
+      "STATICALLY_RESOLVED": 8,
+      "STATICALLY_SOLVABLE": 9,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "legacy": {
-      "STATICALLY_RESOLVED": 2,
-      "STATICALLY_SOLVABLE": 2,
+      "STATICALLY_RESOLVED": 4,
+      "STATICALLY_SOLVABLE": 0,
       "STATICALLY_AMBIGUOUS": 0,
       "RUNTIME_ESSENTIAL": 0
     },
     "combat": {
-      "STATICALLY_RESOLVED": 11,
-      "STATICALLY_SOLVABLE": 16,
+      "STATICALLY_RESOLVED": 12,
+      "STATICALLY_SOLVABLE": 15,
       "STATICALLY_AMBIGUOUS": 2,
       "RUNTIME_ESSENTIAL": 0
     }
   },
   "static_ceiling": {
     "definition": "Count-based projection = STATICALLY_RESOLVED + STATICALLY_SOLVABLE, i.e. every question with either evidence already in hand or a concrete named static avenue remaining. STATICALLY_AMBIGUOUS questions are excluded from the ceiling because they are not proven closeable by static work alone yet (their alternatives may or may not collapse to one answer statically).",
-    "statically_resolved": 29,
-    "statically_solvable": 30,
-    "ceiling_count": 59,
+    "statically_resolved": 35,
+    "statically_solvable": 26,
+    "ceiling_count": 61,
     "total_bounded_questions": 63,
-    "ceiling_fraction_of_total": 0.9365,
+    "ceiling_fraction_of_total": 0.9683,
     "excluded_pending_further_static_work": {
-      "STATICALLY_AMBIGUOUS": 4,
+      "STATICALLY_AMBIGUOUS": 2,
       "RUNTIME_ESSENTIAL": 0
     }
   },

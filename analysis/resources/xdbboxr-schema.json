@@ -1,52 +1,625 @@
 {
-  "schema_version": 1,
-  "model_version": 2,
+  "schema_version": 2,
+  "model_version": 3,
   "revision": "ULUS10066-v1.00",
   "resource": "preload/db.viv!xdbboxr.adf",
-  "status": "static_header_only",
-  "confidence": "CANDIDATE",
-  "summary": "Only the shared 32-byte xdb table header (see xdb-schema-evidence.json) is currently proven for xdbboxr.adf. No per-record field offset, width, or signedness is included here because no static evidence -- header arithmetic, byte-pattern inspection, or executable parser code -- reliably pinned the record boundary in this pass. This file exists so future work extends a versioned model instead of re-deriving the header from scratch, and so no downstream consumer accidentally treats an unproven field as confirmed.",
+  "status": "record_layout_and_rating_fields_mapped",
+  "confidence": "PROBABLE",
+  "summary": "Follow-up static RE corrects the earlier model: xdbboxr.adf has 121 fields and 37 records, not 121 records and 37 fields. The fixed header is 24 bytes; a 31-byte packed 2-bit-per-field type map begins at +0x18; the row matrix begins at +0x38 with a 0xF2-byte stride. Identity, base availability, Replay identity selector, hometown, nickname/alias, weight/division, career timing, rating mode, core ratings, stance/style and several appearance fields are now mapped.",
   "container": {
     "compressed_size": 3117,
     "decoded_size": 9704,
+    "decoded_size_hex": "0x25E8",
     "refpack_header": "10fb",
-    "refpack_decode": "clean: exact declared-size match (9704 bytes), zero trailing bytes, self-consistent decode/encode round trip via src/fnr3_re/refpack.py"
+    "refpack_decode": "clean: exact declared-size match, zero RefPack trailing bytes"
   },
-  "proven_header_fields": {
-    "word0": {"value": 121, "candidate_meaning": "record count", "confidence": "CANDIDATE", "reason": "121 is a plausible boxer-database row count (larger than the ~40-fighter playable roster commonly reported for this title, consistent with also including legends/created-boxer template slots), but no stride arithmetic or executable code confirms it names a record count rather than some other quantity."},
-    "word1": {"value": 37, "candidate_meaning": "field/column count", "confidence": "CANDIDATE", "reason": "37 is a plausible per-boxer field count for a rich boxer schema (name, ratings, attributes, appearance, ...), but this is a plausibility judgement, not a proven claim -- flagged explicitly per the evidence standard's prohibition on promoting a claim from a value that merely 'looks right'."},
-    "section_size_a": {"value": 9012, "candidate_meaning": "size in bytes of a leading fixed-size section, distinct from a 692-byte trailing region", "confidence": "CANDIDATE"},
-    "trailing_bytes": {"value": 692, "candidate_meaning": "possible string pool or secondary section following the fixed section", "confidence": "CANDIDATE"},
-    "word6": {"value": 21, "candidate_meaning": "unknown; xdbboxr.adf is one of only two tables (with xdbcutpn.adf) where this word is non-zero", "confidence": "CANDIDATE"}
-  },
-  "record_layout": {
-    "status": "partially_resolved",
-    "record_count": 121,
-    "record_count_confidence": "PROBABLE",
-    "record_count_evidence": "func_001AD268 reads word0 directly from the payload and uses it as a genuine per-entry loop bound (see boxer-ownership-map.json's header_word0_proof) -- this settles the structural question of whether word0 is consumed as a count at all, though it does not yet prove the counted entries are specifically 'boxer records' as opposed to some other per-row flag.",
-    "record_stride": null,
-    "fields": [],
-    "flags_array": {
-      "offset": "+0x18",
-      "confidence": "CANDIDATE",
-      "layout": "2 bits per entry, 4 entries per byte, for word0 (121) entries -- ceil(121/4) = 31 bytes, spanning payload offset 0x18 through 0x36",
-      "evidence": "func_001AD268 computes each entry's address as payload+0x18+(index>>2) and extracts (byte >> shift) & 0x3 where shift depends on index&0x3; see boxer-ownership-map.json's revised_header_model.",
-      "meaning_of_the_4_values": "unresolved -- not determined whether 0/1/2/3 correspond to boxer status categories (e.g. active/legend/created/hidden) or something unrelated to boxer semantics specifically"
+  "header": {
+    "size": 24,
+    "field_count": {
+      "word": "word0",
+      "value": 121,
+      "confidence": "CONFIRMED",
+      "evidence": "func_001ACCAC bounds field_id against header[0]; func_001AD268 scans exactly header[0] 2-bit field-type codes."
     },
-    "why_still_unresolved_beyond_the_above": [
-      "No boxer-record field accessor (a function that reads a specific named field -- rating, weight, name, etc. -- out of an indexed boxer entry) was located and traced in this pass; BOOT.BIN contains 24,576 disassembled functions and the boxer table's known consumers (6 direct singleton-accessor callers plus func_001AD268) do not themselves read individual named fields.",
-      "The boxer-table runtime accessor found in BOOT.BIN (func_00186464, see boxer-ownership-map.json) walks the loaded table via a linked-list 'next' pointer at offset +0x10 of each visited node rather than doing index*stride array arithmetic against the payload directly -- whether this linked list is built from the payload's flags-array entries, or is a separate structure entirely, was not determined.",
-      "The byte range after the +0x18 flags array (payload offset ~0x37 onward, out of 9704 total bytes) was not further structurally analyzed in this pass."
+    "record_count": {
+      "word": "word1",
+      "value": 37,
+      "confidence": "CONFIRMED",
+      "evidence": "func_001AD21C returns header[1]; func_001AD180 bounds record_index against header[1] and computes row = matrix_base + record_index*(field_count*2)."
+    },
+    "float_pool_base": {
+      "word": "word2",
+      "value": 9012,
+      "hex": "0x2334",
+      "confidence": "CONFIRMED"
+    },
+    "int32_pool_base": {
+      "word": "word3",
+      "value": 9012,
+      "hex": "0x2334",
+      "confidence": "CONFIRMED"
+    },
+    "string_pool_base": {
+      "word": "word4",
+      "value": 9012,
+      "hex": "0x2334",
+      "confidence": "CONFIRMED"
+    },
+    "reserved_word5": {
+      "value": 0,
+      "confidence": "PROBABLE"
+    },
+    "note": "Bytes at +0x18 and +0x1C are not header words: +0x18 starts the packed field-type bitmap and +0x38 begins the aligned row matrix in xdbboxr."
+  },
+  "field_type_table": {
+    "offset": "0x18",
+    "bytes": 31,
+    "aligned_end": "0x38",
+    "layout": "2 bits per field, four fields per byte; field shift = 6 - ((field_id & 3)*2)",
+    "native_types": {
+      "0": "inline signed int16 stored directly in the row token",
+      "1": "byte/string pool at payload + string_pool_base + signed16 token",
+      "2": "int32 pool at payload + int32_pool_base + signed16(token)*4",
+      "3": "float32 pool at payload + float_pool_base + signed16(token)*4"
+    },
+    "confidence": "CONFIRMED",
+    "evidence": [
+      "func_001ACCAC",
+      "func_001ACD40",
+      "func_001ACE20"
     ]
   },
-  "boxer_data_is_not_confined_to_this_table": {
-    "confidence": "PROBABLE for the archive family, CANDIDATE for any specific field split",
-    "finding": "xdbboxr.adf is not the sole boxer database. A 9-entry resource registry table found in BOOT.BIN (see analysis/resources/resource-loader-map.json) groups xdbboxr.adf's containing archive (preload/db.viv is not itself in that table, but 4 sibling appearance archives are) alongside boxersh.viv (staged damage models, gloves), cboxshr.viv (shorts models), boxmisc.viv (face/damage/equipment geometry), boxmisc2.viv (headgear-compatible hair morphs), boxerpre.viv, allhair.viv, actors.viv, and tables.viv. None of these are xdbboxr.adf-format tables -- they are 3D model/geometry archives -- so boxer *appearance* data is confirmed split across a completely separate resource family from boxer *database* fields, consistent with a normal game-engine separation of database records (identity/stats) from rendering assets (models/textures), not a schema-splitting surprise.",
-    "see_also": "analysis/resources/boxer-ownership-map.json's cross_resource_relationships and analysis/resources/corpus-resource-index.json"
+  "record_descriptor_matrix": {
+    "offset": "0x38",
+    "offset_formula": "align4(0x18 + ceil(field_count/4))",
+    "stride": 242,
+    "stride_hex": "0xF2",
+    "records": 37,
+    "fields_per_record": 121,
+    "descriptor_width": 2,
+    "order": "row-major: offset = 0x38 + record_index*0xF2 + field_id*2",
+    "end": "0x2334",
+    "confidence": "CONFIRMED",
+    "evidence": "func_001AD180 computes the matrix base as word2 - align4(field_count*record_count*2), then advances by field_count*2 per record. For xdbboxr the result is 0x38 and the padded matrix ends exactly at word2=0x2334."
   },
-  "explicitly_not_claimed": [
-    "field offsets for name/rating/weight/division/stance/handedness/appearance/hair/shorts/equipment/hometown/nationality/career-eligibility/rivals/training/store-unlock/created-boxer flags -- none of these have been located in xdbboxr.adf's decoded bytes or in executable field-accessor code",
-    "whether word0=121 counts playable roster boxers, all database rows including templates, or something else",
-    "whether the 692-byte trailing region is a string pool, a secondary record array, or padding"
-  ]
+  "select_boxer_ratings": {
+    "source_handler": "0x001D53F0 (UpdateSelectBoxerInfo)",
+    "accessor_chain": [
+      "func_00185114",
+      "func_0018553C",
+      "func_001ACD40"
+    ],
+    "field_storage": "Fields 0x10-0x18 resolve as type 0 inline signed int16 tokens through func_001ACD40. Power averages two component fields; iOverall is computed separately.",
+    "fields": [
+      {
+        "ui": "iPower",
+        "field_ids": [
+          "0x10",
+          "0x11"
+        ],
+        "record_relative_offsets": [
+          "0x20",
+          "0x22"
+        ],
+        "payload_record0_offsets": [
+          "0x58",
+          "0x5A"
+        ],
+        "storage": "int16 + int16",
+        "behavior": "average of the two signed-int16 power components"
+      },
+      {
+        "ui": "iSpeed",
+        "field_id": "0x12",
+        "record_relative_offset": "0x24",
+        "payload_record0_offset": "0x5C",
+        "storage": "int16"
+      },
+      {
+        "ui": "iAgility",
+        "field_id": "0x13",
+        "record_relative_offset": "0x26",
+        "payload_record0_offset": "0x5E",
+        "storage": "int16"
+      },
+      {
+        "ui": "iStamina",
+        "field_id": "0x14",
+        "record_relative_offset": "0x28",
+        "payload_record0_offset": "0x60",
+        "storage": "int16"
+      },
+      {
+        "ui": "iChin",
+        "field_id": "0x15",
+        "record_relative_offset": "0x2A",
+        "payload_record0_offset": "0x62",
+        "storage": "int16"
+      },
+      {
+        "ui": "iHeart",
+        "field_id": "0x16",
+        "record_relative_offset": "0x2C",
+        "payload_record0_offset": "0x64",
+        "storage": "int16"
+      },
+      {
+        "ui": "iCuts",
+        "field_id": "0x17",
+        "record_relative_offset": "0x2E",
+        "payload_record0_offset": "0x66",
+        "storage": "int16"
+      },
+      {
+        "ui": "iBody",
+        "field_id": "0x18",
+        "record_relative_offset": "0x30",
+        "payload_record0_offset": "0x68",
+        "storage": "int16"
+      },
+      {
+        "ui": "iOverall",
+        "storage": "computed",
+        "behavior": "computed by func_001D50F4; no direct raw XDB field asserted"
+      }
+    ],
+    "per_record_offset_formula": "payload_offset = 0x38 + record_index*0xF2 + field_id*2"
+  },
+  "roster_count_correction": {
+    "finding": "121 is the XDB field/column count, not the boxer-record count. xdbboxr.adf contains 37 base rows/records in the tracked retail resource.",
+    "selector_model": "func_00186284 resolves the boxer selector/index by cumulative registered-table record counts. It never consults xdbboxr field 0: it subtracts each table's dynamic record_count and passes the residual record index to func_001AD180.",
+    "select_boxer_context": "The normal stock SelectBoxer range table exposes selector indices 0-34 across six divisions. Base rows/indexes 35 and 36 are bonus/hidden records for Fabolous and Little Mac.",
+    "field0_correction": "xdbboxr field 0 happens to equal row index for rows 0-34 but contains 74 and 75 in rows 35 and 36. Because the actual selector resolver reaches those records by cumulative indices 35 and 36 without reading field 0, field 0 is NOT the global SelectBoxer/fight-session boxer index. Its exact secondary/resource-ID role remains unresolved.",
+    "hard_maximum": "No hard total roster maximum is established. Base record_count is dynamic and func_00186284 can span multiple registered boxer-table instances."
+  },
+  "unresolved": [
+    "Exact original authored label and full downstream interpretation of xdbboxr field 0x05. It is now proven to feed a normalized boxer audio/presentation identity used both in Replay payloads and boxer-specific chant-bank selection, but a direct raw commentary-line identity is explicitly not claimed.",
+    "What boxer/category source sets field 0x0F nonzero; its effect is proven as alternate/raw versus weight-class-adjusted rating mode, but the owning semantic category is unresolved.",
+    "Exact semantic names of the three packed 0x0E nibble traits.",
+    "Exact semantic role of field 0x00's secondary/resource identity number (74/75 for the two bonus records).",
+    "Semantic identities for remaining physical/biographical fields including likely age/height/reach and the packed 0x0D/0x0E metadata.",
+    "Remaining handedness/equipment and deeper appearance-resource semantics; stance, style, skin tone, eyebrow, eye colour, facial hair, facial-hair colour, hair colour, and the hair-style resource token are now mapped.",
+    "Career/store/generated-boxer fields and any independent save/UI maximum on the cumulative boxer selector space.",
+    "Exact original iOverall formula internals beyond the recovered helper boundary."
+  ],
+  "identity_fields": {
+    "confidence": "CONFIRMED for name fields 1-2; PROBABLE for field 3; field 0 is explicitly unresolved after correcting the earlier global-ID interpretation",
+    "fields": [
+      {
+        "field_id": "0x00",
+        "row_offset": "0x00",
+        "storage": "inline signed int16",
+        "semantic": "secondary boxer/resource identity key; exact role unresolved",
+        "confidence": "CANDIDATE",
+        "evidence": "Rows 0-34 contain values 0-34, while bonus rows 35-36 contain 74 and 75. func_00186284 proves the game's cumulative boxer selector/index is instead derived entirely from registered-table record counts and residual row position, so the previous 'global boxer ID' label for field 0 is superseded."
+      },
+      {
+        "field_id": "0x01",
+        "row_offset": "0x02",
+        "storage": "string-pool reference",
+        "semantic": "last/surname or display family name",
+        "evidence": "Decoded values include ALI, FRAZIER, HOLYFIELD, JONES JR, etc. func_001851CC reads field 2 then field 1 while composing the boxer display name."
+      },
+      {
+        "field_id": "0x02",
+        "row_offset": "0x04",
+        "storage": "string-pool reference",
+        "semantic": "first/given name",
+        "evidence": "Decoded values include MUHAMMAD, JOE, EVANDER, ROY, etc. func_001851CC reads field 2 before field 1 while composing the boxer display name."
+      },
+      {
+        "field_id": "0x03",
+        "row_offset": "0x06",
+        "storage": "string-pool reference",
+        "semantic": "short CRO/resource stem",
+        "evidence": "Values are compact stems matching boxer identities, e.g. mali, jfra, ehol, rjon, mpac, fabo and spun."
+      }
+    ]
+  },
+  "base_records_outside_stock_ranges": {
+    "confidence": "CONFIRMED for physical record identity; field-0 secondary IDs remain semantically unresolved",
+    "records": [
+      {
+        "row_index": 35,
+        "selector_index": 35,
+        "field0_secondary_id": 74,
+        "last_or_display_name": "FABOLOUS",
+        "first_name": "",
+        "cro_stem": "fabo"
+      },
+      {
+        "row_index": 36,
+        "selector_index": 36,
+        "field0_secondary_id": 75,
+        "last_or_display_name": "MAC",
+        "first_name": "LITTLE",
+        "cro_stem": "spun"
+      }
+    ],
+    "finding": "The two base-table rows outside the normal stock SelectBoxer ranges are real bonus/hidden boxer records. The cumulative resolver reaches them as selector indices 35 and 36; their field-0 values 74/75 are separate secondary IDs/keys.",
+    "custom_boxer_separation": "GetSelectBoxerInfo has a separate created/custom-boxer path that emits iCustomBoxerID, strCustomBoxerName and iCustomBoxerWeightClass from session/custom state, independently of base rows 35-36."
+  },
+  "weight_and_division": {
+    "confidence": "CONFIRMED",
+    "weight_field": {
+      "field_id": "0x09",
+      "row_offset": "0x12",
+      "storage": "inline signed int16",
+      "semantic": "boxer weight in the game's pound-scale units",
+      "evidence": "func_0018600C reads XDB field 9 and immediately maps its value to the six SelectBoxer weight-class enum values; known rows independently fit the thresholds (e.g. Pacquiao=125, Morales=126)."
+    },
+    "classifier": {
+      "function": "func_0018600C",
+      "selectboxer_corroboration": "GetSelectBoxerInfo calls func_0018600C at 0x001D7D28 and applies an explicit <6 enum bound.",
+      "enum_order": [
+        {
+          "enum": 0,
+          "name": "Heavyweight",
+          "minimum": 191,
+          "maximum": 280
+        },
+        {
+          "enum": 1,
+          "name": "Light Heavyweight",
+          "minimum": 169,
+          "maximum": 190
+        },
+        {
+          "enum": 2,
+          "name": "Middleweight",
+          "minimum": 148,
+          "maximum": 168
+        },
+        {
+          "enum": 3,
+          "name": "Welterweight",
+          "minimum": 136,
+          "maximum": 147
+        },
+        {
+          "enum": 4,
+          "name": "Lightweight",
+          "minimum": 127,
+          "maximum": 135
+        },
+        {
+          "enum": 5,
+          "name": "Featherweight",
+          "minimum": null,
+          "maximum": 126
+        }
+      ],
+      "invalid_high_weight": "values >= 281 return -1",
+      "exact_branches": [
+        "<127 -> 5",
+        "127..135 -> 4",
+        "136..147 -> 3",
+        "148..168 -> 2",
+        "169..190 -> 1",
+        "191..280 -> 0",
+        ">=281 -> -1"
+      ]
+    }
+  },
+  "selection_flag": {
+    "field_id": "0x04",
+    "row_offset": "0x08",
+    "storage": "inline signed int16",
+    "semantic": "base/default boxer availability flag",
+    "confidence": "CONFIRMED for executable behavior; PROBABLE user-facing 'unlocked/selectable' wording",
+    "observed_values": "1 for normal stock rows 0-34; 0 for bonus rows 35-36.",
+    "executable_evidence": [
+      "func_00185D84 reads field 4 through func_001ACD40 and returns (field4 > 0).",
+      "T_00278ABC applies that predicate across exactly 35 stock selector indices and writes the result into the parallel D_0056477C availability array.",
+      "func_00278768 counts enabled entries and func_002787A0 copies only enabled stock indices.",
+      "func_001B0FE8 returns true immediately when field4 > 0. When field4 == 0, selector index 35 is conditionally accepted through a per-boxer bit in the session/object bitset beginning at +0x1C4; indices >=36 are rejected in that predicate.",
+      "T_001B2648 can set the corresponding +0x1C4 availability bit using func_001AF728, which splits a selector index into word=index/32 and bit=index%32."
+    ],
+    "conclusion": "Field 0x04 is the default/base availability flag. Normal stock boxers pass directly; at least bonus selector index 35 can be promoted to available by a separate runtime/session unlock bit. This is stronger than the earlier stock-list-only interpretation."
+  },
+  "reference_fields": {
+    "hometown": {
+      "field_id": "0x06",
+      "row_offset": "0x0C",
+      "storage": "inline signed int16 foreign-key token",
+      "semantic": "xdbhmtwn.adf hometown key/reference",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "T_00185FA0 reads boxer field 6, resolves it through func_001A9020, then reads hometown-table field 1.",
+        "T_001860A0 reads boxer field 6, resolves it through func_001A9020, then reads hometown-table field 4.",
+        "Direct decode of xdbhmtwn.adf proves a 63-record keyed table whose field 4 contains O_Home_* localization keys; boxer field-6 values fall in that key space."
+      ]
+    },
+    "nickname_alias": {
+      "field_id": "0x07",
+      "row_offset": "0x0E",
+      "storage": "inline signed int16 foreign-key token",
+      "semantic": "xdbalias.adf nickname/alias key/reference",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "func_00185F34 reads boxer field 7, resolves it through func_00185008, then reads alias-table field 1.",
+        "T_00186108 reads boxer field 7, resolves it through func_00185008, then reads alias-table field 3.",
+        "Direct decode of xdbalias.adf proves a 76-record keyed table whose field 3 contains ST_Nick_* localization keys; boxer field-7 values occupy that key space."
+      ]
+    }
+  },
+  "partially_decoded_compact_fields": {
+    "field_0x0D": {
+      "storage": "inline signed int16 packed value",
+      "confidence": "CONFIRMED for bit extraction; semantic labels not yet promoted",
+      "helpers": {
+        "func_001853F0": "returns ((field_0x0D >> 8) & 0xFF) + 1900",
+        "func_00185434": "returns field_0x0D & 0xFF"
+      },
+      "note": "The resulting high-byte-plus-1900 / low-byte pairs strongly resemble year plus age/event metadata in the decoded retail rows, but the owning semantic consumer has not yet been proven."
+    },
+    "field_0x0E": {
+      "storage": "inline signed int16 packed value",
+      "confidence": "CONFIRMED for bit extraction; semantics unresolved",
+      "helpers": {
+        "func_00185468": "returns field_0x0E & 0xF",
+        "func_0018549C": "returns (field_0x0E >> 4) & 0xF",
+        "func_001854DC": "returns ((field_0x0E >> 8) & 0xF) - 5"
+      }
+    },
+    "field_0x05": {
+      "storage": "inline signed int16",
+      "confidence": "CONFIRMED read/dataflow boundary; PROBABLE higher-level semantic label",
+      "helper": "func_00185B30 returns field 5 directly",
+      "note": "func_00185B30 returns field 0x05 directly. func_0010C9C8 maps it through a bounded 76-entry boxer-code namespace used by Replay payloads. New debug-build cross-evidence proves the same normalized boxer code is consumed by AuAemsManager boxer-chant selection: after 0x001278C0 normalization, IDs <500 format as chant_PSP_Lic%03d.abk and IDs >=500 as chant_PSP_CaB%03d.abk, with generic fallback Chant_PSP_Gen%03d.abk. This establishes a boxer-specific audio/presentation identity role, but does NOT prove field 0x05 is a raw commentary line ID or exact original authored label.",
+      "semantic": "boxer audio/presentation identity selector feeding a normalized boxer code",
+      "evidence": [
+        "func_00185B30 -> raw xdbboxr field 0x05",
+        "func_0010C9C8 -> bounded normalized boxer code",
+        "func_0010BB58 -> Replay payload boxer codes",
+        "0x00133884 -> boxer chant-bank loader",
+        "0x001278C0 -> chant-ID normalization/remapping",
+        "analysis/resources/debug-build-aip-dispatch.json",
+        "analysis/resources/fight-event-dispatch-evidence.json"
+      ]
+    },
+    "fields_0x73_to_0x78": {
+      "storage": "inline signed int16",
+      "confidence": "CONFIRMED access pattern; semantics unresolved",
+      "helper": "func_00185B60(accessor, n) reads field 0x73+n for n<6 and clamps the result to 0..100",
+      "note": "Six 0-100 fields heavily consumed by gameplay/AI-adjacent functions; exact labels remain open."
+    }
+  },
+  "cross_table_fields": {
+    "confidence": "CONFIRMED",
+    "fields": [
+      {
+        "field_id": "0x06",
+        "row_offset": "0x0C",
+        "storage": "inline signed int16",
+        "semantic": "hometown-table record ID",
+        "target_table": "xdbhmtwn.adf",
+        "target_record_count": 63,
+        "evidence": [
+          "T_00185FA0 reads boxer field 0x06, rejects negative values, enters the hometown-table accessor path at func_001A9020, selects that record, then reads hometown field 0x01.",
+          "T_001860A0 follows the same boxer field 0x06 -> func_001A9020 path and reads hometown field 0x04 as a pooled string/key.",
+          "Decoded boxer values are all valid xdbhmtwn record indices (0..62), and duplicate boxer variants retain the same hometown ID.",
+          "Direct xdbhmtwn decoding shows the referenced rows contain localization-style data such as field-4 keys O_Home_1, O_Home_30, O_Home_42, etc."
+        ]
+      },
+      {
+        "field_id": "0x07",
+        "row_offset": "0x0E",
+        "storage": "inline signed int16",
+        "semantic": "alias/nickname-table record ID",
+        "target_table": "xdbalias.adf",
+        "target_record_count": 76,
+        "evidence": [
+          "func_00185F34 reads boxer field 0x07, rejects negative values, enters the alias-table accessor path at func_00185008, selects that record, then reads alias field 0x01.",
+          "T_00186108 follows the same boxer field 0x07 -> func_00185008 path and reads alias field 0x03 as a pooled string/key.",
+          "Decoded boxer values are all valid xdbalias record indices (0..75), and duplicate boxer variants retain the same alias ID.",
+          "Direct xdbalias decoding shows the referenced rows contain nickname localization keys such as ST_Nick_41, ST_Nick_43, ST_Nick_44, with T_NA used by one terminal record."
+        ]
+      }
+    ]
+  },
+  "career_timing_fields": {
+    "confidence": "PROBABLE semantic labels; CONFIRMED bit extraction/arithmetic",
+    "packed_field": {
+      "field_id": "0x0D",
+      "row_offset": "0x1A",
+      "storage": "inline signed int16",
+      "layout": {
+        "low_byte": "career/pro start age",
+        "high_byte": "career/pro start year minus 1900"
+      }
+    },
+    "accessors": {
+      "func_001853F0": "returns ((field_0x0D >> 8) & 0xFF) + 1900",
+      "func_00185434": "returns field_0x0D & 0xFF"
+    },
+    "executable_corroboration": [
+      "func_00197DAC reads the high-byte accessor as a calendar year and rejects entries whose start year is later than the current simulated year.",
+      "The same function combines the low byte with the start year as start_year - start_age + 39, i.e. the calendar year in which the boxer reaches age 39, and uses that threshold in career-era filtering.",
+      "Decoded retail rows match real boxer career timing strongly enough to support the semantic labels: e.g. Ali encodes 1960/18, Frazier 1965/21, Holyfield 1984/22 and Roy Jones Jr 1989/20."
+    ],
+    "note": "Some retail rows appear to contain reused or imperfect historical values, so this records the engine meaning of the packed fields rather than asserting historical accuracy for every boxer."
+  },
+  "packed_trait_field_0x0E": {
+    "confidence": "CONFIRMED packing; semantic labels unresolved",
+    "field_id": "0x0E",
+    "row_offset": "0x1C",
+    "storage": "inline signed int16",
+    "accessors": [
+      {
+        "function": "func_00185468",
+        "value": "field & 0x000F",
+        "destination_examples": "generated/career boxer byte +0x0E"
+      },
+      {
+        "function": "func_0018549C",
+        "value": "(field & 0x00F0) >> 4",
+        "destination_examples": "generated/career boxer byte +0x0F"
+      },
+      {
+        "function": "func_001854DC",
+        "value": "((field & 0x0F00) >> 8) - 5",
+        "destination_examples": "generated/career boxer byte +0x10"
+      }
+    ],
+    "evidence": "func_00197DAC and a second career-generation path copy the three decoded components into adjacent bytes of generated boxer/career records.",
+    "unresolved": "Exact trait names represented by the three nibbles."
+  },
+  "auxiliary_field_accessors": {
+    "0x05": {
+      "function": "func_00185B30",
+      "behavior": "returns field 0x05 as signed int16",
+      "downstream": "func_0010C9C8 normalizes the field through a bounded 76-entry mapping; func_0010BB58 places two normalized boxer codes into the named Replay event payload before generic event dispatch.",
+      "semantic_behavior": "Replay-event boxer identity/profile source selector",
+      "confidence": "CONFIRMED Replay-event dataflow; exact authored column label and normalized-code meaning unresolved",
+      "evidence": [
+        "func_00185B30 returns xdbboxr field 0x05 as signed int16.",
+        "func_0010C9C8 maps the value through a bounded 76-entry table and can fall back through field 0x07's alias-linked path.",
+        "func_0010BB58 calls func_0010C9C8 for both active boxers and writes both results to payload +0x14/+0x18.",
+        "The payload is dispatched through func_003E5860 under descriptor D_0055AB38, whose name is Replay.",
+        "No direct evidence ties this field to commentary/audio selection."
+      ]
+    },
+    "0x0B": {
+      "function": "func_00185374",
+      "behavior": "reads field 0x0B; under a fight-session condition from func_001B10AC, values >=63 are transformed to value/2 + value/8 (5/8 scaling), otherwise returned directly",
+      "semantic": "unresolved"
+    }
+  },
+  "rating_mode_field_0x0F": {
+    "field_id": "0x0F",
+    "row_offset": "0x1E",
+    "storage": "inline signed int16",
+    "confidence": "CONFIRMED for executable behavior; semantic source/type label remains unresolved",
+    "observed_retail_base_rows": "0 for all 37 rows in the tracked base xdbboxr.adf",
+    "behavior": [
+      "func_001857E4 reads field 0x0F after resolving rating fields 0x10-0x18.",
+      "When field 0x0F != 0, func_001857E4 returns the selected raw rating (or derived Power/Overall slot) clamped to 10..100.",
+      "When field 0x0F == 0, func_001857E4 obtains the boxer's weight class through func_0018600C and scales the selected rating through D_FLT_0055E280 before clamping it to 10..100.",
+      "T_00187434 only populates its nine-rating output through func_001857E4 when field 0x0F == 0 and marks output +0x78 = 1.",
+      "func_00187548 takes the complementary path: when field 0x0F != 0 it fills the nine-rating output with the unscaled/base accessor func_0018553C and marks output +0x78 = 0."
+    ],
+    "conclusion": "Field 0x0F selects between the game's weight-class-adjusted rating path and an alternate/raw rating mode. The underlying boxer category that sets the flag is not yet proven, so it is intentionally not named 'created', 'career', or similar."
+  },
+  "presentation_and_appearance_fields": {
+    "confidence": "CONFIRMED for stance/style/skin-tone and the listed head-appearance bridge fields; hair-style field 0x71 is confirmed as an internal resource token rather than the UI index",
+    "bridge": {
+      "function": "func_0018A110",
+      "role": "Copies/normalizes xdbboxr fields into the boxer presentation scratch structure consumed by front-end handlers.",
+      "ui_consumers": [
+        "T_001E3434 emits iStance and iStyle from scratch offsets +0x8C/+0x8E.",
+        "T_001E62BC emits iStyle directly and remaps scratch +0xC2 into iSkinTone.",
+        "T_001E76C4 randomizes iHairStyle/iHairColour/iEyeColour/iEyebrow/iFacialHair/iFacialHairColour, writes the corresponding scratch fields, then commits them through func_0018ADCC."
+      ]
+    },
+    "fields": [
+      {
+        "field_id": "0x19",
+        "row_offset": "0x32",
+        "storage": "inline signed int16",
+        "semantic": "stance flag / iStance",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0x8C",
+        "normalization": "func_0018A110 stores 1 when field 0x19 > 0, otherwise 0.",
+        "evidence": "T_001E3434 reads scratch +0x8C and publishes it under the literal iStance."
+      },
+      {
+        "field_id": "0x1A",
+        "row_offset": "0x34",
+        "storage": "inline signed int16",
+        "semantic": "style enum / iStyle",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0x8E",
+        "evidence": "func_0018A110 copies field 0x1A directly to scratch +0x8E; T_001E3434 and T_001E62BC publish that value under iStyle."
+      },
+      {
+        "field_id": "0x34",
+        "row_offset": "0x68",
+        "storage": "inline signed int16",
+        "semantic": "skin-tone internal enum",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xC2",
+        "ui_mapping": {
+          "1": 3,
+          "2": 4,
+          "3": 0,
+          "4": 1,
+          "5": 2
+        },
+        "evidence": "func_0018A110 copies field 0x34 to scratch +0xC2. T_001E62BC reads that slot and publishes iSkinTone through the exact five-value remap shown here."
+      },
+      {
+        "field_id": "0x35",
+        "row_offset": "0x6A",
+        "storage": "inline signed int16",
+        "semantic": "eyebrow selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xC4",
+        "evidence": "T_001E76C4 publishes iEyebrow and writes the same generated selection to scratch +0xC4 before func_0018ADCC commits it; func_0018A110 maps field 0x35 to +0xC4."
+      },
+      {
+        "field_id": "0x36",
+        "row_offset": "0x6C",
+        "storage": "inline signed int16",
+        "semantic": "eye-colour selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xC6",
+        "evidence": "T_001E76C4 publishes iEyeColour and writes the same generated selection to scratch +0xC6; func_0018A110 maps field 0x36 to +0xC6."
+      },
+      {
+        "field_id": "0x37",
+        "row_offset": "0x6E",
+        "storage": "inline signed int16",
+        "semantic": "facial-hair selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xC8",
+        "evidence": "T_001E76C4 publishes iFacialHair and writes the same generated selection to scratch +0xC8; func_0018A110 maps field 0x37 to +0xC8."
+      },
+      {
+        "field_id": "0x38",
+        "row_offset": "0x70",
+        "storage": "inline signed int16",
+        "semantic": "facial-hair-colour internal selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xCA",
+        "ui_note": "The randomizer stores the internal value in scratch +0xCA and publishes iFacialHairColour as internal_value - 1.",
+        "evidence": "func_0018A110 maps field 0x38 to +0xCA; T_001E76C4 writes s2 to +0xCA and emits s2-1 as iFacialHairColour."
+      },
+      {
+        "field_id": "0x39",
+        "row_offset": "0x72",
+        "storage": "inline signed int16",
+        "semantic": "hair-colour selection",
+        "confidence": "CONFIRMED",
+        "scratch_offset": "0xCC",
+        "evidence": "T_001E76C4 publishes iHairColour and writes the same generated selection to scratch +0xCC; func_0018A110 maps field 0x39 to +0xCC."
+      },
+      {
+        "field_id": "0x71",
+        "row_offset": "0xE2",
+        "storage": "inline signed int16",
+        "semantic": "hair-style resource token",
+        "confidence": "CONFIRMED for resource-token role; user-facing style index is indirect",
+        "scratch_offset": "0x13C",
+        "evidence": "func_0018A110 maps field 0x71 to scratch +0x13C. T_001E76C4 publishes the UI iHairStyle index separately, then stores D_0055F9A8[iHairStyle] into +0x13C before committing."
+      }
+    ]
+  },
+  "replay_identity_field_0x05": {
+    "field_id": "0x05",
+    "row_offset": "0x0A",
+    "storage": "inline signed int16",
+    "confidence": "CONFIRMED for Replay-event dataflow; exact normalized-code meaning remains unresolved",
+    "native_reader": "func_00185B30",
+    "normalizer": "func_0010C9C8",
+    "behavior": [
+      "func_0010C9C8 treats field 0x05 as a bounded 76-entry selector and maps it to a normalized boxer code.",
+      "Licensed boxers represented in multiple weight classes use different field-0x05 source values that normalize to the same output code in several observed pairs.",
+      "When the direct field-0x05 mapping produces no code, the mapper can fall back through field 0x07's alias/nickname-linked path.",
+      "func_0010BB58 invokes the mapper for both active boxers, writes the normalized results to Replay-event payload offsets +0x14 and +0x18, and dispatches the payload through func_003E5860.",
+      "The first-use fallback registers/resolves descriptor D_0055AB38 through func_003E4A94; that descriptor is named Replay."
+    ],
+    "conclusion": "Field 0x05 is a per-boxer source selector for normalized Replay-event identity/profile codes. It is NOT presently proven to be a commentary, speech, or audio ID.",
+    "evidence_file": "analysis/resources/fight-event-dispatch-evidence.json"
+  }
 }

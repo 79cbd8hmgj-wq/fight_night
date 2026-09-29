@@ -10,18 +10,24 @@ Anchors:
   ``.../bagotricks``, ``.../attack power``, ``.../energy and health``,
   ``.../phys damage``.
 
-This module does not attempt to reach or replace the original AI decision
-loop -- its owning function was not located by any pass so far (the
-``ai/mods/p%d/...`` strings' two known consumers, ``func_00093C5C`` and
-``func_00091D24``, were not disassembled this pass). It implements the
-overhaul's own new AI *response* layer: a small rule-based policy that
-reacts to the Alpha 1 stamina/damage state this milestone actually
-introduces, per this milestone's explicit priority list (pace management,
-aggression vs. conservation, reaction to low stamina, reaction to being
-hurt, defensive adjustment, opponent-condition awareness). The named
-``ai/mods`` categories are used as this policy's own tunable knob names so
-that a future pass which does locate the real modifier table can map this
-policy's outputs onto it without a shape change.
+This module does not attempt to replace the original AI decision loop.
+A later static pass disassembled the two ``ai/mods/p%d/...`` string consumers
+and corrected the earlier lead: ``func_00093C5C`` and ``func_00091D24``
+are the constructor/destructor pair for a 0xD4 per-Player AI modifier/config
+subobject stored at Player+0x2BC, not the action-selection loop. The same pass
+recovered probable Player construction at ``0x000A01EC``, probable virtual
+``Player::Update`` at ``0x000A0894``, and a combat/action-event convergence
+candidate at ``0x000A1100``; see
+``analysis/resources/player-fight-loop-evidence.json``.
+
+This module therefore remains the overhaul's own new AI *response* layer: a
+small rule-based policy that reacts to the Alpha 1 stamina/damage state this
+milestone actually introduces, per this milestone's explicit priority list
+(pace management, aggression vs. conservation, reaction to low stamina,
+reaction to being hurt, defensive adjustment, opponent-condition awareness).
+The named ``ai/mods`` categories are used as this policy's own tunable knob
+names so a later pass can map policy outputs onto the real decision/update
+path without a shape change.
 """
 
 from __future__ import annotations

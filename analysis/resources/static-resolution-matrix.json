@@ -39,20 +39,24 @@
       "reason": "Unchanged from the prior pass: singleton at ELF virtual 0x000080B4 via func_00186408, first 3 fields proven by func_001A0C74."
     },
     {
-      "question": "Is xdbboxr.adf header word0 (121) genuinely consumed by executable code as a per-entry count, or is it merely a plausible-looking number?",
+      "question": "Are xdbboxr.adf header word0/word1 and the +0x18 packed field table structurally identified?",
       "status": "STATICALLY_RESOLVED",
-      "reason": "func_001AD268 was disassembled and directly proven to read word0 from the singleton's payload pointer and use it as the exact upper bound of a per-entry scanning loop -- a real, exact-code consumption, not an inference from the value alone. This question was RUNTIME_BLOCKED in the prior pass; static disassembly of the actual consumer settled it without any runtime step."
+      "reason": "Follow-up static RE resolves word0 as field_count (121), word1 as record_count (37), and +0x18 as the packed 2-bit per-field storage-class table. func_001ACCAC bounds field_id against word0; func_001AD180 bounds record_index against word1 and selects the row-major descriptor matrix; func_001ACD40/func_001ACE20 identify type codes 0/1/2/3 as inline int16/string/int32/float32."
     },
     {
       "question": "Is xdbboxr.adf's per-record field layout (name/rating/weight/division/stance/handedness/appearance/hair/shorts/hometown/career-eligibility/rivals/training/store-unlock/created-boxer data) fully resolved?",
       "status": "STATIC_PENDING",
       "static_avenues_remaining": [
-        "Disassemble func_0018654C, which consumes func_001AD268's classification result in both T_0018E4F4 and func_001AF768 -- it may reveal what the 4 flag-array categories mean or how they map to a further field.",
-        "Search for a direct (non-linked-list) accessor into the boxer singleton's +0x8 payload pointer at an offset past the +0x18 flags array (payload bytes ~0x37-9704 were not structurally analyzed this pass).",
-        "Cross-compare the +0x18 packed-flags-array layout against at least one other xdb table's own consumer (only xdbboxr.adf's was traced) to confirm or refute that the layout generalizes.",
-        "Disassemble the 9 subsystem-init calls chained after func_001AF768's two boxer-table queries, which may reveal what a stride of 5 vs. 0x28 (40) bytes per entry is used for downstream."
+        "The generic record boundary and storage ABI are resolved; map remaining semantic field IDs by tracing concrete readers through func_001ACD40.",
+        "Already resolved: identity fields 0x00-0x03, stock SelectBoxer availability field 0x04, weight/division field 0x09 plus func_0018600C, and rating fields 0x10-0x18 (Power uses two components; Overall is computed).",
+        "Trace stance/handedness, appearance/equipment, hometown, career/store, rivals/training, and created-boxer accessors to their field IDs."
       ],
-      "why_not_yet_statically_resolved": "None of the above four avenues were completed in this pass; the record boundary past the proven +0x18 flags array remains open."
+      "why_not_yet_statically_resolved": "The physical record layout and several high-value semantic fields are resolved, but semantic names for most of the remaining 121 field IDs are not."
+    },
+    {
+      "question": "Is xdbboxr.adf field 0x04's stock SelectBoxer policy resolved?",
+      "status": "STATICALLY_RESOLVED",
+      "reason": "func_00185D84 reads field 0x04 and returns value>0. T_00278ABC applies that predicate across exactly 35 ordered stock boxer IDs from D_005646F0 and writes the parallel D_0056477C availability flags. func_00278768 counts the enabled flags, and func_002787A0 builds the output boxer-ID list by skipping disabled entries. This proves field 0x04 gates inclusion in the active stock SelectBoxer roster; separate bonus/hidden unlock policy is not inferred."
     },
     {
       "question": "What does func_00186464's 8-bit-masked index parameter actually select when walking the +0x10 linked list -- a boxer record, a table-instance registration, or something else?",

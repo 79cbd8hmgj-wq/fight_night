@@ -15,6 +15,10 @@ statically -> continue to next dependency.** No runtime observation
 (PPSSPP, debugger, breakpoints, save states) was used at any point. No
 unidentified field was guessed at or patched.
 
+## Follow-up corrections after Alpha 1
+
+PR #37 uses the ULES00270 review/debug build as a cross-build static reference. It resolves the AIP native dispatch side, maps the developer quick-fight handlers, and corrects two stale Alpha 1 interpretations: `+0x19B0/+0x19B4` are boxer IDs/indices rather than pointers, and `+0x19A8` is a session-mode field rather than an options bitfield. See `docs/decomp/packages/aip-native-dispatch/README.md` and `analysis/resources/debug-build-aip-dispatch.json`.
+
 ## What is genuinely new this pass (static RE)
 
 Full write-ups with confidence and source citations are in
@@ -27,8 +31,10 @@ replacement/hook boundary, patch location, affected Programs). Summary:
    misreading of `func_001AF768` as a "UI/menu-construction routine." It is
    in fact this singleton's constructor, reached from 3 independent
    subsystems this pass (fight-totals, judging, options). Two of its
-   fields are corroborated by multiple call sites: `+0x19B0`/`+0x19B4`
-   (the two competing boxers' object pointers).
+   fields are corroborated by multiple call sites: `+0x19B0`/`+0x19B4`.
+   **Follow-up correction (PR #37):** these are numeric per-corner boxer
+   selection IDs/indices, not boxer-object pointers. `func_001B00B4` is the
+   write-side setter and `func_00186284` resolves the stored index.
 2. **`func_00186464`'s linked-list index resolved** (previously
    `STATICALLY_AMBIGUOUS`): it is a table-instance registry, not a
    boxer-record index. Full disassembly of its caller `func_0018654C`
@@ -48,24 +54,28 @@ replacement/hook boundary, patch location, affected Programs). Summary:
    identical code -- no per-judge weighting exists in the calling code.
    Whether a per-judge-*object* internal bias exists remains open
    (`func_08A02C`'s own body was not disassembled).
-6. **The shared native-function registry** deepened one level:
-   `func_0CDAC0`/`func_0CDA70` both reduce to two ~122-instruction
-   registration entry points sharing one global registry pointer
-   (`0x005436D8`). The call-by-name *dispatch* side (the APT bytecode
-   interpreter itself) was not reached -- this is the single largest
-   remaining blocker, see "Blockers" below.
+6. **The shared native-function registry** deepened one level in Alpha 1:
+   `func_0CDAC0`/`func_0CDA70` both reduce to registration entry points
+   sharing global registry pointer `0x005436D8`. **Follow-up PR #37 resolves
+   the former dispatch blocker:** `func_000D024C` is FSCommand dispatch and
+   `func_000D041C` is LoadVariables dispatch, each performing the registered
+   name lookup and indirect invocation.
 7. **T_001D54A0/T_001E83E0 confirmed as UI-only**: the two functions a
    prior pass tied to `iStamina` register all 9 proven boxer rating names
    (Power/Speed/Agility/Stamina/Chin/Body/Heart/Cuts/Overall) as UI
    properties for the boxer rating-card display -- not the in-fight
    stamina mechanic. This is a correction that prevents wasted future
    effort, not new gameplay logic.
-8. **`xdbboxr.adf`'s per-record boxer stat layout: attempted, still
-   unresolved.** A direct read of the decoded payload past the proven
-   `+0x18` flags array shows plausible-looking 16-bit values, but no
-   consumer function was found this pass connecting them to the 9 proven
-   stat names. Per this project's discipline, this is reported as an open
-   blocker, not patched or exposed as a resolved field map.
+8. **`xdbboxr.adf`'s physical record layout and several high-value
+   semantic fields are now recovered.** PR #37 resolves the 24-byte XDB
+   header, the packed 2-bit-per-field storage-class table, the row-major
+   descriptor matrix, identity fields 0x00-0x03, weight/division field 0x09,
+   and rating fields 0x10-0x18. A later targeted trace in the same PR also
+   proves field 0x04 is the inclusion/availability gate for the active
+   35-entry stock SelectBoxer roster: T_00278ABC populates a parallel flag
+   table from func_00185D84(field 0x04), func_00278768 counts enabled slots,
+   and func_002787A0 emits only enabled boxer IDs. Most of the remaining 121
+   semantic field names are still open.
 
 These two resolutions were folded into `analysis/reports/
 static-re-ceiling.json` (`program-04-04` now `STATICALLY_RESOLVED`;
@@ -80,36 +90,39 @@ implementation work required -- not a renewed broad-assessment effort.
 
 `src/fnr3_re/overhaul/boxer_model.py`: `BoxerRatings` (the 9 proven fields,
 proven order) and `BoxerRatingOverrideTable` (a new, ID-keyed JSON
-resource). Because `xdbboxr.adf`'s per-record byte layout remains
-unresolved (see finding 8 above), this module does **not** read or write
-those bytes -- it implements a neutral replacement boundary instead, per
-this milestone's own instructions ("a proven replacement boundary" is an
-acceptable alternative to "actual game-owned boxer data" when the latter
-isn't yet safely reachable). `overall` defaults to independently-stored
-(the conservative choice) with an explicit, tested hook
-(`with_overall_derived`) for a future pass that proves the real
-Power/Speed/.../Cuts -> Overall relationship, if one exists.
+resource). The original XDB byte layout is now recovered for the core identity,
+availability, weight/division, and rating fields, but this module still
+does **not** mutate those bytes directly. It retains the neutral override
+boundary as a reversible mod architecture choice while the remaining field
+semantics, rebuild policy, and global boxer-ID/record-ID behavior are still
+being bounded. `overall` keeps an explicit derivation hook because retail
+computes it through `func_001D50F4` rather than exposing a directly mapped
+raw XDB field.
 
 ### B. Boxer selection / roster integration -- PARTIALLY ADVANCED
 
 `GetSelectBoxerInfo`/`UpdateSelectBoxerInfo`/`LoadSelectBoxer`/
 `SetSelectBoxerInfo`'s registration functions (`func_001D537C`/
 `func_001D5438`) were disassembled and confirmed to be registration
-trampolines only, sharing the registry described in finding 6. Their real
-implementations were **not** reached -- the call-by-name dispatch side of
-the registry was not located this pass (see "Blockers"). Consequently:
-boxer-ID mapping, selected-boxer state, division filtering, and roster
-iteration through the real game code remain unmapped. The 121-entry
-maximum question is **not** treated as resolved and roster expansion is
-**not** made to depend on it (per this milestone's explicit instruction) --
-`BoxerRatingOverrideTable` is keyed by an opaque, mod-defined `boxer_id`
-with no assumption about `xdbboxr.adf`'s own ID scheme or count.
+trampolines only, sharing the registry described in finding 6. Their real implementations were **not** reached during Alpha 1.
+**Follow-up PR #37 has since resolved the generic call-by-name dispatch,
+the concrete SelectBoxer handlers, the six-class division filter, the
+stock ID ranges, and the active-roster construction path.** The normal
+stock list contains 35 entries (IDs 0-34 across six divisions), while base
+XDB rows 35-36 are bonus/hidden records with global boxer IDs 74 and 75.
+Field 0x04 gates inclusion in the active 35-entry stock list. The old
+"121-entry maximum" interpretation is superseded: 121 is the field count,
+37 is the current base-table record count, and no independent hard total
+roster maximum has yet been proven. `BoxerRatingOverrideTable` therefore
+remains keyed by an opaque, mod-defined `boxer_id` and does not impose a
+retail roster cap.
 
 ### C. Fight lifecycle -- PARTIALLY ADVANCED
 
 The owning object (the fight-session singleton, finding 1) is now
-identified, corroborated by 3 independent call sites, with 2 fields
-proven. The full lifecycle functions (init/round-start/round-end/
+identified. Follow-up PR #37 adds write-side setters for the two boxer
+selection IDs (`+0x19B0/+0x19B4`), venue ID (`+0x19AC`), and session mode
+(`+0x19A8`), correcting the earlier boxer-pointer interpretation. The full lifecycle functions (init/round-start/round-end/
 stoppage/decision/teardown) were **not** located this pass -- `docs/
 overhaul/alpha1/README.md`'s "Blockers" section names the next step. No
 hook map is claimed beyond `fnr3_re.overhaul.fight_session`'s documented
@@ -219,13 +232,13 @@ system) can consume them without an architectural rework.
 
 ## Blockers (named, not vague)
 
-1. **The APT bytecode call-by-name dispatch mechanism.** Registration
-   (`func_0CDAC0`/`func_0CDA70` -> `func_0CFE08`/`func_0CF9C4`, shared
-   registry at `0x005436D8`) is fully understood; the lookup/invoke side
-   that resolves a script's `"GetSelectBoxerInfo"` call to its real
-   implementation function was not located. This single blocker gates
-   Section B's boxer-ID mapping and roster iteration, and would very
-   likely also unblock several `static-re-backlog.json` entries at once.
+1. **APT native dispatch: RESOLVED in follow-up PR #37.** Registration and
+   lookup/invoke are now mapped end-to-end: FSCommand dispatch is
+   `func_000D024C`, LoadVariables dispatch is `func_000D041C`, and the
+   debug-menu handler descriptors resolve to concrete implementations.
+   Per-screen handler behavior such as the full select-boxer roster logic is
+   still a separate tracing task, but the generic dispatch blocker itself is
+   closed.
 2. **`xdbboxr.adf`'s per-record boxer stat byte layout.** Attempted this
    pass (finding 8); still open.
 3. **The real in-fight stamina/damage/AI/judging formulas.** Only their
@@ -249,8 +262,9 @@ strict mypy are reported in the PR description.
 
 ## What remains before a playable Alpha ISO
 
-A playable build additionally needs, beyond this pass: (1) resolving
-blocker 1 to reach real game state; (2) at least one proven, safe patch
+A playable build additionally needs, beyond this pass: (1) tracing the
+specific real gameplay handlers now reachable through the resolved AIP dispatch
+and establishing safe hook sites; (2) at least one proven, safe patch
 site per system (stamina/damage/AI/judging) to actually wire this
 rule-engine code into `BOOT.BIN`; (3) a verified reference ISO and
 extracted workspace in a session that has one, to exercise

@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "persistent_age": {
+    "field": "progression record +0x09",
+    "confidence": "CONFIRMED",
+    "display_proof": {
+      "provider_region": "0x001E2D80+",
+      "read_site": "0x001E2F08",
+      "ui_key": "iAge",
+      "output_site": "0x001E2F18-0x001E2F28",
+      "behavior": "Loads byte record+0x09, formats it with %d, then emits it as iAge."
+    },
+    "world_aging_proof": {
+      "function": "0x00195810",
+      "behavior": [
+        "Iterates the career population.",
+        "Tests whether each boxer's annual date boundary falls between the old and newly advanced career dates.",
+        "Increments progression record+0x09 by one when the boundary is crossed.",
+        "Explicitly skips the player's current progression-record index from profile+0x4E."
+      ],
+      "increment_site": "0x00195914-0x00195924"
+    },
+    "implication": "Career Mode 2.0 can use the original persistent age byte for both amateur and professional career phases. The retail weekly world aging routine already contains the calendar logic needed for yearly advancement; it currently excludes the player."
+  },
+  "player_aging_extension_boundary": {
+    "function": "0x00195810",
+    "confidence": "CONFIRMED existing exclusion; extension design is proposed",
+    "current_behavior": "AI/non-player records age automatically; the current player record is skipped at 0x00195880-0x00195888.",
+    "career2_use": "Extend the same annual-crossing logic to the player rather than creating a parallel age clock. This keeps player growth/decline synchronized to profile+0x9C career date and the living-world population."
+  },
+  "create_physique_height": {
+    "registration_region": "0x001E5E54",
+    "native_names": [
+      "GetCreatePhysiqueInfo",
+      "OnToggleCreatePhysiqueStyle",
+      "OnToggleCreatePhysiqueSkinTone",
+      "OnToggleCreatePhysiqueHeight",
+      "SetCreatePhysiqueInfo"
+    ],
+    "height_toggle_handler": {
+      "function": "0x001E6130",
+      "binding": "OnToggleCreatePhysiqueHeight",
+      "confidence": "CONFIRMED by direct read of iHeightIndex and mutation behavior",
+      "input_key": "iHeightIndex",
+      "behavior": [
+        "Loads the working created-boxer data.",
+        "Adds the selected height index to the current minimum allowed inch value.",
+        "Writes the resulting absolute value into working-boxer offsets +0x6A and +0x70.",
+        "Synchronizes the mutated boxer data through 0x0018ADCC."
+      ],
+      "confirmed_height_field": "+0x70",
+      "companion_synchronized_field": "+0x6A",
+      "boundary": "Working-boxer +0x70 is directly compared against the generated astrHeight values and is therefore confirmed height. +0x6A is synchronized to the same value by the height-toggle handler but its independent semantic meaning is not yet proven; it is not labeled Reach."
+    },
+    "provider": {
+      "function": "0x001E620C",
+      "binding": "GetCreatePhysiqueInfo",
+      "confidence": "CONFIRMED provider role from output keys",
+      "output_keys": [
+        "iStyle",
+        "iSkinTone",
+        "iHeightIndex",
+        "astrHeight",
+        "strCROBoxer"
+      ],
+      "behavior": [
+        "Loads the current created boxer into a working copy.",
+        "Classifies the boxer by weight through 0x0018600C.",
+        "Selects a minimum/maximum raw height range from that weight class.",
+        "Builds astrHeight by enumerating every integer height in the range.",
+        "Compares working-boxer +0x70 against each raw value to determine iHeightIndex."
+      ]
+    },
+    "unit_formatter": {
+      "function": "0x00206FD0",
+      "confidence": "CONFIRMED",
+      "behavior": [
+        "Receives the raw integer height.",
+        "For metric display multiplies the raw value by float 2.54 before formatting centimeters.",
+        "For non-metric display divides the raw value by 12 for feet/inches formatting."
+      ],
+      "conclusion": "The stored/create-screen raw height unit is inches."
+    },
+    "weight_classifier": {
+      "function": "0x0018600C",
+      "source_field": "boxer XDB field 0x09 / weight",
+      "confidence": "CONFIRMED thresholds and return classes",
+      "classes": [
+        {
+          "return_value": 5,
+          "weight_lbs": "<=126",
+          "division": "Featherweight"
+        },
+        {
+          "return_value": 4,
+          "weight_lbs": "127-135",
+          "division": "Lightweight"
+        },
+        {
+          "return_value": 3,
+          "weight_lbs": "136-147",
+          "division": "Welterweight"
+        },
+        {
+          "return_value": 2,
+          "weight_lbs": "148-168",
+          "division": "Middleweight"
+        },
+        {
+          "return_value": 1,
+          "weight_lbs": "169-190",
+          "division": "Light Heavyweight"
+        },
+        {
+          "return_value": 0,
+          "weight_lbs": "191-280",
+          "division": "Heavyweight"
+        },
+        {
+          "return_value": -1,
+          "weight_lbs": ">=281",
+          "division": "invalid/out of supported range"
+        }
+      ]
+    },
+    "original_creation_ranges_inches": [
+      {
+        "division": "Heavyweight",
+        "min": 70,
+        "max": 80
+      },
+      {
+        "division": "Light Heavyweight",
+        "min": 67,
+        "max": 76
+      },
+      {
+        "division": "Middleweight",
+        "min": 66,
+        "max": 75
+      },
+      {
+        "division": "Welterweight",
+        "min": 65,
+        "max": 73
+      },
+      {
+        "division": "Lightweight",
+        "min": 64,
+        "max": 71
+      },
+      {
+        "division": "Featherweight",
+        "min": 63,
+        "max": 70
+      }
+    ],
+    "career2_implication": "The created-boxer model already persists physical height in an integer-inch field and already constrains plausible values by natural weight class. Amateur Career can initialize a younger boxer below their eventual adult height and gradually modify this same field, while preserving original visual/body synchronization."
+  },
+  "unresolved_physical_fields": {
+    "reach": {
+      "status": "UNRESOLVED",
+      "note": "No named Reach UI key has yet been tied to a persistent boxer offset. The companion field +0x6A changes with height but is not promoted to Reach without independent evidence."
+    },
+    "walking_weight": {
+      "status": "RESOLVED_BASE_FIELD",
+      "field": "persistent boxer+0x6C",
+      "note": "The numeric current/base boxer weight field is confirmed. Career Mode 2.0 still needs design rules for distinguishing temporary fight weight, walking weight and target/natural weight if those are modeled separately."
+    },
+    "muscle_capacity": {
+      "status": "UNRESOLVED"
+    }
+  },
+  "career2_next_static_steps": [
+    "Potential/learning-rate storage: map the serializer/profile layout far enough to identify a versioned extension point rather than assuming zero padding is free.",
+    "Trace the created-boxer/profile initialization path to find existing random/generated development traits that may already serve as hidden potential inputs.",
+    "Find independent consumers of persistent boxer+0x6A before assigning Reach.",
+    "Use age (+0x09 progression record), height (+0x70), weight (+0x6C), ratings (+0x7A..+0x8A) and physique basis (+0xB0..+0xB8) as the confirmed physical-development state."
+  ],
+  "mutable_weight": {
+    "persistent_boxer_field": "+0x6C",
+    "source_xdb_field": "xdbboxr field 0x09",
+    "confidence": "CONFIRMED",
+    "mapping_proof": {
+      "mapper": "0x0018A110",
+      "sites": [
+        "0x0018A2F0 requests XDB field 0x09 through 0x001ACD40.",
+        "The returned signed 16-bit value is stored at persistent boxer+0x6C in the delay slot of the following field-access call."
+      ]
+    },
+    "division_classifier": {
+      "function": "0x0018600C",
+      "behavior": "Reads XDB field 0x09 and maps its pound value into the six supported weight divisions using the same thresholds recorded for Create Physique height ranges.",
+      "thresholds": [
+        "<=126 Featherweight",
+        "127-135 Lightweight",
+        "136-147 Welterweight",
+        "148-168 Middleweight",
+        "169-190 Light Heavyweight",
+        "191-280 Heavyweight",
+        ">=281 invalid/out of supported range"
+      ]
+    },
+    "career2_implication": "The created/career boxer already has a mutable numeric weight field rather than only a division enum. Career Mode 2.0 can model walking-weight growth against this field and derive natural/current division from the existing classifier."
+  },
+  "neighboring_physical_field_caution": {
+    "confidence": "CONFIRMED mapping, UNRESOLVED semantics",
+    "mapper": "0x0018A110",
+    "mappings": {
+      "persistent +0x66": "direct copy of XDB field 0x06 (known hometown key/reference in base boxer records)",
+      "persistent +0x68": "direct copy of XDB field 0x07 (known alias/nickname key/reference in base boxer records)",
+      "persistent +0x6A": "direct copy of XDB field 0x08; semantic meaning unresolved",
+      "persistent +0x6C": "direct copy of XDB field 0x09 = weight",
+      "persistent +0x6E": "direct copy of XDB field 0x0A; semantic meaning unresolved",
+      "persistent +0x70": "derived from XDB field 0x0B through 0x00185374 in base-row conversion, but directly used as current height by Create Physique"
+    },
+    "important_note": "Create Physique height changes synchronize +0x6A and +0x70 to the selected inch value. This is not enough to call +0x6A 'Reach'; the mixed identity/physical neighborhood demonstrates why semantic naming must come from an independent consumer."
+  },
+  "create_build_physique_basis": {
+    "confidence": "CONFIRMED persistence/dataflow; individual coefficient semantics remain unresolved",
+    "native_interface": {
+      "registration_region": "0x001E6BE4",
+      "functions": [
+        "GetCreateBuildInfo",
+        "SetCreateBuildToggle",
+        "SetCreateBuildInfo"
+      ],
+      "get_provider": "0x001E6C78",
+      "toggle_handler": "0x001E6CD8",
+      "commit_handler": "0x001E6D0C"
+    },
+    "build_toggle": {
+      "input_key": "iBuildType",
+      "transient_global": "0x0055F928",
+      "behavior": [
+        "0x001E6CD8 reads iBuildType from the UI and stores it to 0x0055F928.",
+        "The registered SetCreateBuildInfo implementation at 0x001E6D0C is literally jr $ra; nop.",
+        "Therefore the UI build choice is not persisted as a standalone build-type integer by this native interface."
+      ]
+    },
+    "consumer": {
+      "function": "0x001C90C4",
+      "confidence": "CONFIRMED consumer of the transient build selector and persistent boxer-shape path",
+      "only_direct_build_global_read": "0x001C99C0 loads 0x0055F928",
+      "caller": "0x001BE11C",
+      "behavior": [
+        "Loads the current boxer and reshapes it into a mutable working boxer through 0x00185114 / 0x0018A110.",
+        "Uses the transient iBuildType selector to constrain/choose body-shape editing behavior.",
+        "Manipulates bounded signed body-shape values.",
+        "Calls 0x001C5C4C to convert the editor axes into the persistent five-coefficient physique basis.",
+        "Copies/synchronizes the mutated working boxer through 0x0018ADCC."
+      ]
+    },
+    "persistent_fields": {
+      "base": "persistent boxer",
+      "coefficients": [
+        {
+          "offset": "+0xB0",
+          "source_xdb_field": "0x2C"
+        },
+        {
+          "offset": "+0xB2",
+          "source_xdb_field": "0x2D"
+        },
+        {
+          "offset": "+0xB4",
+          "source_xdb_field": "0x2E"
+        },
+        {
+          "offset": "+0xB6",
+          "source_xdb_field": "0x2F"
+        },
+        {
+          "offset": "+0xB8",
+          "source_xdb_field": "0x70"
+        }
+      ],
+      "width": "signed 16-bit each",
+      "source_mapper": "0x0018A110",
+      "conversion_helper": "0x001C5C4C",
+      "conversion_behavior": [
+        "Clears all five coefficients before rebuilding the basis.",
+        "Takes two signed editor-axis values and decomposes them across the five coefficient slots.",
+        "Uses values centered around 50 and bounded editor ranges, producing a normalized morph basis rather than a single categorical body type."
+      ]
+    },
+    "interpretation_boundary": {
+      "confirmed": "These five values are persistent boxer physique/build morph coefficients controlled by the Create Build editor.",
+      "not_confirmed": [
+        "which coefficient means muscle, fat, width, chest, torso, or another body dimension",
+        "whether any one coefficient can be treated as muscle capacity",
+        "whether iBuildType labels represent body categories or editor-axis modes"
+      ]
+    },
+    "career2_implication": "Amateur physical development can evolve the existing five-coefficient physique basis alongside confirmed age, height and weight. A separate hidden 'muscle capacity' ceiling may govern how those coefficients are allowed to develop, but it should not be stored by repurposing one coefficient until that coefficient's original meaning is independently proven."
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual",
+    "note": "Raw file offsets in this ELF are normally virtual address +0x100 for the mapped text/rodata region. Earlier exploratory physique xrefs that used raw file offsets as virtual addresses are superseded by this artifact."
+  },
+  "relationship_to_age_evidence": {
+    "source": "analysis/resources/career2-amateur-development-evidence.json",
+    "current_age": "progression record+0x09",
+    "xdb_age_field": 13,
+    "default_new_career_age": 20,
+    "note": "Age is stored in the career progression record, not in the boxer physical halfword cluster described below."
+  },
+  "persistent_boxer_physical_block": {
+    "base": "persistent boxer object; player instance is stored at profile+0x256C",
+    "confidence": "CONFIRMED field placement for height/weight; paired-field semantics partially unresolved",
+    "fields": {
+      "+0x6A": {
+        "meaning": "height in inches",
+        "confidence": "CONFIRMED",
+        "xdb_source_field": 8,
+        "evidence": [
+          "XDB->boxer mapper 0x0018A2C0 stores XDB boxer field 8 into boxer+0x6A.",
+          "Create-physique height selection writes the selected division-bounded integer-inch value to +0x6A.",
+          "Generated-boxer initialization writes a randomly chosen division-bounded height to +0x6A.",
+          "3D/runtime construction code at 0x002CB364 loads boxer+0x6A, converts it to float and divides by 72.0 before storing a body/model scale value."
+        ]
+      },
+      "+0x6C": {
+        "meaning": "boxer weight",
+        "confidence": "CONFIRMED",
+        "xdb_source_field": 9,
+        "evidence": [
+          "XDB field 9 is independently proven as boxer weight.",
+          "XDB->boxer mapper stores field 9 at +0x6C.",
+          "Generated-boxer initialization derives +0x6C from division and height through 0x0018E1C8."
+        ]
+      },
+      "+0x6E": {
+        "meaning": "unresolved physical/body field",
+        "confidence": "CONFIRMED storage; UNKNOWN semantics",
+        "xdb_source_field": 10,
+        "warning": "Do not call this age. Persistent career age is progression record+0x09 from XDB field 13."
+      },
+      "+0x70": {
+        "meaning": "second height-linked physical measurement",
+        "confidence": "CONFIRMED linkage; semantic label unresolved",
+        "xdb_source_field": 11,
+        "xdb_accessor": "0x00185374",
+        "evidence": [
+          "XDB->boxer mapper stores helper 0x00185374(field 11) into boxer+0x70.",
+          "Generated-boxer initialization writes the same newly generated height to +0x6A and +0x70.",
+          "Create-physique height toggle likewise updates +0x6A and +0x70 together.",
+          "Boxer generic field accessor exposes +0x70 as a distinct field."
+        ],
+        "candidate_interpretations": [
+          "reach/wingspan",
+          "base/target height",
+          "secondary body-proportion measurement"
+        ],
+        "boundary": "The evidence does not yet distinguish these interpretations. Reach is plausible but NOT promoted."
+      },
+      "+0x72": {
+        "meaning": "second weight-linked physical measurement",
+        "confidence": "CONFIRMED linkage; semantic label unresolved",
+        "xdb_source_field": 12,
+        "evidence": [
+          "XDB->boxer mapper stores XDB field 12 into boxer+0x72.",
+          "Generated-boxer initialization derives boxer+0x6C, then copies that same value to +0x72.",
+          "Boxer generic field accessor exposes +0x72 as a distinct field."
+        ],
+        "candidate_interpretations": [
+          "natural/walking weight",
+          "base/target weight",
+          "secondary body-mass measurement"
+        ],
+        "boundary": "Natural/walking weight is attractive for Career Mode 2.0 but is NOT promoted without a distinct consumer proving it."
+      }
+    }
+  },
+  "creation_height_ranges": {
+    "confidence": "CONFIRMED integer-inch ranges; ordering follows the game's six division cases",
+    "ranges": [
+      [
+        70,
+        80
+      ],
+      [
+        67,
+        76
+      ],
+      [
+        66,
+        75
+      ],
+      [
+        65,
+        73
+      ],
+      [
+        64,
+        71
+      ],
+      [
+        63,
+        70
+      ]
+    ],
+    "note": "These are the permitted/generated height ranges observed in create/generated-boxer code. This artifact does not relabel each pair with a division name unless the switch ordering is independently tied to the already-proven division enum."
+  },
+  "xdb_to_boxer_mapping": {
+    "function": "0x0018A2C0 region",
+    "confidence": "CONFIRMED",
+    "map": {
+      "field 8": "boxer+0x6A",
+      "field 9": "boxer+0x6C",
+      "field 10": "boxer+0x6E",
+      "field 11": "0x00185374(field 11) -> boxer+0x70",
+      "field 12": "boxer+0x72",
+      "field 13": "NOT this boxer cluster: separate age accessor path feeds progression record+0x09"
+    }
+  },
+  "generated_boxer_initialization": {
+    "region": "0x0018D0xx",
+    "confidence": "CONFIRMED",
+    "behavior": [
+      "Chooses a division-bounded height.",
+      "Writes height to both boxer+0x6A and boxer+0x70.",
+      "Calls 0x0018E1C8(division,height,0,50) to derive boxer+0x6C.",
+      "Copies boxer+0x6C into boxer+0x72."
+    ],
+    "implication": "The game intentionally models two height-linked and two weight-linked fields, initialized identically for generated boxers."
+  },
+  "field_11_transform": {
+    "function": "0x00185374",
+    "confidence": "CONFIRMED arithmetic; semantic purpose unresolved",
+    "behavior": [
+      "Reads XDB field 11.",
+      "Normally returns the raw signed value.",
+      "When fight-session byte +0x1921 is nonzero and the raw value is at least 63, returns approximately five-eighths of the original value."
+    ],
+    "boundary": "The conditional conversion is a reason NOT to rename field 11/+0x70 as reach until the fight-session flag and downstream consumer are understood."
+  },
+  "mutation_audit": {
+    "confidence": "CONFIRMED for direct halfword stores in the debug ELF; indirect generic setters can still mutate the fields",
+    "direct_writes": {
+      "+0x6A": [
+        "XDB population",
+        "generic boxer setter",
+        "generated-boxer initialization",
+        "career/profile initialization/reset contexts that are not all boxer-object writes"
+      ],
+      "+0x6C": [
+        "XDB population",
+        "generic boxer setter",
+        "generated-boxer initialization"
+      ],
+      "+0x70": [
+        "XDB population",
+        "generic boxer setter",
+        "generated-boxer initialization"
+      ],
+      "+0x72": [
+        "XDB population",
+        "generic boxer setter",
+        "generated-boxer initialization"
+      ]
+    },
+    "conclusion": "No dedicated annual physical-growth writer has been identified for the persistent boxer body fields. Existing AI annual aging increments progression age, but that by itself does not mutate height/weight."
+  },
+  "career2_relevance": {
+    "existing_reusable_state": [
+      "persistent age",
+      "persistent physical height",
+      "persistent boxer weight",
+      "two additional paired physical measurements",
+      "division-bounded generated height ranges"
+    ],
+    "design_opportunity": [
+      "Career Mode 2.0 can implement adolescent physical growth by adding a yearly growth writer above these existing persistent physical fields.",
+      "If +0x70/+0x72 are later proven as reach/natural weight, they provide ideal built-in targets for the user's reach and natural-weight growth model.",
+      "Until then, new growth projection/potential data must remain separate rather than overwriting unresolved retail fields."
+    ],
+    "next_static_step": [
+      "Trace non-UI consumers of boxer+0x70 and boxer+0x72 to determine their exact semantics.",
+      "Audit all player-age advancement paths; the known population aging loop skips the player, so determine whether a separate player birthday path exists.",
+      "Trace weight-class reassignment after boxer-weight changes.",
+      "Only after those boundaries are proven should Career Mode 2.0 define yearly height/reach/weight growth writes."
+    ]
+  }
+}

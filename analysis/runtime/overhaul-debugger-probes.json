@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "revision_id": "ULUS10066-v1.00",
+  "boot_sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+  "address_mapping": {
+    "confirmed_live_elf_virtual_zero": "0x08804000",
+    "rule": "runtime = 0x08804000 + elf_virtual"
+  },
+  "purpose": "Focused PPSSPP debugger probes for functions most likely to expose safe hook boundaries for the FNR3 overhaul. This profile intentionally excludes audio/UI-only tracing.",
+  "probes": [
+    {
+      "id": "fight_session_constructor",
+      "priority": 1,
+      "subsystem": "fight",
+      "elf_virtual": "0x001AF768",
+      "runtime": "0x089B3768",
+      "mode": "passive_log",
+      "why": "One-time/low-frequency fight-session construction boundary. Capturing callers and arguments should expose fight initialization and the surrounding lifecycle chain.",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "a2",
+        "a3"
+      ],
+      "log_format": "FNR3OH|fight_session_constructor|pc={pc}|ra={ra}|sp={sp}|a0={a0}|a1={a1}|a2={a2}|a3={a3}"
+    },
+    {
+      "id": "fight_session_accessor",
+      "priority": 1,
+      "subsystem": "fight",
+      "elf_virtual": "0x001B3EA8",
+      "runtime": "0x089B7EA8",
+      "mode": "passive_log_conditional",
+      "why": "Known singleton accessor used by fight totals, judging and options/session code. Call-frequency/caller sampling can identify central fight-loop consumers.",
+      "capture": [
+        "pc",
+        "ra",
+        "a0"
+      ],
+      "note": "Potentially frequent; use condition/sampling rather than unrestricted logging."
+    },
+    {
+      "id": "boxer_selection_setter",
+      "priority": 2,
+      "subsystem": "fight/roster",
+      "elf_virtual": "0x001B00B4",
+      "runtime": "0x089B40B4",
+      "mode": "passive_log",
+      "why": "Proven per-corner boxer selection setter. Useful lifecycle marker and validation that session construction/selection state is understood.",
+      "capture": [
+        "pc",
+        "ra",
+        "a0",
+        "a1",
+        "a2"
+      ]
+    },
+    {
+      "id": "ai_attack_power_consumer_a",
+      "priority": 1,
+      "subsystem": "ai",
+      "elf_virtual": "0x00093C5C",
+      "runtime": "0x08897C5C",
+      "mode": "research_pause",
+      "why": "Existing static backlog names this as an attack-power consumer. Caller/backtrace capture can reveal the AI decision-update/action-selection loop.",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "a2",
+        "a3",
+        "v0",
+        "v1"
+      ],
+      "note": "Likely high frequency; do not enable as unrestricted log-only probe."
+    },
+    {
+      "id": "ai_attack_power_consumer_b",
+      "priority": 1,
+      "subsystem": "ai",
+      "elf_virtual": "0x00091D24",
+      "runtime": "0x08895D24",
+      "mode": "research_pause",
+      "why": "Second attack-power consumer; comparing callers with the first can distinguish decision scoring from action execution.",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "a2",
+        "a3",
+        "v0",
+        "v1"
+      ]
+    },
+    {
+      "id": "ai_punches_thrown_owner",
+      "priority": 2,
+      "subsystem": "hit-resolution",
+      "elf_virtual": "0x001E2084",
+      "runtime": "0x089E6084",
+      "mode": "research_pause",
+      "why": "Backlog anchor for aiPunchesThrown. Caller/callee trace may locate player/AI convergence and hit-resolution bookkeeping.",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "a2",
+        "a3"
+      ]
+    },
+    {
+      "id": "fight_stats_accessor",
+      "priority": 2,
+      "subsystem": "fight-stats",
+      "elf_virtual": "0x000BA748",
+      "runtime": "0x088BE748",
+      "mode": "research_pause_conditional",
+      "why": "Known generic fight-stat accessor used for punches thrown/hit/knockdowns. Conditional hits on stat IDs can reveal authoritative stat storage and writers.",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "a2",
+        "a3"
+      ]
+    },
+    {
+      "id": "fight_totals_reader",
+      "priority": 3,
+      "subsystem": "damage/fight-stats",
+      "elf_virtual": "0x001F2E00",
+      "runtime": "0x089F6E00",
+      "mode": "passive_log",
+      "why": "Known reader of knockdowns and fight totals. Mostly presentation-facing, but useful as an end-of-fight/lifecycle anchor and for validating authoritative stat values.",
+      "capture": [
+        "pc",
+        "ra",
+        "a0",
+        "a1"
+      ]
+    },
+    {
+      "id": "three_knockdown_path_a",
+      "priority": 1,
+      "subsystem": "damage/KO",
+      "elf_virtual": "0x002027F4",
+      "runtime": "0x08A067F4",
+      "mode": "research_pause",
+      "why": "Static backlog identifies this as a 3-knockdown-rule path. Capturing state/backtrace around hits should lead backward into health/damage and forward into stoppage logic.",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "a2",
+        "a3"
+      ]
+    },
+    {
+      "id": "three_knockdown_path_b",
+      "priority": 1,
+      "subsystem": "damage/KO",
+      "elf_virtual": "0x00205458",
+      "runtime": "0x08A09458",
+      "mode": "research_pause",
+      "why": "Second 3-knockdown-rule path; useful for distinguishing rule evaluation from consequence/state transition.",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "a2",
+        "a3"
+      ]
+    },
+    {
+      "id": "judging_scorecard",
+      "priority": 1,
+      "subsystem": "judging",
+      "elf_virtual": "0x001F7248",
+      "runtime": "0x089FB248",
+      "mode": "passive_log",
+      "why": "Known scorecard aggregation boundary. End-of-round/fight hits can reveal inputs and callers leading to the real per-round scoring routine.",
+      "capture": [
+        "pc",
+        "ra",
+        "sp",
+        "a0",
+        "a1",
+        "a2",
+        "a3"
+      ]
+    }
+  ],
+  "execution_order": [
+    "fight_session_constructor",
+    "judging_scorecard",
+    "three_knockdown_path_a",
+    "three_knockdown_path_b",
+    "ai_attack_power_consumer_a",
+    "ai_attack_power_consumer_b",
+    "ai_punches_thrown_owner",
+    "fight_stats_accessor"
+  ],
+  "success_criteria": [
+    "Identify at least one fight lifecycle caller chain suitable for a safe hook boundary.",
+    "Identify the authoritative stamina/damage state owner or writer neighborhood.",
+    "Bound the AI decision loop from attack-power consumers.",
+    "Locate the scoring function beneath/around the scorecard aggregation boundary."
+  ]
+}

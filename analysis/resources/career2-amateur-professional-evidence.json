@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "career_phase": {
+    "field": "persistent profile +0x121",
+    "confidence": "CONFIRMED as the persistent Amateur/Professional progression-phase field; values 0 and 1 remain distinct subphases on the amateur side, value 2 is established by the Go Pro transition",
+    "states": {
+      "0": {
+        "classification": "Amateur-side phase",
+        "confidence": "CONFIRMED class family; exact subphase name unresolved",
+        "evidence": [
+          "Completed-fight writer classifies profile+0x121 values 0/1 as history class 0.",
+          "Career Central displays the boxer as unranked for profile+0x121 0/1."
+        ]
+      },
+      "1": {
+        "classification": "Amateur-side/intermediate transition phase",
+        "confidence": "CONFIRMED history classification; exact semantic name unresolved",
+        "evidence": [
+          "Completed-fight writer still classifies profile+0x121=1 as history class 0.",
+          "0x001948C0 explicitly writes value 1 while reshaping/copying career progression data.",
+          "0x00194E18 can advance 0 -> 1 before later advancing 1 -> 2 in the same larger transition sequence."
+        ]
+      },
+      "2": {
+        "classification": "Professional phase entry",
+        "confidence": "CONFIRMED by named Go Pro contract path",
+        "evidence": [
+          "Contract type 23 is independently identified by the UI output iGoProContractID.",
+          "The contract-apply state machine function 0x001A38C4 routes type 23 to 0x0019DC80.",
+          "0x0019DC80 writes profile+0x121 = 2.",
+          "Completed-fight writer classifies values >1 as history class 1."
+        ]
+      },
+      ">2": {
+        "classification": "Professional-side progression states",
+        "confidence": "CONFIRMED class family; exact values/enums unresolved",
+        "evidence": [
+          "Completed-fight writer classifies all profile+0x121 values >1 as history class 1.",
+          "Career Central switches to ranked display behavior when profile+0x121 >1."
+        ]
+      }
+    },
+    "writers": [
+      {
+        "function": "0x001943EC",
+        "behavior": "stores profile+0x121 = 0 when input is false, or 2 when input is true, then calls 0x001943C0",
+        "confidence": "CONFIRMED"
+      },
+      {
+        "function": "0x001948C0",
+        "store_site": "0x00194960",
+        "behavior": "stores profile+0x121 = 1 during a larger progression-record reshape/setup",
+        "confidence": "CONFIRMED"
+      },
+      {
+        "function": "0x0019DC80",
+        "store_site": "0x0019DD1C",
+        "behavior": "stores profile+0x121 = 2 and rebuilds/copies progression-record state",
+        "confidence": "CONFIRMED"
+      },
+      {
+        "function": "0x00194E18",
+        "behavior": "when starting from phase 0, performs setup and calls 0x001948C0 (phase 1); if phase==1, adds 20,000 to three money/earnings-like profile totals and then calls 0x0019DC80 (phase 2)",
+        "confidence": "CONFIRMED behavior; exact public method name and trigger remain unresolved",
+        "warning": "Do not label 0x00194E18 itself as the Go Pro contract handler until its indirect caller is identified. The direct Go Pro contract path is separately proven through 0x001A38C4 -> 0x0019DC80."
+      }
+    ]
+  },
+  "fight_history_classes": {
+    "confidence": "CONFIRMED numeric Amateur/Professional mapping",
+    "class_0": {
+      "meaning": "Amateur",
+      "count_field": "profile+0x2AA0",
+      "ring_index_field": "profile+0x2AA2",
+      "storage_base": "profile+0x26B8",
+      "capacity": 20,
+      "entry_size_bytes": 25
+    },
+    "class_1": {
+      "meaning": "Professional",
+      "count_field": "profile+0x2AA1",
+      "ring_index_field": "profile+0x2AA3",
+      "storage_base": "profile+0x28AC",
+      "capacity": 20,
+      "entry_size_bytes": 25
+    },
+    "ui_provider": {
+      "function": "0x001EE220",
+      "proposed_binding": "GetCareerHistoryInfo",
+      "inputs": [
+        "iClass"
+      ],
+      "outputs": [
+        "iCurrentClass",
+        "fight-history rows"
+      ],
+      "behavior": [
+        "When the requested class is explicit, it reads that class's independent history ring.",
+        "When class selection resolves to -1, the provider derives a current-class fallback from profile+0x121.",
+        "The UI resource contains the paired localization labels $T_Amateur and $T_Professional."
+      ]
+    },
+    "writer": {
+      "function": "0x001939DC",
+      "reader": "0x00193BB8",
+      "only_direct_writer_caller": "0x001B7894",
+      "classification_at_caller": "class=0 when profile+0x121 is 0 or 1; class=1 when profile+0x121 >1",
+      "evidence_for_numeric_mapping": [
+        "Named contract type 23 = Go Pro drives profile+0x121 to 2.",
+        "The fight-result writer therefore starts writing class 1 after Go Pro, proving class 1 = Professional and class 0 = Amateur."
+      ]
+    },
+    "significance": "Retail FNR3 already maintains separate persistent Amateur and Professional fight-history rings. Career Mode 2.0 can extend this existing distinction instead of inventing the phase boundary from scratch."
+  },
+  "go_pro_transition": {
+    "contract_type": 23,
+    "ui_anchor": "iGoProContractID",
+    "contract_state_handler": "0x001A38C4",
+    "type_23_branch": "0x001A39F4",
+    "phase_transition_call": "0x001A3A18 -> 0x0019DC80",
+    "result": "profile+0x121 = 2",
+    "confidence": "CONFIRMED"
+  },
+  "retirement_transition": {
+    "contract_type": 27,
+    "ui_anchor": "iRetireContractID",
+    "contract_commit_handler": "0x001A3B5C",
+    "type_27_check": "0x001A3B8C-0x001A3B98",
+    "retired_flag_store": "0x001A3C5C-0x001A3C60",
+    "result": "profile+0x00 = 1",
+    "confidence": "CONFIRMED",
+    "downstream_effect": [
+      "Career Central emits iRetired from profile+0x00.",
+      "GetNextEventState forces event code 4 whenever profile+0x00 is nonzero."
+    ]
+  },
+  "career2_relevance": {
+    "directly_reusable_boundaries": [
+      "persistent amateur/pro phase field at profile+0x121",
+      "named Go Pro special contract type 23",
+      "named Retire special contract type 27",
+      "separate amateur and professional fight-history rings",
+      "retired persistent flag profile+0x00"
+    ],
+    "extension_opportunities": [
+      "Replace the original Go Pro availability rule with age/readiness/promoter-interest logic while retaining the proven transition boundary.",
+      "Store richer amateur achievements alongside or beyond the existing 20-entry amateur history ring.",
+      "Replace automatic/end-condition retirement availability with player-driven retirement while retaining the existing persistent retired flag and UI transition.",
+      "Preserve amateur history after turning professional rather than discarding/reinterpreting it."
+    ],
+    "next_static_step": [
+      "Trace the availability/generation rules that decide when type-23 Go Pro and type-27 Retire contracts enter the contract list.",
+      "Map the fields in each 25-byte history entry to opponent/result/rounds/TKO time and stakes.",
+      "Trace rating/training progression around phase 0/1/2 to identify where amateur development is converted into professional starting state."
+    ]
+  }
+}
