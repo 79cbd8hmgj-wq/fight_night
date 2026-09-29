@@ -347,6 +347,38 @@ def main() -> None:
                     }
                 )
 
+    # Follow retail contract type 27 through the same three dispatch tables
+    # already recovered for Career Mode 2.0 contract/championship work.
+    type27_dispatches = {}
+    for label, table_address, first_type in (
+        ("contract_list_ui", 0x0050E1C0, 2),
+        ("eligibility", 0x00508A08, 1),
+        ("scheduler", 0x00508C60, 2),
+        ("post_fight_result", 0x00508478, 2),
+    ):
+        entry = table_address + (27 - first_type) * 4
+        target = vaddr_word(raw, elf, entry)
+        if target is None:
+            type27_dispatches[label] = {
+                "entry": f"0x{entry:08X}",
+                "target": None,
+                "assembly": [],
+            }
+            continue
+        start, end = function_bounds(raw, elf, target)
+        type27_dispatches[label] = {
+            "entry": f"0x{entry:08X}",
+            "target": f"0x{target:08X}",
+            "function_start": f"0x{start:08X}",
+            "assembly": disasm_range(
+                raw,
+                elf,
+                max(start, target - 0x40),
+                min(end, target + 0x180),
+                150,
+            ),
+        }
+
     focused = {}
     for address in (
         0x001CFE54,
@@ -367,6 +399,7 @@ def main() -> None:
         json.dumps(
             {
                 "string_xrefs": string_xrefs,
+                "type27_dispatches": type27_dispatches,
                 "strict_profile_zero_writers": strict_profile_zero_writers(raw, elf),
                 "profile_direct_writers": profile_direct_writers,
                 "zero_byte_store_candidates": zero_byte_stores[:80],
