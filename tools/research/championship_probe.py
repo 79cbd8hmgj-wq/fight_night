@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import struct
 
@@ -890,6 +891,35 @@ def main() -> None:
                     min(function_bounds(raw, elf, addr)[1], addr + 0x68),
                 ),
             })
+
+    if os.environ.get("CHAMPIONSHIP_PROBE_COMPACT") == "special":
+        special_types = {16, 17, 21, 22}
+        print("CHAMPIONSHIP_SPECIAL_PROBE_BEGIN")
+        print(json.dumps({
+            "title_counter_cases": [
+                row for row in title_counter_jump_table
+                if row["contract_type"] in special_types
+            ],
+            "result_contract_cases": [
+                row for row in result_contract_jump_table
+                if row["contract_type"] in special_types
+            ],
+            "contract_cases": [
+                row for row in contract_cases
+                if row["type_id"] in special_types
+            ],
+            "title_gate_table": [
+                row for row in title_gate_table
+                if row["state"] in special_types
+            ],
+            "result_title_transfer_region": focused_ranges["result_title_transfer_region"],
+            "shared_progression_title_counters": {
+                key: value for key, value in focused_ranges.items()
+                if key.startswith("shared_progression_title_counters_")
+            },
+        }, indent=2))
+        print("CHAMPIONSHIP_SPECIAL_PROBE_END")
+        return
 
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
