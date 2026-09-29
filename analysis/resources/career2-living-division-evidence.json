@@ -193,7 +193,8 @@
       "player title won/lost/defended/forfeited career statistics",
       "three persistent career rank-class ladders mapped onto six absolute weight classes",
       "persistent three-slot current and previous championship holders",
-      "shared fight-result championship transfer with won/lost/defended/forfeited accounting"
+      "shared fight-result championship transfer with won/lost/defended/forfeited accounting",
+      "regular AI matchmaking uses only subtype-0 non-title assignments"
     ],
     "extension_targets": [
       "explicit injuries and recovery",
@@ -209,9 +210,9 @@
       "mandatory challengers/eliminators and vacancy succession"
     ],
     "next_static_step": [
-      "Close title scheduling: types 13/14/15 are now bounded as slot-specific award/title contract paths; bind their subtype-8 assignments through accepted-contract scheduling and determine AI equivalents.",
-      "After title scheduling, trace mandatory challenger/eliminator policy.",
-      "Then resolve explicit injury/recovery semantics and weight-class movement."
+      "Trace title-contract eligibility types 13/14/15 and adjacent contract families to recover the stock challenger-selection policy and determine whether any eliminator concept exists.",
+      "Then design/identify the cleanest hook for AI-vs-AI subtype-8 title scheduling and title transfer.",
+      "After challenger/eliminator policy, resolve explicit injury/recovery semantics and weight-class movement."
     ]
   },
   "match_descriptor": {
@@ -564,5 +565,40 @@
       "slot_count": 3,
       "absolute_class_mapping": "profile+0x2D..+0x2F"
     }
+  },
+  "ai_championship_scheduling": {
+    "confidence": "CONFIRMED for the regular AI matcher and all direct AssignCareerMatch callers; no retail AI-vs-AI subtype-8 title assignment found",
+    "assign_match_function": "0x00194518",
+    "direct_caller_inventory": [
+      "0x00195564 regular population matchmaking",
+      "0x001A4F50 special/live-contract scheduler (call sites 0x001A5248/0x001A532C/0x001A5414/0x001A54AC/0x001A54FC/0x001A5548)",
+      "0x001FF384 accepted player-contract handler (call site 0x001FF490)"
+    ],
+    "regular_ai_matchmaker": {
+      "function": "0x00195564",
+      "subtype_register": "$fp",
+      "initialization": "0x001955D4 sets $fp = 0",
+      "assignment_call": "0x00195758 passes $a3 = $fp to 0x00194518",
+      "finding": "Every match created by the normal AI population matcher uses match subtype 0, not championship subtype 8."
+    },
+    "special_contract_scheduler": {
+      "function": "0x001A4F50",
+      "player_index": "profile+0x4E loaded into $s3",
+      "subtype": "live contract +0x36 loaded into $s4",
+      "finding": "Its title-family scheduling calls use the current player index as fighter A and the contract-defined opponent as fighter B; title contracts 13/14/15 therefore remain player-facing subtype-8 assignments."
+    },
+    "accepted_player_contract": {
+      "call_site": "0x001FF490",
+      "player_index": "profile+0x4E",
+      "opponent": "profile+0x166",
+      "subtype": "live selected contract +0x36",
+      "finding": "For title templates 13/14/15 this schedules subtype 8."
+    },
+    "implication": [
+      "The stock AI-vs-AI world scheduler does not create championship descriptors.",
+      "The recovered title-transfer writer is used by player/post-result and title/bootstrap paths, but no direct due-AI-fight title-transfer caller was found.",
+      "Career Mode 2.0 therefore needs an explicit AI title-bout policy if championships are to change hands independently of the player."
+    ],
+    "boundary": "This is a bounded executable conclusion from the complete direct caller inventory of AssignCareerMatch. It does not claim that no unrelated code can ever mutate title-holder state outside the recovered scheduling/result paths."
   }
 }
