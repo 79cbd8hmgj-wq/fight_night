@@ -255,6 +255,22 @@ def test_v2_count_length_mismatch_is_rejected_after_crc_is_recomputed() -> None:
         decode_c2ex(bytes(block))
 
 
+def test_v2_malformed_ledger_row_is_contained_as_c2ex_error() -> None:
+    block = bytearray(
+        encode_c2ex(
+            _data(ledger=LegacyFightLedger(entries=(_entry(),)))
+        )
+    )
+    payload = bytearray(block[C2EX_HEADER_SIZE:])
+    first_entry_reserved = C2EX_V1_PAYLOAD_SIZE + 4 + LEGACY_FIGHT_ENTRY_SIZE - 1
+    payload[first_entry_reserved] = 1
+    struct.pack_into("<I", block, 12, zlib.crc32(payload) & 0xFFFFFFFF)
+    block[C2EX_HEADER_SIZE:] = payload
+
+    with pytest.raises(C2EXError, match="legacy entry 0"):
+        decode_c2ex(bytes(block))
+
+
 def test_nonzero_unknown_tail_is_rejected() -> None:
     stock = b"\x33" * C2EX_OFFSET
 
