@@ -172,7 +172,10 @@
       "matchmaking retry/rotation state",
       "six persistent division ranking ladders",
       "post-fight ranking-score recomputation",
-      "automatic rank synchronization from sorted ladder order"
+      "automatic rank synchronization from sorted ladder order",
+      "current belt-holder presentation in the division ranking UI",
+      "separate title wins/defenses/losses/forfeitures statistics",
+      "trophy/award owner and defense-count presentation"
     ],
     "extension_targets": [
       "title ownership and title-fight scheduling",
@@ -187,9 +190,9 @@
       "replace 0x00195564 compatibility policy with rank/title/promoter/health/weight-class matchmaking"
     ],
     "next_static_step": [
-      "Training/staff persistence: trace GetTrainingInfo/SetTrainingInfo, trainer.fnc and xdbtrain.adf.",
-      "After training/staff, return to title/award ownership so living-division bouts can move championships.",
-      "Later decode the remaining match subtype/result nibbles only if Career 2.0 UI or scheduling requires them."
+      "Championship ownership: trace GetRankingInformation -> aCurrentBeltHolders and the trophy/career-stat providers to persistent owner/defense fields.",
+      "Championship scheduling: connect those ownership fields to post-fight title transfer and the existing contract/match subtype path into 0x00194518.",
+      "After title ownership/scheduling, move to explicit injury/recovery semantics, weight-class movement and mandatory-challenger/eliminator policy."
     ]
   },
   "match_descriptor": {
@@ -366,6 +369,73 @@
       "AI fight simulation recomputes boxer ranking scores after bouts.",
       "The ladder is sorted by those scores and each boxer's public zero-based rank is synchronized from the resulting order.",
       "Career Mode 2.0 can therefore extend the existing ranking engine for living-division movement instead of inventing rankings from scratch."
+    ]
+  },
+  "championship_frontend_surfaces": {
+    "confidence": "CONFIRMED front-end/native-interface contract; persistent championship storage and writer functions are not yet mapped",
+    "ranking_screen": {
+      "resource": "careermodefe1/careerranks.big",
+      "native_interface": "GetRankingInformation",
+      "fields": [
+        "iRank_Class",
+        "aCurrentBeltHolders"
+      ],
+      "ui_evidence": [
+        "mcBelt",
+        "six division-specific rank-screen titles"
+      ],
+      "implication": "The division-ranking screen receives current belt-holder data alongside rank-class data, so championship ownership is already surfaced at the same UI boundary as the six division ladders."
+    },
+    "career_stats_screen": {
+      "resource": "careermodefe1/mycareerstats.big",
+      "native_interface": "GetMyCareerStatsInfo",
+      "fields": [
+        "aiTitleBeltsWon",
+        "aiTitleBeltsDefended",
+        "aiTitleBeltsLost",
+        "aiTitleBeltsForfeited"
+      ],
+      "labels": [
+        "$ST_Belts_Won",
+        "$ST_Belts_Defended",
+        "$ST_Belts_Lost",
+        "$ST_Belts_Forfeited"
+      ],
+      "implication": "Career statistics separately track title wins, defenses, losses and forfeitures rather than exposing only one generic title count."
+    },
+    "trophy_case": {
+      "resources": [
+        "careermodefe1/careertrophycase.big",
+        "careermodefe1/viewaward.big"
+      ],
+      "native_interfaces": [
+        "GetTrophyCaseInfo",
+        "GetTrophyInfo",
+        "GetViewAwardInfo"
+      ],
+      "fields": [
+        "aTrophyIDs",
+        "aTrophyTypes",
+        "iTrophyID",
+        "strTrophyName",
+        "strTrophyOwner",
+        "strTimesDefended"
+      ],
+      "implication": "Award/trophy records carry an explicit owner and defense count, providing a second title-history presentation path distinct from the current-belt-holder array."
+    },
+    "executable_string_addresses": {
+      "GetMyCareerStatsInfo": "BOOT.BIN string @ 0x50BC58",
+      "aiTitleBeltsWon": "BOOT.BIN string @ 0x50BCC8",
+      "aiTitleBeltsDefended": "BOOT.BIN string @ 0x50BCD8",
+      "aiTitleBeltsLost": "BOOT.BIN string @ 0x50BCF0",
+      "GetTrophyCaseInfo": "BOOT.BIN string @ 0x50D798",
+      "GetTrophyInfo": "BOOT.BIN string @ 0x50D7AC"
+    },
+    "boundary": "These resource/native names prove the championship-facing data contract, but not which profile/progression offsets own each belt, which function transfers a belt after a bout, or which contract/match subtype marks a scheduled championship fight.",
+    "next_static_step": [
+      "Trace the native handler behind GetRankingInformation to the producer of aCurrentBeltHolders.",
+      "Trace GetTrophyCaseInfo/GetTrophyInfo and GetMyCareerStatsInfo back to persistent title/award fields.",
+      "Then connect the resulting ownership fields to the post-fight path and to the contract/match subtype passed into AssignCareerMatch."
     ]
   }
 }
