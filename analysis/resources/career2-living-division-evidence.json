@@ -233,9 +233,9 @@
       "true body-weight gain/cut mechanics synchronized with persistent boxer+0x6C"
     ],
     "next_static_step": [
-      "Weight-class movement is now structurally recovered: stock career uses a fixed three-slot window {base class, one lower, one higher} and switches the active logical slot without changing persistent boxer weight.",
-      "Bound which contract/result transitions choose slot 1 versus slot 2 and whether any stock gate restricts moving down/up based on titles, rank or career state.",
-      "Separately bound whether any persistent injury diagnosis/severity state exists beyond the recovered post-fight availability cooldown."
+      "Map the 0x001A4F50 contract-type jump cases to target slot 0/1/2 and the INFO_Weightclass_Change fine-print flag.",
+      "Check for title/rank/career-state gates on switching into slot 1 versus slot 2.",
+      "Separately close the search for a persistent injury diagnosis/severity field beyond progression+0x13."
     ]
   },
   "match_descriptor": {
@@ -998,5 +998,60 @@
       "finding": "The actual numeric weight field is mapped and mutable in boxer/create-physique code, but the recovered career slot-switch function does not modify it.",
       "implication": "A Career Mode 2.0 system that models genuine gaining/cutting body weight must explicitly coordinate +0x6C with slot/class state; the stock career transition path alone is a logical division switch."
     }
+  },
+  "weight_class_movement": {
+    "confidence": "CONFIRMED three-slot adjacent-class window initialization and active-slot switching; exact contract-type-to-slot policy remains partially unresolved",
+    "slot_window_initialization": {
+      "function": "0x0019CFF8",
+      "proof_region": "0x0019D3B0-0x0019D424",
+      "player_weight_classifier": "0x0018600C",
+      "absolute_class_enum": {
+        "0": "Heavyweight",
+        "1": "Light Heavyweight",
+        "2": "Middleweight",
+        "3": "Welterweight",
+        "4": "Lightweight",
+        "5": "Featherweight",
+        "7": "unavailable/out-of-window sentinel"
+      },
+      "persistent_mapping": {
+        "slot_0": "profile+0x2D = player's classified current/base class",
+        "slot_1": "profile+0x2E = slot_0 - 1 (one class heavier), or 7 at Heavyweight",
+        "slot_2": "profile+0x2F = slot_0 + 1 (one class lighter), or 7 at Featherweight"
+      },
+      "evidence": [
+        "0x0019D3CC calls 0x0018600C and stores its class result to profile+0x2D.",
+        "0x0019D3E4..0x0019D404 sets profile+0x2F to base+1 except base class 5, where it writes sentinel 7.",
+        "0x0019D40C..0x0019D424 sets profile+0x2E to base-1 except base class 0, where it writes sentinel 7."
+      ]
+    },
+    "active_slot_switching": {
+      "function": "0x0019527C",
+      "proposed_name": "SetActiveCareerWeightClassSlot",
+      "active_fields": [
+        "profile+0x2A",
+        "profile+0x2B"
+      ],
+      "slot_to_class_getter": "0x001929C4(career,slot) -> profile[0x2D+slot]",
+      "scheduler": "0x001A4F50",
+      "evidence": [
+        "0x001A4F50 snapshots profile+0x2A into s5.",
+        "At 0x001A5198 it switches to slot 0 only when the current slot is not 0.",
+        "At 0x001A527C it switches to slot 1 only when the current slot is not 1.",
+        "At 0x001A5364 it switches to slot 2 only when the current slot is not 2.",
+        "After a switch the scheduler resolves the target slot ladder opponent and schedules through 0x00194518."
+      ],
+      "contract_marker": "When a slot change occurs, the selected/live contract byte +0x02 is set to 1 before 0x0019527C; exact public meaning remains unresolved."
+    },
+    "persistence_boundary": {
+      "bounded_scan": "Direct SB writes to profile+0x2D/+0x2E/+0x2F in career/front-end code were found only in the initialization region above; later code reads these mappings.",
+      "implication": "Recovered stock movement changes the active logical slot rather than rewriting boxer weight or rebuilding the three slot mappings.",
+      "title_note": "The slot-switch path does not immediately call the title-transfer/forfeiture writer. Standard title forfeiture remains separately enforced by the one-year deadline path 0x0019DFE8."
+    },
+    "career2_implication": [
+      "Retail's compatibility baseline is a fixed three-class window centered on the player's starting class.",
+      "Expanding Career Mode 2.0 beyond adjacent classes requires extending/remapping the three-slot persistence model, not merely changing one division byte.",
+      "Current boxer weight at persistent boxer+0x6C can still drive a richer natural/walking-weight model independently of the stock active-slot selector."
+    ]
   }
 }
