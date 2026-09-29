@@ -629,6 +629,36 @@ def main() -> None:
             pos = off + len(term)
         semantic_string_hits[term.decode("ascii")] = hits[:64]
 
+
+    # Candidate semantics for progression record+0x13, which the weekly world
+    # tick decrements.  Collect getter-tied accesses so post-fight setters can
+    # be distinguished from unrelated objects that also have a +0x13 byte.
+    progression_cooldown_sequences = []
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        words = list(words_for_section(raw, sec))
+        for i, (addr, word) in enumerate(words):
+            if not (0x00190000 <= addr < 0x001B8000):
+                continue
+            if (word >> 26) != 0x03:
+                continue
+            dest = ((addr + 4) & 0xF0000000) | ((word & 0x03FFFFFF) << 2)
+            if dest != 0x001928F0:
+                continue
+            window = words[max(0, i - 6): min(len(words), i + 24)]
+            if not any((w & 0xFFFF) == 0x13 for _wa, w in window):
+                continue
+            progression_cooldown_sequences.append({
+                "getter_call": f"0x{addr:08X}",
+                "function_start": f"0x{function_bounds(raw, elf, addr)[0]:08X}",
+                "context": disasm_range(
+                    raw, elf,
+                    max(function_bounds(raw, elf, addr)[0], addr - 0x20),
+                    min(function_bounds(raw, elf, addr)[1], addr + 0x68),
+                ),
+            })
+
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
         "targets": rows,
@@ -652,6 +682,7 @@ def main() -> None:
         "title_stat_writes": title_stat_writes,
         "title_stat_pointer_adjusts": title_stat_pointer_adjusts,
         "progression_title_counter_sequences": progression_title_counter_sequences,
+        "progression_cooldown_sequences": progression_cooldown_sequences,
         "semantic_string_hits": semantic_string_hits,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
