@@ -164,7 +164,9 @@
       "player championship contract generation",
       "slot-specific title scheduling with persistent subtype-8 match descriptors",
       "three paired player championship challenge/defense contract families",
-      "slot-specific title defenses using persistent subtype-9 match descriptors"
+      "slot-specific title defenses using persistent subtype-9 match descriptors",
+      "standard title challenge opponent selection from ladder slot 0",
+      "standard title defense opponent selection from ladder slot 1"
     ],
     "not_yet_proven": [
       "rematch-clause storage",
@@ -175,7 +177,7 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "Standard player championship challenges (types 15/13/14, subtype 8) and defenses (types 20/18/19, subtype 9) are now paired and bounded. Next inspect the remaining contract families for any true mandatory-challenger/eliminator semantics; if none are evidenced, treat mandatory challengers and AI title scheduling as Career Mode 2.0 extensions, then move to explicit injury/recovery and weight-class movement."
+    "next_static_step": "Retail title defenses already select ladder slot 1 as the player's challenger. Next determine whether any contract/result path enforces a mandatory-defense deadline or creates eliminators; absent such evidence, implement those as Career Mode 2.0 policy extensions. In parallel, resolve progression-record+0x18 title-forfeiture writes, then move to explicit injury/recovery and weight-class movement."
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -664,6 +666,43 @@
         }
       ],
       "boundary": "These contracts mutate award/belt state and some branches increment title-win/defense-related progression counters, but they are not promoted to mandatory-challenger or eliminator contracts without stronger semantic evidence."
+    },
+    "opponent_selection": {
+      "confidence": "CONFIRMED ladder-slot selection in special/live-contract scheduler 0x001A4F50",
+      "scheduler": "0x001A4F50",
+      "common_path": [
+        "Loads the current player progression index from profile+0x4E as fighter A.",
+        "Resolves the active career-slot ranking ladder from profile+0x2A.",
+        "For non-type-25 contracts, reads live contract+0x2C and uses that value as the ranking-ladder slot index.",
+        "Loads the boxer progression-record index from ladder entry profile + active_slot*0xC8 + 0x2EA + live_contract[+0x2C]*4.",
+        "Passes that boxer as fighter B to 0x00194518 AssignCareerMatch."
+      ],
+      "template_field_mapping": "live contract+0x2C comes from fights.fnc template+0x1C",
+      "challenge_family": {
+        "contract_types": [
+          15,
+          13,
+          14
+        ],
+        "template_plus_0x1C": 0,
+        "selected_ladder_slot": 0,
+        "interpretation": "The standard title-challenge contracts schedule the player against ladder slot 0."
+      },
+      "defense_family": {
+        "contract_types": [
+          20,
+          18,
+          19
+        ],
+        "template_plus_0x1C": 1,
+        "selected_ladder_slot": 1,
+        "interpretation": "The standard title-defense contracts schedule the player against ladder slot 1, i.e. the highest challenger position beneath slot 0 in the sorted ladder."
+      },
+      "mandatory_challenger_boundary": {
+        "supported": "Retail already hardwires the standard player title-defense opponent to ladder slot 1.",
+        "not_yet_supported": "No deadline, sanctioning rule, refusal penalty, rotating mandatory order, eliminator bracket, or AI-vs-AI mandatory-title scheduler has been proven.",
+        "career2_implication": "Career Mode 2.0 can preserve the proven champion-vs-top-challenger baseline while adding explicit mandatory-challenger timing, eliminators, vacancies and AI title scheduling."
+      }
     }
   }
 }
