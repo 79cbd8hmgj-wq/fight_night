@@ -438,6 +438,23 @@ def main() -> None:
             "string_refs": local_string_refs(target, target + 0x120),
             "assembly": disasm_range(raw, elf, target, target + 0x120),
         })
+    title_gate_table = []
+    for i in range(20):
+        dest = vaddr_word(raw, elf, 0x00508220 + i * 4)
+        title_gate_table.append({
+            "state": i + 3,
+            "target": f"0x{dest:08X}" if dest is not None else None,
+            "value": 1 if dest == 0x001971D0 else (0 if dest == 0x001971D8 else None),
+        })
+    secondary_gate_table = []
+    for i in range(8):
+        dest = vaddr_word(raw, elf, 0x00508270 + i * 4)
+        secondary_gate_table.append({
+            "state": i + 2,
+            "target": f"0x{dest:08X}" if dest is not None else None,
+            "value": 1 if dest == 0x00197210 else (0 if dest == 0x00197218 else None),
+        })
+
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
         "targets": rows,
@@ -451,6 +468,8 @@ def main() -> None:
         "contract_label_strings": contract_label_strings,
         "contract_detail_strings": contract_detail_strings,
         "contract_cases": contract_cases,
+        "title_gate_table": title_gate_table,
+        "secondary_gate_table": secondary_gate_table,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
