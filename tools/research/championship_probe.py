@@ -283,6 +283,9 @@ def main() -> None:
     def read_c_string(address: int) -> str | None:
         off = elf.vaddr_to_offset(address)
         if off is None:
+            fallback = address + 0x100
+            off = fallback if 0 <= fallback < len(raw) else None
+        if off is None:
             return None
         end = raw.find(b"\0", off, min(len(raw), off + 256))
         if end < 0:
@@ -354,6 +357,35 @@ def main() -> None:
                 "context": disasm_range(raw, elf, max(start, addr - 0x40), min(end, addr + 0x50)),
             })
 
+    def scan_string_region(start_vaddr: int, end_vaddr: int) -> list[dict[str, str]]:
+        rows = []
+        start_off = start_vaddr + 0x100
+        end_off = min(len(raw), end_vaddr + 0x100)
+        off = start_off
+        while off < end_off:
+            while off < end_off and not (0x20 <= raw[off] <= 0x7E):
+                off += 1
+            if off >= end_off:
+                break
+            begin = off
+            while off < end_off and 0x20 <= raw[off] <= 0x7E:
+                off += 1
+            if off < end_off and raw[off] == 0 and off - begin >= 4:
+                try:
+                    value = raw[begin:off].decode("ascii")
+                except UnicodeDecodeError:
+                    value = ""
+                if value:
+                    rows.append({
+                        "vaddr": f"0x{begin - 0x100:08X}",
+                        "value": value,
+                    })
+            off += 1
+        return rows
+
+    contract_label_strings = scan_string_region(0x0050DEC0, 0x0050E100)
+    contract_detail_strings = scan_string_region(0x0050E820, 0x0050EC20)
+
     contract_cases = []
     for index in range(20):
         type_id = index + 3
@@ -374,6 +406,8 @@ def main() -> None:
         "manual_functions": manual_functions,
         "focused_ranges": focused_ranges,
         "named_strings": named_strings,
+        "contract_label_strings": contract_label_strings,
+        "contract_detail_strings": contract_detail_strings,
         "contract_cases": contract_cases,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
