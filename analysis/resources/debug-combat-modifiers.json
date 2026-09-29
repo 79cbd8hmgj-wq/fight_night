@@ -647,5 +647,39 @@
     "stamina": "The original game now has bounded debug-build candidates for attack energy cost, continuous energy recovery, movement energy cost and between-round max-energy recovery. This is sufficient to transfer-match concrete retail functions instead of searching for a generic iStamina string.",
     "damage": "0x0007EB7C is a concrete debug-build damage formula boundary with explicit head/body, punch-type, lead/rear and global attack-damage modifiers.",
     "hook_status": "These are high-value debug-build hook candidates only. They must be matched to ULUS10066 and original instructions/ABI verified before build_plan.json receives retail patches."
+  },
+  "ko_knockdown_lifecycle": {
+    "confidence": "CONFIRMED for KO-moment modifiers, knockdown-state flow, and three-knockdown enforcement; exact original function names unknown",
+    "ko_moment": {
+      "evaluator": "0x00082228 lifecycle state 2",
+      "duration_modifiers": [
+        {
+          "id": 32,
+          "name": "dec KO moment length"
+        },
+        {
+          "id": 33,
+          "name": "inc opp KO moment length"
+        }
+      ],
+      "next_state": "state 3 timed KO-moment phase"
+    },
+    "knockdown_sequence": {
+      "lifecycle_state": 6,
+      "handler": "0x000827B8",
+      "entered_from": "state 2 when boxer condition/predicate indicates knockdown sequence",
+      "downed_boxer_predicate": "0x0009CF68 (boxer+0x140 in {7,8,9})",
+      "three_knockdown_rule": {
+        "stat_id": "0x0F",
+        "semantic": "knockdowns suffered; queried per-round for the downed boxer",
+        "stat_writer": "0x000BAB38",
+        "threshold": 3,
+        "terminal_state": 7
+      }
+    },
+    "terminal_state": {
+      "lifecycle_state": 7,
+      "evidence": "Reached from three-knockdown stoppage, scheduled-round exhaustion, and other fight-ending conditions."
+    }
   }
 }
