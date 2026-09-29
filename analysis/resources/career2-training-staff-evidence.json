@@ -162,9 +162,157 @@
       "Extend contract-person framework for manager/promoter relationships rather than creating an unrelated staff storage system."
     ],
     "next_static_step": [
-      "Map the training-result provider and the function that applies training deltas to persistent boxer ratings.",
-      "Decode xdbtrain.adf field layout and connect rows to training activities/focus/intensity.",
-      "Trace trainer contract duration/expiry so camps and longer-term coach relationships can be scheduled by the weekly calendar."
+      "Decode xdbtrain.adf enough to identify original activity/focus/reward metadata.",
+      "Trace trainer contract duration/expiry and determine how trainer focus/expertise influences training outcomes.",
+      "Map save serialization of profile+0x256C and the staff slots so new potential/growth/camp fields can be placed safely.",
+      "Then target age/potential/physical-growth extension points for Amateur Career."
     ]
+  },
+  "training_result_application": {
+    "confidence": "CONFIRMED persistent-rating mutation and UI before/after delta path; descriptive function names are not original symbols",
+    "generator_and_applier": {
+      "function": "0x001E8F88",
+      "proposed_name": "GenerateAndApplyTrainingResult",
+      "confidence": "CONFIRMED role from caller/dataflow; proposed name is descriptive",
+      "behavior": [
+        "Reads the current transient training configuration from the fight session.",
+        "Uses training mode/focus/intensity, career phase/age context, RNG and additional scaling state to generate an eight-stat signed training result.",
+        "Calls 0x001E95F0 for the player boxer, and in the career/training mode can also run a parallel result path for the active rival/opponent context.",
+        "Updates the fight-session training-state completion/reset path after result generation."
+      ],
+      "important_correction": "The career+0x60 object read in this generator is the live fight-contract slot, not the trainer-contract slot. Its +0x48 method supplies the contract's scheduling/weeks value; do not mislabel this access as trainer data."
+    },
+    "per_boxer_result_function": {
+      "function": "0x001E95F0",
+      "proposed_name": "ApplyGeneratedTrainingOutcome",
+      "confidence": "CONFIRMED role; proposed name is descriptive",
+      "behavior": [
+        "Builds an eight-byte signed stat-delta vector from the generated training result and contextual scaling.",
+        "Calls 0x0018DCA0 on the supplied persistent boxer-data object to apply the deltas.",
+        "Can invoke additional boxer-shape/physical update helpers 0x00186C88/0x00186DE4 after the rating change; exact morphology semantics remain unresolved.",
+        "Returns a success/result flag to the caller."
+      ]
+    },
+    "persistent_rating_writer": {
+      "function": "0x0018DCA0",
+      "proposed_name": "ApplyTrainingRatingDeltas",
+      "confidence": "CONFIRMED behavior; proposed name is descriptive",
+      "clamp_range": "10..100 inclusive",
+      "dirty_flag": "+0x78 = 1 after mutation",
+      "persistent_boxer_offsets": {
+        "+0x7A": {
+          "meaning": "Power-linked rating A",
+          "confidence": "CONFIRMED training/UI relationship; exact distinction from +0x7C unresolved"
+        },
+        "+0x7C": {
+          "meaning": "Power-linked rating B",
+          "confidence": "CONFIRMED training/UI relationship; exact distinction from +0x7A unresolved"
+        },
+        "+0x7E": {
+          "meaning": "Speed",
+          "confidence": "CONFIRMED"
+        },
+        "+0x80": {
+          "meaning": "Agility",
+          "confidence": "CONFIRMED"
+        },
+        "+0x82": {
+          "meaning": "Stamina",
+          "confidence": "CONFIRMED"
+        },
+        "+0x84": {
+          "meaning": "Chin",
+          "confidence": "CONFIRMED"
+        },
+        "+0x86": {
+          "meaning": "Heart",
+          "confidence": "CONFIRMED"
+        },
+        "+0x88": {
+          "meaning": "Body",
+          "confidence": "CONFIRMED"
+        },
+        "+0x8A": {
+          "meaning": "Cuts",
+          "confidence": "CONFIRMED"
+        }
+      },
+      "delta_application": [
+        "The first generated Power delta is intentionally applied to both +0x7A and +0x7C.",
+        "The remaining seven trainable UI stats each update one stored signed 16-bit rating.",
+        "Every mutated field is clamped to 10..100."
+      ],
+      "overall_rating": "Not stored as one of these nine direct mutation targets in this path. The Training Results provider derives Overall separately from the full before/after boxer state."
+    },
+    "persistent_player_boxer_location": {
+      "base": "profile+0x256C",
+      "confidence": "CONFIRMED debug static + retail runtime cross-build match",
+      "retail_runtime_example": {
+        "source": "analysis/save/career-runtime-evidence-2026-09-14.json",
+        "inferred_profile_base": "0x08D984D4 from confirmed career_bank 0x08D98574 = profile+0xA0",
+        "persistent_boxer_base": "0x08D9AA40",
+        "mapped_addresses": {
+          "Power-linked A": "0x08D9AABA",
+          "Power-linked B": "0x08D9AABC",
+          "Speed": "0x08D9AABE",
+          "Agility": "0x08D9AAC0",
+          "Stamina": "0x08D9AAC2",
+          "Chin": "0x08D9AAC4",
+          "Heart": "0x08D9AAC6",
+          "Body": "0x08D9AAC8",
+          "Cuts": "0x08D9AACA"
+        }
+      },
+      "cross_validation": [
+        "Retail checkpoint 4->5 showed Power +3 at both 0x08D9AABA and 0x08D9AABC, exactly matching the writer's duplicated Power delta.",
+        "Retail Stamina +1 matched 0x08D9AAC2.",
+        "Retail Body +1 matched 0x08D9AAC8.",
+        "Retail Cuts +1 matched 0x08D9AACA.",
+        "The simultaneously displayed Speed/Agility/Chin/Heart 0 deltas corresponded to unchanged mapped fields."
+      ]
+    },
+    "training_results_provider": {
+      "function": "0x001E99A8",
+      "proposed_binding": "GetTrainingResultsInfo",
+      "binding_confidence": "CONFIRMED provider role from direct output-key use; exact native registration indirection is generic",
+      "output_keys": [
+        "strCROBoxerBefore",
+        "strCROBoxerAfter",
+        "aStats",
+        "aStatsDelta",
+        "iWeightClassChange",
+        "strPopupText"
+      ],
+      "persistence_flow": [
+        "Copies 0x53 four-byte units (0x14C bytes) from profile+0x256C into separate before/after working copies.",
+        "Runs 0x001E8F88 against the after copy.",
+        "Copies the mutated after copy back to profile+0x256C, making the training result persistent.",
+        "Synchronizes the mutated boxer data through 0x0018ADCC.",
+        "Builds the displayed before/after rating arrays.",
+        "Computes aStatsDelta in UI order."
+      ],
+      "displayed_delta_order": [
+        "Power (average/combined result of the two Power-linked stored fields)",
+        "Speed",
+        "Agility",
+        "Stamina",
+        "Chin",
+        "Body",
+        "Heart",
+        "Cuts",
+        "Overall (derived separately from the whole boxer state)"
+      ]
+    },
+    "optional_minigame_boundary": {
+      "confidence": "CONFIRMED architectural boundary; replacement behavior is an overhaul design decision",
+      "reusable_path": [
+        "Choose persistent camp/training activity in Career Mode 2.0.",
+        "If the player plays the minigame, retain the original gameplay/result generation path.",
+        "If the player skips the minigame, generate the eight-stat outcome in Career Mode 2.0 using camp quality, coach, fatigue, development/potential and activity choice.",
+        "Feed that outcome into the same persistent boxer-rating writer semantics / downstream before-after result presentation.",
+        "Reuse Training Results UI fields aStats/aStatsDelta and the existing persistent boxer block."
+      ],
+      "key_point": "The minigame is not itself the persistence mechanism. Persistence happens at the boxer-data mutation/copyback boundary, so Career Mode 2.0 can make the minigame optional without inventing a separate ratings save path."
+    }
   }
 }
