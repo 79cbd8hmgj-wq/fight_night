@@ -1,30 +1,50 @@
 # Career Mode 2.0 — Retirement and Legacy Foundation
 
-This slice begins roadmap priority 4 after the amateur-development, living-
+This slice covers roadmap priority 4 after the amateur-development, living-
 division, and C2EX/save-contract foundations.
 
 ## Proven retail retirement state
 
-The retail career already has a first-class retirement flag:
+The retail career has a first-class persistent retirement state:
 
-- profile +0x00 is emitted by Career Central as iRetired;
-- GetNextEventState tests the same byte;
+- profile +0x00 is emitted by Career Central as `iRetired`;
+- `GetNextEventState` tests the same byte;
 - any nonzero value forces next-event code 4;
-- the retail contract system also exposes a dedicated Retire contract family
-  as resolved contract type 27.
+- new-career initialization clears the flag at `0x0019D208`;
+- contract type 27 is the dedicated Retire contract family.
 
-The host model therefore treats retirement as a real persistent career state,
-not as a Career 2.0-only overlay.
+The retirement transition itself is now statically closed.
 
-The current foundation exposes retirement as one-way. Although a future
-Career 2.0 comeback feature is in scope conceptually, a retail unretire/comeback
-writer path has not been proven yet. Clearing the flag is therefore not exposed
-as if it were already understood retail behavior.
+### Exact voluntary-retirement write
+
+The indirect handler at `0x001A3B5C` reads the selected/live contract type
+from record `+0x34` and compares it with literal `27`.
+
+On that type-27 path:
+
+1. the career profile pointer is reloaded from career `+0x3C`;
+2. literal `1` is loaded into `$a1`;
+3. `0x001A3C60` executes `sb $a1, 0x0($a0)`;
+4. therefore persistent `profile+0x00 = 1`.
+
+The handler is referenced by a function pointer at `0x00581A20` and has no
+direct JAL callers in the executable, consistent with an indirect
+object/vtable-style contract-finalization dispatch.
+
+The same path also clears/reset several adjacent contract/career fields,
+including profile `+0x13C/+0x140`, fight-session/career `+0x19A2`, and the
+selected contract's active state. This confirms type 27 is not merely a UI
+label: accepting/finalizing it commits the retired state.
+
+A second function, `0x001A38C4`, also has a proven
+`profile+0x00 = 1` write at `0x001A39E8` and is referenced at
+`0x00581A18`. Its internal contract-type jump-table case is not yet named, so
+it remains separate evidence rather than being folded into the voluntary
+type-27 path.
 
 ## Legacy inputs already mapped
 
-The project can already assemble a useful evidence-backed retirement snapshot
-from retail career state:
+The project can already assemble an evidence-backed retirement snapshot:
 
 | Metric | Proven source |
 |---|---|
@@ -41,59 +61,49 @@ from retail career state:
 | title forfeitures | progression record +0x18 |
 | age | proven career-age path used by the amateur-development slice |
 
-The model also derives total bouts and KO-win rate without changing retail
+The host model derives total bouts and KO-win rate without changing retail
 state.
 
 ## What is deliberately not scored yet
 
-The Career Mode 2.0 design calls for a broader legacy evaluation than retail
-currently exposes directly. The final formula should eventually account for
-areas such as:
+The final Career Mode 2.0 legacy formula should account for more than the
+currently mapped counters. Remaining inputs include:
 
 - quality of opposition;
-- championships and defenses;
 - accomplishments across multiple divisions;
-- longevity;
-- knockouts;
+- career longevity;
 - technical performance;
 - finances;
 - health/career wear.
 
-Only some of those inputs are presently mapped strongly enough to be named and
-consumed. This slice therefore produces a LegacyEvidenceSnapshot rather than
-hard-coding a legacy score or arbitrary weights.
+The current implementation therefore exposes a `LegacyEvidenceSnapshot`
+rather than inventing a weighting formula. Evidence-backed retail state and
+Career Mode 2.0 scoring policy remain separate layers.
 
-That keeps two layers separate:
+## Contract type 27 surfaces
 
-1. evidence-backed retail state;
-2. Career Mode 2.0 scoring policy, which can be tuned after its remaining
-   inputs are defined.
+The recovered type-27 path now spans multiple retail systems:
 
-## Existing retirement contract path
+- resolver: `0x001A2C98`;
+- contract-list dispatch: `0x0050E224 -> 0x001FF6A4`;
+- special scheduler: `0x00508CC4 -> 0x001A5430`;
+- persistent retirement handler: `0x001A3B5C`;
+- retired-byte store: `0x001A3C60`.
 
-The recovered contract system contains a dedicated special retirement contract:
+The resolver still contains a conditional raw-27 -> type-25 remap whose
+predicate is unnamed. That caveat does not weaken the direct type-27 writer
+proof; it only means not every raw type-27 record necessarily reaches the
+public Retire path unchanged.
 
-- resolved type 27;
-- exposed through iRetireContractID;
-- contract-list case at debug/review 0x001FF6C0;
-- type resolver at 0x001A2C98;
-- the resolver can conditionally remap raw type 27 to type 25 through a still-
-  unnamed predicate.
+## Remaining priority-4 work
 
-That makes the existing special-contract path a strong candidate for the
-eventual player-driven retirement UI/transition, but this slice does not claim
-the final writer site for profile+0x00 until that path is traced directly.
+The retirement state transition is resolved. The remaining work is the
+**legacy side**:
 
-## Next static/implementation step
-
-The next retirement/legacy pass should:
-
-1. trace every writer of profile+0x00;
-2. follow the accepted Retire contract path until the exact retirement write is
-   reached;
-3. map the existing career-end condition and distinguish it from voluntary
-   retirement;
-4. identify durable sources for opposition quality, division history and
-   longevity;
-5. only then lock the Career Mode 2.0 legacy scoring formula and any comeback
-   policy.
+1. resolve the separate `0x001A38C4` profile+0x00 writer case;
+2. decode the 25-byte career-history entries far enough to retain opponent,
+   result, class/date and stakes information;
+3. identify the stock career-end/forced-retirement eligibility condition;
+4. define durable inputs for opposition quality, multi-division achievement
+   and longevity;
+5. then lock the Career Mode 2.0 legacy formula and any comeback policy.
