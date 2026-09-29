@@ -318,5 +318,51 @@
       "0x0007854C between-round max-energy/health recovery"
     ],
     "next_step": "Trace the 0x0007FFxx callers and 0x0008000C state transition to distinguish fight-start setup from between-round reset and recover the exact round-state enum/lifecycle transitions."
+  },
+  "two_boxer_combat_subsystem": {
+    "constructor": "0x00021ED0",
+    "object_size": "0x2C",
+    "central_fight_manager_field": "+0x38",
+    "member_function_table": "0x0057991C",
+    "update_method": "0x00021F60",
+    "confidence": "CONFIRMED structure and call chain; exact original class/method names unknown",
+    "ownership_evidence": [
+      "Central fight-manager constructor 0x0001EAAC allocates 0x2C bytes, calls 0x00021ED0(subsystem, manager), and stores the result at manager+0x38.",
+      "0x00021ED0 calls base constructor 0x00021728 and installs member-function table 0x0057991C at object+0x18.",
+      "Raw function pointer 0x00021F60 occurs in that member-function table, explaining the absence of direct JAL callers."
+    ],
+    "update_behavior": [
+      "Checks fight/global state conditions before processing combatants.",
+      "Loops boxer indices 0 and 1 using 0x0008552C to resolve the high-level boxer owners.",
+      "For each boxer loads boxer+0x28C and calls 0x00074370.",
+      "Stores the returned byte/result and calls 0x0009D2BC(boxer, result).",
+      "On a later pass, when the result is nonzero and state preconditions hold, invokes 0x000A2D78(boxer, 0)."
+    ],
+    "bounded_chain": [
+      "central fight manager +0x38",
+      "virtual update 0x00021F60",
+      "two boxer loop via 0x0008552C",
+      "boxer+0x28C",
+      "0x00074370 per-boxer contact/hit dispatcher",
+      "0x000754B8 core hit resolver",
+      "damage calculation / flash-KO evaluation / physical-state mutation"
+    ],
+    "implication": "This is the strongest recovered outer combat-resolution tick so far. It coordinates hit/contact resolution for both fighters inside the central fight manager."
+  },
+  "outer_combat_tick_to_damage": {
+    "confidence": "CONFIRMED",
+    "chain": [
+      "0x0001EAAC central fight-manager constructor owns subsystem at +0x38",
+      "0x00021F60 two-boxer combat tick",
+      "0x0008552C boxer owner lookup",
+      "boxer+0x28C combat/contact subobject",
+      "0x00074370 per-boxer contact dispatcher",
+      "0x000754B8 core hit resolver",
+      "0x0007894C / 0x0007EB7C damage calculation",
+      "0x0007A198 physical damage application",
+      "0x0007D09C flash-KO evaluation on guarded path",
+      "0x00079254 severe physical reset on flash-KO success"
+    ],
+    "next_static_step": "Trace 0x0009D2BC and the success/result value returned by 0x00074370 into the combat-state controller, specifically looking for transition to state ID 6 DRONE_KNOCKDOWN_ATTACK."
   }
 }
