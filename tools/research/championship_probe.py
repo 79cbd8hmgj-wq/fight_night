@@ -174,8 +174,56 @@ def main() -> None:
             }
         functions[key]["xrefs"].append(f"0x{xref:08X}")
 
+    # Find all direct halfword writes to the six persistent champion slots.
+    champion_write_offsets = {0x50, 0x52, 0x54, 0x56, 0x58, 0x5A}
+    champion_writes = []
+    seen_bounds = set()
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        for addr, word in words_for_section(raw, sec):
+            op = word >> 26
+            imm = word & 0xFFFF
+            if op != 0x29 or imm not in champion_write_offsets:  # SH
+                continue
+            start, end = function_bounds(raw, elf, addr)
+            key = (start, end)
+            context_start = max(start, addr - 0x50)
+            context_end = min(end, addr + 0x70)
+            champion_writes.append({
+                "address": f"0x{addr:08X}",
+                "field_offset": f"0x{imm:02X}",
+                "function_start": f"0x{start:08X}",
+                "function_end": f"0x{end:08X}",
+                "context": disasm_range(raw, elf, context_start, context_end),
+            })
+            seen_bounds.add(key)
+
+    # Also inventory direct byte writes to the title/trophy-state neighborhood.
+    title_state_writes = []
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        for addr, word in words_for_section(raw, sec):
+            op = word >> 26
+            imm = word & 0xFFFF
+            if op != 0x28 or not (0x1B <= imm <= 0x40):  # SB
+                continue
+            start, end = function_bounds(raw, elf, addr)
+            title_state_writes.append({
+                "address": f"0x{addr:08X}",
+                "field_offset": f"0x{imm:02X}",
+                "function_start": f"0x{start:08X}",
+                "context": disasm_range(raw, elf, max(start, addr - 0x28), min(end, addr + 0x38)),
+            })
+
     print("CHAMPIONSHIP_PROBE_BEGIN")
-    print(json.dumps({"targets": rows, "functions": list(functions.values())}, indent=2))
+    print(json.dumps({
+        "targets": rows,
+        "functions": list(functions.values()),
+        "champion_halfword_writes": champion_writes,
+        "title_state_byte_writes": title_state_writes,
+    }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
 if __name__ == "__main__":
