@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "purpose": "Career Mode 2.0 retirement transition and legacy-input evidence",
   "source_artifacts": {
     "retail": {
@@ -183,17 +183,89 @@
     "The final legacy formula remains a Career Mode 2.0 policy layer above the proven retail evidence inputs."
   ],
   "unresolved_for_final_legacy_policy": [
-    "opposition-quality history at fight time",
+    "stable opponent identity and opponent rank-at-fight beyond the retail 22-byte display-name history",
     "durable multi-division accomplishment history beyond current three-slot state",
     "career-longevity start/end basis",
     "technical-performance aggregation",
-    "health/career-wear input",
     "comeback policy",
     "final Career Mode 2.0 legacy-score weights"
   ],
   "next_step": [
-    "Stop re-tracing the already-proven type-27 retirement writer path.",
-    "Map durable opposition-quality, division-history and career-longevity inputs needed by the current-version legacy system.",
-    "After those inputs are bounded, define the Career Mode 2.0 legacy scoring policy as mod-owned logic."
-  ]
+    "Finish decoding the retail fight-result label table and TKO-time formatter so all 25 bytes have bounded display semantics.",
+    "Define a mod-owned Career 2.0 legacy fight ledger for stable opponent ID/rank, division and title stakes; persist it in the C2EX extension rather than overloading the retail 25-byte rings.",
+    "Map career longevity and division-history inputs, then lock the current-version legacy scoring policy. Recovery/injury/health expansion remains deferred by the current release scope."
+  ],
+  "retail_fight_history": {
+    "confidence": "CONFIRMED layout and UI semantics from exact ULUS10066-v1.00 writer/reader/UI dataflow",
+    "writer": "0x001939DC",
+    "reader": "0x00193BB8",
+    "completed_fight_writer_caller": "0x001B7894",
+    "ui_provider": "0x001EE2D0 (GetCareerHistoryInfo data-producing implementation; registration cluster begins at 0x001EE218)",
+    "rings": {
+      "amateur": {
+        "class_value": 0,
+        "count_field": "profile+0x2AA0",
+        "ring_index_field": "profile+0x2AA2",
+        "storage_base": "profile+0x26B8",
+        "capacity": 20
+      },
+      "professional": {
+        "class_value": 1,
+        "count_field": "profile+0x2AA1",
+        "ring_index_field": "profile+0x2AA3",
+        "storage_base": "profile+0x28AC",
+        "capacity": 20
+      }
+    },
+    "entry_size_bytes": 25,
+    "fields": {
+      "0x00..0x15": {
+        "meaning": "opponent display-name string buffer",
+        "size_bytes": 22,
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "Writer passes destination entry, source buffer and length 0x16 to 0x004A9C7C before writing the final three bytes.",
+          "Completed-fight caller builds the source buffer at sp+0x80 with a 0x16-byte bound through 0x004A6654 using xdbalias.adf.",
+          "Reader 0x00193BB8 copies the entry string through confirmed strcpy helper 0x004A9A0C.",
+          "GetCareerHistoryInfo emits that copied string through astrOpponentName."
+        ],
+        "limitation": "The retail history entry stores the displayed opponent string, not a proven stable progression-record ID or opponent rank-at-fight."
+      },
+      "0x16": {
+        "meaning": "fight-result code",
+        "storage": "s8",
+        "confidence": "CONFIRMED semantic role; individual code labels pending result-table decode",
+        "evidence": [
+          "Writer stores its result argument at entry+0x16.",
+          "Reader sign-extends entry+0x16.",
+          "GetCareerHistoryInfo indexes a result-string pointer table with this signed byte and emits astrFightResult."
+        ]
+      },
+      "0x17": {
+        "meaning": "rounds lasted",
+        "storage": "u8",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "Reader copies entry+0x17 to the UI temporary record.",
+          "GetCareerHistoryInfo reads that byte and emits it directly through the aRoundsLasted integer-array output."
+        ]
+      },
+      "0x18": {
+        "meaning": "TKO/KO time value",
+        "storage": "u8",
+        "confidence": "CONFIRMED UI role; exact unit/encoding pending formatter decode",
+        "evidence": [
+          "Reader copies entry+0x18 to the UI temporary record.",
+          "GetCareerHistoryInfo tests the byte for >0, passes it to formatter 0x00206E18 and emits the formatted string through astrTKOTime; zero uses the fallback placeholder."
+        ]
+      }
+    },
+    "class_mapping": "profile+0x121 values 0/1 write class 0 (Amateur); values >1 write class 1 (Professional)",
+    "legacy_consequence": [
+      "Retail preserves at most the most recent 20 amateur and 20 professional bouts.",
+      "The entry is sufficient for displayed opponent/result/rounds/TKO-time history.",
+      "It is not sufficient by itself for robust Career 2.0 opposition-quality scoring because no stable opponent ID, opponent rank-at-fight, division-at-fight or title-stakes field is proven in the 25-byte entry.",
+      "Career Mode 2.0 therefore needs a mod-owned persistent legacy fight ledger if opposition quality and multi-division accomplishments must remain exact across a full career."
+    ]
+  }
 }
