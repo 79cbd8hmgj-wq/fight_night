@@ -221,9 +221,9 @@
       "AI title-challenge/title-defense scheduling policy"
     ],
     "next_static_step": [
-      "Normalize date helper 0x001A1280 to determine the exact standard title-defense deadline interval.",
-      "Search remaining contract/strings for any separate eliminator or rotating mandatory-challenger system beyond the proven ladder-entry-1 defense/succession rule.",
-      "Then move to explicit injury/recovery semantics and weight-class movement."
+      "Standard title-defense timing is now recovered: one calendar year, with ladder entry 1 as the defense/succession challenger.",
+      "Bound whether any separate eliminator/rotating mandatory-challenger subsystem exists in the remaining contract/template dispatch space.",
+      "Then move to injury/recovery and weight-class movement."
     ]
   },
   "match_descriptor": {
@@ -713,7 +713,7 @@
     "title_forfeiture_policy": {
       "function": "0x0019DFE8",
       "proposed_name": "ProcessExpiredCareerTitles",
-      "confidence": "CONFIRMED standard three-slot title-expiry/forfeiture behavior; exact calendar duration is pending date-helper normalization",
+      "confidence": "CONFIRMED standard three-slot title-expiry/forfeiture behavior and exact one-calendar-year deadline",
       "caller": {
         "call_site": "0x001B70F0",
         "context": "post-fight career flow 0x001B6A40, after the player's scheduled match fields +0x28/+0x24 are cleared and before matchmaking/world/calendar refresh"
@@ -749,11 +749,13 @@
         "Increments the current player's progression-record +0x18 counter, independently confirmed by GetMyCareerStatsInfo as aiTitleBeltsForfeited."
       ],
       "significance": [
-        "Retail FNR3 contains an actual title-defense expiry/forfeiture mechanism rather than only voluntary title-defense contracts.",
+        "Retail FNR3 contains an actual one-year title-defense expiry/forfeiture mechanism rather than only voluntary title-defense contracts.",
         "The built-in vacancy/succession rule promotes ladder entry 1 when a standard player-held title expires.",
-        "Combined with defense contracts 20/18/19 selecting ladder entry 1, the stock model establishes champion-versus-top-challenger as the baseline defense policy."
+        "Defense contracts 20/18/19 also select ladder entry 1, establishing champion-versus-top-challenger as the stock defense policy."
       ],
-      "boundary": "The deadline comparison is proven. The exact real-world duration encoded when profile+0x128/+0x130/+0x12C are created is not named until helper 0x001A1280 is normalized."
+      "boundary": "The one-year deadline and top-challenger succession are confirmed. No separate rotating mandatory-challenger or eliminator subsystem has yet been proven.",
+      "defense_deadline_interval": "1 calendar year",
+      "deadline_construction": "0x0019AAAC copies profile+0x9C career date and calls 0x001A1280 with months=0, days=0, years=1, hours=0, minutes=0 before storing the per-title deadline."
     }
   },
   "championship_contract_dispatch": {
@@ -877,14 +879,43 @@
     },
     "ai_scheduling_boundary": "Regular AI matchmaking 0x00195564 emits subtype 0 only. No stock AI-vs-AI subtype-8 challenge or subtype-9 defense scheduler has been found among direct AssignCareerMatch callers.",
     "unresolved": [
-      "Dynamic writer for progression record+0x18 (aiTitleBeltsForfeited).",
-      "Mandatory-challenger/eliminator contract or policy, if any.",
-      "Exact localized public wording for the numeric challenge/defense types."
+      "Separate mandatory-challenger/eliminator contract or policy beyond the proven ladder-entry-1 defense/succession rule, if any.",
+      "Exact localized public wording for several numeric title/award types."
     ],
     "next_static_step": [
-      "Trace the eligibility and opponent-selection policy around challenge types 13/14/15 and defense types 18/19/20 for mandatory-challenger/eliminator behavior.",
-      "Search all progression-record access paths for the +0x18 forfeiture counter writer.",
-      "Then move to explicit injury/recovery and weight-class movement."
+      "Search the complete contract/template and executable dispatch space for a separate eliminator or challenger-selection path beyond ladder entry 1.",
+      "If none is found, bound the retail rule as fixed top-challenger defense plus one-year forfeiture and define the Career Mode 2.0 extension boundary there.",
+      "Then move to explicit injury/recovery semantics and weight-class movement."
     ]
+  },
+  "packed_career_date_arithmetic": {
+    "function": "0x001A1280",
+    "proposed_name": "AddPackedCareerDateComponents",
+    "confidence": "CONFIRMED packed layout and component-add behavior; proposed name is descriptive",
+    "packed_layout": {
+      "bits 0-5": "minute (0..59 normalization)",
+      "bits 6-10": "hour (0..23 normalization)",
+      "bits 11-15": "day of month",
+      "bits 16-19": "month (1..12 normalization)",
+      "bits 20-31": "year (12-bit)"
+    },
+    "delta_inputs": {
+      "a1": "months",
+      "a2": "days",
+      "a3": "years",
+      "t0": "hours",
+      "t1": "minutes"
+    },
+    "normalization": [
+      "minutes >= 60 carry into hours",
+      "hours >= 24 carry into days",
+      "months beyond 12 carry into years",
+      "day/month rollover is normalized with helper 0x001A0EA4"
+    ],
+    "title_deadline_call_pattern": {
+      "arguments": "months=0, days=0, years=1, hours=0, minutes=0",
+      "result": "the standard title/award deadline is created exactly one calendar year after the source career date",
+      "confidence": "CONFIRMED from the repeated 0x0019AAAC title-family deadline creation calls"
+    }
   }
 }
