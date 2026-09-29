@@ -261,15 +261,10 @@ def test_calendar_projection_rejects_uint16_overflow() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("offer", "message"),
-    [
-        (_offer(contract_id=49), ""),
-    ],
-)
-def test_valid_template_boundary(offer: RetailFightContractTemplate, message: str) -> None:
+def test_valid_template_boundary() -> None:
+    offer = _offer(contract_id=49)
+
     assert offer.contract_id == 49
-    assert message == ""
 
 
 def test_invalid_template_and_context_boundaries_fail_closed() -> None:
