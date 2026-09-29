@@ -68,8 +68,17 @@ The proven save boundary is:
 - C2EX append offset: 0x5674;
 - available extension space: 0x1EBC / 7,868 bytes.
 
-This slice defines the development model only. Binary C2EX encoding and PSP
-save/load hooks remain the dedicated save-schema milestone.
+The branch now also includes the first binary C2EX codec. Version 1 is a
+52-byte deterministic block: a 16-byte little-endian header (magic, version,
+flags, payload length, CRC32) plus 36 bytes containing eight potential
+ceilings, eight learning-rate values, and target height/weight. The codec
+round-trips the extension, treats the stock zero-filled tail as a legacy save,
+rejects malformed/nonzero unknown tails, and proves that appending C2EX leaves
+the original 0x5674 stock bytes unchanged.
+
+Actual PSP save/load serializer hooks remain a later integration boundary; the
+codec does not claim that host-side serialization alone patches retail save
+code.
 
 ## Training policy
 
@@ -95,7 +104,8 @@ behavior, which preserves the player progression and persistent boxer blocks.
 
 ## Next implementation dependency
 
-The next step for this slice is to define the compact versioned C2EX binary
-schema for the new potential, learning-rate and physical-growth data, then
-round-trip this model through that codec without touching the stock 0x5674
-bytes.
+The compact C2EX v1 schema and stock-prefix-preserving round trip are now
+implemented. The next implementation boundary is the guarded retail serializer
+integration: append C2EX after the two stock chunks on save, detect/validate it
+after the two stock chunks on load, and initialize development defaults when a
+legacy save has no C2EX magic.
