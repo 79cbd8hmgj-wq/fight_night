@@ -846,11 +846,30 @@
         21,
         22
       ],
-      "evidence": [
-        "These types pass the broad championship/award gate but are excluded from the normal persistent champion-transfer set.",
-        "Individual-contract UI references include INFO_Awards_16 and FP_Everlast_Belt.",
-        "Their result branches can update title-style counters, so they are retained as special award/belt contracts rather than promoted to division-championship ownership."
-      ]
+      "families": {
+        "16/21": {
+          "identifier": "INFO_Awards_16",
+          "state_flag": "profile+0x1F",
+          "auxiliary_state": "profile+0x19",
+          "derived_date": "profile+0x134",
+          "acquisition_type": 16,
+          "repeat_or_defense_type": 21
+        },
+        "17/22": {
+          "identifier": "FP_Everlast_Belt",
+          "state_flag": "profile+0x20",
+          "auxiliary_state": "profile+0x1A",
+          "derived_date": "profile+0x138",
+          "acquisition_type": 17,
+          "repeat_or_defense_type": 22
+        }
+      },
+      "bookkeeping": [
+        "Acquisition branches increment player progression record+0x15 (belts won).",
+        "Already-held repeat branches for types 21/22 increment player progression record+0x17 (belts defended), profile+0x38, KO-derived profile+0x3B, and family-specific +0x3F or +0x40.",
+        "These contracts do not replace profile+0x50/+0x52/+0x54 persistent career-title holders."
+      ],
+      "confidence": "CONFIRMED result bookkeeping; exact localized wording for INFO_Awards_16 remains unresolved"
     },
     "ai_scheduling_boundary": "Regular AI matchmaking 0x00195564 emits subtype 0 only. No stock AI-vs-AI subtype-8 challenge or subtype-9 defense scheduler has been found among direct AssignCareerMatch callers.",
     "unresolved": [
@@ -1114,7 +1133,6 @@
     },
     "unresolved": [
       "Resolve the semantics of profile+0x66, profile+0x68 and profile+0x6A through proven generic-accessor/serialization callers or runtime evidence; direct UI/report access has been ruled out.",
-      "Resolve special award/belt result bookkeeping differences for contract types 16/17/21/22.",
       "Distinguish the exact public result-method labels within code pairs 2/3 versus 4/5/6 and their reciprocal 7..11 values if needed."
     ],
     "contract_type_gate": {
@@ -1231,6 +1249,34 @@
       "equality": "Normal synchronized player-facing slot state.",
       "mismatch": "Background/off-committed-slot processing, proven during career initialization and title-expiry/world updates.",
       "direct_writer_boundary": "Proven +0x2B career-profile writes are limited to explicit synchronized slot switching, matchmaking resynchronization from +0x2A, and initialization to slot 0; background multi-slot processing changes +0x2A alone."
+    },
+    "special_award_belt_result_bookkeeping": {
+      "confidence": "CONFIRMED",
+      "info_awards_16_family": {
+        "acquisition_type": 16,
+        "repeat_or_defense_type": 21,
+        "state_flag": "profile+0x1F",
+        "auxiliary_state": "profile+0x19",
+        "one_year_derived_date": "profile+0x134",
+        "acquisition_history": "player progression+0x15 belts won",
+        "repeat_history": "player progression+0x17 belts defended",
+        "family_repeat_aggregate": "profile+0x3F"
+      },
+      "everlast_belt_family": {
+        "acquisition_type": 17,
+        "repeat_or_defense_type": 22,
+        "state_flag": "profile+0x20",
+        "auxiliary_state": "profile+0x1A",
+        "one_year_derived_date": "profile+0x138",
+        "acquisition_history": "player progression+0x15 belts won",
+        "repeat_history": "player progression+0x17 belts defended",
+        "family_repeat_aggregate": "profile+0x40"
+      },
+      "common_repeat_aggregates": [
+        "profile+0x38 increments",
+        "profile+0x3B adds the 0x001A248C KO-counting predicate"
+      ],
+      "persistent_holder_effect": "none; later championship transfer logic explicitly keeps types 16/17/21/22 out of the standard three-slot holder-transfer set"
     }
   }
 }
