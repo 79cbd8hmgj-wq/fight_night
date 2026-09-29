@@ -458,6 +458,18 @@ def main() -> None:
             "value": 1 if dest == 0x00197210 else (0 if dest == 0x00197218 else None),
         })
 
+    eligibility_cases = []
+    for index in range(27):
+        type_id = index + 1
+        target = vaddr_word(raw, elf, 0x00508A08 + index * 4)
+        if target is None:
+            continue
+        eligibility_cases.append({
+            "type_id": type_id,
+            "target": f"0x{target:08X}",
+            "assembly": disasm_range(raw, elf, target, min(target + 0xC0, 0x001A4684)),
+        })
+
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
         "targets": rows,
@@ -473,6 +485,7 @@ def main() -> None:
         "contract_cases": contract_cases,
         "title_gate_table": title_gate_table,
         "secondary_gate_table": secondary_gate_table,
+        "eligibility_cases": eligibility_cases,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
