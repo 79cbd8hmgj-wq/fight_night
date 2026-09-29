@@ -249,6 +249,9 @@ def main() -> None:
         "champion_transfer_tail": disasm_range(raw, elf, 0x00196F58, 0x00197018),
         "result_title_transfer_region": disasm_range(raw, elf, 0x0019CB00, 0x0019CDA0),
         "division_mapping_helper": disasm_range(raw, elf, 0x0019527C, 0x00195340),
+        "career_slot_to_weight_class": disasm_range(raw, elf, 0x001929C4, 0x00192A40),
+        "title_record_getter": disasm_range(raw, elf, 0x00192930, 0x001929C4),
+        "title_gate_helper": disasm_range(raw, elf, 0x001971A0, 0x00197280),
     }
 
     print("CHAMPIONSHIP_PROBE_BEGIN")
