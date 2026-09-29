@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "scope": "Career Mode 2.0 Amateur Career age, phase transition, development carryover and generated-boxer seed evidence. Training-minigame internals are intentionally out of scope.",
+  "player_age": {
+    "persistent_profile_mirror": {
+      "field": "profile+0x41",
+      "meaning": "current player age mirror",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "Fresh-career initializer 0x0019CFF8 loads literal 0x14 (20) at 0x0019D0E0 and stores it to profile+0x41 at 0x0019D280.",
+        "A roster-derived initialization path calls 0x00185434 and stores the returned age both to the player's progression record+0x09 and profile+0x41."
+      ]
+    },
+    "progression_record_field": {
+      "field": "+0x09",
+      "meaning": "current age",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "Population initializer writes the output of XDB boxer helper 0x00185434 into progression record+0x09.",
+        "Annual world-aging routine 0x00195810 increments progression record+0x09 when the annual date boundary is crossed.",
+        "Population retirement/inactivation routine 0x00195990 uses +0x09 in its age-related decisions."
+      ]
+    },
+    "default_new_career_age": {
+      "value": 20,
+      "initializer": "0x0019CFF8",
+      "load_site": "0x0019D0E0",
+      "store_site": "0x0019D280",
+      "confidence": "CONFIRMED"
+    },
+    "baseline_age_field": {
+      "field": "progression record+0x11",
+      "meaning": "baseline/starting-age or career-span reference",
+      "confidence": "PROBABLE",
+      "evidence": [
+        "Retirement logic uses +0x09 and +0x11 together.",
+        "Generated-population initialization assigns +0x11 independently from current age.",
+        "A progression maintenance path can copy current age +0x09 into +0x11 under state/ordering conditions."
+      ],
+      "boundary": "The field participates in age/career-span logic, but the exact original member name is not retained."
+    }
+  },
+  "xdb_age_encoding": {
+    "field_index": "0x0D",
+    "confidence": "CONFIRMED behavior",
+    "low_byte": {
+      "accessor": "0x00185434",
+      "meaning": "age",
+      "evidence": [
+        "0x00185434 reads XDB boxer field 0x0D and returns its low byte.",
+        "Career population initialization writes that return value to progression record+0x09 current age.",
+        "Player initialization also mirrors the same value to profile+0x41."
+      ]
+    },
+    "high_byte": {
+      "accessor": "0x001853F0",
+      "behavior": "returns high_byte(field_0x0D) + 1900",
+      "use": "feeds career calendar-year/date initialization through date helper 0x001A0E1C",
+      "confidence": "CONFIRMED arithmetic/use; exact semantic label unresolved",
+      "warning": "Do not rename this byte 'birth year' without stronger evidence."
+    }
+  },
+  "amateur_to_pro_carryover": {
+    "phase_field": "profile+0x121",
+    "phase_0_to_1": {
+      "function": "0x001948C0",
+      "confidence": "CONFIRMED",
+      "behavior": [
+        "Copies the current player's 0x34-byte progression record to temporary storage.",
+        "Writes profile+0x121 = 1.",
+        "Preserves/copies the persistent player boxer block at profile+0x256C and synchronizes it through 0x0018ADCC.",
+        "Restores/rewrites the player progression record after the transition."
+      ],
+      "significance": "The intermediate career transition preserves both player progression-record state and persistent boxer attributes instead of rebuilding the boxer."
+    },
+    "phase_1_to_2": {
+      "function": "0x0019DC80",
+      "trigger_context": "Named Go Pro contract type 23 reaches this function through 0x001A38C4.",
+      "result": "profile+0x121 = 2",
+      "confidence": "CONFIRMED"
+    },
+    "combined_transition_controller": {
+      "function": "0x00194E18",
+      "confidence": "CONFIRMED behavior; exact public method name unresolved",
+      "behavior": [
+        "When phase is 0, performs setup and calls 0x001948C0 to enter phase 1.",
+        "When phase is 1, adds 20,000 (0x4E20) to three money/earnings-like profile totals at +0xA0/+0xA4/+0x94, then calls 0x0019DC80 to enter phase 2."
+      ],
+      "implication": "Career Mode 2.0 can preserve amateur development, rival/history metadata and new potential/growth state across the existing phase transition rather than reconstructing a new professional boxer."
+    }
+  },
+  "generated_boxer_archetype_seed": {
+    "xdb_field_index": "0x0E",
+    "confidence": "CONFIRMED packed seed extraction and rating-generation use; semantic names of components unresolved",
+    "accessors": [
+      {
+        "function": "0x00185468",
+        "extraction": "low nibble",
+        "destination": "progression record+0x0E"
+      },
+      {
+        "function": "0x0018549C",
+        "extraction": "bits 4-7",
+        "destination": "progression record+0x0F"
+      },
+      {
+        "function": "0x001854DC",
+        "extraction": "bits 8-11 minus 5",
+        "destination": "progression record+0x10"
+      }
+    ],
+    "consumer": {
+      "function": "0x0018FF8C",
+      "confidence": "CONFIRMED rating-profile construction role",
+      "behavior": [
+        "Uses progression record+0x0E to select a base rating-profile table.",
+        "Uses record+0x0F and signed record+0x10 to alter the generated rating distribution/style.",
+        "Writes persistent boxer ratings in the block containing +0x7A..+0x8A."
+      ]
+    },
+    "boundary": "These bytes are useful generated-boxer archetype/style seeds. They are NOT evidence of hidden potential ceilings or learning-rate fields."
+  },
+  "potential_and_growth_gap": {
+    "confirmed_existing_support": [
+      "persistent current age and annual aging",
+      "career-phase progression and Amateur->Pro carryover",
+      "persistent boxer ratings",
+      "generated-boxer archetype/style seed",
+      "six-division world simulation and AI population aging"
+    ],
+    "not_yet_found": [
+      "explicit per-rating potential ceiling",
+      "technical learning-rate field",
+      "physical-growth projection field",
+      "persistent height-growth schedule",
+      "persistent reach-growth schedule"
+    ],
+    "design_consequence": "Career Mode 2.0 should plan to add potential/learning-rate/growth data unless subsequent static evidence identifies an existing field. Existing archetype bytes must not be silently repurposed as potential without proving their unused value range and all consumers."
+  },
+  "next_static_step": [
+    "Map the persistent player's weight/height/reach fields and their UI/accessor consumers.",
+    "Trace weight-class reassignment after boxer-data changes to identify a safe physical-growth/weight-class transition boundary.",
+    "Identify unused/reserved save capacity appropriate for new potential, learning-rate and growth-projection data.",
+    "Trace title/award and legacy sources after the physical-growth storage map is bounded."
+  ]
+}
