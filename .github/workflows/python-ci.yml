@@ -50,6 +50,9 @@ jobs:
           assert info.revision_locked
           print(info.package_version, info.observed_revision)
           PY
+      - name: Run bounded championship research probe
+        run: python tools/research/championship_probe.py
+
       - name: Run PSP integration unit tests
         run: |
           python -m pytest \
