@@ -237,8 +237,9 @@
       "true body-weight gain/cut mechanics synchronized with persistent boxer+0x6C"
     ],
     "next_static_step": [
-      "Persistent injury/recovery semantics are now bounded: stock persistence is the generic +0x13 availability cooldown, while explicit diagnosis/severity remains an overhaul extension.",
-      "Next, bound whether retail has a separate mandatory-challenger/eliminator scheduling policy beyond rank-0 defenses and the one-year title vacancy/forfeiture path."
+      "Persistent injury/recovery semantics are bounded: stock persistence is the generic +0x13 availability cooldown; explicit diagnosis/severity remains an overhaul extension.",
+      "Mandatory-challenger/eliminator scheduling is bounded: retail evidence stops at rank-0 player defenses plus one-year vacancy/forfeiture succession to ladder entry 1.",
+      "Next, continue with promoter/manager influence and other living-division policy hooks rather than searching for a nonexistent proven stock mandatory-challenger subsystem."
     ]
   },
   "match_descriptor": {
@@ -1365,5 +1366,41 @@
       ],
       "persistent_holder_effect": "none; later championship transfer logic explicitly keeps types 16/17/21/22 out of the standard three-slot holder-transfer set"
     }
+  },
+  "mandatory_challenger_boundary": {
+    "confidence": "CONFIRMED bounded static boundary across recovered contract scheduling, AssignCareerMatch callers, and championship succession; indirect/runtime-only policy is not claimed impossible",
+    "shipped_policy": {
+      "player_title_defenses": "Professional defense contract types 18/19/20 are the paired subtype-9 title-defense templates and require rank 0.",
+      "ai_matchmaking": "Regular AI population matchmaking 0x00195564 assigns subtype 0 only; it does not schedule subtype-8 title challenges or subtype-9 title defenses.",
+      "vacancy_or_forfeiture": "The one-calendar-year title-expiry path 0x0019DFE8 forfeits the player title and transfers the working title slot to ladder entry 1/top challenger.",
+      "special_award_belts": "Contract types 16/17/21/22 are separately proven award/belt families and do not provide a mandatory-challenger or eliminator scheduler."
+    },
+    "direct_scheduler_boundary": {
+      "assign_match_function": "0x00194518",
+      "complete_direct_callers": [
+        "0x00195564 regular population matchmaking",
+        "0x001A4F50 special/live-contract scheduler",
+        "0x001FF384 accepted player-contract handler"
+      ],
+      "result": "No separate direct AI championship, mandatory-challenger, or eliminator assignment path is present among the complete direct AssignCareerMatch caller inventory."
+    },
+    "semantic_search_boundary": {
+      "executable_terms_checked": [
+        "mandatory",
+        "eliminator",
+        "challenger",
+        "contender",
+        "title shot",
+        "championship"
+      ],
+      "result": "No explicit mandatory-challenger/eliminator/title-shot policy string was recovered from the executable semantic scan.",
+      "caveat": "Absence of a display/debug string alone is not proof; the scheduler/caller inventory provides the stronger boundary."
+    },
+    "conclusion": "Retail FNR3 PSP does not evidence a separate mandatory-challenger/eliminator scheduling system beyond rank-0 player defenses and one-year vacancy/forfeiture succession to ladder entry 1. Rich mandatory-challenger/eliminator logic and autonomous AI title scheduling remain Career Mode 2.0 extension features.",
+    "overhaul_boundary": [
+      "Build mandatory-challenger/eliminator policy on top of the proven three-slot ladder/title ownership model.",
+      "Use AssignCareerMatch for scheduled title bouts and TransferCareerTitleSlot for ownership changes.",
+      "Do not label any existing retail field or contract family as 'mandatory challenger' without new evidence."
+    ]
   }
 }
