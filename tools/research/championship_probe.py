@@ -529,6 +529,45 @@ def main() -> None:
             "assembly": disasm_range(raw, elf, target, min(target + 0xC0, 0x001A4684)),
         })
 
+
+    # Find title-counter mutations tied specifically to progression-record getter
+    # 0x001928F0.  This avoids confusing profile/stack bytes at the same small
+    # offsets (+0x15..+0x18) with progression-record title statistics.
+    progression_title_counter_sequences = []
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        words = list(words_for_section(raw, sec))
+        for i, (addr, word) in enumerate(words):
+            if not (0x00190000 <= addr < 0x001B0000):
+                continue
+            if (word >> 26) != 0x03:  # JAL
+                continue
+            dest = ((addr + 4) & 0xF0000000) | ((word & 0x03FFFFFF) << 2)
+            if dest != 0x001928F0:
+                continue
+            window = words[max(0, i - 5): min(len(words), i + 28)]
+            interesting = False
+            for _waddr, w in window:
+                op = w >> 26
+                imm = w & 0xFFFF
+                # load/store/addiu family using the four title-stat offsets.
+                if imm in {0x15, 0x16, 0x17, 0x18} and op in {
+                    0x08, 0x09, 0x20, 0x21, 0x23, 0x24, 0x25, 0x28, 0x29, 0x2B
+                }:
+                    interesting = True
+                    break
+            if interesting:
+                progression_title_counter_sequences.append({
+                    "getter_call": f"0x{addr:08X}",
+                    "function_start": f"0x{function_bounds(raw, elf, addr)[0]:08X}",
+                    "context": disasm_range(
+                        raw, elf,
+                        max(function_bounds(raw, elf, addr)[0], addr - 0x18),
+                        min(function_bounds(raw, elf, addr)[1], addr + 0x70),
+                    ),
+                })
+
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
         "targets": rows,
@@ -550,6 +589,7 @@ def main() -> None:
         "secondary_gate_table": secondary_gate_table,
         "eligibility_cases": eligibility_cases,
         "title_stat_writes": title_stat_writes,
+        "progression_title_counter_sequences": progression_title_counter_sequences,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
