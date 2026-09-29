@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source_goal": "Career Mode 2.0 / Amateur Career overhaul",
-  "priority_statement": "Career systems shown in the overhaul design are the primary RE target. Combat internals are secondary unless required to support career consequences, amateur/pro rules, health/wear, or fight simulation.",
+  "priority_statement": "Career systems shown in the overhaul design are the primary RE target. Current Career Mode 2.0 scope explicitly excludes recovery/injury expansion, trainer/cutman expansion, and manager/promoter systems; those are deferred to the next version by user direction.",
   "target_groups": [
     {
       "priority": 1,
@@ -40,7 +40,6 @@
         "win bonus",
         "rematch clause",
         "title/eliminator status",
-        "promoter influence",
         "replacement-opponent risk"
       ],
       "proven_retail_anchors": [
@@ -67,12 +66,11 @@
     {
       "priority": 3,
       "id": "living-division",
-      "goal": "Let AI-controlled fighters fight, rank, win titles, age, get injured, change class and retire independently of the player.",
+      "goal": "Let AI-controlled fighters fight, rank, win titles, age, change class and retire independently of the player.",
       "desired_features": [
         "AI-vs-AI fight scheduling",
         "rank movement",
         "title ownership/history",
-        "injuries",
         "weight-class changes",
         "mandatory challengers",
         "retirement/return",
@@ -93,7 +91,7 @@
       ]
     },
     {
-      "priority": 4,
+      "priority": 99,
       "id": "promoters-managers-staff",
       "goal": "Create promoter/manager/trainer relationships that affect offers, money and career access.",
       "desired_features": [
@@ -114,11 +112,9 @@
         "main-menu trainer hire state machine"
       ],
       "next_static_work": [
-        "Trace actual GetTrainingInfo/SetTrainingInfo data implementations beyond their registration trampolines.",
-        "Trace trainer.fnc consumer 0x001B9334.",
-        "Map promoter-related fields from contract/fine-print code and payout calculation.",
-        "Determine which staff/contract fields are serialized in the career payload."
-      ]
+        "Do not continue RE or implementation for manager/promoter/trainer/cutman expansion in the current Career Mode 2.0 version."
+      ],
+      "status": "DEFERRED_TO_NEXT_VERSION_BY_USER"
     },
     {
       "priority": 5,
@@ -164,11 +160,9 @@
         "main-menu trainer hire state machine"
       ],
       "next_static_work": [
-        "Skip xdbtrain/minigame internals.",
-        "Retain only trainer-contract persistence, contract duration/expiry, and any weekly calendar fields that affect Career Mode 2.0.",
-        "Return to training implementation only if a later Career 2.0 feature requires an existing downstream rating-write boundary."
+        "Do not continue trainer/cutman or recovery/injury work in the current Career Mode 2.0 version."
       ],
-      "status": "PARKED_BY_USER"
+      "status": "DEFERRED_TO_NEXT_VERSION_BY_USER"
     },
     {
       "priority": 7,
@@ -176,7 +170,7 @@
       "goal": "Let the player decide when to retire and score legacy across titles, opposition, longevity, divisions, KOs, technique, finances and health.",
       "desired_features": [
         "voluntary retirement",
-        "age/health pressure",
+        "age/career-longevity pressure",
         "legacy score",
         "retirement consequences",
         "possible comeback"
@@ -215,15 +209,36 @@
   ],
   "immediate_sequence": [
     "1. Amateur age/potential/physical-growth storage and progression",
-    "2. Promoter/manager/staff persistence excluding minigame internals",
-    "3. Title/award ownership for the living division",
-    "4. Save capacity and serializer extension points",
-    "5. Retirement/legacy scoring sources"
+    "2. Living-division/title implementation boundaries and AI fight scheduling",
+    "3. Save capacity, Career 2.0 extension schema and serializer patch points",
+    "4. Retirement/legacy scoring sources and state transition",
+    "5. Career-flow and fight-offer implementation integration"
   ],
   "parked_work": [
     "deeper AEMS/audio internals",
     "additional combat formula RE beyond Career 2.0 needs",
     "debugger-based telemetry",
-    "training minigame internals / xdbtrain activity decoding"
-  ]
+    "training minigame internals / xdbtrain activity decoding",
+    "recovery/injury expansion — deferred to next version by user",
+    "trainer/cutman expansion — deferred to next version by user",
+    "manager/promoter relationships and influence — deferred to next version by user"
+  ],
+  "current_release_scope": {
+    "status": "LOCKED_BY_USER",
+    "included": [
+      "career flow/calendar/state transitions",
+      "amateur/pro development and turn-pro flow",
+      "fight offers/contracts excluding manager/promoter relationship mechanics",
+      "living divisions, AI fights, rankings and championships",
+      "weight-class movement",
+      "save extension/versioning",
+      "retirement and legacy"
+    ],
+    "deferred_to_next_version": [
+      "recovery/injury expansion",
+      "trainer/cutman expansion",
+      "manager/promoter relationships and influence"
+    ],
+    "rule": "Do not spend additional RE or implementation time on deferred systems during the current Career Mode 2.0 version."
+  }
 }
