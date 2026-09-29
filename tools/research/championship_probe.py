@@ -229,7 +229,7 @@ def main() -> None:
                 "context": disasm_range(raw, elf, max(start, addr - 0x28), min(end, addr + 0x38)),
             })
 
-    manual_targets = [0x00196DC4, 0x001948C0, 0x0019BB68, 0x0019CFF8]
+    manual_targets = [0x00196DC4, 0x001948C0, 0x0019BB68, 0x0019CFF8, 0x001FF120, 0x001FF1B4, 0x00202904, 0x002029A4, 0x00202A84, 0x00202EF4]
     manual_functions = []
     for target in manual_targets:
         start, end = function_bounds(raw, elf, target)
@@ -267,6 +267,9 @@ def main() -> None:
         "career_slot_to_weight_class": disasm_range(raw, elf, 0x001929C4, 0x00192A40),
         "title_record_getter": disasm_range(raw, elf, 0x00192930, 0x001929C4),
         "title_gate_helper": disasm_range(raw, elf, 0x001971A0, 0x00197280),
+        "contract_info_region": disasm_range(raw, elf, 0x001FF0D0, 0x001FF430),
+        "award_label_region": disasm_range(raw, elf, 0x00202880, 0x00203020),
+        "division_change_tail": disasm_range(raw, elf, 0x00195340, 0x00195430),
         "match_descriptor_predicate_a": disasm_range(raw, elf, 0x001A2400, 0x001A2460),
         "match_descriptor_predicate_b": disasm_range(raw, elf, 0x001A2460, 0x001A24C4),
         "match_descriptor_reciprocal": disasm_range(raw, elf, 0x001A24C4, 0x001A25A0),
