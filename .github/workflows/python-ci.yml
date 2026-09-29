@@ -52,6 +52,8 @@ jobs:
           PY
       - name: Run bounded championship research probe
         run: python tools/research/championship_probe.py
+      - name: Run career availability research probe
+        run: python tools/research/career_availability_probe.py
 
       - name: Run PSP integration unit tests
         run: |
