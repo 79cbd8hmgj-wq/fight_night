@@ -99,7 +99,10 @@ def test_knockouts_cannot_exceed_wins() -> None:
         ),
     ],
 )
-def test_retail_byte_counters_are_range_checked(\n    factory: Callable[[], object],\n    message: str,\n) -> None:
+def test_retail_byte_counters_are_range_checked(
+    factory: Callable[[], object],
+    message: str,
+) -> None:
     with pytest.raises(RetirementLegacyError, match=message):
         factory()
 
