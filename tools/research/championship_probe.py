@@ -264,6 +264,7 @@ def main() -> None:
         "champion_transfer_full": disasm_range(raw, elf, 0x00196DC4, 0x00197018),
         "shared_result_caller_19E790": disasm_range(raw, elf, 0x0019E790, 0x0019EB40),
         "shared_result_caller_1B6A40": disasm_range(raw, elf, 0x001B6A40, 0x001B7120),
+        "live_result_participant_normalization": disasm_range(raw, elf, 0x001B6F20, 0x001B7040),
         "post_fight_result_inputs": disasm_range(raw, elf, 0x0019BE00, 0x0019C300),
         "post_fight_result_setup": disasm_range(raw, elf, 0x0019C300, 0x0019C620),
         "post_fight_participant_normalization": disasm_range(raw, elf, 0x0019C610, 0x0019C850),
