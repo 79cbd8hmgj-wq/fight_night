@@ -544,6 +544,49 @@ def main() -> None:
             "value": 1 if dest == 0x00197210 else (0 if dest == 0x00197218 else None),
         })
 
+    # Decode the result-code reciprocal table used by 0x001A24C4. This
+    # gives an evidence-backed mapping between the two fighter perspectives
+    # instead of assigning names to the packed 4-bit result values by guess.
+    result_reciprocal_jump_table = []
+    for index in range(12):
+        address = 0x00508658 + index * 4
+        target = vaddr_word(raw, elf, address)
+        result_reciprocal_jump_table.append({
+            "result_code": index,
+            "jump_target": f"0x{target:08X}" if target is not None else None,
+            "case_assembly": (
+                disasm_range(raw, elf, target, min(target + 0x18, 0x001A256C))
+                if target is not None else []
+            ),
+        })
+
+    # Inventory every direct caller of the four packed-result predicates.
+    # The callsite contexts let us map which fighter index/result branch each
+    # predicate guards in the championship result path.
+    result_predicate_callers = {}
+    for target in (0x001A2400, 0x001A2430, 0x001A2460, 0x001A248C):
+        callers = []
+        for sec in elf.sections:
+            if sec.kind != "executable" or sec.size < 4:
+                continue
+            for addr, word in words_for_section(raw, sec):
+                if (word >> 26) != 0x03:
+                    continue
+                dest = ((addr + 4) & 0xF0000000) | ((word & 0x03FFFFFF) << 2)
+                if dest != target:
+                    continue
+                caller_start, caller_end = function_bounds(raw, elf, addr)
+                callers.append({
+                    "call_site": f"0x{addr:08X}",
+                    "caller_start": f"0x{caller_start:08X}",
+                    "context": disasm_range(
+                        raw, elf,
+                        max(caller_start, addr - 0x50),
+                        min(caller_end, addr + 0x70),
+                    ),
+                })
+        result_predicate_callers[f"0x{target:08X}"] = callers
+
     eligibility_cases = []
     for index in range(27):
         type_id = index + 1
@@ -678,6 +721,8 @@ def main() -> None:
         "contract_cases": contract_cases,
         "title_gate_table": title_gate_table,
         "secondary_gate_table": secondary_gate_table,
+        "result_reciprocal_jump_table": result_reciprocal_jump_table,
+        "result_predicate_callers": result_predicate_callers,
         "eligibility_cases": eligibility_cases,
         "title_stat_writes": title_stat_writes,
         "title_stat_pointer_adjusts": title_stat_pointer_adjusts,
