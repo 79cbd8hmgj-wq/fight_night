@@ -403,10 +403,10 @@ def main() -> None:
     ):
         entry = table_address + (27 - first_type) * 4
         target = vaddr_word(raw, elf, entry)
-        if target is None:
+        if target in {None, 0}:
             type27_dispatches[label] = {
                 "entry": f"0x{entry:08X}",
-                "target": None,
+                "target": None if target is None else "0x00000000",
                 "assembly": [],
             }
             continue
