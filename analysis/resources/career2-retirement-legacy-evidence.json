@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "purpose": "Career Mode 2.0 retirement transition and legacy-input evidence",
   "source_artifacts": {
     "retail": {
@@ -191,8 +191,8 @@
     "final Career Mode 2.0 legacy-score weights"
   ],
   "next_step": [
-    "Finish decoding the retail fight-result label table and TKO-time formatter so all 25 bytes have bounded display semantics.",
-    "Define a mod-owned Career 2.0 legacy fight ledger for stable opponent ID/rank, division and title stakes; persist it in the C2EX extension rather than overloading the retail 25-byte rings.",
+    "Treat the 25-byte retail fight-history display record as fully decoded and do not overload it with new Career 2.0 semantics.",
+    "Define a mod-owned Career 2.0 legacy fight ledger for stable opponent ID/rank, division, career date and title stakes; persist it in the C2EX extension.",
     "Map career longevity and division-history inputs, then lock the current-version legacy scoring policy. Recovery/injury/health expansion remains deferred by the current release scope."
   ],
   "retail_fight_history": {
@@ -234,12 +234,21 @@
       "0x16": {
         "meaning": "fight-result code",
         "storage": "s8",
-        "confidence": "CONFIRMED semantic role; individual code labels pending result-table decode",
+        "confidence": "CONFIRMED",
         "evidence": [
           "Writer stores its result argument at entry+0x16.",
+          "The completed-fight caller constructs only codes 0..4 on the history-write path.",
           "Reader sign-extends entry+0x16.",
-          "GetCareerHistoryInfo indexes a result-string pointer table with this signed byte and emits astrFightResult."
-        ]
+          "GetCareerHistoryInfo indexes the pointer table at 0x0055FF88 with this byte and emits astrFightResult.",
+          "Exact-retail table entries 0..4 resolve to $M_Win_KO, $M_Win_Decision, $M_Loss_KO, $M_Loss_Decision and $M_Draw."
+        ],
+        "valid_codes": {
+          "0": "$M_Win_KO",
+          "1": "$M_Win_Decision",
+          "2": "$M_Loss_KO",
+          "3": "$M_Loss_Decision",
+          "4": "$M_Draw"
+        }
       },
       "0x17": {
         "meaning": "rounds lasted",
@@ -251,21 +260,25 @@
         ]
       },
       "0x18": {
-        "meaning": "TKO/KO time value",
+        "meaning": "TKO/KO time second-count",
         "storage": "u8",
-        "confidence": "CONFIRMED UI role; exact unit/encoding pending formatter decode",
+        "confidence": "CONFIRMED",
         "evidence": [
           "Reader copies entry+0x18 to the UI temporary record.",
-          "GetCareerHistoryInfo tests the byte for >0, passes it to formatter 0x00206E18 and emits the formatted string through astrTKOTime; zero uses the fallback placeholder."
-        ]
+          "GetCareerHistoryInfo tests the byte for >0 and emits it through astrTKOTime; zero uses the fallback placeholder.",
+          "Formatter 0x00206E18 divides the stored value by 60 and passes quotient/remainder to the time-format string path, proving a whole-second count rendered as minutes/seconds."
+        ],
+        "encoding": "u8 integer rendered as base-60 quotient/remainder (minutes/seconds) by 0x00206E18"
       }
     },
     "class_mapping": "profile+0x121 values 0/1 write class 0 (Amateur); values >1 write class 1 (Professional)",
     "legacy_consequence": [
       "Retail preserves at most the most recent 20 amateur and 20 professional bouts.",
-      "The entry is sufficient for displayed opponent/result/rounds/TKO-time history.",
-      "It is not sufficient by itself for robust Career 2.0 opposition-quality scoring because no stable opponent ID, opponent rank-at-fight, division-at-fight or title-stakes field is proven in the 25-byte entry.",
+      "Each entry is exactly 22 bytes of opponent display name plus one result-code byte, one rounds-lasted byte and one TKO/KO-time second-count byte.",
+      "The result-code table is fully bounded for retail-produced history values 0..4: Win KO, Win Decision, Loss KO, Loss Decision and Draw.",
+      "The entry is not sufficient by itself for robust Career 2.0 opposition-quality scoring because no stable opponent ID, opponent rank-at-fight, division-at-fight, career date or title-stakes field is present.",
       "Career Mode 2.0 therefore needs a mod-owned persistent legacy fight ledger if opposition quality and multi-division accomplishments must remain exact across a full career."
-    ]
+    ],
+    "display_semantics_status": "CLOSED_FOR_ALL_25_BYTES"
   }
 }
