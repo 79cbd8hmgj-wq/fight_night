@@ -24,6 +24,18 @@ TARGETS = [
     "iTrophyID",
     "aTrophyIDs",
     "aTrophyTypes",
+    "GetIndividualContractInfo",
+    "strFightType",
+    "INFO_Awards_0",
+    "INFO_Awards_1",
+    "INFO_Awards_7",
+    "INFO_Awards_15",
+    "INFO_Awards_16",
+    "INFO_Awards_20",
+    "INFO_Awards_21",
+    "INFO_Awards_22",
+    "INFO_Awards_28",
+    "INFO_Awards_Unknown",
 ]
 
 def offset_to_vaddr(elf, offset: int) -> int | None:
