@@ -268,6 +268,7 @@ def main() -> None:
         "post_fight_result_setup": disasm_range(raw, elf, 0x0019C300, 0x0019C620),
         "post_fight_participant_normalization": disasm_range(raw, elf, 0x0019C610, 0x0019C850),
         "post_fight_title_counter_setup": disasm_range(raw, elf, 0x0019C7C0, 0x0019CA00),
+        "post_fight_winner_selection": disasm_range(raw, elf, 0x0019C9F0, 0x0019CB20),
         "result_title_transfer_region": disasm_range(raw, elf, 0x0019CB00, 0x0019CDA0),
         "result_title_transfer_full": disasm_range(raw, elf, 0x0019CC20, 0x0019CFF8),
         "title_state_helper_1A0E58": disasm_range(raw, elf, 0x001A0E58, 0x001A0E70),
