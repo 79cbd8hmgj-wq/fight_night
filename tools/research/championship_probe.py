@@ -217,12 +217,41 @@ def main() -> None:
                 "context": disasm_range(raw, elf, max(start, addr - 0x28), min(end, addr + 0x38)),
             })
 
+    manual_targets = [0x00196DC4, 0x001948C0, 0x0019BB68, 0x0019CFF8]
+    manual_functions = []
+    for target in manual_targets:
+        start, end = function_bounds(raw, elf, target)
+        callers = []
+        for sec in elf.sections:
+            if sec.kind != "executable" or sec.size < 4:
+                continue
+            for addr, word in words_for_section(raw, sec):
+                if (word >> 26) != 0x03:  # JAL
+                    continue
+                dest = ((addr + 4) & 0xF0000000) | ((word & 0x03FFFFFF) << 2)
+                if dest == target:
+                    caller_start, caller_end = function_bounds(raw, elf, addr)
+                    callers.append({
+                        "call_site": f"0x{addr:08X}",
+                        "caller_start": f"0x{caller_start:08X}",
+                        "caller_end": f"0x{caller_end:08X}",
+                        "context": disasm_range(raw, elf, max(caller_start, addr - 0x40), min(caller_end, addr + 0x50)),
+                    })
+        manual_functions.append({
+            "target": f"0x{target:08X}",
+            "start": f"0x{start:08X}",
+            "end": f"0x{end:08X}",
+            "callers": callers,
+            "assembly": disasm_range(raw, elf, start, end),
+        })
+
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
         "targets": rows,
         "functions": list(functions.values()),
         "champion_halfword_writes": champion_writes,
         "title_state_byte_writes": title_state_writes,
+        "manual_functions": manual_functions,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
