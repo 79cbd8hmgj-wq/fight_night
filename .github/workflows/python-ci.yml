@@ -40,7 +40,7 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: Install PSP analysis extra
-        run: python -m pip install -e ".[psp-analysis,dev]"
+        run: python -m pip install -e ".[psp-analysis,dev]" "spimdisasm>=1.42.4,<2"
       - name: Verify locked PSP toolkit provenance
         run: |
           python - <<'PY'
