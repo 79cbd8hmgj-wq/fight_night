@@ -33,20 +33,22 @@ PROFILE_RETIRED_OFFSET = 0x00
 PROFILE_MONEY_OFFSET = 0xA0
 RETIRED_NEXT_EVENT_CODE = 4
 
+# Exact ULUS10066-v1.00 ELF virtual-address anchors cross-checked by
+# tools/research/career_retirement_probe.py. These are evidence anchors, not
+# portable patch addresses for other revisions.
 RETIRE_CONTRACT_TYPE = 27
 RETIREMENT_INITIALIZER = 0x0019CFF8
 RETIREMENT_INITIALIZER_FLAG_STORE = 0x0019D208
 RETIREMENT_STATE_HANDLER = 0x001A38C4
+RETIREMENT_STATE_HANDLER_POINTER_VADDR = 0x00581A18
 RETIREMENT_STATE_FLAG_STORE = 0x001A39E8
 RETIREMENT_COMMIT_HANDLER = 0x001A3B5C
+RETIREMENT_HANDLER_POINTER_VADDR = 0x00581A20
 RETIREMENT_COMMIT_FLAG_STORE = 0x001A3C60
 
-# Exact debug/review addresses for the statically proven voluntary retirement
-# transition. These are evidence constants, not portable retail patch sites.
-RETIRE_CONTRACT_TYPE = 27
-RETIREMENT_HANDLER_VADDR = 0x001A3B5C
-RETIREMENT_WRITE_VADDR = 0x001A3C60
-RETIREMENT_HANDLER_POINTER_VADDR = 0x00581A20
+# Compatibility aliases retained for the first retirement-foundation tests.
+RETIREMENT_HANDLER_VADDR = RETIREMENT_COMMIT_HANDLER
+RETIREMENT_WRITE_VADDR = RETIREMENT_COMMIT_FLAG_STORE
 
 
 class RetirementLegacyError(ValueError):
@@ -69,9 +71,11 @@ class RetirementState:
     """One-way retirement state backed by retail profile+0x00.
 
     Retail evidence proves that nonzero profile+0x00 emits iRetired and forces
-    GetNextEventState to code 4. The type-27 contract handler at 0x001A3B5C
-    writes literal 1 to this field at 0x001A3C60. A comeback/unretire write
-    path has not yet been proven, so this foundation does not expose one.
+    GetNextEventState to code 4. Type-27 contract state/apply and
+    commit/finalization handlers both write literal 1 to this field. The only
+    direct zero write found by the bounded retail scan is career
+    initialization, so this foundation does not expose a guessed comeback
+    transition.
     """
 
     retired: bool = False
