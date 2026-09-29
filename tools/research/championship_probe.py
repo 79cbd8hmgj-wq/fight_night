@@ -329,6 +329,17 @@ def main() -> None:
         for address in named_string_addresses
     }
 
+    # Stored contract type -> post-fight career/title dispatch in 0x0019AAAC.
+    result_contract_jump_table = []
+    for index in range(25):
+        address = 0x00508478 + index * 4
+        target = vaddr_word(raw, elf, address)
+        result_contract_jump_table.append({
+            "contract_type": index + 2,
+            "jump_target": f"0x{target:08X}" if target is not None else None,
+            "case_assembly": disasm_range(raw, elf, target, min(target + 0xA0, 0x0019BB68)) if target is not None else [],
+        })
+
     # Contract-type -> eligibility precheck switch in 0x001A3FBC.
     eligibility_jump_table = []
     for index in range(27):
@@ -510,6 +521,7 @@ def main() -> None:
         "manual_functions": manual_functions,
         "focused_ranges": focused_ranges,
         "named_strings": named_strings,
+        "result_contract_jump_table": result_contract_jump_table,
         "eligibility_jump_table": eligibility_jump_table,
         "scheduler_jump_table": scheduler_jump_table,
         "contract_label_address_strings": contract_label_address_strings,
