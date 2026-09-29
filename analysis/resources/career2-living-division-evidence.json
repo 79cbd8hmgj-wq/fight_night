@@ -1014,34 +1014,40 @@
     ]
   },
   "championship_result_path": {
-    "confidence": "CONFIRMED post-fight championship transfer callsites; exact contract-type labels still unresolved",
+    "confidence": "CONFIRMED player-becomes-holder/player-displaced title-transfer branches plus a separate active-slot/shadow-mismatch transfer path; exact public result-method labels and profile counter names remain unresolved",
     "transfer_callee": "0x00196DC4",
     "post_fight_region": "0x0019CB00-0x0019CDA0",
     "confirmed_calls": [
       {
         "call_site": "0x0019CCB0",
-        "division_source": "profile+0x2A",
-        "new_champion_source": "s2 (fight-result-selected progression index)",
-        "gate": "0x001971A0 must return nonzero on this path; additional profile+0x80 range checks apply before the call"
+        "title_slot_source": "profile+0x2A",
+        "new_champion_source": "s2",
+        "proven_role": "player-becomes-holder branch",
+        "gate": "outer title-result path is active; current holder equals s7; result is not draw; profile+0x2A equals profile+0x2B; s2 equals player progression index profile+0x4E; 0x001971A0 accepts the contract type; standard title types transfer while special award/belt types 16/17/21/22 take a no-transfer bookkeeping branch"
       },
       {
         "call_site": "0x0019CD4C",
-        "division_source": "profile+0x2A",
+        "title_slot_source": "profile+0x2A",
         "new_champion_source": "s2",
-        "gate": "same result/title gate family as 0x0019CCB0"
+        "proven_role": "player-displaced branch",
+        "gate": "current holder equals s7 and s7 equals player progression index profile+0x4E while s2 is the other participant; result is not draw; profile+0x2A equals profile+0x2B; 0x001971A0 accepts the contract type; standard title types transfer the slot to s2",
+        "post_effect": "profile+0x6A is reset to zero immediately after the standard-title transfer"
       },
       {
         "call_site": "0x0019CD68",
-        "division_source": "profile+0x2A",
+        "title_slot_source": "profile+0x2A",
         "new_champion_source": "s2",
-        "gate": "alternate result branch within the same post-fight title-transfer region"
+        "proven_role": "active-slot/shadow-mismatch transfer branch",
+        "gate": "profile+0x2A differs from profile+0x2B, so the shared handler's s4 synchronization flag is zero; this path bypasses the normal player-identity and 0x001971A0 contract-family checks and transfers the active title slot directly to s2"
       }
     ],
     "observed_preconditions": [
-      "The post-fight logic reads the current champion from profile+0x50+division*2 before deciding whether a transfer is required.",
-      "It compares the current champion against a fight-result-selected progression index.",
-      "It calls 0x001971A0 as a boolean gate before transfer on relevant branches.",
-      "It also branches on profile+0x80 through bounded numeric ranges before calling 0x00196DC4."
+      "The shared result handler stores s4 = (profile+0x2A == profile+0x2B) at 0x0019AB24-0x0019AB38; this is an exact active-slot/shadow synchronization flag.",
+      "The handler preserves its participant inputs as s2 = original a1 and s7 = original a2 from 0x0019C638/0x0019C618 through the championship-transfer region; there is no internal s2/s7 swap in 0x0019C610-0x0019CD70.",
+      "The player progression-record index is read directly from profile+0x4E for the player-identity checks.",
+      "The synchronized player-becomes-holder branch requires s2 == profile+0x4E while the current title holder at profile+0x50+slot*2 equals s7.",
+      "The synchronized player-displaced branch requires the current holder s7 == profile+0x4E while s2 is the other participant.",
+      "The slot-mismatch branch s4==0 bypasses those player-identity checks and the normal contract-family helper before calling 0x00196DC4."
     ],
     "participant_roles": {
       "s2": "Original a1 participant (stack+0x368) and the normalized result owner. If the working descriptor is loss-class, 0x001A24C4 reciprocates it before progression stats are applied to s2; every championship transfer in this region installs s2 as the new holder.",
@@ -1089,7 +1095,8 @@
       }
     },
     "unresolved": [
-      "Resolve exact semantics of profile+0x66, profile+0x68 and profile+0x6A across title acquisition, defense streak/state and special award/belt paths.",
+      "Resolve the public/UI/save semantics of profile+0x66, profile+0x68 and profile+0x6A from independent readers rather than naming them from mutation behavior alone.",
+      "Resolve why and when profile+0x2A and profile+0x2B diverge so the s4==0 / 0x0019CD68 title-transfer path can be given a precise career-rule name.",
       "Resolve special award/belt result bookkeeping differences for contract types 16/17/21/22.",
       "Distinguish the exact public result-method labels within code pairs 2/3 versus 4/5/6 and their reciprocal 7..11 values if needed."
     ],
@@ -1134,7 +1141,8 @@
       "transfer": "0x00196DC4 changes the slot holder; it increments incoming champion progression record+0x15 (belts won) and displaced holder record+0x16 (belts lost).",
       "successful_standard_defense": "The paired defense result branches for contract types 20/18/19 increment player progression record+0x17 (belts defended) without requiring a holder transfer.",
       "expiry_forfeiture": "0x0019DFE8 is a separate one-calendar-year expiry path; it transfers the slot to ladder entry 1 and increments the player's progression record+0x18 (belts forfeited).",
-      "confidence": "CONFIRMED transfer/defense/forfeiture separation and player-win/player-loss/non-player transfer roles; profile-level +0x66/+0x68/+0x6A counter names remain unresolved."
+      "confidence": "CONFIRMED transfer/defense/forfeiture separation and player-win/player-loss/non-player transfer roles; profile-level +0x66/+0x68/+0x6A counter names remain unresolved.",
+      "profile_level_counters": "profile+0x66/+0x68/+0x6A are now behaviorally bounded as above, but their exact UI/stat names remain intentionally unassigned."
     },
     "match_subtypes": {
       "type 3": 4,
@@ -1153,6 +1161,31 @@
       "0x001A2460": "draw predicate (code 1)",
       "0x001A248C": "KO-counting win subset (codes 2 or 3)",
       "confidence": "CONFIRMED from exact predicate bodies, reciprocal table and progression-record stat writers"
+    },
+    "participant_role_resolution": {
+      "shared_handler": "0x0019AAAC",
+      "preserved_inputs": {
+        "s2": "original a1 participant progression index, reloaded from stack+0x368",
+        "s7": "original a2 participant progression index, reloaded from stack+0x36A"
+      },
+      "synchronization_flag": "s4 = 1 exactly when profile+0x2A == profile+0x2B; otherwise 0",
+      "live_caller": "0x001B7038 passes a1=s3 and a2=s6 after its own participant/result preparation. Static evidence does not require globally naming a1/a2 as winner/loser because the shared handler identifies the player explicitly through profile+0x4E at the title-transfer branches.",
+      "boundary": "The result-method code still determines win/loss/draw statistics separately; the championship branch roles above are proven from holder/player identity tests and the actual holder mutation, not inferred from a global winner/loser register convention."
+    },
+    "profile_title_counters": {
+      "profile+0x66": {
+        "behavior": "initialized/reset to zero; incremented on the synchronized player-becomes-holder/title-acquisition branch, and also incremented for special award/belt types 16/17/21/22 where no persistent career-title-slot transfer occurs",
+        "exact_public_name": "unresolved"
+      },
+      "profile+0x68": {
+        "behavior": "initialized/reset to zero; incremented when the synchronized title-result path has s2 == player and the player is already the current holder, with 0x001971A0 accepting the contract type",
+        "exact_public_name": "unresolved"
+      },
+      "profile+0x6A": {
+        "behavior": "initialized/reset to zero; incremented alongside profile+0x68 on that current-holder path; reset to zero immediately after the synchronized standard-title player-displaced transfer at 0x0019CD4C",
+        "exact_public_name": "unresolved",
+        "bounded_inference": "its increment-while-holder/reset-on-displacement behavior is consistent with a current-reign/streak quantity, but that label is not yet proven"
+      }
     }
   }
 }
