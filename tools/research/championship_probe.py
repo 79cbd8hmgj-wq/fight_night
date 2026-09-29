@@ -423,6 +423,31 @@ def main() -> None:
                 "context": disasm_range(raw, elf, max(start, addr - 0x40), min(end, addr + 0x50)),
             })
 
+    # Computed accesses to progression-record title-stat offsets. Direct SB/LB
+    # scans miss the common pattern "addiu ptr, record, +0x17; lbu/sb 0(ptr)".
+    title_stat_pointer_adjusts = []
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        for addr, word in words_for_section(raw, sec):
+            if not (0x00190000 <= addr < 0x001B0000):
+                continue
+            op = word >> 26
+            imm = word & 0xFFFF
+            if op != 0x09 or imm not in {0x15, 0x16, 0x17, 0x18}:  # ADDIU
+                continue
+            rs = (word >> 21) & 0x1F
+            rt = (word >> 16) & 0x1F
+            start, end = function_bounds(raw, elf, addr)
+            title_stat_pointer_adjusts.append({
+                "address": f"0x{addr:08X}",
+                "offset": f"0x{imm:02X}",
+                "base_reg": rs,
+                "dest_reg": rt,
+                "function_start": f"0x{start:08X}",
+                "context": disasm_range(raw, elf, max(start, addr - 0x30), min(end, addr + 0x40)),
+            })
+
     def scan_string_region(start_vaddr: int, end_vaddr: int) -> list[dict[str, str]]:
         rows = []
         start_off = elf.vaddr_to_offset(start_vaddr)
@@ -589,6 +614,7 @@ def main() -> None:
         "secondary_gate_table": secondary_gate_table,
         "eligibility_cases": eligibility_cases,
         "title_stat_writes": title_stat_writes,
+        "title_stat_pointer_adjusts": title_stat_pointer_adjusts,
         "progression_title_counter_sequences": progression_title_counter_sequences,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
