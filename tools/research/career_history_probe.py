@@ -18,6 +18,8 @@ HISTORY_STRINGS = (
     "astrTKOTime",
 )
 
+HISTORY_RESULT_TABLE = 0x0055FF88
+
 TARGETS = (
     0x001939DC,  # fight-history ring writer
     0x00193BB8,  # fight-history ring reader
@@ -192,6 +194,17 @@ def main() -> None:
             pos = off + 1
         strings[name] = positions
 
+    result_labels = []
+    for index in range(8):
+        pointer = vaddr_word(raw, elf, HISTORY_RESULT_TABLE + index * 4)
+        result_labels.append(
+            {
+                "index": index,
+                "pointer": f"0x{pointer:08X}" if pointer is not None else None,
+                "string": read_c_string(raw, elf, pointer) if pointer not in {None, 0} else None,
+            }
+        )
+
     functions = {}
     for target in TARGETS:
         start, end = function_bounds(raw, elf, target)
@@ -207,7 +220,14 @@ def main() -> None:
         json.dumps(
             {
                 "strings": strings,
+                "result_labels": result_labels,
                 "functions": functions,
+                "tko_time_formatter": disasm_range(
+                    raw, elf, *function_bounds(raw, elf, 0x00206E18), 180
+                ),
+                "opponent_name_builder": disasm_range(
+                    raw, elf, *function_bounds(raw, elf, 0x004A6654), 180
+                ),
                 "focused_completed_fight_context": disasm_range(
                     raw, elf, 0x001B7600, 0x001B78A0, 220
                 ),
