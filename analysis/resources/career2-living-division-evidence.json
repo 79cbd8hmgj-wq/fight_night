@@ -20,17 +20,19 @@
   },
   "population_model": {
     "record_getter": "0x001928F0(career,index)",
-    "default_population_sizes": {
-      "amateur_side": 20,
-      "post_initial_or_professional_side": 50
-    },
-    "dynamic_count_field": "profile+0x2A",
+    "division_index_field": "profile+0x2A",
+    "division_shadow_field": "profile+0x2B",
     "current_player_index": "profile+0x4E",
-    "confidence": "CONFIRMED loop bounds/record access; exact meaning of every profile count field remains unresolved",
+    "default_active_ladder_sizes": {
+      "initial_amateur_division_0": 20,
+      "professional_or_other_division_paths": 50
+    },
+    "confidence": "CONFIRMED division index, table dimensions and record access; profile+0x2B exact lifecycle meaning remains unresolved",
+    "correction": "Earlier revision incorrectly described profile+0x2A as a dynamic population-count field. Direct disassembly of 0x0019527C proves profile+0x2A is the six-division index 0..5.",
     "evidence": [
-      "Multiple weekly population routines use profile+0x2A when nonzero.",
-      "When it is zero they fall back to 20 records on phase 0 and 50 records when profile+0x121 is nonzero.",
-      "All records are accessed through the same 0x001928F0 index getter used by Career Central for the player's current progression record."
+      "0x0019527C switches the supplied division value 0..5 to INFO_Division_1 through INFO_Division_6 and stores the value to profile+0x2A and +0x2B.",
+      "Matchmaking/ranking arithmetic multiplies profile+0x2A by 0xC8, proving a fixed 200-byte table stride per division.",
+      "Progression records are still accessed through the shared 0x001928F0 index getter."
     ]
   },
   "annual_aging": {
@@ -167,7 +169,10 @@
       "population replacement/maintenance",
       "persistent reciprocal upcoming-fight assignments",
       "AI matchup generation for unscheduled population records",
-      "matchmaking retry/rotation state"
+      "matchmaking retry/rotation state",
+      "six persistent division ranking ladders",
+      "post-fight ranking-score recomputation",
+      "automatic rank synchronization from sorted ladder order"
     ],
     "extension_targets": [
       "title ownership and title-fight scheduling",
@@ -182,10 +187,9 @@
       "replace 0x00195564 compatibility policy with rank/title/promoter/health/weight-class matchmaking"
     ],
     "next_static_step": [
-      "Identify the population ordering table used by 0x00195564 and determine whether it is explicitly weight-class/ranking ordered.",
-      "Decode the 8-bit match subtype and two 4-bit result/state codes stored in the packed descriptor.",
-      "Trace title/award state through 0x0019AAAC and related progression functions so scheduled AI bouts can move championships.",
-      "Then move to training/staff persistence, which is the next major Career Mode 2.0 subsystem."
+      "Training/staff persistence: trace GetTrainingInfo/SetTrainingInfo, trainer.fnc and xdbtrain.adf.",
+      "After training/staff, return to title/award ownership so living-division bouts can move championships.",
+      "Later decode the remaining match subtype/result nibbles only if Career 2.0 UI or scheduling requires them."
     ]
   },
   "match_descriptor": {
@@ -295,5 +299,73 @@
       "significance": "Long calendar advances repeatedly refresh unscheduled matchups before advancing/simulating the next week."
     },
     "implication": "The retail game already has a reusable AI matchmaking API plus persistent upcoming-match storage. Career Mode 2.0 can replace the compatibility policy and surface these scheduled descriptors in an 'Upcoming Fights' UI instead of creating scheduling infrastructure from scratch."
+  },
+  "division_ranking_ladder": {
+    "confidence": "CONFIRMED",
+    "division_count": 6,
+    "base": "profile+0x2E8",
+    "stride_per_division_bytes": 200,
+    "max_entries_per_division": 50,
+    "entry_size_bytes": 4,
+    "entry_layout": {
+      "+0x00": "u16 ranking/sort score",
+      "+0x02": "s16 boxer progression-record index"
+    },
+    "boxer_index_addressing_note": "The boxer-index halfword is therefore observed at profile + division*0xC8 + 0x2EA + slot*4.",
+    "synchronizer": {
+      "function": "0x0019472C",
+      "proposed_name": "SynchronizeDivisionRanks",
+      "confidence": "CONFIRMED behavior; proposed name is descriptive",
+      "behavior": [
+        "Chooses an active ladder length of 20 for the initial amateur-side division-0 path and 50 for professional/other paths.",
+        "Calls 0x00197604 to reorder the current division's ranking entries.",
+        "Iterates the ordered entries.",
+        "Reads each boxer progression index from entry+0x02.",
+        "Gets that boxer progression record through 0x001928F0.",
+        "Writes the loop position directly to progression record+0x04, proving +0x04 is the zero-based displayed rank."
+      ]
+    },
+    "sorter": {
+      "function": "0x00197604",
+      "proposed_name": "SortDivisionRankingEntries",
+      "confidence": "CONFIRMED behavior; proposed name is descriptive",
+      "comparator": "0x001923E8",
+      "behavior": [
+        "Operates on the same 4-byte ranking entries.",
+        "Compares the u16 score values at entry+0x00.",
+        "Swaps the entire {score, boxer_index} pair when reordering is required.",
+        "Therefore the persistent ladder order is driven by the u16 ranking score rather than boxer index."
+      ]
+    },
+    "score_recompute": {
+      "function": "0x00196628",
+      "proposed_name": "RecomputeCareerRankingScore",
+      "confidence": "CONFIRMED score calculation/storage role; proposed name is descriptive",
+      "inputs_from_progression_record": [
+        "+0x01 flag/state byte",
+        "+0x05 wins",
+        "+0x06 losses",
+        "+0x07 draws",
+        "+0x08 KOs",
+        "+0x09 age-like field",
+        "+0x11 baseline/starting-age-like field"
+      ],
+      "outputs": [
+        "stores computed score to progression record+0x20",
+        "finds the boxer's current division-ladder slot through 0x00192B28",
+        "stores the same u16 score to that ladder entry+0x00"
+      ],
+      "caller_context": [
+        "0x0019E790 calls it for both fighters after a simulated AI-vs-AI bout.",
+        "The formula includes record, KO/performance and age/career-span inputs plus phase/player special cases."
+      ],
+      "boundary": "The mathematical formula is statically recovered as an implementation, but it is not yet normalized into a human-readable ranking model because several auxiliary constants/flags remain semantically unnamed."
+    },
+    "significance": [
+      "The retail career already maintains a persistent ordered ladder separately for each of six divisions.",
+      "AI fight simulation recomputes boxer ranking scores after bouts.",
+      "The ladder is sorted by those scores and each boxer's public zero-based rank is synchronized from the resulting order.",
+      "Career Mode 2.0 can therefore extend the existing ranking engine for living-division movement instead of inventing rankings from scratch."
+    ]
   }
 }
