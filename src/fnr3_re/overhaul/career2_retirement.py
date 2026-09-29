@@ -33,6 +33,13 @@ PROFILE_RETIRED_OFFSET = 0x00
 PROFILE_MONEY_OFFSET = 0xA0
 RETIRED_NEXT_EVENT_CODE = 4
 
+# Exact debug/review addresses for the statically proven voluntary retirement
+# transition. These are evidence constants, not portable retail patch sites.
+RETIRE_CONTRACT_TYPE = 27
+RETIREMENT_HANDLER_VADDR = 0x001A3B5C
+RETIREMENT_WRITE_VADDR = 0x001A3C60
+RETIREMENT_HANDLER_POINTER_VADDR = 0x00581A20
+
 
 class RetirementLegacyError(ValueError):
     """Raised when retirement/legacy state violates a proven boundary."""
@@ -54,8 +61,9 @@ class RetirementState:
     """One-way retirement state backed by retail profile+0x00.
 
     Retail evidence proves that nonzero profile+0x00 emits iRetired and forces
-    GetNextEventState to code 4. A comeback/unretire write path has not yet
-    been proven, so this foundation does not expose one.
+    GetNextEventState to code 4. The type-27 contract handler at 0x001A3B5C
+    writes literal 1 to this field at 0x001A3C60. A comeback/unretire write
+    path has not yet been proven, so this foundation does not expose one.
     """
 
     retired: bool = False
