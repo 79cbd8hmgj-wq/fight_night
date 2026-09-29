@@ -395,6 +395,7 @@ def main() -> None:
     # already recovered for Career Mode 2.0 contract/championship work.
     type27_dispatches = {}
     for label, table_address, first_type in (
+        ("retirement_commit_dispatch", 0x005089A0, 3),
         ("contract_list_ui", 0x0050E1C0, 2),
         ("eligibility", 0x00508A08, 1),
         ("scheduler", 0x00508C60, 2),
