@@ -634,7 +634,7 @@
       "result_semantics_boundary": "Subtype 9 is proven for these standard title-defense templates. Belt retention/transfer still depends on the shared result-state and current-holder checks; subtype alone is not the transfer predicate."
     },
     "special_award_belt_contracts": {
-      "confidence": "CONFIRMED separate award/belt family; exact public semantics remain unresolved",
+      "confidence": "CONFIRMED two separate special award/belt families with acquisition and repeat-defense bookkeeping; exact localized name of INFO_Awards_16 remains unresolved",
       "contracts": [
         {
           "contract_type": 16,
@@ -665,7 +665,36 @@
           "state_byte": "profile+0x20"
         }
       ],
-      "boundary": "These contracts mutate award/belt state and some branches increment title-win/defense-related progression counters, but they are not promoted to mandatory-challenger or eliminator contracts without stronger semantic evidence."
+      "boundary": "INFO_Awards_16's localized display wording is still unknown. The family structures and acquisition/repeat-defense bookkeeping are proven from the decoded template types and post-fight jump-table cases.",
+      "families": {
+        "info_awards_16": {
+          "public_identifier": "INFO_Awards_16",
+          "state_flag": "profile+0x1F",
+          "auxiliary_state": "profile+0x19",
+          "anniversary_or_deadline": "profile+0x134",
+          "acquisition_type": 16,
+          "repeat_or_defense_type": 21,
+          "result_behavior": [
+            "Type 16 enters the acquisition-only case at 0x0019B680: when the award state changes to held, it sets profile+0x1F, stores a one-year derived date at +0x134, sets +0x19, and increments the player progression-record +0x15 belts-won history.",
+            "Type 21 enters the paired case at 0x0019B708. If the award is not already in the compared held/result state it performs the same acquisition bookkeeping and +0x15 increment.",
+            "When the type-21 branch takes the already-held path at 0x0019B790, it refreshes +0x134, updates/clears +0x19 around the result bookkeeping, increments profile aggregate +0x38, adds the KO predicate to +0x3B, increments family-specific aggregate +0x3F, and increments player progression-record +0x17 belts-defended."
+          ]
+        },
+        "everlast_belt": {
+          "public_identifier": "FP_Everlast_Belt",
+          "state_flag": "profile+0x20",
+          "auxiliary_state": "profile+0x1A",
+          "anniversary_or_deadline": "profile+0x138",
+          "acquisition_type": 17,
+          "repeat_or_defense_type": 22,
+          "result_behavior": [
+            "Type 17 enters the acquisition-only case at 0x0019B858: when the belt state changes to held, it sets profile+0x20, stores a one-year derived date at +0x138, sets +0x1A, and increments player progression-record +0x15 belts-won history.",
+            "Type 22 enters the paired case at 0x0019B8E0. If the belt is not already in the compared held/result state it performs the same acquisition bookkeeping and +0x15 increment.",
+            "When the type-22 branch takes the already-held path at 0x0019B968, it refreshes +0x138, updates/clears +0x1A around the result bookkeeping, increments profile aggregate +0x38, adds the KO predicate to +0x3B, increments family-specific aggregate +0x40, and increments player progression-record +0x17 belts-defended."
+          ]
+        }
+      },
+      "persistent_title_boundary": "Types 16/17/21/22 are explicitly excluded from the standard persistent three-slot holder-transfer set in the later championship-result path; their ownership lives in special profile state rather than profile+0x50/+0x52/+0x54."
     },
     "opponent_selection": {
       "confidence": "CONFIRMED ladder-slot selection in special/live-contract scheduler 0x001A4F50",
