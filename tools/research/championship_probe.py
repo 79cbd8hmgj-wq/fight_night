@@ -229,7 +229,7 @@ def main() -> None:
                 "context": disasm_range(raw, elf, max(start, addr - 0x28), min(end, addr + 0x38)),
             })
 
-    manual_targets = [0x00194518, 0x00196DC4, 0x001948C0, 0x0019BB68, 0x0019CFF8, 0x001FF120, 0x001FF1B4, 0x00202904, 0x002029A4, 0x00202A84, 0x00202EF4]
+    manual_targets = [0x00194518, 0x00195564, 0x001A4F50, 0x00196DC4, 0x001948C0, 0x0019BB68, 0x0019CFF8, 0x001FF120, 0x001FF1B4, 0x00202904, 0x002029A4, 0x00202A84, 0x00202EF4]
     manual_functions = []
     for target in manual_targets:
         start, end = function_bounds(raw, elf, target)
@@ -258,6 +258,8 @@ def main() -> None:
         })
 
     focused_ranges = {
+        "population_matchmaking_full": disasm_range(raw, elf, 0x00195564, 0x00195810),
+        "special_contract_scheduler_full": disasm_range(raw, elf, 0x001A4F50, 0x001A5594),
         "champion_transfer_full": disasm_range(raw, elf, 0x00196DC4, 0x00197018),
         "result_title_transfer_region": disasm_range(raw, elf, 0x0019CB00, 0x0019CDA0),
         "ranking_belt_region": disasm_range(raw, elf, 0x001E2B70, 0x001E2D20),
