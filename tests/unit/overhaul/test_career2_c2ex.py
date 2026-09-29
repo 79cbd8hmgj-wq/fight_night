@@ -222,10 +222,13 @@ def test_unsupported_version_and_flags_are_rejected() -> None:
 
 def test_v1_bad_payload_length_is_rejected() -> None:
     block = bytearray(encode_c2ex_v1(_data()))
-    struct.pack_into("<I", block, 8, C2EX_V1_PAYLOAD_SIZE - 1)
+    payload = bytes(block[C2EX_HEADER_SIZE:-1])
+    struct.pack_into("<I", block, 8, len(payload))
+    struct.pack_into("<I", block, 12, zlib.crc32(payload) & 0xFFFFFFFF)
+    malformed = bytes(block[:C2EX_HEADER_SIZE]) + payload
 
-    with pytest.raises(C2EXError, match="block length"):
-        decode_c2ex(bytes(block[:-1]))
+    with pytest.raises(C2EXError, match="v1 payload length"):
+        decode_c2ex(malformed)
 
 
 def test_v2_bad_entry_size_is_rejected_after_crc_is_recomputed() -> None:
