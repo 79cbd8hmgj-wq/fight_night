@@ -210,9 +210,9 @@
       "mandatory challengers/eliminators and vacancy succession"
     ],
     "next_static_step": [
-      "Trace title-contract eligibility types 13/14/15 and adjacent contract families to recover the stock challenger-selection policy and determine whether any eliminator concept exists.",
-      "Then design/identify the cleanest hook for AI-vs-AI subtype-8 title scheduling and title transfer.",
-      "After challenger/eliminator policy, resolve explicit injury/recovery semantics and weight-class movement."
+      "Finish championship result semantics around 0x0019CC20-0x0019CFF8 and helper calls 0x001A0E58/0x001A0E70/0x001A1280.",
+      "Once title-contract roles are proven, connect the correct contract subtype(s) to AssignCareerMatch and AI living-world scheduling.",
+      "Then move to mandatory challengers/eliminators, explicit injury/recovery semantics, and weight-class movement."
     ]
   },
   "match_descriptor": {
@@ -600,5 +600,170 @@
       "Career Mode 2.0 therefore needs an explicit AI title-bout policy if championships are to change hands independently of the player."
     ],
     "boundary": "This is a bounded executable conclusion from the complete direct caller inventory of AssignCareerMatch. It does not claim that no unrelated code can ever mutate title-holder state outside the recovered scheduling/result paths."
+  },
+  "championship_ownership": {
+    "confidence": "CONFIRMED persistent current/previous champion slots, transfer helper, and player title counters; exact public names for every contract type remain partially unresolved",
+    "current_champion_slots": {
+      "base": "profile+0x50",
+      "count": 6,
+      "stride_bytes": 2,
+      "value": "s16 progression-record index",
+      "formula": "current_champion[division] = *(s16 *)(profile + 0x50 + division*2)",
+      "ui_proof": "GetRankingInformation compares each ranked boxer index against profile+0x50+division*2 before writing aCurrentBeltHolders."
+    },
+    "previous_champion_slots": {
+      "base": "profile+0x56",
+      "count": 6,
+      "stride_bytes": 2,
+      "value": "s16 progression-record index",
+      "formula": "previous_champion[division] = *(s16 *)(profile + 0x56 + division*2)"
+    },
+    "transfer_helper": {
+      "function": "0x00196DC4",
+      "proposed_name": "TransferDivisionChampionship",
+      "arguments": {
+        "a0": "career object",
+        "a1": "division index",
+        "a2": "new champion progression-record index"
+      },
+      "behavior": [
+        "Copies current champion profile+0x50+division*2 into previous champion profile+0x56+division*2.",
+        "Writes the new champion progression index to profile+0x50+division*2.",
+        "When the new champion is the player in the player's current division, sets profile+0x21+division to 1.",
+        "When the outgoing champion is the player and profile+0x21+division is 1, changes that byte to 2.",
+        "Increments the new champion progression record's title-wins counter at +0x15.",
+        "When an outgoing champion exists, increments that progression record's title-losses counter at +0x16."
+      ],
+      "callers_observed": [
+        "0x001984F0",
+        "0x00198A08",
+        "0x0019CCB0",
+        "0x0019CD4C",
+        "0x0019CD68",
+        "0x0019E0D4",
+        "0x0019E27C",
+        "0x0019E428"
+      ]
+    },
+    "player_title_statistics": {
+      "source": "GetMyCareerStatsInfo / T_001E2084",
+      "progression_record_fields": {
+        "+0x15": "title belts won",
+        "+0x16": "title belts lost",
+        "+0x17": "title belts defended",
+        "+0x18": "title belts forfeited"
+      },
+      "confidence": "CONFIRMED by direct binding to aiTitleBeltsWon/Defended/Lost/Forfeited"
+    },
+    "player_division_title_state": {
+      "base": "profile+0x21",
+      "stride_bytes": 1,
+      "count": 6,
+      "observed_states": {
+        "1": "player is/has just become the current champion for that division in transfer logic",
+        "2": "written when the player is replaced as champion after state 1"
+      },
+      "boundary": "Other values and every UI meaning for this per-division state byte remain unresolved."
+    }
+  },
+  "championship_contract_dispatch": {
+    "confidence": "CONFIRMED numeric dispatch and counter-field bindings; exact localized public labels for types 13-22 are not all recovered",
+    "current_contract_type_field": "profile+0x80",
+    "championship_or_award_gate": {
+      "function": "0x001971A0",
+      "true_for_types": [
+        3,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22
+      ],
+      "false_for_types": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "note": "Types outside the switch range also return false."
+    },
+    "title_counter_dispatch": {
+      "13": {
+        "state_byte": "+0x1E",
+        "counter_field": "+0x18",
+        "known_counter_meaning": "title belts forfeited"
+      },
+      "14": {
+        "state_byte": "+0x1D",
+        "counter_field": "+0x17",
+        "known_counter_meaning": "title belts defended"
+      },
+      "15": {
+        "state_byte": "+0x1C",
+        "counter_field": "+0x16",
+        "known_counter_meaning": "title belts lost"
+      },
+      "16": {
+        "state_byte": "+0x1F",
+        "counter_field": "+0x19",
+        "known_counter_meaning": "unresolved special award counter"
+      },
+      "17": {
+        "state_byte": "+0x20",
+        "counter_field": "+0x1A",
+        "known_counter_meaning": "unresolved special award counter"
+      },
+      "18": {
+        "state_byte": "+0x1E",
+        "counter_field": "+0x18",
+        "known_counter_meaning": "title belts forfeited"
+      },
+      "19": {
+        "state_byte": "+0x1D",
+        "counter_field": "+0x17",
+        "known_counter_meaning": "title belts defended"
+      },
+      "20": {
+        "state_byte": "+0x1C",
+        "counter_field": "+0x16",
+        "known_counter_meaning": "title belts lost"
+      },
+      "21": {
+        "state_byte": "+0x1F",
+        "counter_field": "+0x19",
+        "known_counter_meaning": "unresolved special award counter"
+      },
+      "22": {
+        "state_byte": "+0x20",
+        "counter_field": "+0x1A",
+        "known_counter_meaning": "unresolved special award counter"
+      }
+    },
+    "frontend_label_evidence": {
+      "16/21": "individual-contract UI references INFO_Awards_16",
+      "17/22": "individual-contract UI references FP_Everlast_Belt",
+      "boundary": "Do not assign public names to 13-15/18-20 from nearby INFO_Awards_* strings alone."
+    },
+    "scheduling_groups": {
+      "15/20": "special scheduler path 0x001A5180; branch is restricted to division index 0 in the observed eligibility path",
+      "13/18": "special scheduler path 0x001A5260; observed path targets division index 1",
+      "14/19": "special scheduler path 0x001A5348; observed path targets division index 2",
+      "16/17/21/22": "special scheduler path 0x001A546C and direct AssignCareerMatch integration"
+    },
+    "next_static_step": [
+      "Finish the post-fight contract-type conditions around 0x0019CC20-0x0019CFF8 to separate title transfer, defense, loss and forfeiture triggers.",
+      "Trace 0x001A0E58/0x001A0E70/0x001A1280 to identify the state/counter transition helpers used by contract types 13-22.",
+      "Then determine whether types 13-15/18-20 represent challenger/defender/forfeit variants or another title-contract partition before assigning names."
+    ]
   }
 }
