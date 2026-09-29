@@ -5,361 +5,391 @@
     "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
     "address_domain": "ELF virtual"
   },
-  "modifier_object": {
-    "owner_field": "high-level boxer +0x2BC",
-    "size": "0xD4",
-    "constructor": "0x00093C5C",
-    "destructor": "0x00091D24",
-    "raw_accessor": "0x00091DF4",
-    "scaled_float_helper": "0x00091E04",
-    "normalized_float_helper": "0x00091E58",
-    "slot_count": 52,
-    "slot_names": [
-      {
-        "index": 0,
-        "hex": "0x00",
-        "name": "dec E cost for movement"
-      },
-      {
-        "index": 1,
-        "hex": "0x01",
-        "name": "dec E cost for attacks"
-      },
-      {
-        "index": 2,
-        "hex": "0x02",
-        "name": "dec rate max E reduction"
-      },
-      {
-        "index": 3,
-        "hex": "0x03",
-        "name": "dec rate max H reduction"
-      },
-      {
-        "index": 4,
-        "hex": "0x04",
-        "name": "inc current E regen rate"
-      },
-      {
-        "index": 5,
-        "hex": "0x05",
-        "name": "inc current H regen rate"
-      },
-      {
-        "index": 6,
-        "hex": "0x06",
-        "name": "dec damage taken from clean punch"
-      },
-      {
-        "index": 7,
-        "hex": "0x07",
-        "name": "dec damage taken from blocked punch"
-      },
-      {
-        "index": 8,
-        "hex": "0x08",
-        "name": "dec damage taken from body punch"
-      },
-      {
-        "index": 9,
-        "hex": "0x09",
-        "name": "dec damage taken from head punch"
-      },
-      {
-        "index": 10,
-        "hex": "0x0A",
-        "name": "dec chance for cut"
-      },
-      {
-        "index": 11,
-        "hex": "0x0B",
-        "name": "inc opp chance for cut"
-      },
-      {
-        "index": 12,
-        "hex": "0x0C",
-        "name": "dec chance for injury"
-      },
-      {
-        "index": 13,
-        "hex": "0x0D",
-        "name": "inc opp chance for injury"
-      },
-      {
-        "index": 14,
-        "hex": "0x0E",
-        "name": "inc tcc cuts heal rate"
-      },
-      {
-        "index": 15,
-        "hex": "0x0F",
-        "name": "inc tcc swell heal rate"
-      },
-      {
-        "index": 16,
-        "hex": "0x10",
-        "name": "inc between round max E regen rate"
-      },
-      {
-        "index": 17,
-        "hex": "0x11",
-        "name": "inc move speed"
-      },
-      {
-        "index": 18,
-        "hex": "0x12",
-        "name": "inc block speed"
-      },
-      {
-        "index": 19,
-        "hex": "0x13",
-        "name": "inc lean speed"
-      },
-      {
-        "index": 20,
-        "hex": "0x14",
-        "name": "inc all attack damage"
-      },
-      {
-        "index": 21,
-        "hex": "0x15",
-        "name": "inc uppercut damage"
-      },
-      {
-        "index": 22,
-        "hex": "0x16",
-        "name": "inc hook damage"
-      },
-      {
-        "index": 23,
-        "hex": "0x17",
-        "name": "inc straight damage"
-      },
-      {
-        "index": 24,
-        "hex": "0x18",
-        "name": "inc jab damage"
-      },
-      {
-        "index": 25,
-        "hex": "0x19",
-        "name": "inc lead attack damage"
-      },
-      {
-        "index": 26,
-        "hex": "0x1A",
-        "name": "inc rear attack damage"
-      },
-      {
-        "index": 27,
-        "hex": "0x1B",
-        "name": "inc rolling power damage"
-      },
-      {
-        "index": 28,
-        "hex": "0x1C",
-        "name": "dec perry vulnerable time"
-      },
-      {
-        "index": 29,
-        "hex": "0x1D",
-        "name": "inc opp perry vulnerable time"
-      },
-      {
-        "index": 30,
-        "hex": "0x1E",
-        "name": "inc chance E boost"
-      },
-      {
-        "index": 31,
-        "hex": "0x1F",
-        "name": "inc length E boost"
-      },
-      {
-        "index": 32,
-        "hex": "0x20",
-        "name": "dec KO moment length"
-      },
-      {
-        "index": 33,
-        "hex": "0x21",
-        "name": "inc opp KO moment length"
-      },
-      {
-        "index": 34,
-        "hex": "0x22",
-        "name": "inc knockdown recover chance"
-      },
-      {
-        "index": 35,
-        "hex": "0x23",
-        "name": "dec opp knockdown recover chance"
-      },
-      {
-        "index": 36,
-        "hex": "0x24",
-        "name": "dec called"
-      },
-      {
-        "index": 37,
-        "hex": "0x25",
-        "name": "inc chance opp can't parry"
-      },
-      {
-        "index": 38,
-        "hex": "0x26",
-        "name": "dec swelling"
-      },
-      {
-        "index": 39,
-        "hex": "0x27",
-        "name": "inc opp swelling"
-      },
-      {
-        "index": 40,
-        "hex": "0x28",
-        "name": "inc chance undetected illegal"
-      },
-      {
-        "index": 41,
-        "hex": "0x29",
-        "name": "rival inc chance undetected illegal"
-      },
-      {
-        "index": 42,
-        "hex": "0x2A",
-        "name": "inc moving attack damage"
-      },
-      {
-        "index": 43,
-        "hex": "0x2B",
-        "name": "inc chance clinch thru punch"
-      },
-      {
-        "index": 44,
-        "hex": "0x2C",
-        "name": "inc chance to sustain punch during KO moment"
-      },
-      {
-        "index": 45,
-        "hex": "0x2D",
-        "name": "inc chance flash KO"
-      },
-      {
-        "index": 46,
-        "hex": "0x2E",
-        "name": "dec chance to be flash KOd"
-      },
-      {
-        "index": 47,
-        "hex": "0x2F",
-        "name": "inc chance that jab won't be parried"
-      },
-      {
-        "index": 48,
-        "hex": "0x30",
-        "name": "inc combo punch damage"
-      },
-      {
-        "index": 49,
-        "hex": "0x31",
-        "name": "inc damage when your punch hits a non-directional block"
-      },
-      {
-        "index": 50,
-        "hex": "0x32",
-        "name": "inc amount of opp punch redirection"
-      },
-      {
-        "index": 51,
-        "hex": "0x33",
-        "name": "dec your punch redirection amt"
-      }
+  "modifier_system": {
+    "count": 52,
+    "high_level_boxer_field": "+0x2BC",
+    "object_constructor": "0x00093C5C",
+    "raw_value_getter": "0x00091DF4",
+    "scaled_value_getter": "0x00091E58",
+    "apply_to_float": "0x00091E04",
+    "name_pointer_table": "0x0053C708",
+    "factor_table": "0x0053C7D8",
+    "confidence": "CONFIRMED",
+    "apply_formula": "out = input + abs(input) * ((modifier[id] / 10.0) * factor[id])",
+    "evidence": [
+      "0x00091E04 indexes the integer modifier array by id*4, divides the integer by 10.0, multiplies by the per-ID float in the factor table, multiplies that result by abs(input), and adds it to input.",
+      "0x00091E58 returns modifier[id] / 10.0.",
+      "The 52 names and 52 factors are adjacent indexed tables in the debug ELF."
     ],
-    "mapping_confidence": "CONFIRMED",
-    "mapping_evidence": "The debug ELF contains exactly 52 contiguous developer strings from file offsets 0x4F9E70 through 0x4FA3D4, followed immediately by the six ai/mods/p%d category path strings. 0x00093C5C initializes exactly 0x34 (52) integer slots in the 0xD4-byte object, and 0x00091E04/0x00091E58 index those slots as 4-byte integers. Combat call sites use indices whose developer labels match the surrounding arithmetic."
-  },
-  "confirmed_consumers": {
-    "stamina_energy": [
+    "entries": [
       {
-        "function": "0x0007C75C",
-        "call": "0x0007C80C",
-        "slot": 0,
+        "id": 0,
         "name": "dec E cost for movement",
-        "behavior": "Applies movement energy-cost modifier before calling 0x00079E80."
+        "factor": -0.5
       },
+      {
+        "id": 1,
+        "name": "dec E cost for attacks",
+        "factor": -0.5
+      },
+      {
+        "id": 2,
+        "name": "dec rate max E reduction",
+        "factor": -0.5
+      },
+      {
+        "id": 3,
+        "name": "dec rate max H reduction",
+        "factor": -0.5
+      },
+      {
+        "id": 4,
+        "name": "inc current E regen rate",
+        "factor": 0.5
+      },
+      {
+        "id": 5,
+        "name": "inc current H regen rate",
+        "factor": 0.1
+      },
+      {
+        "id": 6,
+        "name": "dec damage taken from clean punch",
+        "factor": -0.5
+      },
+      {
+        "id": 7,
+        "name": "dec damage taken from blocked punch",
+        "factor": -0.5
+      },
+      {
+        "id": 8,
+        "name": "dec damage taken from body punch",
+        "factor": -0.5
+      },
+      {
+        "id": 9,
+        "name": "dec damage taken from head punch",
+        "factor": -0.5
+      },
+      {
+        "id": 10,
+        "name": "dec chance for cut",
+        "factor": -0.60000002
+      },
+      {
+        "id": 11,
+        "name": "inc opp chance for cut",
+        "factor": 0.5
+      },
+      {
+        "id": 12,
+        "name": "dec chance for injury",
+        "factor": -0.5
+      },
+      {
+        "id": 13,
+        "name": "inc opp chance for injury",
+        "factor": 0.5
+      },
+      {
+        "id": 14,
+        "name": "inc tcc cuts heal rate",
+        "factor": 0.5
+      },
+      {
+        "id": 15,
+        "name": "inc tcc swell heal rate",
+        "factor": 0.5
+      },
+      {
+        "id": 16,
+        "name": "inc between round max E regen rate",
+        "factor": 0.5
+      },
+      {
+        "id": 17,
+        "name": "inc move speed",
+        "factor": 0.5
+      },
+      {
+        "id": 18,
+        "name": "inc block speed",
+        "factor": 0.5
+      },
+      {
+        "id": 19,
+        "name": "inc lean speed",
+        "factor": 0.5
+      },
+      {
+        "id": 20,
+        "name": "inc all attack damage",
+        "factor": 0.5
+      },
+      {
+        "id": 21,
+        "name": "inc uppercut damage",
+        "factor": 0.5
+      },
+      {
+        "id": 22,
+        "name": "inc hook damage",
+        "factor": 0.5
+      },
+      {
+        "id": 23,
+        "name": "inc straight damage",
+        "factor": 0.5
+      },
+      {
+        "id": 24,
+        "name": "inc jab damage",
+        "factor": 0.5
+      },
+      {
+        "id": 25,
+        "name": "inc lead attack damage",
+        "factor": 0.5
+      },
+      {
+        "id": 26,
+        "name": "inc rear attack damage",
+        "factor": 0.5
+      },
+      {
+        "id": 27,
+        "name": "inc rolling power damage",
+        "factor": 0.5
+      },
+      {
+        "id": 28,
+        "name": "dec perry vulnerable time",
+        "factor": 0.5
+      },
+      {
+        "id": 29,
+        "name": "inc opp perry vulnerable time",
+        "factor": -0.5
+      },
+      {
+        "id": 30,
+        "name": "inc chance E boost",
+        "factor": 0.5
+      },
+      {
+        "id": 31,
+        "name": "inc length E boost",
+        "factor": 0.5
+      },
+      {
+        "id": 32,
+        "name": "dec KO moment length",
+        "factor": -0.5
+      },
+      {
+        "id": 33,
+        "name": "inc opp KO moment length",
+        "factor": 0.5
+      },
+      {
+        "id": 34,
+        "name": "inc knockdown recover chance",
+        "factor": 0.5
+      },
+      {
+        "id": 35,
+        "name": "dec opp knockdown recover chance",
+        "factor": -0.5
+      },
+      {
+        "id": 36,
+        "name": "dec called",
+        "factor": -0.5
+      },
+      {
+        "id": 37,
+        "name": "inc chance opp can't parry",
+        "factor": 1
+      },
+      {
+        "id": 38,
+        "name": "dec swelling",
+        "factor": -1
+      },
+      {
+        "id": 39,
+        "name": "inc opp swelling",
+        "factor": 0.5
+      },
+      {
+        "id": 40,
+        "name": "inc chance undetected illegal",
+        "factor": -0.5
+      },
+      {
+        "id": 41,
+        "name": "rival inc chance undetected illegal",
+        "factor": -1
+      },
+      {
+        "id": 42,
+        "name": "inc moving attack damage",
+        "factor": 0.5
+      },
+      {
+        "id": 43,
+        "name": "inc chance clinch thru punch",
+        "factor": 1
+      },
+      {
+        "id": 44,
+        "name": "inc chance to sustain punch during KO moment",
+        "factor": 1
+      },
+      {
+        "id": 45,
+        "name": "inc chance flash KO",
+        "factor": 0.07
+      },
+      {
+        "id": 46,
+        "name": "dec chance to be flash KOd",
+        "factor": -0.07
+      },
+      {
+        "id": 47,
+        "name": "inc chance that jab won't be parried",
+        "factor": 0.5
+      },
+      {
+        "id": 48,
+        "name": "inc combo punch damage",
+        "factor": 0.5
+      },
+      {
+        "id": 49,
+        "name": "inc damage when your punch hits a non-directional block",
+        "factor": 0.5
+      },
+      {
+        "id": 50,
+        "name": "inc amount of opp punch redirection",
+        "factor": 0.5
+      },
+      {
+        "id": 51,
+        "name": "dec your punch redirection amt",
+        "factor": -0.5
+      }
+    ]
+  },
+  "physical_combat_state": {
+    "high_level_boxer_field": "+0x294",
+    "clamp_function": "0x0007E914",
+    "confidence": "CONFIRMED object ownership and percentage-like clamping; individual field labels partially resolved",
+    "observations": [
+      "The physical-state constructor/reset initializes multiple leading float fields to 100.0.",
+      "0x0007E914 clamps a set of physical-state float fields into percentage-like ranges.",
+      "The same object is consumed by energy spend/recovery, health recovery, damage, knockdown and between-round recovery paths."
+    ]
+  },
+  "energy_stamina": {
+    "current_energy_candidate_field": "+0x08",
+    "confidence": "CONFIRMED as a repeatedly added/subtracted/clamped energy resource; PROBABLE mapping to the user-facing stamina meter until the companion max-energy fields are fully named",
+    "attack_cost_calculators": [
       {
         "function": "0x00078794",
-        "call": "0x000787F0",
-        "slot": 1,
-        "name": "dec E cost for attacks",
-        "behavior": "Applies attack energy-cost modifier to an action-derived cost before calling 0x00079E80."
+        "mode_argument_to_base_cost": 0,
+        "evidence": "Calls 0x0007A330(physical_state, attack_id, 0), stores base/adjusted cost at physical_state+0x310, applies modifier ID 1, then calls 0x00079E80."
       },
       {
         "function": "0x00078C88",
-        "call": "0x00078CE4",
-        "slot": 1,
-        "name": "dec E cost for attacks",
-        "behavior": "Second attack-cost path."
+        "mode_argument_to_base_cost": 1,
+        "evidence": "Calls 0x0007A330(physical_state, attack_id, 1), applies modifier ID 1, then calls 0x00079E80."
       },
       {
         "function": "0x00078D1C",
-        "call": "0x00078D78",
-        "slot": 1,
-        "name": "dec E cost for attacks",
-        "behavior": "Third attack-cost path."
-      },
-      {
-        "function": "0x00079E80",
-        "call": "0x00079FAC",
-        "slot": 2,
-        "name": "dec rate max E reduction",
-        "behavior": "Drains current energy at object+0x08 and applies a separately modified reduction to max-energy-like field +0x0C."
-      },
-      {
-        "function": "0x0007A198",
-        "call": "0x0007A238",
-        "slot": 3,
-        "name": "dec rate max H reduction",
-        "behavior": "Applies max-health-reduction modifier before reducing one of several health-region/current-max field pairs."
-      },
-      {
-        "function": "0x0007C75C",
-        "call": "0x0007C96C",
-        "slot": 4,
-        "name": "inc current E regen rate",
-        "behavior": "Applies current-energy regeneration modifier before calling 0x00079DF4."
-      },
-      {
-        "function": "0x0007854C",
-        "call": "0x000786D8",
-        "slot": 5,
-        "name": "inc current H regen rate",
-        "behavior": "Between-round/setup path applies current-health regeneration modifier before calling 0x0007A000."
-      },
-      {
-        "function": "0x0007C75C",
-        "call": "0x0007C938",
-        "slot": 5,
-        "name": "inc current H regen rate",
-        "behavior": "Active update path applies current-health regeneration modifier before calling 0x0007A000."
-      },
-      {
-        "function": "0x0007854C",
-        "call": "0x000785F8",
-        "slot": 16,
-        "name": "inc between round max E regen rate",
-        "behavior": "Between-round path applies maximum-energy regeneration modifier and writes the max-energy-like field +0x0C."
+        "mode_argument_to_base_cost": 2,
+        "evidence": "Calls 0x0007A330(physical_state, attack_id, 2), applies modifier ID 1, then calls 0x00079E80."
       }
     ],
-    "punch_damage": [
+    "base_attack_cost": "0x0007A330",
+    "subtract_helper": {
+      "function": "0x00079E80",
+      "role": "energy spend/subtract",
+      "confidence": "CONFIRMED behavior",
+      "evidence": [
+        "Subtracts a scaled amount from physical_state+0x08 when gameplay gates permit.",
+        "Calls 0x0007E914 afterward to clamp/normalize the physical state.",
+        "Uses boxer rating accessor 0x0009BB6C(..., 4) as part of the scaling path."
+      ]
+    },
+    "add_helper": {
+      "function": "0x00079DF4",
+      "role": "energy add/recovery",
+      "confidence": "CONFIRMED behavior",
+      "evidence": [
+        "Adds a scaled amount to physical_state+0x08.",
+        "Calls 0x0007E914 afterward to clamp/normalize."
+      ]
+    },
+    "continuous_tick": {
+      "function": "0x0007C75C",
+      "confidence": "CONFIRMED physical-state periodic update; exact original method name unknown",
+      "direct_modifier_uses": [
+        {
+          "id": 0,
+          "name": "dec E cost for movement",
+          "site": "0x0007C80C",
+          "downstream": "0x00079E80"
+        },
+        {
+          "id": 5,
+          "name": "inc current H regen rate",
+          "site": "0x0007C938",
+          "downstream": "0x0007A000"
+        },
+        {
+          "id": 4,
+          "name": "inc current E regen rate",
+          "site": "0x0007C96C",
+          "downstream": "0x00079DF4"
+        }
+      ],
+      "known_callers": [
+        "0x0009E2C4",
+        "0x0009E3BC",
+        "0x000A8D48"
+      ]
+    },
+    "between_round_recovery": {
+      "function": "0x0007854C",
+      "direct_modifier_ids": [
+        16,
+        5
+      ],
+      "modifier_names": [
+        "inc between round max E regen rate",
+        "inc current H regen rate"
+      ],
+      "caller": "0x0009BC24 inside per-boxer reset/setup 0x0009BB94",
+      "confidence": "CONFIRMED"
+    }
+  },
+  "damage_pipeline": {
+    "calculation_function": "0x0007EB7C",
+    "confidence": "CONFIRMED central attack-damage modifier pipeline; exact original symbol unknown",
+    "direct_callers": [
+      "0x00078A88",
+      "0x00078C38",
+      "0x0007CBC8",
+      "0x0007CED4"
+    ],
+    "base_damage_source": "0x0007958C",
+    "modifier_sequence": [
       {
-        "function": "0x0007EB7C",
-        "calls": [
-          "0x0007ECF4",
-          "0x0007ECE0"
-        ],
-        "slots": [
+        "ids": [
           8,
           9
         ],
@@ -367,24 +397,14 @@
           "dec damage taken from body punch",
           "dec damage taken from head punch"
         ],
-        "behavior": "Selects body-vs-head defender damage reduction."
+        "selection": "hit-region dependent"
       },
       {
-        "function": "0x0007EB7C",
-        "call": "0x0007ED08",
-        "slot": 20,
-        "name": "inc all attack damage",
-        "behavior": "Applies attacker all-attack-damage modifier."
+        "id": 20,
+        "name": "inc all attack damage"
       },
       {
-        "function": "0x0007EB7C",
-        "calls": [
-          "0x0007ED98",
-          "0x0007ED80",
-          "0x0007ED68",
-          "0x0007ED50"
-        ],
-        "slots": [
+        "ids": [
           21,
           22,
           23,
@@ -396,15 +416,10 @@
           "inc straight damage",
           "inc jab damage"
         ],
-        "behavior": "Selects uppercut/hook/straight/jab damage modifier from punch type."
+        "selection": "punch-type dependent"
       },
       {
-        "function": "0x0007EB7C",
-        "calls": [
-          "0x0007EDB4",
-          "0x0007EDC8"
-        ],
-        "slots": [
+        "ids": [
           25,
           26
         ],
@@ -412,302 +427,32 @@
           "inc lead attack damage",
           "inc rear attack damage"
         ],
-        "behavior": "Selects lead/rear attack damage modifier."
+        "selection": "lead/rear dependent"
       },
       {
-        "function": "0x0007EB7C",
-        "call": "0x0007F034",
-        "slot": 27,
+        "id": 27,
         "name": "inc rolling power damage",
-        "behavior": "Applies rolling-power damage modifier under its guarded path."
-      },
-      {
-        "function": "0x0007EB7C",
-        "call": "0x0007F1B4",
-        "slot": 48,
-        "name": "inc combo punch damage",
-        "behavior": "Reads normalized combo-punch-damage modifier and folds it into the final damage scale."
-      },
-      {
-        "function": "0x00078A88",
-        "post_call": "0x00078A9C",
-        "slot": 6,
-        "name": "dec damage taken from clean punch",
-        "behavior": "A caller of 0x0007EB7C additionally applies clean-punch damage reduction before accumulating damage."
-      },
-      {
-        "function": "0x0007CAD0",
-        "calls": [
-          "0x0007CDAC",
-          "0x0007CE14"
-        ],
-        "slots": [
-          7,
-          49
-        ],
-        "names": [
-          "dec damage taken from blocked punch",
-          "inc damage when your punch hits a non-directional block"
-        ],
-        "behavior": "Blocked/non-directional-block damage path applies defender blocked-punch reduction and attacker non-directional-block damage modifier."
+        "selection": "conditional"
       }
     ],
-    "ko_and_flash": [
-      {
-        "function": "0x0007D09C",
-        "calls": [
-          "0x0007D284",
-          "0x0007D298"
-        ],
-        "slots": [
-          46,
-          45
-        ],
-        "names": [
-          "dec chance to be flash KOd",
-          "inc chance flash KO"
-        ],
-        "behavior": "Combines defender flash-KO resistance and attacker flash-KO chance in a random chance test."
-      },
-      {
-        "function": "0x00082228",
-        "calls": [
-          "0x00082620",
-          "0x00082640"
-        ],
-        "slots": [
-          32,
-          33
-        ],
-        "names": [
-          "dec KO moment length",
-          "inc opp KO moment length"
-        ],
-        "behavior": "Combines own KO-moment-length reduction and opponent KO-moment-length increase in KO-moment timing/state arithmetic."
-      }
-    ],
-    "other_directly_bounded": [
-      {
-        "calls": [
-          "0x00079D50",
-          "0x00079D64"
-        ],
-        "slots": [
-          10,
-          11
-        ],
-        "names": [
-          "dec chance for cut",
-          "inc opp chance for cut"
-        ],
-        "behavior": "Cut chance modifiers."
-      },
-      {
-        "calls": [
-          "0x0007DD74",
-          "0x0007DDA0"
-        ],
-        "slots": [
-          38,
-          39
-        ],
-        "names": [
-          "dec swelling",
-          "inc opp swelling"
-        ],
-        "behavior": "Swelling modifiers."
-      },
-      {
-        "calls": [
-          "0x00075E08",
-          "0x00075E20"
-        ],
-        "slots": [
-          51,
-          50
-        ],
-        "names": [
-          "dec your punch redirection amt",
-          "inc amount of opp punch redirection"
-        ],
-        "behavior": "Punch-redirection modifiers."
-      },
-      {
-        "calls": [
-          "0x00074A98",
-          "0x00074AD8"
-        ],
-        "slots": [
-          37,
-          47
-        ],
-        "names": [
-          "inc chance opp can't parry",
-          "inc chance that jab won't be parried"
-        ],
-        "behavior": "Parry-related chance modifiers."
-      },
-      {
-        "calls": [
-          "0x000A20D8",
-          "0x000A20FC"
-        ],
-        "slots": [
-          28,
-          29
-        ],
-        "names": [
-          "dec perry vulnerable time",
-          "inc opp perry vulnerable time"
-        ],
-        "behavior": "Parry-vulnerable-time modifiers."
-      },
-      {
-        "calls": [
-          "0x000A193C",
-          "0x000A1950"
-        ],
-        "slot": 17,
-        "name": "inc move speed",
-        "behavior": "Movement-speed modifier."
-      },
-      {
-        "call": "0x000A67DC",
-        "slot": 19,
-        "name": "inc lean speed",
-        "behavior": "Lean-speed modifier."
-      },
-      {
-        "call": "0x000A8098",
-        "slot": 18,
-        "name": "inc block speed",
-        "behavior": "Block-speed modifier."
-      }
-    ]
+    "clean_punch_path": {
+      "call_site": "0x00078A88",
+      "post_calculation_modifier_id": 6,
+      "post_calculation_modifier_name": "dec damage taken from clean punch",
+      "accumulation_field": "physical_state+0x300",
+      "downstream_damage_apply": "0x0007A198",
+      "confidence": "CONFIRMED"
+    },
+    "alternate_path": {
+      "call_site": "0x00078C38",
+      "downstream_damage_apply": "0x0007A198",
+      "confidence": "CONFIRMED; semantic label still unresolved"
+    },
+    "next_static_step": "Trace 0x0007A198 and downstream physical-state writes to identify the exact current-health/stun fields and the transition into knockdown/KO/TKO state."
   },
-  "behavioral_functions": {
-    "0x00079E80": {
-      "proposed_name": "ApplyEnergyCost",
-      "confidence": "PROBABLE name; CONFIRMED behavior",
-      "observations": [
-        "Consumes a positive float cost.",
-        "Subtracts a scaled amount from object+0x08.",
-        "Uses modifier slot 2 ('dec rate max E reduction') to derive a second reduction applied to object+0x0C.",
-        "Called from movement-cost and attack-cost paths."
-      ]
-    },
-    "0x00079DF4": {
-      "proposed_name": "RestoreCurrentEnergy",
-      "confidence": "PROBABLE name; CONFIRMED direction/field behavior",
-      "observations": [
-        "Consumes a positive float amount.",
-        "Adds a rating/session-scaled amount to object+0x08.",
-        "Called from active current-E regeneration and between-round energy restoration paths."
-      ]
-    },
-    "0x0007A198": {
-      "proposed_name": "ApplyMaxHealthReduction",
-      "confidence": "PROBABLE name; CONFIRMED modifier/field-reduction behavior",
-      "observations": [
-        "Consumes modifier slot 3 ('dec rate max H reduction').",
-        "Selector argument chooses among several health-region/current-max field pairs.",
-        "Subtracts from both current and paired max-like values on several selector paths."
-      ]
-    },
-    "0x0007A000": {
-      "proposed_name": "RestoreCurrentHealth",
-      "confidence": "PROBABLE",
-      "observations": [
-        "Called only after paths applying 'inc current H regen rate' in the recovered subsystem.",
-        "In the normal branch adds a scaled amount to three current health-region-like fields and clamps through 0x0007E914.",
-        "Special session/rule branches alter the update shape."
-      ]
-    },
-    "0x0007EB7C": {
-      "proposed_name": "ComputePunchDamage",
-      "confidence": "CONFIRMED behavioral role; exact original symbol unknown",
-      "observations": [
-        "Uses defender body/head damage-reduction modifiers.",
-        "Uses attacker all-attack plus punch-type, lead/rear, rolling-power and combo damage modifiers.",
-        "Has four direct callers in punch-hit/block handling code.",
-        "Returns a float subsequently accumulated/applied by its callers."
-      ]
-    },
-    "0x0007D09C": {
-      "proposed_name": "EvaluateFlashKOChance",
-      "confidence": "PROBABLE name; CONFIRMED flash-KO modifier use",
-      "observations": [
-        "Directly combines slots 45/46, 'inc chance flash KO' and 'dec chance to be flash KOd'.",
-        "Performs random percentage comparison."
-      ]
-    },
-    "0x00082228": {
-      "proposed_name": "UpdateKOMoment",
-      "confidence": "PROBABLE name; CONFIRMED KO-moment modifier use",
-      "observations": [
-        "Consumes slots 32/33 named KO-moment length modifiers.",
-        "Updates an integer timer/state at owned object+0x14 with clamping."
-      ]
-    }
-  },
-  "overhaul_relevance": [
-    "The retail overhaul no longer needs to invent a stamina/damage architecture from UI names: the debug build exposes concrete energy drain/regeneration, max-energy degradation/recovery, health regeneration/max-health degradation, punch-damage, flash-KO and KO-moment functions.",
-    "These are debug-build addresses. Before patching, each target must be matched to ULUS10066 by instruction/data-flow signature and its original bytes/ABI verified.",
-    "0x0007EB7C is currently the strongest damage hook candidate; 0x00079E80 and 0x00079DF4 are the strongest stamina/energy hook candidates."
-  ],
-  "physical_combat_state_object": {
-    "owner_field": "high-level boxer +0x294",
-    "size": "0x360",
-    "constructor": "0x00078378",
-    "reset_initializer": "0x00078440",
-    "member_function_table": "0x0057C764",
-    "owner_back_pointer": "+0x358",
-    "member_function_table_field": "+0x35C",
-    "confidence": "CONFIRMED structural ownership; semantic field names below use direct energy/health modifier behavior",
-    "construction_evidence": [
-      "0x000A01EC allocates 0x360 bytes, calls 0x00078378(new_object, high_level_boxer), and stores the result at high-level boxer+0x294.",
-      "0x00078378 stores the high-level boxer pointer at object+0x358 and table pointer 0x0057C764 at +0x35C.",
-      "0x00078378/0x00078440 initialize the energy/health fields later consumed by 0x00079E80, 0x00079DF4, 0x0007A000, 0x0007A198 and 0x0007C75C."
-    ],
-    "core_fields": {
-      "+0x08": "current energy (strongly CONFIRMED by drain/regen dataflow)",
-      "+0x0C": "maximum/current-cap energy ceiling (strongly CONFIRMED by max-E reduction and between-round max-E regen)",
-      "+0x00/+0x04": "one current/max health-region pair",
-      "+0x10/+0x14": "second current/max health-region pair",
-      "+0x18/+0x1C": "third current/max health-region pair",
-      "+0x20/+0x24/+0x28/+0x2C": "additional health/damage state values; exact labels still open",
-      "+0x304/+0x308": "active health-regeneration accumulator/rate-like values consumed by 0x0007C75C",
-      "+0x324": "countdown/gate that can restore current energy to the +0x0C ceiling",
-      "+0x358": "owning high-level boxer object",
-      "+0x35C": "member-function table pointer"
-    },
-    "active_update": {
-      "function": "0x0007C75C",
-      "proposed_name": "PhysicalCombatState_Update",
-      "confidence": "CONFIRMED per-active-path health/energy update; exact original name unknown",
-      "owner_calls": [
-        "0x0009E2C4: calls 0x0007C75C(high_level_boxer+0x294)",
-        "0x0009E3BC: calls 0x0007C75C(high_level_boxer+0x294)",
-        "0x000A8D48: calls 0x0007C75C(high_level_boxer+0x294)"
-      ],
-      "behavior": [
-        "Uses modifier slot 0 'dec E cost for movement' then calls 0x00079E80 to drain energy when movement-cost conditions are active.",
-        "Uses modifier slot 5 'inc current H regen rate' then calls 0x0007A000.",
-        "Uses modifier slot 4 'inc current E regen rate' then calls 0x00079DF4.",
-        "Maintains timers/gates and clamps the physical state through helper calls after regeneration/drain work."
-      ],
-      "implication": "0x0007C75C is a stronger single overhaul integration boundary for live stamina/health behavior than patching every movement/attack caller separately."
-    },
-    "between_round_recovery": {
-      "function": "0x0007854C",
-      "caller": "0x0009BB94",
-      "owner_call_site": "0x0009BC24 -> 0x0007854C(high_level_boxer+0x294)",
-      "confidence": "CONFIRMED recovery/reset path; round-boundary interpretation strongly supported by higher-level lifecycle caller",
-      "behavior": [
-        "Uses modifier slot 16 'inc between round max E regen rate' and raises the +0x0C max-energy ceiling.",
-        "Uses modifier slot 5 'inc current H regen rate' and calls 0x0007A000.",
-        "Runs inside 0x0009BB94, which is invoked once for each of the two fighters by 0x000802B8."
-      ]
-    }
+  "overhaul_implications": {
+    "stamina": "The original game now has bounded debug-build candidates for attack energy cost, continuous energy recovery, movement energy cost and between-round max-energy recovery. This is sufficient to transfer-match concrete retail functions instead of searching for a generic iStamina string.",
+    "damage": "0x0007EB7C is a concrete debug-build damage formula boundary with explicit head/body, punch-type, lead/rear and global attack-damage modifiers.",
+    "hook_status": "These are high-value debug-build hook candidates only. They must be matched to ULUS10066 and original instructions/ABI verified before build_plan.json receives retail patches."
   }
 }
