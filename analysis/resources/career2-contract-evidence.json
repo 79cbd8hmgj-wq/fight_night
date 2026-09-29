@@ -358,5 +358,63 @@
       "Uses random selection for several pools, while maintaining additional progression/rival/availability gates."
     ],
     "implication": "The original professional/amateur career already has a dynamic offer-generation skeleton. The overhaul can substitute richer pool construction (rank, record, reputation, promoter, health, recent activity, titles, etc.) while preserving the proven UI and selection/confirmation interfaces."
+  },
+  "automatic_offer_refresh": {
+    "selector": "0x001A319C",
+    "proposed_name": "SelectRandomEligibleCareerContract",
+    "confidence": "CONFIRMED behavior; proposed name is descriptive",
+    "career_phase_pool_selection": {
+      "field": "profile+0x121",
+      "behavior": "Converts the phase to a boolean and selects one of two candidate-pool descriptors.",
+      "raw_pool_descriptor_addend": "0x00021318",
+      "boundary": "The 0x21318 value is a pre-relocation data addend in the PSP ELF; do not treat it as a final runtime address."
+    },
+    "behavior": [
+      "Constructs a temporary live-contract wrapper.",
+      "Selects a candidate-ID pool based on bool(profile+0x121).",
+      "Iterates the pool and loads each candidate with 0x001A2FA0.",
+      "Gets the current career rank and filters each candidate through 0x001A3FBC.",
+      "Collects at most 10 eligible contract IDs.",
+      "If at least one is eligible, chooses one using RNG 0x0026E674.",
+      "Installs the chosen ID into the career live-contract slot through 0x0019FC10.",
+      "Runs 0x0019FAC4 and 0x001935E4 to perform the corresponding career/event setup.",
+      "Returns 1 on success and 0 when no eligible template was found."
+    ],
+    "max_eligible_candidates": 10,
+    "only_direct_caller": "0x001B720C inside 0x001B6A40",
+    "significance": "The retail career already has an automatic eligible-offer fallback. Career Mode 2.0 can replace the phase-specific candidate pools and/or eligibility policy while preserving the downstream selected-contract and UI flow."
+  },
+  "post_fight_offer_refresh": {
+    "function": "0x001B6A40",
+    "proposed_name": "UpdateCareerAfterFight",
+    "confidence": "CONFIRMED as a large fight-result/career-update path; proposed name is descriptive",
+    "input_evidence": [
+      "The function receives a fight/result object and extracts boxer/result data.",
+      "It reads numerous authoritative fight statistics through 0x000BA748.",
+      "It reads and writes the live career object and persistent profile.",
+      "It updates progression records before refreshing the next contract."
+    ],
+    "progression_and_offer_flow": [
+      "Calls 0x0019AAAC and 0x00194724 with fight/result statistics and a phase-derived argument.",
+      "Clears current progression-record +0x28/+0x24 and profile +0x02/+0x03.",
+      "Calls 0x0019DFE8.",
+      "Copies the current packed profile date and invokes 0x00195564, 0x00195430 and 0x00193048.",
+      "Checks profile+0x121 and existing contract/prerequisite state.",
+      "When an existing contract path cannot be retained and profile+0x140 is nonzero, calls 0x001A319C to choose a random eligible contract.",
+      "If that automatic selection fails, clears profile+0x13C and profile+0x140."
+    ],
+    "automatic_selector_call_site": "0x001B720C",
+    "existing_contract_path": "0x001B715C-0x001B71F4 can retain/install an already-selected contract through 0x0019FC10 and 0x001935E4 when its state/flags permit",
+    "post_fight_profile_flags": {
+      "+0x09/+0x10": "set together when a threshold/stat-accumulation condition is reached",
+      "+0x0A/+0x11": "set together from a fight-stat ratio compared against ~0.7",
+      "+0x0B/+0x12": "set together from another fight-stat ratio compared against ~0.4",
+      "warning": "These bytes are confirmed post-fight progression/achievement-like flags but are not semantically named yet."
+    },
+    "significance": [
+      "This function is a natural Career Mode 2.0 world-advance boundary because it already applies fight consequences, advances career state/date and selects the next offer.",
+      "A living-division/world simulation can be inserted around this boundary so the wider boxing world advances after player fights rather than only changing the player record."
+    ],
+    "next_static_step": "Trace 0x0019AAAC and 0x00194724 to recover the original rank/progression update formulas, then determine how the candidate-pool descriptors used by 0x001A319C are populated from fights.fnc."
   }
 }
