@@ -60,6 +60,8 @@ jobs:
         env:
           CHAMPIONSHIP_PROBE_COMPACT: special
         run: python tools/research/championship_probe.py
+      - name: Run bounded retirement research probe
+        run: python tools/research/career_retirement_probe.py
       - name: Run career weight movement research probe
         run: python tools/research/career_weight_movement_probe.py
       - name: Run career weight transition research probe
