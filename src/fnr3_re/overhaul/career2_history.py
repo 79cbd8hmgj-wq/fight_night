@@ -89,7 +89,7 @@ class RetailCareerHistoryEntry:
             raise CareerHistoryError("tko_time_seconds must fit uint8")
 
     @classmethod
-    def from_bytes(cls, raw: bytes) -> "RetailCareerHistoryEntry":
+    def from_bytes(cls, raw: bytes) -> RetailCareerHistoryEntry:
         if len(raw) != RETAIL_HISTORY_ENTRY_SIZE:
             raise CareerHistoryError(
                 f"retail history entry must be exactly {RETAIL_HISTORY_ENTRY_SIZE} bytes"
