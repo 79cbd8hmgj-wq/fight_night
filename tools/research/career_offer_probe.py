@@ -170,12 +170,19 @@ def main() -> None:
     # exposing the two unresolved current-version questions: +0x50 record gate
     # and selection -> scheduling dataflow.
     focused = {
-        "eligibility_tail": disasm_range(
+        "eligibility_shared_gates": disasm_range(
             raw,
             elf,
-            0x001A42A0,
-            0x001A4500,
-            180,
+            0x001A4100,
+            0x001A42D0,
+            220,
+        ),
+        "eligibility_type_tail": disasm_range(
+            raw,
+            elf,
+            0x001A42CC,
+            0x001A4520,
+            220,
         ),
         "selection_and_followup": disasm_range(
             raw,
@@ -187,9 +194,9 @@ def main() -> None:
         "accepted_offer_schedule": disasm_range(
             raw,
             elf,
-            0x001FF440,
-            0x001FF570,
-            180,
+            0x001FF380,
+            0x001FF4C8,
+            220,
         ),
     }
 
