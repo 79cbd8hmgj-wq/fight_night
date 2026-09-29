@@ -331,6 +331,17 @@ def main() -> None:
             "case_assembly": disasm_range(raw, elf, target, min(target + 0x90, 0x001A4684)) if target is not None else [],
         })
 
+    # Contract-type -> special/live-contract scheduler switch in 0x001A4F50.
+    scheduler_jump_table = []
+    for index in range(26):
+        address = 0x00508C60 + index * 4
+        target = vaddr_word(raw, elf, address)
+        scheduler_jump_table.append({
+            "contract_type": index + 2,
+            "jump_target": f"0x{target:08X}" if target is not None else None,
+            "case_assembly": disasm_range(raw, elf, target, min(target + 0xA0, 0x001A5594)) if target is not None else [],
+        })
+
     # Contract-type -> award-label switch used by individual contract info.
     award_jump_table = []
     for index in range(20):
@@ -491,6 +502,7 @@ def main() -> None:
         "focused_ranges": focused_ranges,
         "named_strings": named_strings,
         "eligibility_jump_table": eligibility_jump_table,
+        "scheduler_jump_table": scheduler_jump_table,
         "contract_label_address_strings": contract_label_address_strings,
         "contract_label_strings": contract_label_strings,
         "contract_detail_strings": contract_detail_strings,
