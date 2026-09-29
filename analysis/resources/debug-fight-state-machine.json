@@ -364,5 +364,107 @@
       "0x00079254 severe physical reset on flash-KO success"
     ],
     "next_static_step": "Trace 0x0009D2BC and the success/result value returned by 0x00074370 into the combat-state controller, specifically looking for transition to state ID 6 DRONE_KNOCKDOWN_ATTACK."
+  },
+  "fight_lifecycle_state_machine": {
+    "dispatcher": "0x000801F8",
+    "transition_function": "0x0008000C",
+    "state_field": "+0x24",
+    "previous_state_field": "+0x28",
+    "confidence": "CONFIRMED dispatch/transition mechanics; semantic labels remain PROBABLE where noted",
+    "states": {
+      "1": {
+        "handler": "0x0007FEDC",
+        "role": "round/fight reset/setup",
+        "confidence": "PROBABLE",
+        "evidence": [
+          "Under its state conditions it invokes two-fighter reset 0x000802B8.",
+          "That reset reaches per-boxer 0x0009BB94 -> physical recovery 0x0007854C, which applies the named between-round max-energy recovery modifier."
+        ]
+      },
+      "2": {
+        "handler": "0x00082228",
+        "role": "post-hit/fighter-condition evaluator and KO-moment setup",
+        "confidence": "CONFIRMED behavior; role label PROBABLE",
+        "evidence": [
+          "Evaluates both fighters and multiple high-level boxer/physical-state predicates.",
+          "Can transition to states 3, 4, 6, or 7 depending on fighter and fight conditions.",
+          "When a boxer is selected for the timed path, computes a duration from physical/fight state and rating data.",
+          "Applies modifier ID 32 'dec KO moment length' from the selected boxer and ID 33 'inc opp KO moment length' from the opponent.",
+          "Stores the scaled/clamped duration at lifecycle owner+0x14 and transitions to state 3."
+        ]
+      },
+      "3": {
+        "handler": "0x0007FC20",
+        "role": "timed KO-moment/vulnerable phase",
+        "confidence": "PROBABLE semantic label; timer mechanics CONFIRMED",
+        "evidence": [
+          "Calls state-2 evaluator 0x00082228 first.",
+          "When the external condition permits, decrements owner+0x14.",
+          "When owner+0x14 reaches the terminal threshold it calls 0x00080130."
+        ],
+        "exit_helper": "0x00080130",
+        "exit_behavior": [
+          "Clears owner+0x14.",
+          "Loops both fighters.",
+          "If boxer+0x229 is active, calls 0x0009CFF4(boxer,1) to clear that state.",
+          "Otherwise applies physical recovery through 0x000792FC.",
+          "Transitions back to lifecycle state 2."
+        ]
+      },
+      "4": {
+        "handler": "0x0007FC84",
+        "role": "timer/reset/recovery phase",
+        "confidence": "STRUCTURALLY_BOUNDED semantics unresolved",
+        "evidence": [
+          "Uses owner+0x1C/+0x18 countdown/timer fields.",
+          "Calls 0x0007FA98 and 0x00082CF4.",
+          "Loops boxer state through 0x0009BF40.",
+          "Can transition to state 7 or state 5."
+        ]
+      },
+      "5": {
+        "handler": "0x0007FFA8",
+        "role": "unresolved lifecycle state",
+        "confidence": "UNRESOLVED",
+        "note": "Entering state 5 through 0x0008000C calls 0x0009BCAC on both boxers."
+      },
+      "6": {
+        "handler": "0x000827B8",
+        "role": "knockdown/countdown candidate",
+        "confidence": "PROBABLE; detailed decode in progress",
+        "evidence": [
+          "Uses lifecycle owner+0x10 as a countdown.",
+          "Sets owner+0x3C when countdown reaches a threshold.",
+          "Consults fight-session option bits and fight stat ID 0x0F.",
+          "Can transition back to lifecycle state 2."
+        ]
+      },
+      "7": {
+        "handler": "0x0007FEC0",
+        "role": "terminal/idle/result-pending candidate",
+        "confidence": "UNRESOLVED",
+        "evidence": [
+          "Small handler that calls 0x0007FA98."
+        ]
+      }
+    },
+    "transition_side_effects": {
+      "state2": "clears owner+0x10",
+      "state5": "calls 0x0009BCAC on both boxers",
+      "state6": "searches two boxers for 0x0009CF68 true and stores matching boxer index at owner+0x2C"
+    },
+    "ko_moment_modifier_connection": {
+      "state2_handler": "0x00082228",
+      "modifier_ids": [
+        32,
+        33
+      ],
+      "names": [
+        "dec KO moment length",
+        "inc opp KO moment length"
+      ],
+      "result": "duration stored at owner+0x14 then lifecycle state 3"
+    },
+    "next_static_step": "Fully decode state 6 0x000827B8 through its count/recovery/result branches, then use its transition targets to distinguish knockdown count, recovery, and fight-end states."
   }
 }
