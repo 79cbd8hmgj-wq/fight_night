@@ -61,6 +61,72 @@ def disasm(raw, elf, start, end, limit=120):
     return out
 
 
+def offset_to_vaddr(elf, offset):
+    for ph in elf.program_headers:
+        if ph.type == 1 and ph.offset <= offset < ph.offset + ph.filesz:
+            return ph.vaddr + (offset - ph.offset)
+    for sec in elf.sections:
+        if sec.type != 8 and sec.offset <= offset < sec.offset + sec.size:
+            return sec.addr + (offset - sec.offset)
+    return None
+
+
+def refs_to_address(raw, elf, target):
+    refs=set()
+    low=target & 0xFFFF
+    hi_ori=(target >> 16) & 0xFFFF
+    hi_addiu=((target + 0x8000) >> 16) & 0xFFFF
+    for sec in elf.sections:
+        if sec.kind != "executable":
+            continue
+        ws=list(words(raw,sec))
+        for i,(addr,w) in enumerate(ws):
+            if (w >> 26) != 0x0F:
+                continue
+            rt=(w >> 16)&31
+            imm=w&0xFFFF
+            if imm not in (hi_ori,hi_addiu):
+                continue
+            for addr2,w2 in ws[i+1:i+13]:
+                op2=w2>>26
+                rs2=(w2>>21)&31
+                rt2=(w2>>16)&31
+                imm2=w2&0xFFFF
+                if rs2 != rt or rt2 != rt:
+                    continue
+                if op2 == 0x0D and imm == hi_ori and imm2 == low:
+                    refs.add(addr2)
+                elif op2 == 0x09 and imm == hi_addiu and imm2 == low:
+                    refs.add(addr2)
+    return sorted(refs)
+
+
+def string_xrefs(raw, elf, names):
+    out={}
+    for name in names:
+        needle=name.encode("ascii")+b"\0"
+        hits=[]
+        pos=0
+        while True:
+            off=raw.find(needle,pos)
+            if off < 0:
+                break
+            va=offset_to_vaddr(elf,off)
+            refs=refs_to_address(raw,elf,va) if va is not None else []
+            hits.append({
+                "file_offset":f"0x{off:X}",
+                "vaddr":f"0x{va:08X}" if va is not None else None,
+                "refs":[{
+                    "address":f"0x{x:08X}",
+                    "function_start":f"0x{bounds(raw,elf,x)[0]:08X}",
+                    "context":disasm(raw,elf,max(bounds(raw,elf,x)[0],x-0x28),min(bounds(raw,elf,x)[1],x+0x38),32),
+                } for x in refs],
+            })
+            pos=off+1
+        out[name]=hits
+    return out
+
+
 def jal_callers(raw, elf, target):
     out=[]
     for sec in elf.sections:
@@ -119,11 +185,17 @@ def main():
         "slot_to_class_getter":disasm(raw,elf,0x001929C4,0x001929D4,16),
     }
 
+    weight_change_strings=string_xrefs(raw,elf,[
+        "INFO_Weightclass_Change_Yes",
+        "INFO_Weightclass_Change_No",
+    ])
+
     print("CAREER_WEIGHTCLASS_PROBE_BEGIN")
     print(json.dumps({
         "slot_weight_class_field_accesses":field_accesses,
         "callers":callers,
         "focused_ranges":focused,
+        "weight_change_string_xrefs":weight_change_strings,
     },indent=2))
     print("CAREER_WEIGHTCLASS_PROBE_END")
 
