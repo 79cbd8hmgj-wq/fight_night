@@ -36,11 +36,19 @@ including profile `+0x13C/+0x140`, fight-session/career `+0x19A2`, and the
 selected contract's active state. This confirms type 27 is not merely a UI
 label: accepting/finalizing it commits the retired state.
 
-A second function, `0x001A38C4`, also has a proven
-`profile+0x00 = 1` write at `0x001A39E8` and is referenced at
-`0x00581A18`. Its internal contract-type jump-table case is not yet named, so
-it remains separate evidence rather than being folded into the voluntary
-type-27 path.
+The earlier second-writer ambiguity is also resolved. Function `0x001A38C4`
+is the type-27 **state/apply** stage: its contract-type table at `0x005089A0`
+maps type 27 to `0x001A3978`, which reaches the
+`profile+0x00 = 1` store at `0x001A39E8`. Function `0x001A3B5C` is the
+later **commit/finalization** stage and performs the same idempotent set-to-1
+at `0x001A3C60`. Both are indirect methods, referenced at `0x00581A18`
+and `0x00581A20` respectively.
+
+The exact ULUS10066-v1.00 retail BOOT.BIN independently reproduces this
+lifecycle. The bounded retail writer inventory finds three strong direct
+writers to profile+0x00: initialization clears it at `0x0019D208`, while the
+type-27 state/apply and commit paths set it to 1. No separate direct retail
+comeback/unretire writer was found in that bounded scan.
 
 ## Legacy inputs already mapped
 
@@ -87,8 +95,12 @@ The recovered type-27 path now spans multiple retail systems:
 - resolver: `0x001A2C98`;
 - contract-list dispatch: `0x0050E224 -> 0x001FF6A4`;
 - special scheduler: `0x00508CC4 -> 0x001A5430`;
-- persistent retirement handler: `0x001A3B5C`;
-- retired-byte store: `0x001A3C60`.
+- state/apply dispatch: `0x00508A00 -> 0x001A3978` inside `0x001A38C4`;
+- state/apply retired-byte store: `0x001A39E8`;
+- commit/finalization handler: `0x001A3B5C`;
+- commit/finalization retired-byte store: `0x001A3C60`;
+- type-27 post-fight dispatch entry is null, consistent with retirement being
+  a non-fight contract.
 
 The resolver still contains a conditional raw-27 -> type-25 remap whose
 predicate is unnamed. That caveat does not weaken the direct type-27 writer
@@ -100,10 +112,12 @@ public Retire path unchanged.
 The retirement state transition is resolved. The remaining work is the
 **legacy side**:
 
-1. resolve the separate `0x001A38C4` profile+0x00 writer case;
-2. decode the 25-byte career-history entries far enough to retain opponent,
+1. decode the 25-byte career-history entries far enough to retain opponent,
    result, class/date and stakes information;
-3. identify the stock career-end/forced-retirement eligibility condition;
-4. define durable inputs for opposition quality, multi-division achievement
+2. identify the stock career-end/forced-retirement eligibility condition;
+3. define durable inputs for opposition quality, multi-division achievement
    and longevity;
-5. then lock the Career Mode 2.0 legacy formula and any comeback policy.
+4. then lock the Career Mode 2.0 legacy formula and any comeback policy.
+
+The type-27 retirement writer path is closed and should not be re-traced unless
+new contradictory runtime evidence appears.
