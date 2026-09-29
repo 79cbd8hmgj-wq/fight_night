@@ -192,7 +192,7 @@ class RetailFightContractTemplate:
     def evaluate_proven_gates(
         self,
         context: CareerOfferContext,
-    ) -> "OfferEligibility":
+    ) -> OfferEligibility:
         """Evaluate only the retail gates whose comparison semantics are proven.
 
         Retail also performs type-specific prechecks and gates involving
