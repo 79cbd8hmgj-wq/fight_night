@@ -26,6 +26,7 @@ from fnr3_re.overhaul.career2_legacy import (
     LEGACY_FIGHT_ENTRY_SIZE,
     LegacyFightEntry,
     LegacyFightLedger,
+    LegacyLedgerError,
 )
 
 C2EX_MAGIC = b"C2EX"
@@ -259,15 +260,19 @@ def decode_c2ex(block: bytes) -> C2EXAmateurDevelopment:
         )
 
     ledger_start = C2EX_V2_FIXED_PAYLOAD_SIZE
-    entries = tuple(
-        LegacyFightEntry.from_bytes(
-            payload[
-                ledger_start + index * LEGACY_FIGHT_ENTRY_SIZE :
-                ledger_start + (index + 1) * LEGACY_FIGHT_ENTRY_SIZE
-            ]
-        )
-        for index in range(count)
-    )
+    entries_list: list[LegacyFightEntry] = []
+    for index in range(count):
+        raw_entry = payload[
+            ledger_start + index * LEGACY_FIGHT_ENTRY_SIZE :
+            ledger_start + (index + 1) * LEGACY_FIGHT_ENTRY_SIZE
+        ]
+        try:
+            entries_list.append(LegacyFightEntry.from_bytes(raw_entry))
+        except LegacyLedgerError as exc:
+            raise C2EXError(
+                f"invalid C2EX v2 legacy entry {index}: {exc}"
+            ) from exc
+    entries = tuple(entries_list)
     return _decode_development(
         payload,
         schema_version=C2EX_VERSION,
