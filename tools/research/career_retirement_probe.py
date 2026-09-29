@@ -121,6 +121,123 @@ def references_to_address(raw: bytes, elf, target: int) -> list[int]:
     return sorted(refs)
 
 
+
+def written_register(word: int) -> int | None:
+    op = word >> 26
+    if op == 0:
+        funct = word & 0x3F
+        if funct in {0x08, 0x0C, 0x0D}:  # jr/syscall/break
+            return None
+        return (word >> 11) & 0x1F
+    if op in {
+        0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+        0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
+    }:
+        return (word >> 16) & 0x1F
+    if op == 0x03:  # jal
+        return 31
+    return None
+
+
+def propagated_source_register(word: int) -> int | None:
+    if (word >> 26) != 0:
+        return None
+    rs = (word >> 21) & 0x1F
+    rt = (word >> 16) & 0x1F
+    funct = word & 0x3F
+    if funct in {0x21, 0x25}:  # addu/or pseudo-move forms
+        if rt == 0:
+            return rs
+        if rs == 0:
+            return rt
+    return None
+
+
+def loaded_constant(word: int) -> int | None:
+    op = word >> 26
+    rs = (word >> 21) & 0x1F
+    imm = word & 0xFFFF
+    if rs != 0:
+        return None
+    if op == 0x09:
+        return sign16(imm)
+    if op == 0x0D:
+        return imm
+    return None
+
+
+def strict_profile_zero_writers(raw: bytes, elf) -> list[dict]:
+    rows = []
+    caller_saved = {2, 3, 4, 5, 6, 7, *range(8, 16), 24, 25, 31}
+    for sec in elf.sections:
+        if sec.kind != "executable":
+            continue
+        profile_regs: set[int] = set()
+        constants: dict[int, int] = {}
+        current_start = sec.addr
+        for addr, word in words_for_section(raw, sec):
+            if not (CAREER_START <= addr < CAREER_END):
+                continue
+            if is_stack_prologue(word):
+                profile_regs.clear()
+                constants.clear()
+                current_start = addr
+
+            op = word >> 26
+            rs = (word >> 21) & 0x1F
+            rt = (word >> 16) & 0x1F
+            imm = word & 0xFFFF
+
+            if op == 0x28 and imm == 0 and rs in profile_regs:
+                start, end = function_bounds(raw, elf, addr)
+                rows.append(
+                    {
+                        "address": f"0x{addr:08X}",
+                        "function_start": f"0x{start:08X}",
+                        "base_reg": rs,
+                        "value_reg": rt,
+                        "known_value": constants.get(rt),
+                        "context": disasm_range(
+                            raw,
+                            elf,
+                            max(start, addr - 0x90),
+                            min(end, addr + 0x80),
+                            120,
+                        ),
+                    }
+                )
+
+            dest = written_register(word)
+            source = propagated_source_register(word)
+            const = loaded_constant(word)
+
+            if op == 0x23 and imm == 0x003C:
+                profile_regs.discard(rt)
+                profile_regs.add(rt)
+            elif dest is not None:
+                was_profile_alias = source in profile_regs if source is not None else False
+                profile_regs.discard(dest)
+                if was_profile_alias:
+                    profile_regs.add(dest)
+
+            if dest is not None:
+                constants.pop(dest, None)
+                if const is not None:
+                    constants[dest] = const
+                elif source is not None and source in constants:
+                    constants[dest] = constants[source]
+
+            if op == 0x03:
+                for reg in caller_saved:
+                    profile_regs.discard(reg)
+                    constants.pop(reg, None)
+
+            if word == 0x03E00008:
+                profile_regs.clear()
+                constants.clear()
+                current_start = addr + 8
+    return rows
+
 def main() -> None:
     raw = Path("BOOT.BIN").read_bytes()
     elf = parse_elf32(raw)
@@ -250,6 +367,7 @@ def main() -> None:
         json.dumps(
             {
                 "string_xrefs": string_xrefs,
+                "strict_profile_zero_writers": strict_profile_zero_writers(raw, elf),
                 "profile_direct_writers": profile_direct_writers,
                 "zero_byte_store_candidates": zero_byte_stores[:80],
                 "zero_byte_store_candidate_count": len(zero_byte_stores),
