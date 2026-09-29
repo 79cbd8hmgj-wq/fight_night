@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "training_native_interface": {
+    "registration": "0x001E8918",
+    "names": [
+      "GetTrainingInfo",
+      "SetTrainingInfo",
+      "LeaveTraining"
+    ],
+    "registration_note": "0x001E8918 is registration glue; the data-producing functions are separate.",
+    "get_training_info": {
+      "function": "0x001E89AC",
+      "confidence": "CONFIRMED provider role from surrounding registration and direct training-data construction",
+      "behavior": [
+        "Resolves the current career/fight context and boxer data.",
+        "Builds an eight-value training-stat block from current boxer state.",
+        "Emits the stat array through key aStats.",
+        "Emits the current boxer resource through strCROBoxer.",
+        "Uses career division/current-boxer state rather than maintaining a separate persistent UI-only stat copy."
+      ],
+      "output_keys": [
+        "aStats",
+        "strCROBoxer"
+      ]
+    },
+    "set_training_info": {
+      "function": "0x001E8C30",
+      "confidence": "CONFIRMED by direct reads of iIntensity and iFocus",
+      "input_keys": [
+        "iIntensity",
+        "iFocus"
+      ],
+      "behavior": [
+        "Reads iIntensity and iFocus as signed integer selections.",
+        "Calls 0x001B0180(fight_session, slot 0, intensity, focus).",
+        "Calls 0x001B0678(fight_session, -1) to reset a related training-mode/state field."
+      ]
+    }
+  },
+  "transient_training_selection": {
+    "encoder": "0x001B0180",
+    "confidence": "CONFIRMED",
+    "destination": "fight-session +0x19C8 + slot*4",
+    "encoding": "low nibble = (intensity + 1) & 0xF; high nibble = ((focus + 1) & 0xF) << 4",
+    "slot_used_by_SetTrainingInfo": 0,
+    "implication": "Training intensity/focus selection is stored in transient fight-session state. Career Mode 2.0 should not treat this packed byte/word as the persistent camp calendar; it is the handoff into the selected training activity/minigame."
+  },
+  "persistent_contract_slots": {
+    "selector": "0x00193840",
+    "confidence": "CONFIRMED",
+    "slots": {
+      "0": {
+        "offset": "career+0x60",
+        "role": "fight contract",
+        "confidence": "CONFIRMED from fight-contract selection flow"
+      },
+      "1": {
+        "offset": "career+0xE8",
+        "role": "trainer contract",
+        "confidence": "CONFIRMED by contract-person UI using trainer.fnc object path for contract type 0"
+      },
+      "2": {
+        "offset": "career+0x134",
+        "role": "cutman contract",
+        "confidence": "CONFIRMED by alternate contract-person/cutman path"
+      }
+    },
+    "behavior": [
+      "Dispatches the requested ID into the selected embedded contract object through its member-function slot +0x28.",
+      "Uses the object's +0x38 method to obtain a money/signing-cost value and rejects selection when profile+0xA0 bank is too low.",
+      "Can clear/replace an existing slot contract and update shared career prerequisite state."
+    ],
+    "significance": "Trainer/cutman state lives in the same persistent career contract framework as fight contracts, giving Career Mode 2.0 a proven place to extend staff relationships."
+  },
+  "trainer_resource": {
+    "loader_region": "0x001B9284",
+    "filename": "trainer.fnc",
+    "archive": "contract/contracts.viv",
+    "magic": "TRNR",
+    "template_size_bytes": 24,
+    "template_count_global": "0x0055E6C4",
+    "template_pointer_global": "0x0055E6C0",
+    "selector": "0x001B9534",
+    "confidence": "CONFIRMED",
+    "evidence": [
+      "The loader checks the four-byte TRNR magic.",
+      "It reads the record count from the resource header.",
+      "Allocation/copy arithmetic is count * 24 bytes.",
+      "0x001B9534 bounds the requested trainer index against the loaded count and copies one 24-byte template into a live trainer-contract object."
+    ]
+  },
+  "trainer_contract_ui": {
+    "get_contract_person_info": {
+      "function": "0x00203760",
+      "confidence": "CONFIRMED by direct read of iContractPersonID and output-key usage",
+      "input": "iContractPersonID",
+      "trainer_path": "Uses trainer object constructors/selectors 0x001B91A4 / 0x001B9534 when contract-type mode is 0.",
+      "outputs": [
+        "INFO_Weeks / strWeeksRemaining",
+        "strPercentCut",
+        "strRatingFocus",
+        "INFO_Expertise_%d and Power/Speed/Balanced/Unknown focus labels"
+      ]
+    },
+    "set_contract_person_contract_info": {
+      "function": "0x00203B7C",
+      "confidence": "CONFIRMED by direct read of iTrainerID",
+      "input": "iTrainerID",
+      "behavior": "Calls shared persistent contract selector 0x00193840 with slot 1 when staff contract type is 0, or slot 2 otherwise."
+    },
+    "get_contract_info": {
+      "function": "0x00203E78",
+      "confidence": "CONFIRMED list/provider role from direct array/output keys",
+      "outputs": [
+        "aContractPersonIDs",
+        "astrContractPersonFirstName",
+        "astrContractPersonLastName",
+        "astrSigningFee",
+        "strCROContract",
+        "strContractCRO",
+        "strBank",
+        "iContractType",
+        "iSignedContractPerson"
+      ]
+    },
+    "affordability_attempt": {
+      "function": "0x00203BF8",
+      "proposed_binding": "AttemptSignContract",
+      "confidence": "PROBABLE native binding; CONFIRMED affordability/list-selection behavior",
+      "evidence": [
+        "Compares profile+0xA0 bank against the selected staff template's money/signing-cost field.",
+        "Emits iAffordable and strPopupText paths.",
+        "Handles trainer and cutman template families separately."
+      ]
+    }
+  },
+  "career_event_integration": {
+    "evidence": [
+      "GetNextEventState uses current progression-record+0x28 as a trainer/staff-contract-related input and emits iTrainerContractSigned.",
+      "Main-menu resources contain TRAINER_NONE, TRAINER_USEDEFAULT, TRAINER_HIRE, TRAINER_CANCEL, goHireTrainer, goDefaultTrainer, goCancelTrainer and OnNoTrainerSigned."
+    ],
+    "implication": "Trainer signing is not isolated menu state; it participates in the core career event-selection loop."
+  },
+  "career2_relevance": {
+    "reusable": [
+      "persistent trainer contract slot",
+      "persistent cutman contract slot",
+      "staff template tables with cost, duration/focus/expertise data",
+      "bank/affordability checks",
+      "career event gating based on trainer-contract state",
+      "transient intensity/focus handoff into training gameplay"
+    ],
+    "extension_plan": [
+      "Reuse trainer slot as the base coach/gym relationship while extending persistent data for relationship, specialty, learning rate and camp effects.",
+      "Keep intensity/focus as per-activity choices, but move weekly camp planning above this transient handoff.",
+      "Make the minigame optional by allowing Career 2.0 to compute an activity result and feed the same downstream training-result/progression path when the user skips gameplay.",
+      "Extend contract-person framework for manager/promoter relationships rather than creating an unrelated staff storage system."
+    ],
+    "next_static_step": [
+      "Map the training-result provider and the function that applies training deltas to persistent boxer ratings.",
+      "Decode xdbtrain.adf field layout and connect rows to training activities/focus/intensity.",
+      "Trace trainer contract duration/expiry so camps and longer-term coach relationships can be scheduled by the weekly calendar."
+    ]
+  }
+}
