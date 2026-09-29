@@ -176,15 +176,21 @@
         "possible comeback"
       ],
       "proven_retail_anchors": [
-        "iRetired is exported by the Career Central implementation",
+        "iRetired is exported by Career Central from profile+0x00",
+        "GetNextEventState forces next-event code 4 whenever profile+0x00 is nonzero",
+        "new-career initialization clears profile+0x00 at 0x0019D208",
+        "type-27 state/apply handler 0x001A38C4 writes profile+0x00 = 1 at 0x001A39E8",
+        "type-27 commit/finalization handler 0x001A3B5C writes profile+0x00 = 1 at 0x001A3C60",
+        "exact ULUS10066-v1.00 retail writer scan independently confirms the retirement lifecycle",
         "Career Central exposes awards/rank/money/record/date data",
         "record-book and award resources already exist"
       ],
       "next_static_work": [
-        "Find every iRetired reader/writer and identify the retirement state transition.",
-        "Map award/title/record-book ownership and career-stat sources.",
-        "Identify the existing career-end condition so it can be replaced with player-driven retirement."
-      ]
+        "Decode the 25-byte career-history entries to recover opponent/result/class/date/stakes inputs for legacy scoring.",
+        "Identify the stock career-end/forced-retirement eligibility condition separately from voluntary type-27 retirement.",
+        "Map durable opposition-quality, multi-division and longevity inputs before locking the Career Mode 2.0 legacy formula."
+      ],
+      "status": "RETIREMENT_LIFECYCLE_RESOLVED_LEGACY_INPUTS_IN_PROGRESS"
     },
     {
       "priority": 8,
