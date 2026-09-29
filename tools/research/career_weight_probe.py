@@ -117,6 +117,14 @@ def main() -> None:
     targets = [0x001929C4, 0x0019527C, 0x00197230, 0x0019FBD8, 0x0019FBF4]
     callers = {f"0x{x:08X}": jal_callers(raw, elf, x) for x in targets}
 
+    # Decode the 26-entry scheduler dispatch table used by contract types 2..27.
+    scheduler_type_targets = {}
+    table_off = elf.vaddr_to_offset(0x00518C60)
+    if table_off is not None:
+        for i in range(26):
+            target = struct.unpack_from("<I", raw, table_off + i * 4)[0]
+            scheduler_type_targets[str(i + 2)] = f"0x{target:08X}"
+
     focused = {
         "career_slot_mapping_getter": disasm_range(raw, elf, 0x001929B8, 0x00192A80, 160),
         "active_slot_transition": disasm_range(raw, elf, 0x0019527C, 0x00195430, 300),
@@ -125,6 +133,7 @@ def main() -> None:
         "post_fight_weight_transition": disasm_range(raw, elf, 0x0019CEB0, 0x0019D0A0, 260),
         "career_initialization": disasm_range(raw, elf, 0x0019D8C0, 0x0019DB80, 260),
         "special_contract_scheduler": disasm_range(raw, elf, 0x001A4F50, 0x001A55A0, 420),
+        "weight_change_fine_print": disasm_range(raw, elf, 0x00203020, 0x002030C8, 64),
     }
 
     print("CAREER_WEIGHT_PROBE_BEGIN")
@@ -132,6 +141,7 @@ def main() -> None:
         "profile_weight_slot_accesses": direct_byte_accesses,
         "callers": callers,
         "focused_ranges": focused,
+        "scheduler_type_targets": scheduler_type_targets,
     }, indent=2))
     print("CAREER_WEIGHT_PROBE_END")
 
