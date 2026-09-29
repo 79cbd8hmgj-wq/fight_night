@@ -233,9 +233,9 @@
       "true body-weight gain/cut mechanics synchronized with persistent boxer+0x6C"
     ],
     "next_static_step": [
-      "Resolve 0x001971A0's jump-table truth set and map the accepted profile+0x80 values to contract/fight labels.",
-      "Separate transfer, successful defense, title loss and forfeiture bookkeeping.",
-      "Then map title-fight scheduling subtype into AssignCareerMatch and the packed +0x24 descriptor."
+      "Trace s2/s7/s4 setup in the post-fight championship transfer region and name each transfer branch from proven fighter roles.",
+      "Resolve the remaining per-slot title-state counters and special award/belt result paths.",
+      "Then move to persistent injury/recovery semantics."
     ]
   },
   "match_descriptor": {
@@ -285,9 +285,55 @@
       "confidence": "CONFIRMED reciprocal/perspective conversion role",
       "behavior": [
         "Replaces the packed opponent index with the other fighter's progression index.",
-        "Preserves the 8-bit subtype and low 4-bit code.",
-        "Transforms the 4-bit result/state code through a small mapping table before repacking.",
+        "Preserves the 8-bit subtype and low 4-bit secondary code.",
+        "Transforms result code 2<->7, 3<->8, 4<->9, 5<->10 and 6<->11; codes 0 and 1 remain unchanged.",
         "0x00194518 uses this helper when writing the reciprocal schedule descriptor to the second fighter."
+      ]
+    },
+    "result_code_semantics": {
+      "confidence": "CONFIRMED win/loss/draw classes and KO-counting subset; exact public names of the individual win methods remain unresolved",
+      "packed_field": "bits 4..7 of progression record+0x24 match descriptor",
+      "predicates": {
+        "0x001A2400": "true exactly for codes 2..6; these increment progression record+0x05 (wins)",
+        "0x001A2430": "true exactly for codes 7..11; these increment progression record+0x06 (losses)",
+        "0x001A2460": "true exactly for code 1; this increments progression record+0x07 (draws)",
+        "0x001A248C": "true exactly for codes 2 or 3; these increment progression record+0x08 (KOs)"
+      },
+      "codes": {
+        "0": "unset/no resolved result",
+        "1": "draw",
+        "2..6": "win classes from the descriptor's current fighter perspective",
+        "7..11": "reciprocal loss classes / opponent-win classes"
+      },
+      "reciprocal_pairs": {
+        "0": 0,
+        "1": 1,
+        "2": 7,
+        "3": 8,
+        "4": 9,
+        "5": 10,
+        "6": 11,
+        "7": 2,
+        "8": 3,
+        "9": 4,
+        "10": 5,
+        "11": 6
+      },
+      "ko_counting_codes": {
+        "winning_perspective": [
+          2,
+          3
+        ],
+        "reciprocal_losing_perspective": [
+          7,
+          8
+        ],
+        "boundary": "Codes 2 and 3 both count toward the winner's KO statistic. Static evidence here does not yet distinguish their exact public method labels (for example KO versus another stoppage class)."
+      },
+      "proof": [
+        "0x0019C638..0x0019C6C8 applies the four predicates to progression record bytes +0x05 through +0x08 respectively.",
+        "Those four progression bytes were independently recovered as wins, losses, draws and KOs.",
+        "0x001A24C4 maps the 12-value result code through the exact reciprocal table above when the match descriptor is viewed from the other fighter's perspective."
       ]
     }
   },
@@ -808,8 +854,8 @@
       "Exact localized public wording for several numeric title/award types."
     ],
     "next_static_step": [
-      "Decode 0x001A2400/0x001A2430/0x001A2460 and trace s2/s7/s4 into the three post-fight 0x00196DC4 callsites so challenge-win, defense-loss and special award/belt transfer branches can be named precisely.",
-      "Resolve the remaining result bookkeeping for special award/belt types 16/17/21/22 without conflating them with the three persistent career title slots.",
+      "Trace s2/s7/s4 setup feeding 0x0019CC20..0x0019CD68 and label the player-title-acquisition, player-title-loss and non-player/special transfer branches precisely.",
+      "Resolve profile+0x66/+0x68/+0x6A title-state counters and the special award/belt result paths for contract types 16/17/21/22.",
       "Then close championship result semantics and move to persistent injury/recovery semantics."
     ]
   },
@@ -998,9 +1044,10 @@
       "It also branches on profile+0x80 through bounded numeric ranges before calling 0x00196DC4."
     ],
     "unresolved": [
-      "Exact semantic names of result predicates 0x001A2400, 0x001A2430 and 0x001A2460.",
-      "Exact role of s2/s7/s4 at the three nearby post-fight 0x00196DC4 callsites, needed to label each transfer branch as challenge win, defense loss, or special award/belt transfer without inference.",
-      "Special award/belt result bookkeeping differences for contract types 16/17/21/22."
+      "Trace the setup/normalization of s2, s7 and s4 immediately before 0x0019CC20 so each 0x00196DC4 title-transfer branch can be labeled by fighter role without inference.",
+      "Resolve the s4==0 title-transfer path separately from the two player-identity branches.",
+      "Resolve special award/belt result bookkeeping differences for contract types 16/17/21/22.",
+      "Distinguish the exact public result-method labels within code pairs 2/3 versus 4/5/6 and their reciprocal 7..11 values if needed."
     ],
     "contract_type_gate": {
       "field": "profile+0x80",
@@ -1055,6 +1102,13 @@
       "type 22": 8,
       "persistence": "AssignCareerMatch stores the subtype in progression record+0x24 bits 8..15.",
       "confidence": "CONFIRMED from decoded fights.fnc templates and AssignCareerMatch dataflow"
+    },
+    "result_predicates": {
+      "0x001A2400": "win-class predicate for the descriptor's current fighter perspective (codes 2..6)",
+      "0x001A2430": "loss-class/opponent-win predicate (codes 7..11)",
+      "0x001A2460": "draw predicate (code 1)",
+      "0x001A248C": "KO-counting win subset (codes 2 or 3)",
+      "confidence": "CONFIRMED from exact predicate bodies, reciprocal table and progression-record stat writers"
     }
   }
 }
