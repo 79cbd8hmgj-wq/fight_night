@@ -18,7 +18,7 @@ binary patch.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from fnr3_re.overhaul.career2_amateur import AmateurDevelopmentState
 from fnr3_re.overhaul.career2_c2ex import (
@@ -28,7 +28,7 @@ from fnr3_re.overhaul.career2_c2ex import (
 )
 
 
-class Career2SaveSource(str, Enum):
+class Career2SaveSource(StrEnum):
     """Origin of the development data found in one active save body."""
 
     LEGACY_RETAIL = "legacy_retail"
