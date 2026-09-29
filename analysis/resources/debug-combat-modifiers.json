@@ -375,6 +375,36 @@
       ],
       "caller": "0x0009BC24 inside per-boxer reset/setup 0x0009BB94",
       "confidence": "CONFIRMED"
+    },
+    "high_level_attack_dispatcher": {
+      "function": "0x000A2D78",
+      "confidence": "CONFIRMED as high-level attack/action dispatcher; exact original method name unknown",
+      "direct_callers": [
+        "0x000220EC",
+        "0x00074544",
+        "0x000749F0",
+        "0x00074A54",
+        "0x00074D78",
+        "0x00074DE4",
+        "0x00074F44",
+        "0x00074FAC",
+        "0x0009C958",
+        "0x0009E368",
+        "0x000A0B8C",
+        "0x000A0D1C",
+        "0x000A5F4C",
+        "0x000A6080"
+      ],
+      "action_mode_to_energy_path": {
+        "0": "conditionally calls 0x00078794",
+        "1": "calls 0x00078DE4",
+        "2": "calls 0x00078C88",
+        "3": "calls 0x00078DA8",
+        "4": "calls 0x00078D1C",
+        "5": "no corresponding energy-spend call in the recovered switch",
+        "-1": "resets attack-related state"
+      },
+      "implication": "This is a strong debug-build attack initiation/execution boundary above the lower physical-state energy-cost routines. Action-code semantics are not yet promoted to punch names."
     }
   },
   "damage_pipeline": {
@@ -448,7 +478,111 @@
       "downstream_damage_apply": "0x0007A198",
       "confidence": "CONFIRMED; semantic label still unresolved"
     },
-    "next_static_step": "Trace 0x0007A198 and downstream physical-state writes to identify the exact current-health/stun fields and the transition into knockdown/KO/TKO state."
+    "next_static_step": "Trace 0x0007A198 and downstream physical-state writes to identify the exact current-health/stun fields and the transition into knockdown/KO/TKO state.",
+    "damage_application": {
+      "function": "0x0007A198",
+      "confidence": "CONFIRMED",
+      "arguments": {
+        "a0": "physical combat state",
+        "a1": "damage channel/type 0..3",
+        "f12": "damage amount"
+      },
+      "max_health_modifier": {
+        "id": 3,
+        "name": "dec rate max H reduction",
+        "behavior": "Applies the modifier to a scaled companion reduction before subtracting from max/cap-like fields."
+      },
+      "channels": {
+        "0": {
+          "writes": [
+            "physical_state+0x10 -= damage",
+            "physical_state+0x14 -= modifier-ID-3-adjusted companion amount"
+          ]
+        },
+        "1": {
+          "writes": [
+            "physical_state+0x18 -= damage",
+            "physical_state+0x1C -= modifier-ID-3-adjusted companion amount"
+          ]
+        },
+        "2": {
+          "writes": [
+            "physical_state+0x30C = current damage amount",
+            "physical_state+0x314 tracks peak damage",
+            "physical_state+0x00 -= damage",
+            "physical_state+0x04 -= modifier-ID-3-adjusted companion amount",
+            "physical_state+0x2E8 += truncated integer damage"
+          ]
+        },
+        "3": {
+          "writes": [
+            "physical_state+0x20 -= damage"
+          ]
+        }
+      },
+      "post_actions": [
+        "calls 0x0007A5D8(physical_state, channel, damage)",
+        "calls 0x0007E914 to clamp/normalize physical state"
+      ],
+      "boundary": "The four channels are structurally distinct but are not assigned user-facing health/stun/body/head labels without further evidence."
+    },
+    "damage_history": {
+      "function": "0x0007A5D8",
+      "confidence": "CONFIRMED",
+      "correction": "This routine is NOT a knockdown transition or KO decision.",
+      "behavior": [
+        "Uses physical_state+0x100 as a rotating/history index.",
+        "Indexes a channel-major history matrix beginning near physical_state+0x104.",
+        "Adds the incoming damage amount to the selected history cell."
+      ],
+      "implication": "Knockdown/KO threshold logic must be sought in consumers of the physical-state current/cap fields, not in 0x0007A5D8."
+    },
+    "physical_state_threshold_leads": {
+      "0x00078FF4": {
+        "confidence": "CONFIRMED threshold/probability consumer; semantic label unresolved",
+        "behavior": [
+          "Reads physical_state+0x00.",
+          "Bins the value through thresholds around 10/20/40/50/60.",
+          "Applies modifier ID 30 'inc chance E boost'.",
+          "On a successful random check calls 0x00079778."
+        ],
+        "only_direct_caller": "0x00075D30"
+      },
+      "0x00079254": {
+        "confidence": "CONFIRMED severe physical-state reset path; exact knockdown/recovery label unresolved",
+        "behavior": [
+          "Calls 0x00079430 and 0x00079A5C before mutating the core physical state.",
+          "Moves the current +0x00 amount into cumulative +0x2E8.",
+          "Sets physical_state+0x00 = 0 and +0x08 = 0.",
+          "Reduces physical_state+0x04 by 5.0 with a lower clamp.",
+          "Has exactly one direct caller at 0x00075798 inside the large hit/combat-resolution routine beginning 0x000754B8."
+        ]
+      },
+      "0x00079778": {
+        "confidence": "CONFIRMED energy-boost/state helper; exact public label unresolved",
+        "behavior": [
+          "Uses boxer rating accessor 0x0009BB6C(...,4).",
+          "Uses modifier ID 30 'inc chance E boost'.",
+          "Updates physical_state bookkeeping at +0x31C/+0x320/+0x324."
+        ],
+        "callers": [
+          "0x00079128",
+          "0x00079DC0"
+        ]
+      }
+    },
+    "large_hit_resolution_candidate": {
+      "function": "0x000754B8",
+      "confidence": "CONFIRMED as a large combat/hit resolution routine; exact original symbol unknown",
+      "evidence": [
+        "Reads both combatant/high-level boxer objects and their physical-state objects.",
+        "Calls the clean-punch damage routine 0x0007894C.",
+        "Tests additional combat state through 0x0007D09C.",
+        "At 0x00075798 invokes severe physical-state reset 0x00079254 on one specific guarded path.",
+        "Contains multiple downstream combat-result/state and presentation/event calls."
+      ],
+      "implication": "0x000754B8 is now a higher-priority route to the knockdown/KO transition than the damage-history accumulator."
+    }
   },
   "overhaul_implications": {
     "stamina": "The original game now has bounded debug-build candidates for attack energy cost, continuous energy recovery, movement energy cost and between-round max-energy recovery. This is sufficient to transfer-match concrete retail functions instead of searching for a generic iStamina string.",
