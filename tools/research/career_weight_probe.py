@@ -125,6 +125,13 @@ def main() -> None:
             target = struct.unpack_from("<I", raw, table_off + i * 4)[0]
             scheduler_type_targets[str(i + 2)] = f"0x{target:08X}"
 
+    weight_change_type_targets = {}
+    weight_table_off = elf.vaddr_to_offset(0x00508970)
+    if weight_table_off is not None:
+        for i in range(11):
+            target = struct.unpack_from("<I", raw, weight_table_off + i * 4)[0]
+            weight_change_type_targets[str(i + 10)] = f"0x{target:08X}"
+
     focused = {
         "career_slot_mapping_getter": disasm_range(raw, elf, 0x001929B8, 0x00192A80, 160),
         "active_slot_transition": disasm_range(raw, elf, 0x0019527C, 0x00195430, 300),
@@ -143,6 +150,7 @@ def main() -> None:
         "callers": callers,
         "focused_ranges": focused,
         "scheduler_type_targets": scheduler_type_targets,
+        "weight_change_type_targets": weight_change_type_targets,
     }, indent=2))
     print("CAREER_WEIGHT_PROBE_END")
 
