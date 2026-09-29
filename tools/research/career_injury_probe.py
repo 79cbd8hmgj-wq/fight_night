@@ -158,9 +158,30 @@ def main() -> None:
             "function_end": f"0x{end:08X}",
             "modifier_calls": calls,
             "injury_id_immediates": immediate_ids,
-            "focused_assembly": disasm_range(
-                raw, elf, max(start, lo - 0x40), min(end, hi + 0x50)
-            ),
+            "call_contexts": [
+                {
+                    **call,
+                    "assembly": disasm_range(
+                        raw,
+                        elf,
+                        max(start, int(call["callsite"], 16) - 0x28),
+                        min(end, int(call["callsite"], 16) + 0x2C),
+                    ),
+                }
+                for call in calls
+            ],
+            "injury_id_contexts": [
+                {
+                    **row,
+                    "assembly": disasm_range(
+                        raw,
+                        elf,
+                        max(start, int(row["address"], 16) - 0x18),
+                        min(end, int(row["address"], 16) + 0x1C),
+                    ),
+                }
+                for row in immediate_ids
+            ],
         })
 
     modifier_function_bodies = {
