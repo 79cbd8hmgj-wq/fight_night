@@ -119,7 +119,7 @@ def main() -> None:
 
     # Decode the 26-entry scheduler dispatch table used by contract types 2..27.
     scheduler_type_targets = {}
-    table_off = elf.vaddr_to_offset(0x00518C60)
+    table_off = elf.vaddr_to_offset(0x00508C60)
     if table_off is not None:
         for i in range(26):
             target = struct.unpack_from("<I", raw, table_off + i * 4)[0]
@@ -134,6 +134,7 @@ def main() -> None:
         "career_initialization": disasm_range(raw, elf, 0x0019D8C0, 0x0019DB80, 260),
         "special_contract_scheduler": disasm_range(raw, elf, 0x001A4F50, 0x001A55A0, 420),
         "weight_change_fine_print": disasm_range(raw, elf, 0x00203020, 0x002030C8, 64),
+        "weight_change_predicate": disasm_range(raw, elf, 0x001A3560, 0x001A36A0, 96),
     }
 
     print("CAREER_WEIGHT_PROBE_BEGIN")
