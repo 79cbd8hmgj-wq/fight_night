@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from enum import IntEnum
 from types import MappingProxyType
-from typing import Mapping
+from collections.abc import Mapping
 
 from fnr3_re.overhaul.boxer_model import BoxerRatings
 
@@ -212,7 +212,7 @@ class AmateurDevelopmentState:
         height_inches: int,
         weight_lbs: int,
         physical_plan: PhysicalGrowthPlan,
-    ) -> "AmateurDevelopmentState":
+    ) -> AmateurDevelopmentState:
         """Create the evidence-backed retail starting phase at age 20."""
 
         return cls(
@@ -225,7 +225,7 @@ class AmateurDevelopmentState:
             physical_plan=physical_plan,
         )
 
-    def train(self, *, field: str, effort: int) -> "AmateurDevelopmentState":
+    def train(self, *, field: str, effort: int) -> AmateurDevelopmentState:
         if self.phase is CareerPhase.PROFESSIONAL:
             raise Career2DevelopmentError(
                 "amateur-development training cannot run after the pro transition"
@@ -242,7 +242,7 @@ class AmateurDevelopmentState:
         *,
         height_step_inches: int = 0,
         weight_step_lbs: int = 0,
-    ) -> "AmateurDevelopmentState":
+    ) -> AmateurDevelopmentState:
         if self.age == 255:
             raise Career2DevelopmentError("age cannot exceed the retail u8 field")
         height, weight = self.physical_plan.advance(
@@ -258,14 +258,14 @@ class AmateurDevelopmentState:
             weight_lbs=weight,
         )
 
-    def begin_pro_transition(self) -> "AmateurDevelopmentState":
+    def begin_pro_transition(self) -> AmateurDevelopmentState:
         """Mirror the proven retail 0 -> 1 transition without rebuilding state."""
 
         if self.phase is not CareerPhase.AMATEUR:
             raise Career2DevelopmentError("begin_pro_transition requires phase 0")
         return replace(self, phase=CareerPhase.AMATEUR_TRANSITION)
 
-    def complete_pro_transition(self) -> "AmateurDevelopmentState":
+    def complete_pro_transition(self) -> AmateurDevelopmentState:
         """Mirror the proven retail 1 -> 2 Go Pro transition."""
 
         if self.phase is not CareerPhase.AMATEUR_TRANSITION:
