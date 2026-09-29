@@ -167,24 +167,26 @@
       "subsystem": "Fight",
       "status": "STATICALLY_SOLVABLE",
       "question": "What are the fight lifecycle functions (init/round-start/round-end/result/cleanup)?",
-      "remaining_static_work": "Debug ULES00270 now yields the concrete chain 0x000859B4 boxer-owner setup -> 0x000A01EC high-level boxer object -> 0x0009D084/0x00054608 fighter-runtime creation at +0x2A0 -> 0x000A0894 virtual high-level update -> 0x000350B4 -> 0x000352F4 -> fighter virtual slot +0x100 -> 0x00041450 per-fighter combat/movement tick. Next: identify the owning manager/update path above 0x000A0894 and map round-start/end/result/cleanup neighbors.",
+      "remaining_static_work": "Debug ULES00270 fight lifecycle is now substantially recovered: state1 initial setup -> state2 active fight; state3 timed KO moment; state4 round-end/between-round timer; state5 next-round reset; state6 knockdown sequence/count; state7 terminal fight end. Continue by transfer-matching lifecycle dispatcher 0x000801F8 and central two-boxer combat tick 0x00021F60 into ULUS10066, then verify original retail instructions/ABI for hook candidates.",
       "affected_features": [
         "combat"
       ],
       "sources": {
         "functions": [
-          "0x000859B4",
-          "0x000A01EC",
-          "0x0009D084",
-          "0x00054608",
-          "0x000A0894",
-          "0x000350B4",
-          "0x000352F4",
-          "0x00041450"
+          "0x000801F8",
+          "0x0008000C",
+          "0x0007FEDC",
+          "0x00082228",
+          "0x0007FC20",
+          "0x0007FC84",
+          "0x0007FFA8",
+          "0x000827B8",
+          "0x0007FEC0",
+          "0x00021F60"
         ],
         "evidence": [
           "analysis/resources/debug-fight-state-machine.json",
-          "docs/decomp/packages/fight-state-machine/README.md"
+          "analysis/resources/debug-combat-modifiers.json"
         ]
       }
     },
@@ -326,22 +328,24 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "What triggers the KO/TKO decision path, and is the referee's stoppage decision statically traceable?",
-      "remaining_static_work": "The generic damage formula and physical-state application path are now bounded. Trace the post-application helper 0x0007A5D8, current-health/stun thresholds, DRONE_KNOCKDOWN_ATTACK 0x00061E08, and the already-known 3-knockdown-rule paths to recover the exact KO/TKO/stoppage decision boundary.",
+      "remaining_static_work": "Debug ULES00270 now bounds flash-KO and knockdown lifecycle: 0x0007D09C evaluates flash-KO chance (modifier IDs 45/46), success reaches severe physical reset 0x00079254, lifecycle state2/0x00082228 enters KO-moment or knockdown paths, state6/0x000827B8 controls the knockdown sequence, and terminal state7 is reached for stoppage/end conditions. Three-knockdown enforcement is CONFIRMED: 0x000BAB38 records stat 0x0F for the downed boxer and 0x0E for the scorer; state6 checks the per-round 0x0F count >=3 when the knockdown-rule option is enabled. Remaining static work: distinguish non-flash knockdown/TKO/referee-stoppage thresholds and transfer-match these boundaries to ULUS10066.",
       "affected_features": [
         "combat",
         "career-health"
       ],
       "sources": {
         "functions": [
-          "0x0007A198",
-          "0x0007A5D8",
-          "0x00061E08",
-          "T_002027F4",
-          "T_00205458"
+          "0x0007D09C",
+          "0x00079254",
+          "0x00082228",
+          "0x000827B8",
+          "0x0007FEC0",
+          "0x000BAB38",
+          "0x000BA748"
         ],
         "evidence": [
-          "analysis/resources/debug-combat-modifiers.json",
-          "analysis/resources/debug-fight-state-machine.json"
+          "analysis/resources/debug-fight-state-machine.json",
+          "analysis/resources/debug-combat-modifiers.json"
         ]
       }
     },
