@@ -201,7 +201,10 @@
       "three career-slot championship ownership model mapped onto six absolute weight classes",
       "separate professional title-challenge contracts (13/14/15, subtype 8)",
       "separate professional title-defense contracts (18/19/20, subtype 9)",
-      "confirmed title-defense statistic increments on progression record+0x17"
+      "confirmed title-defense statistic increments on progression record+0x17",
+      "title-defense expiry deadlines for the three standard player championship slots",
+      "automatic title forfeiture with progression +0x18 accounting",
+      "forfeiture succession to ladder entry 1/top challenger"
     ],
     "extension_targets": [
       "explicit injuries and recovery",
@@ -218,8 +221,8 @@
       "AI title-challenge/title-defense scheduling policy"
     ],
     "next_static_step": [
-      "Mandatory challenger/eliminator: trace opponent selection and eligibility for challenge types 13/14/15 and defense types 18/19/20.",
-      "Forfeiture: locate the true progression-record+0x18 writer without confusing profile state bytes.",
+      "Normalize date helper 0x001A1280 to determine the exact standard title-defense deadline interval.",
+      "Search remaining contract/strings for any separate eliminator or rotating mandatory-challenger system beyond the proven ladder-entry-1 defense/succession rule.",
       "Then move to explicit injury/recovery semantics and weight-class movement."
     ]
   },
@@ -687,10 +690,13 @@
           "0x0019BA14..0x0019BA28 increments current-player record+0x17"
         ],
         "+0x18": [
-          "No dynamic progression-record increment is yet proven. Direct profile+0x18 state writes in 0x0019AAAC are not the forfeiture counter."
+          "0x0019E1B4..0x0019E1C8 increments the current-player progression record+0x18 after standard slot-0 title forfeiture processing.",
+          "0x0019E360..0x0019E374 increments progression record+0x18 after standard slot-1 title forfeiture processing.",
+          "0x0019E508..0x0019E51C increments progression record+0x18 after standard slot-2 title forfeiture processing.",
+          "Additional special-award/belt branches at 0x0019E628..0x0019E63C and 0x0019E748..0x0019E75C also increment +0x18."
         ]
       },
-      "confidence": "CONFIRMED field meanings and win/loss/defense updates; forfeiture writer remains unresolved"
+      "confidence": "CONFIRMED field meanings and dynamic won/lost/defended/forfeited updates"
     },
     "player_title_state": {
       "fields": [
@@ -703,6 +709,51 @@
         "profile+0x21.."
       ],
       "warning": "These profile state/award bytes are separate from progression-record title statistics +0x15..+0x18. Do not infer a title-stat increment from a same-numbered profile offset."
+    },
+    "title_forfeiture_policy": {
+      "function": "0x0019DFE8",
+      "proposed_name": "ProcessExpiredCareerTitles",
+      "confidence": "CONFIRMED standard three-slot title-expiry/forfeiture behavior; exact calendar duration is pending date-helper normalization",
+      "caller": {
+        "call_site": "0x001B70F0",
+        "context": "post-fight career flow 0x001B6A40, after the player's scheduled match fields +0x28/+0x24 are cleared and before matchmaking/world/calendar refresh"
+      },
+      "standard_slots": [
+        {
+          "career_slot": 0,
+          "state_byte": "profile+0x1C",
+          "deadline_date": "profile+0x128",
+          "successor_ladder_entry": "profile+0x2EE",
+          "successor_interpretation": "slot-0 ladder entry 1 (the position immediately below ladder slot 0)"
+        },
+        {
+          "career_slot": 1,
+          "state_byte": "profile+0x1E",
+          "deadline_date": "profile+0x130",
+          "successor_ladder_entry": "profile+0x3B6",
+          "successor_interpretation": "slot-1 ladder entry 1"
+        },
+        {
+          "career_slot": 2,
+          "state_byte": "profile+0x1D",
+          "deadline_date": "profile+0x12C",
+          "successor_ladder_entry": "profile+0x47E",
+          "successor_interpretation": "slot-2 ladder entry 1"
+        }
+      ],
+      "behavior": [
+        "For each standard title slot, compares the current career date against a stored per-slot deadline.",
+        "When the deadline is no longer in the future and the corresponding player title-state is active, changes that state from 1 to 2.",
+        "Reads the boxer progression index from ladder entry 1 for that slot and calls 0x00196DC4 TransferCareerTitleSlot with that boxer as the new champion.",
+        "Resynchronizes the affected ladder/ranks and records presentation/history state.",
+        "Increments the current player's progression-record +0x18 counter, independently confirmed by GetMyCareerStatsInfo as aiTitleBeltsForfeited."
+      ],
+      "significance": [
+        "Retail FNR3 contains an actual title-defense expiry/forfeiture mechanism rather than only voluntary title-defense contracts.",
+        "The built-in vacancy/succession rule promotes ladder entry 1 when a standard player-held title expires.",
+        "Combined with defense contracts 20/18/19 selecting ladder entry 1, the stock model establishes champion-versus-top-challenger as the baseline defense policy."
+      ],
+      "boundary": "The deadline comparison is proven. The exact real-world duration encoded when profile+0x128/+0x130/+0x12C are created is not named until helper 0x001A1280 is normalized."
     }
   },
   "championship_contract_dispatch": {
