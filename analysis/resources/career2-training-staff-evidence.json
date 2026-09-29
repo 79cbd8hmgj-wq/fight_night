@@ -160,7 +160,12 @@
       "trainer contract-length-in-weeks field",
       "trainer expertise and rating-focus metadata",
       "shared signing-date / expiration-date / weeks-remaining lifecycle",
-      "automatic staff contract expiration"
+      "automatic staff contract expiration",
+      "trainer contract start date and expiry on the career calendar",
+      "trainer duration in weeks",
+      "trainer percent cut and signing fee",
+      "trainer expertise tier and Power/Speed/Balanced focus",
+      "persistent trainer development-profile ID on the career boxer"
     ],
     "extension_plan": [
       "Reuse trainer slot as the base coach/gym relationship while extending persistent data for relationship, specialty, learning rate and camp effects.",
@@ -172,9 +177,9 @@
       "Reuse staff expiry notifications and weekly date arithmetic for contract renewal/relationship decisions."
     ],
     "next_static_step": [
-      "Map the remaining trainer/xdbtrain fields only when needed for specific coach/camp mechanics; the key Career 2.0 fields are now bounded.",
-      "Move to save serialization/capacity so potential, growth, age-history, relationships and richer living-world state have a safe persistent extension point.",
-      "Then map physical-growth/age progression hooks for Amateur Career."
+      "Age/physical development: map player age and created-boxer height/reach/weight fields and identify a safe yearly growth boundary.",
+      "Potential/learning rate: identify unused/reserved persistent boxer/profile storage near the existing created-boxer development fields before adding new save data.",
+      "Later return to trainer outcome scaling only when implementing coach-specific development formulas."
     ]
   },
   "training_result_application": {
@@ -458,5 +463,99 @@
       ],
       "implication": "Trainer and cutman contracts already have calendar-based duration and expiry. Career Mode 2.0 can extend the same lifecycle for coaches/managers/promoters rather than inventing a separate contract timer."
     }
+  },
+  "trainer_contract_template": {
+    "confidence": "CONFIRMED field behavior; descriptive field names reflect direct UI/lifecycle use",
+    "template_size_bytes": 24,
+    "fields": {
+      "+0x00": {
+        "meaning": "percent cut",
+        "confidence": "CONFIRMED",
+        "evidence": "GetContractPersonInfo reads trainer template+0x00, converts it to float and formats it into strPercentCut."
+      },
+      "+0x04": {
+        "meaning": "signing fee",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "Shared staff-contract affordability logic compares profile+0xA0 bank against template+0x04.",
+          "Contract-person list UI exposes astrSigningFee from the same trainer/cutman template family."
+        ]
+      },
+      "+0x08": {
+        "meaning": "eligibility/rank-range lower or upper bound",
+        "confidence": "CONFIRMED range-gate use; exact bound orientation unresolved"
+      },
+      "+0x0C": {
+        "meaning": "eligibility/rank-range companion bound",
+        "confidence": "CONFIRMED range-gate use; exact bound orientation unresolved"
+      },
+      "+0x10": {
+        "meaning": "contract duration in weeks",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "Trainer vtable +0x48 resolves to 0x001B9528, which returns template+0x10.",
+          "Generic contract expiry-date helper 0x0019FA3C multiplies that value by 7 and adds it to the contract start date."
+        ]
+      },
+      "+0x14": {
+        "meaning": "trainer development/profile row ID",
+        "confidence": "CONFIRMED cross-use; exact original field name unknown",
+        "evidence": [
+          "GetContractPersonInfo uses template+0x14 to initialize the trainer's xdbtrain-backed row object.",
+          "Trainer activation 0x001B9658 reads template+0x14 and forwards it to 0x001B9680.",
+          "0x001B9680 stores the value into the persistent career boxer at +0xA2 and synchronizes the boxer data.",
+          "Trainer cancel/expiry states call the same writer with 0, clearing persistent boxer+0xA2."
+        ]
+      }
+    }
+  },
+  "trainer_development_profile": {
+    "persistent_boxer_field": "+0xA2",
+    "activation_path": "generic contract state 2 -> trainer vtable +0x58 -> 0x001B9658 -> 0x001B9680(profile_id)",
+    "deactivation_paths": [
+      "generic contract state 3 -> trainer vtable +0x60 -> 0x001B95F0 -> 0x001B9680(0)",
+      "generic contract state 4 -> trainer vtable +0x68 -> 0x001B9624 -> 0x001B9680(0)"
+    ],
+    "confidence": "CONFIRMED",
+    "implication": "A signed trainer modifies persistent boxer development state through one compact profile ID. Career Mode 2.0 can extend this into coach/gym specialties and relationships while preserving the existing staff contract lifecycle."
+  },
+  "trainer_display_metadata": {
+    "xdbtrain_row_source": "trainer template +0x14",
+    "confidence": "CONFIRMED",
+    "resolved_columns": {
+      "field 5": {
+        "meaning": "expertise tier/index",
+        "confidence": "CONFIRMED",
+        "evidence": "GetContractPersonInfo reads xdbtrain field 5, adds 1 and formats localization key INFO_Expertise_%d."
+      },
+      "field 6": {
+        "meaning": "rating focus",
+        "confidence": "CONFIRMED",
+        "values": {
+          "0": "ST_Power",
+          "1": "ST_Speed",
+          "2": "ST_Balanced",
+          "other": "ST_Unknown"
+        }
+      }
+    },
+    "boundary": "The remaining xdbtrain columns are left unnamed; generic table decoding was deliberately parked because these two fields already cover the coach specialization UI needed by Career Mode 2.0."
+  },
+  "contract_calendar_lifecycle": {
+    "generic_select_and_start": "0x0019FC10",
+    "expiry_date_helper": "0x0019FA3C",
+    "weeks_remaining_helper": "0x0019FAC4",
+    "state_change_dispatch": "0x0019F978",
+    "confidence": "CONFIRMED",
+    "behavior": [
+      "When a staff/fight contract is selected, 0x0019FC10 stores the current profile date (profile+0x9C) into the contract's state block as the start date.",
+      "The contract-specific selector then loads the chosen template.",
+      "Generic state 2 activates the contract; for trainer contracts this installs template+0x14 into persistent boxer+0xA2.",
+      "0x0019FA3C computes contract end date as start_date + duration_weeks*7.",
+      "0x0019FAC4 computes remaining time by comparing the end date with current profile+0x9C and dividing the day difference by 7.",
+      "A career maintenance function around 0x00192F40 checks remaining weeks for trainer/cutman slots and transitions expired contracts to generic state 3.",
+      "Trainer state 3 clears persistent boxer+0xA2 and invalidates the trainer selection."
+    ],
+    "implication": "Trainer contracts are already integrated with the same calendar used by fight scheduling. Career Mode 2.0 can schedule camps and coaching relationships in weeks without inventing a second time system."
   }
 }
