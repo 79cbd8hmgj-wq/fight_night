@@ -116,7 +116,7 @@ class RetailCareerHistoryEntry:
     def opponent_name_bytes(self) -> bytes:
         """Return display-name bytes through the first NUL terminator."""
 
-        return self.opponent_name_raw.split(b"\\0", 1)[0]
+        return self.opponent_name_raw.split(bytes((0,)), 1)[0]
 
     @property
     def localization_key(self) -> str:
