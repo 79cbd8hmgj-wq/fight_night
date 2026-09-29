@@ -8,6 +8,16 @@ import rabbitizer
 from pspdisasm.elf32 import parse_elf32
 
 
+HISTORY_STRINGS = (
+    "iClass",
+    "iCurrentClass",
+    "aFightNumber",
+    "astrOpponentName",
+    "astrFightResult",
+    "aRoundsLasted",
+    "astrTKOTime",
+)
+
 TARGETS = (
     0x001939DC,  # fight-history ring writer
     0x00193BB8,  # fight-history ring reader
@@ -31,6 +41,16 @@ def vaddr_word(raw: bytes, elf, address: int) -> int | None:
     if off is None or off + 4 > len(raw):
         return None
     return struct.unpack_from("<I", raw, off)[0]
+
+
+def offset_to_vaddr(elf, offset: int) -> int | None:
+    for ph in elf.program_headers:
+        if ph.type == 1 and ph.offset <= offset < ph.offset + ph.filesz:
+            return ph.vaddr + (offset - ph.offset)
+    for sec in elf.sections:
+        if sec.type != 8 and sec.offset <= offset < sec.offset + sec.size:
+            return sec.addr + (offset - sec.offset)
+    return None
 
 
 def is_stack_prologue(word: int) -> bool:
@@ -104,6 +124,20 @@ def main() -> None:
     raw = Path("BOOT.BIN").read_bytes()
     elf = parse_elf32(raw)
 
+    strings = {}
+    for name in HISTORY_STRINGS:
+        needle = name.encode("ascii") + b"\0"
+        positions = []
+        pos = 0
+        while True:
+            off = raw.find(needle, pos)
+            if off < 0:
+                break
+            va = offset_to_vaddr(elf, off)
+            positions.append(f"0x{va:08X}" if va is not None else None)
+            pos = off + 1
+        strings[name] = positions
+
     functions = {}
     for target in TARGETS:
         start, end = function_bounds(raw, elf, target)
@@ -115,7 +149,21 @@ def main() -> None:
         }
 
     print("CAREER_HISTORY_PROBE_BEGIN")
-    print(json.dumps({"functions": functions}, indent=2))
+    print(
+        json.dumps(
+            {
+                "strings": strings,
+                "functions": functions,
+                "focused_completed_fight_context": disasm_range(
+                    raw, elf, 0x001B7600, 0x001B78A0, 220
+                ),
+                "focused_history_ui_context": disasm_range(
+                    raw, elf, 0x001EE2D0, 0x001EE5D8, 260
+                ),
+            },
+            indent=2,
+        )
+    )
     print("CAREER_HISTORY_PROBE_END")
 
 
