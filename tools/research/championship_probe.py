@@ -229,7 +229,7 @@ def main() -> None:
                 "context": disasm_range(raw, elf, max(start, addr - 0x28), min(end, addr + 0x38)),
             })
 
-    manual_targets = [0x00194518, 0x00195564, 0x001A2C98, 0x001A3FBC, 0x001A4F50, 0x00196DC4, 0x001948C0, 0x0019AAAC, 0x0019BB68, 0x0019CFF8, 0x0019DFE8, 0x001FF120, 0x001FF1B4, 0x00202904, 0x002029A4, 0x00202A84, 0x00202EF4]
+    manual_targets = [0x00194518, 0x00195564, 0x001A10B8, 0x001A1280, 0x001A2C98, 0x001A3FBC, 0x001A4F50, 0x00196DC4, 0x001948C0, 0x0019AAAC, 0x0019BB68, 0x0019CFF8, 0x0019DFE8, 0x001FF120, 0x001FF1B4, 0x00202904, 0x002029A4, 0x00202A84, 0x00202EF4]
     manual_functions = []
     for target in manual_targets:
         start, end = function_bounds(raw, elf, target)
@@ -595,6 +595,40 @@ def main() -> None:
                     ),
                 })
 
+    semantic_terms = [
+        b"eliminator", b"challenger", b"contender", b"mandatory",
+        b"title shot", b"championship", b"defend", b"forfeit",
+    ]
+    semantic_string_hits = {}
+    lower_raw = raw.lower()
+    for term in semantic_terms:
+        hits = []
+        pos = 0
+        while True:
+            off = lower_raw.find(term, pos)
+            if off < 0:
+                break
+            start = off
+            while start > 0 and 0x20 <= raw[start - 1] <= 0x7E:
+                start -= 1
+            end = off
+            while end < len(raw) and 0x20 <= raw[end] <= 0x7E:
+                end += 1
+            try:
+                value = raw[start:end].decode("ascii")
+            except UnicodeDecodeError:
+                value = None
+            hits.append({
+                "file_offset": f"0x{off:X}",
+                "vaddr": (
+                    f"0x{offset_to_vaddr(elf, off):08X}"
+                    if offset_to_vaddr(elf, off) is not None else None
+                ),
+                "string": value,
+            })
+            pos = off + len(term)
+        semantic_string_hits[term.decode("ascii")] = hits[:64]
+
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
         "targets": rows,
@@ -618,6 +652,7 @@ def main() -> None:
         "title_stat_writes": title_stat_writes,
         "title_stat_pointer_adjusts": title_stat_pointer_adjusts,
         "progression_title_counter_sequences": progression_title_counter_sequences,
+        "semantic_string_hits": semantic_string_hits,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
