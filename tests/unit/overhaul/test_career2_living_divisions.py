@@ -226,5 +226,5 @@ def test_title_transfer_rejects_invalid_slot() -> None:
         previous_holders=(-1, -1, -1),
     )
 
-    with pytest.raises(LivingDivisionError, match="0..2"):
+    with pytest.raises(LivingDivisionError, match=r"0\\.\\.2"):
         titles.transfer(slot=3, new_holder=77)
