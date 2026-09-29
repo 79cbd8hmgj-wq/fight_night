@@ -117,24 +117,21 @@ def test_title_stake_flags_are_mod_owned_and_composable() -> None:
     assert entry.title_stakes & LegacyTitleStake.ELIMINATOR
 
 
-@pytest.mark.parametrize(
-    ("kwargs", "message"),
-    [
-        ({"opponent_id": 0x1_0000}, "opponent_id"),
-        ({"career_week": 0x1_0000}, "career_week"),
-        ({"rank": 50}, "opponent rank"),
-        ({"rank": -1}, "opponent rank"),
-        ({"overall": 256}, "opponent overall"),
-        ({"rounds": 256}, "rounds_lasted"),
-        ({"finish_seconds": -1}, "finish_seconds"),
-    ],
-)
-def test_entry_storage_ranges_are_enforced(
-    kwargs: dict[str, int],
-    message: str,
-) -> None:
-    with pytest.raises(LegacyLedgerError, match=message):
-        _entry(**kwargs)
+def test_entry_storage_ranges_are_enforced() -> None:
+    with pytest.raises(LegacyLedgerError, match="opponent_id"):
+        _entry(opponent_id=0x1_0000)
+    with pytest.raises(LegacyLedgerError, match="career_week"):
+        _entry(career_week=0x1_0000)
+    with pytest.raises(LegacyLedgerError, match="opponent rank"):
+        _entry(rank=50)
+    with pytest.raises(LegacyLedgerError, match="opponent rank"):
+        _entry(rank=-1)
+    with pytest.raises(LegacyLedgerError, match="opponent overall"):
+        _entry(overall=256)
+    with pytest.raises(LegacyLedgerError, match="rounds_lasted"):
+        _entry(rounds=256)
+    with pytest.raises(LegacyLedgerError, match="finish_seconds"):
+        _entry(finish_seconds=-1)
 
 
 def test_unknown_title_stake_bits_fail_closed() -> None:
