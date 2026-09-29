@@ -718,6 +718,47 @@ def main() -> None:
                     })
                 break
 
+    # Direct career-profile writes to the active working slot (+0x2A)
+    # and its shadow/player-facing slot (+0x2B). Require the SB base register
+    # to come from a nearby LW ..., 0x3C(career), mirroring the counter-reader
+    # provenance filter above so unrelated structs are excluded.
+    profile_slot_direct_writers = []
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        words = list(words_for_section(raw, sec))
+        for i, (addr, word) in enumerate(words):
+            op = word >> 26
+            imm = word & 0xFFFF
+            base_reg = (word >> 21) & 0x1F
+            value_reg = (word >> 16) & 0x1F
+            if op != 0x28 or imm not in {0x2A, 0x2B}:  # SB
+                continue
+            for j in range(i - 1, max(-1, i - 13), -1):
+                prev_addr, prev = words[j]
+                prev_op = prev >> 26
+                prev_rt = (prev >> 16) & 0x1F
+                if prev_op == 0:
+                    prev_rd = (prev >> 11) & 0x1F
+                    if prev_rd == base_reg:
+                        break
+                    continue
+                if prev_op not in register_writing_i_ops or prev_rt != base_reg:
+                    continue
+                if prev_op == 0x23 and (prev & 0xFFFF) == 0x003C:
+                    start, end = function_bounds(raw, elf, addr)
+                    profile_slot_direct_writers.append({
+                        "write_address": f"0x{addr:08X}",
+                        "offset": f"0x{imm:02X}",
+                        "profile_load_address": f"0x{prev_addr:08X}",
+                        "career_reg": (prev >> 21) & 0x1F,
+                        "profile_reg": base_reg,
+                        "value_reg": value_reg,
+                        "function_start": f"0x{start:08X}",
+                        "context": disasm_range(raw, elf, max(start, addr - 0x30), min(end, addr + 0x40)),
+                    })
+                break
+
     profile_title_counter_global_readers = []
     for sec in elf.sections:
         if sec.kind != "executable" or sec.size < 4:
@@ -880,6 +921,7 @@ def main() -> None:
         "profile_title_counter_accesses": profile_title_counter_accesses,
         "profile_title_counter_global_readers": profile_title_counter_global_readers,
         "profile_title_counter_direct_profile_readers": profile_title_counter_direct_profile_readers,
+        "profile_slot_direct_writers": profile_slot_direct_writers,
         "eligibility_cases": eligibility_cases,
         "title_stat_writes": title_stat_writes,
         "title_stat_pointer_adjusts": title_stat_pointer_adjusts,
