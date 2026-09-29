@@ -177,7 +177,7 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "The stock mandatory-defense baseline is now bounded: defense contracts select ladder entry 1, and expired player titles forfeit to ladder entry 1. Normalize 0x001A1280 to recover the exact deadline interval and scan remaining contract/string evidence for a distinct eliminator system; if none appears, treat eliminators and AI title scheduling as Career Mode 2.0 extensions before moving to injury/recovery and weight-class movement."
+    "next_static_step": "Championship policy is now bounded: challenge contracts target ladder slot 0, defense contracts target ladder entry 1, the defense deadline is one calendar year, and no separate eliminator family appears in the complete title-aware contract/scheduler surface. Proceed to injury/recovery semantics, then weight-class movement."
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -714,7 +714,27 @@
         "slot2": "profile+0x12C"
       },
       "implication": "Retail's standard player-title policy is champion vs the immediate top challenger, with a deadline-backed forfeiture path. More elaborate mandatory rotations/eliminators are not required to explain the recovered stock behavior.",
-      "boundary": "The exact deadline duration is pending normalization of date helper 0x001A1280. No distinct eliminator bracket, sanctioning rotation, refusal penalty, or AI-vs-AI title scheduler has yet been proven."
+      "boundary": "Complete title-aware contract dispatch has no additional dedicated eliminator family: type 3 is the initial/amateur championship; 13/14/15 are standard challenges; 18/19/20 are paired defenses; 16/17/21/22 are special award/belt paths. Generic fight templates remain generic and are not promoted to eliminators without title-aware evidence.",
+      "exact_deadline": "1 calendar year",
+      "deadline_proof": "Title-family result branches call 0x001A1280 with months=0, days=0, years=1, hours=0, minutes=0; 0x0019DFE8 later compares current career date against the stored per-slot deadline."
     }
+  },
+  "explicit_eliminator_search": {
+    "confidence": "BOUNDED NEGATIVE RESULT",
+    "scope": [
+      "all 50 decoded fights.fnc templates",
+      "contract types 1..27 dispatched by 0x001A3FBC / GetIndividualContractInfo",
+      "0x001971A0 championship/award gate",
+      "all direct 0x00194518 AssignCareerMatch callers",
+      "tracked executable/resource strings in the repository"
+    ],
+    "finding": [
+      "No additional title-aware contract family exists beyond type 3, standard challenges 13/14/15, standard defenses 18/19/20, and special award/belt types 16/17/21/22.",
+      "No explicit eliminator or mandatory-challenger localization/string identifier has been recovered.",
+      "Standard defenses and title-expiry succession both hardwire ladder entry 1 as the relevant challenger/successor.",
+      "The normal AI-vs-AI matcher emits subtype 0, so it does not schedule stock title defenses or eliminators."
+    ],
+    "conclusion": "Retail FNR3's recoverable standard policy is a fixed champion-vs-top-challenger defense model with a one-calendar-year expiry/forfeiture backstop. A separate rotating mandatory-challenger/eliminator subsystem is not evidenced in the bounded contract/scheduler space and should be treated as a Career Mode 2.0 extension unless new evidence appears.",
+    "caution": "This is an absence result within the fully enumerated contract/title scheduling surfaces above, not a claim that the entire executable contains no unrelated concept that could later be repurposed."
   }
 }
