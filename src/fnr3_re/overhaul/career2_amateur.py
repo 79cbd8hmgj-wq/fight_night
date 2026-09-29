@@ -11,10 +11,10 @@ remain mod-owned and are intended for the C2EX save extension.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from enum import IntEnum
 from types import MappingProxyType
-from collections.abc import Mapping
 
 from fnr3_re.overhaul.boxer_model import BoxerRatings
 
