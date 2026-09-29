@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import struct
 import zlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from fnr3_re.overhaul.career2_amateur import (
     C2EX_MAX_BYTES,
@@ -69,7 +69,7 @@ class C2EXAmateurDevelopment:
 
     rating_plan: RatingDevelopmentPlan
     physical_plan: PhysicalGrowthPlan
-    legacy_ledger: LegacyFightLedger = LegacyFightLedger()
+    legacy_ledger: LegacyFightLedger = field(default_factory=LegacyFightLedger)
     schema_version: int = C2EX_VERSION
 
     def __post_init__(self) -> None:
