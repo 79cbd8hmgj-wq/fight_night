@@ -173,7 +173,7 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "Player title scheduling is now bounded: types 15/13/14 map to career slots 0/1/2 and all schedule subtype 8 through AssignCareerMatch. Next determine whether AI/non-player champions receive dedicated subtype-8 assignments, then trace mandatory challenger/eliminator policy."
+    "next_static_step": "Regular AI matchmaking is now proven subtype 0 only, while title types 15/13/14 schedule player-facing subtype 8. Next trace their eligibility prechecks and adjacent contract families to recover challenger/eliminator policy, then add an AI title-scheduling hook."
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -419,7 +419,7 @@
       "This function is a natural Career Mode 2.0 world-advance boundary because it already applies fight consequences, advances career state/date and selects the next offer.",
       "A living-division/world simulation can be inserted around this boundary so the wider boxing world advances after player fights rather than only changing the player record."
     ],
-    "next_static_step": "Title ownership and player title-contract scheduling are now bounded. Next trace AI/non-player championship assignment policy and mandatory challenger/eliminator generation before moving to injury/recovery semantics."
+    "next_static_step": "Trace title-contract eligibility types 13/14/15 and adjacent contract families for challenger/eliminator policy. The normal AI matcher is now proven to emit subtype 0 only."
   },
   "fights_fnc_decoded_template_table": {
     "confidence": "CONFIRMED resource framing/count/stride; semantic labels remain limited to fields already proven by executable dataflow",
@@ -551,6 +551,13 @@
       "Whether retail AI-vs-AI matchmaking ever creates subtype-8 championship bouts without a player contract.",
       "The exact localization text behind every division-dependent INFO_Awards key.",
       "Mandatory challenger/eliminator contract type(s), if represented separately from the championship family."
-    ]
+    ],
+    "ai_equivalent": {
+      "confidence": "CONFIRMED absence from the regular AI matcher; no separate AI title scheduler found among direct AssignCareerMatch callers",
+      "regular_ai_matcher": "0x00195564 initializes subtype to 0 at 0x001955D4 and passes it unchanged at 0x00195758.",
+      "special_scheduler": "0x001A4F50 uses profile+0x4E as fighter A and live-contract +0x36 as subtype, so its subtype-8 title paths are player-facing.",
+      "accepted_contract": "0x001FF490 also uses profile+0x4E as fighter A and selected opponent profile+0x166.",
+      "implication": "AI-vs-AI championship scheduling is an overhaul feature rather than an already recovered stock policy."
+    }
   }
 }
