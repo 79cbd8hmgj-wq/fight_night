@@ -222,24 +222,19 @@
       "logical switching between base, one-lower and one-higher weight classes"
     ],
     "extension_targets": [
-      "persistent injury diagnoses/severity beyond the stock recovery cooldown",
       "mandatory challengers/eliminators",
-      "promoter/manager influence",
       "form/reputation",
       "comeback from retirement",
       "visible upcoming-fight schedule and historical title movement",
       "surface record+0x24/+0x28 match assignments as upcoming-fight cards",
-      "replace 0x00195564 compatibility policy with rank/title/promoter/health/weight-class matchmaking",
       "AI/non-player championship scheduling policy",
       "mandatory challengers/eliminators and vacancy succession",
       "AI title-challenge/title-defense scheduling policy",
-      "explicit medical injuries layered over the proven generic availability cooldown",
       "true body-weight gain/cut mechanics synchronized with persistent boxer+0x6C"
     ],
     "next_static_step": [
-      "Persistent injury/recovery semantics are bounded: stock persistence is the generic +0x13 availability cooldown; explicit diagnosis/severity remains an overhaul extension.",
-      "Mandatory-challenger/eliminator scheduling is bounded: retail evidence stops at rank-0 player defenses plus one-year vacancy/forfeiture succession to ladder entry 1.",
-      "Next, continue with promoter/manager influence and other living-division policy hooks rather than searching for a nonexistent proven stock mandatory-challenger subsystem."
+      "Do not continue recovery/injury or staff/promoter/manager work in this version.",
+      "Continue only current-version living-division work required for AI fights, rankings, titles, weight-class movement, retirement and save integration."
     ]
   },
   "match_descriptor": {
@@ -1050,7 +1045,8 @@
     },
     "conclusion": "Retail contains explicit injury-chance modifier labels in the combat modifier registry, but the recovered direct-call graph does not consume IDs 12/13 and Career Mode does not directly call the modifier API. The only proven persistent post-fight health availability state is the generic +0x13 recovery cooldown. A persistent diagnosis/severity/body-region injury system should therefore remain a Career Mode 2.0 extension unless later runtime or indirect-call evidence proves otherwise.",
     "overhaul_boundary": "Layer explicit medical injuries and severity over the proven recovery cooldown rather than renaming +0x13 itself as an injury record.",
-    "next_static_step": "Bound whether retail has any separate mandatory-challenger/eliminator scheduling policy beyond the recovered rank-0 title-defense and one-year vacancy/forfeiture rules."
+    "next_static_step": "No further injury/recovery RE or implementation in the current Career Mode 2.0 version.",
+    "project_status": "EVIDENCE_PRESERVED__DEFERRED_TO_NEXT_VERSION_BY_USER"
   },
   "career_weight_class_window": {
     "confidence": "CONFIRMED three-slot career weight-class window and logical slot switching",
@@ -1425,5 +1421,14 @@
       "Use AssignCareerMatch for scheduled title bouts and TransferCareerTitleSlot for ownership changes.",
       "Do not label any existing retail field or contract family as 'mandatory challenger' without new evidence."
     ]
+  },
+  "current_version_scope": {
+    "status": "LOCKED_BY_USER",
+    "deferred_to_next_version": [
+      "recovery/injury expansion beyond already-recovered retail cooldown evidence",
+      "trainer/cutman systems",
+      "manager/promoter systems"
+    ],
+    "instruction": "Preserve existing evidence, but perform no further RE or implementation work on these systems in the current Career Mode 2.0 version."
   }
 }
