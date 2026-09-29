@@ -386,6 +386,39 @@ def main() -> None:
     contract_label_strings = scan_string_region(0x0050DEC0, 0x0050E100)
     contract_detail_strings = scan_string_region(0x0050E820, 0x0050EC20)
 
+    def local_string_refs(start: int, end: int) -> list[dict[str, str]]:
+        refs: dict[int, str] = {}
+        words = []
+        for addr in range(start, end, 4):
+            word = vaddr_word(raw, elf, addr)
+            if word is None:
+                continue
+            words.append((addr, word))
+        for i, (addr, word) in enumerate(words):
+            if (word >> 26) != 0x0F:  # LUI
+                continue
+            rt = (word >> 16) & 0x1F
+            hi = word & 0xFFFF
+            for j in range(i + 1, min(i + 6, len(words))):
+                addr2, w2 = words[j]
+                op2 = w2 >> 26
+                rs2 = (w2 >> 21) & 0x1F
+                rt2 = (w2 >> 16) & 0x1F
+                if rs2 != rt or rt2 != rt:
+                    continue
+                imm = w2 & 0xFFFF
+                target = None
+                if op2 == 0x09:  # ADDIU
+                    target = ((hi << 16) + sign16(imm)) & 0xFFFFFFFF
+                elif op2 == 0x0D:  # ORI
+                    target = ((hi << 16) | imm) & 0xFFFFFFFF
+                if target is None:
+                    continue
+                value = read_c_string(target)
+                if value is not None and value and all((ord(ch) >= 0x20 or ch in "\\t") for ch in value):
+                    refs[target] = value
+        return [{"address": f"0x{k:08X}", "value": v} for k, v in sorted(refs.items())]
+
     contract_cases = []
     for index in range(20):
         type_id = index + 3
@@ -395,7 +428,8 @@ def main() -> None:
         contract_cases.append({
             "type_id": type_id,
             "target": f"0x{target:08X}",
-            "assembly": disasm_range(raw, elf, target, target + 0x90),
+            "string_refs": local_string_refs(target, target + 0x120),
+            "assembly": disasm_range(raw, elf, target, target + 0x120),
         })
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
