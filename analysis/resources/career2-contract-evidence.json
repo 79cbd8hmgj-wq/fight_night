@@ -171,7 +171,7 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "The select/confirm boundary is now recovered. Next: map the Career Central live career-profile fields (+0x80 state, +0x9C date, money, rank, retirement, trainer/staff state) and then trace the Go Pro/Retire special contract confirmation paths through the same scheduler."
+    "next_static_step": "Offer generation and eligibility are now bounded. Next: map how the candidate pools used by 0x0020002C are built, especially Go Pro/Retire insertion, then trace training/staff persistence and ranking/rival/event tables for the living-division layer."
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -225,8 +225,8 @@
     "confidence": "CONFIRMED size/type/timeline fields; other offsets remain partially unresolved",
     "size_bytes": 68,
     "selected_record_loader": "0x001A2FA0",
-    "global_record_table_pointer": "0x0056D530",
-    "selected_count_global": "0x0056D534",
+    "global_record_table_pointer": "0x0055D530",
+    "selected_count_global": "0x0055D534",
     "live_record_storage": "contract_object+0x1C points to owned record storage beginning at object+0x10",
     "evidence": [
       "0x001A2FA0 computes record_address = global_table + contract_id * 68 (id*64 + id*4).",
@@ -253,7 +253,8 @@
         "observed_role": "packed fine-print/rules bitfield read by 0x001A5594",
         "confidence": "CONFIRMED"
       }
-    }
+    },
+    "correction": "Previous evidence revision wrote these globals as 0x0056D530/0x0056D534. Direct LUI/addend recheck proves the correct debug-ELF addresses are 0x0055D530/0x0055D534."
   },
   "live_contract_object": {
     "confidence": "CONFIRMED",
@@ -270,5 +271,92 @@
       "+0x68": "0x001A3B5C"
     },
     "note": "Only method roles proven by direct dataflow are semantically named; the remaining methods stay address-only."
+  },
+  "fights_resource_loader": {
+    "function": "0x001A3D48",
+    "resource": "contract/contracts.viv!fights.fnc",
+    "magic": "FITE",
+    "base_template_size_bytes": 68,
+    "template_pointer_global": "0x0055D530",
+    "template_count_global": "0x0055D534",
+    "confidence": "CONFIRMED",
+    "evidence": [
+      "The function directly references the fights.fnc filename.",
+      "It recognizes the little-endian 0x45544946 value, bytes 'FITE'.",
+      "It allocates/copies entries using a 0x44-byte stride.",
+      "0x001A2FA0 bounds contract IDs against 0x0055D534 and indexes 0x0055D530 by id*0x44 before copying the template into the live contract wrapper."
+    ],
+    "note": "The live contract wrapper contains additional derived fields before/around the copied template. '0x44-byte contract record' should therefore be read as the base fights.fnc template size, not the total live wrapper size."
+  },
+  "offer_eligibility": {
+    "function": "0x001A3FBC",
+    "proposed_name": "EvaluateFightContractEligibility",
+    "confidence": "CONFIRMED eligibility role; proposed name is descriptive",
+    "caller_context": {
+      "generator": "0x0020002C",
+      "current_rank_argument": "current boxer progression record +0x04 (zero-based rank)",
+      "evidence": [
+        "0x0020002C reads the current progression record through 0x001928F0 and sign-extends byte +0x04 into $23.",
+        "Every candidate-template check passes $23 as the second argument to 0x001A3FBC.",
+        "The generator repeatedly loads a candidate template through 0x001A2FA0, calls 0x001A3FBC, and only formats/adds the contract to the UI when the evaluator returns true."
+      ]
+    },
+    "current_career_inputs": [
+      "profile+0x121 career phase",
+      "profile+0xA0 bank/money",
+      "current progression record +0x04 rank",
+      "current progression record +0x05/+0x06/+0x07, whose sum is used as total completed fights",
+      "current progression record +0x05 separately as the numerator in a percentage calculation",
+      "profile+0x13C and additional live-career prerequisite state"
+    ],
+    "live_contract_inputs": [
+      "record+0x18 and +0x1C rank-range bounds",
+      "record+0x24 prerequisite/relationship field (exact meaning unresolved)",
+      "record+0x30 packed eligibility flags",
+      "record+0x34 contract type",
+      "record+0x50 percentage/threshold-like field (exact semantic label unresolved)",
+      "value returned through contract vtable +0x38 / 0x001A2C80 (record+0x14), compared against profile bank"
+    ],
+    "phase_side_flag": {
+      "field": "live record +0x30 bit 0",
+      "behavior": "The evaluator requires bool(profile+0x121) to equal NOT(bit0). Thus templates explicitly select the initial-amateur side versus the nonzero/post-initial side of the career phase.",
+      "confidence": "CONFIRMED boolean relationship",
+      "boundary": "Without the raw fights.fnc templates, the bit value for the specific Go Pro and Retire records is not asserted."
+    },
+    "rank_gate": {
+      "upper_or_worse_rank_field": "record+0x18",
+      "lower_or_better_rank_field": "record+0x1C",
+      "sentinel": "-1 disables the corresponding bound",
+      "behavior": "The current zero-based rank must fall inside the template-defined range.",
+      "confidence": "CONFIRMED comparisons; descriptive bound names reflect zero-is-best ranking convention"
+    },
+    "money_gate": {
+      "required_value_source": "contract vtable +0x38 -> 0x001A2C80 -> record+0x14",
+      "career_value": "profile+0xA0",
+      "behavior": "Contract is rejected when current bank/money is below the returned template value.",
+      "confidence": "CONFIRMED comparison; exact design meaning of the template amount remains unresolved"
+    },
+    "record_gate": {
+      "formula": "percentage = round((record+0x05 * 100) / (record+0x05 + record+0x06 + record+0x07)) when total fights > 0",
+      "template_field": "record+0x50 participates in the final gate",
+      "confidence": "CONFIRMED arithmetic; exact semantic interpretation of +0x50 and the edge-case fallback is unresolved"
+    },
+    "contract_type_dispatch": "Types 1..27 have a type-specific precheck before converging on the shared phase/rank/money/record gates. Go Pro type 23 and Retire type 27 use the generic type branch rather than a wholly separate eligibility function.",
+    "significance": "Retail FNR3 already generates a filtered fight-contract list from candidate pools. Career Mode 2.0 can replace/extend the candidate pools and eligibility policy rather than building the entire offer-selection pipeline from scratch."
+  },
+  "dynamic_offer_generator": {
+    "function": "0x0020002C",
+    "proposed_binding": "GetFightContractInfo",
+    "confidence": "CONFIRMED contract-list generation behavior; native name binding remains highly probable from the surrounding registration cluster",
+    "behavior": [
+      "Gets the current career/progression record and current zero-based rank.",
+      "Branches on profile+0x121 career phase and other career flags.",
+      "Iterates multiple candidate-ID pools.",
+      "Loads each candidate into a temporary live contract object with 0x001A2FA0.",
+      "Filters it with 0x001A3FBC.",
+      "Formats accepted candidates through 0x001FF4E4 into the contract-list output.",
+      "Uses random selection for several pools, while maintaining additional progression/rival/availability gates."
+    ],
+    "implication": "The original professional/amateur career already has a dynamic offer-generation skeleton. The overhaul can substitute richer pool construction (rank, record, reputation, promoter, health, recent activity, titles, etc.) while preserving the proven UI and selection/confirmation interfaces."
   }
 }
