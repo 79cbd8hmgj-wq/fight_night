@@ -56,6 +56,8 @@ jobs:
         run: python tools/research/championship_probe.py
       - name: Run career availability research probe
         run: python tools/research/career_availability_probe.py
+      - name: Run bounded career injury persistence probe
+        run: python tools/research/career_injury_probe.py
       - name: Run career weight movement research probe
         run: python tools/research/career_weight_movement_probe.py
       - name: Run career weight transition research probe
