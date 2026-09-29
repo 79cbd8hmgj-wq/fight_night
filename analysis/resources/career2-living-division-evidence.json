@@ -133,10 +133,49 @@
   },
   "weekly_countdown_decay": {
     "function": "0x00194320",
-    "confidence": "CONFIRMED periodic field decrement; semantic label unresolved",
+    "proposed_name": "DecayPopulationAvailabilityCooldown",
+    "confidence": "CONFIRMED matchmaking-availability cooldown in weekly units; proposed name is descriptive",
     "field": "progression record+0x13",
-    "behavior": "Once per weekly world tick, decrements nonzero record+0x13 for every population entry.",
-    "warning": "Do not name +0x13 as injury/rest/hype without additional evidence."
+    "unit": "weekly world ticks",
+    "behavior": [
+      "Once per weekly world tick, decrements nonzero record+0x13 for each population entry in the active population range.",
+      "0x00195564 rejects both prospective fighters when record+0x13 is nonzero, independently of the scheduled-date field +0x28.",
+      "Player-result paths and 0x0019E790 AI-result simulation write new post-fight values to +0x13.",
+      "Population initialization/replacement also seeds +0x13 with a small nonzero delay so a newly introduced boxer is not immediately matchmade."
+    ],
+    "post_fight_value_helper": {
+      "function": "0x00192410",
+      "proposed_name": "ComputePostFightAvailabilityWeeks",
+      "confidence": "CONFIRMED role from all observed callers and consumers; proposed name is descriptive",
+      "inputs": [
+        "career object",
+        "boxer progression-record index",
+        "unsigned base interval supplied by result logic"
+      ],
+      "boxer_inputs": [
+        "record+0x04 zero-based rank",
+        "record+0x09 current age-like field",
+        "record+0x11 baseline/starting-age-like field"
+      ],
+      "behavior": [
+        "Scales the supplied base interval through rank and age/career-span terms.",
+        "Returns a rounded-up u8 interval.",
+        "The result is stored directly to progression record+0x13 by both player and AI result paths."
+      ],
+      "result_write_sites": [
+        "0x0019C75C -> store at 0x0019C774",
+        "0x0019CEC4 -> store at 0x0019CEE0",
+        "0x0019ED34 -> store at 0x0019ED50",
+        "0x0019ED94 -> store at 0x0019EDAC",
+        "0x0019EF08 -> store at 0x0019EF20"
+      ]
+    },
+    "semantic_boundary": [
+      "This field is now proven as a persistent between-fight availability/matchmaking cooldown, not an unidentified generic counter.",
+      "It is not sufficient evidence for a discrete medical injury state: the same field is assigned after ordinary simulated/player fight outcomes and on population initialization.",
+      "Executable strings 'dec chance for injury' and 'inc opp chance for injury' occur in the in-fight AI/modifier string region, not in the recovered career-persistence path."
+    ],
+    "career2_implication": "Reuse +0x13 as the stock rest/availability cooldown. A richer Career Mode 2.0 injury system should be modeled separately (or layered onto availability) unless another persistent medical field is recovered."
   },
   "population_maintenance": {
     "orchestrator": "0x00195DC0",
@@ -204,10 +243,11 @@
       "confirmed title-defense statistic increments on progression record+0x17",
       "title-defense expiry deadlines for the three standard player championship slots",
       "automatic title forfeiture with progression +0x18 accounting",
-      "forfeiture succession to ladder entry 1/top challenger"
+      "forfeiture succession to ladder entry 1/top challenger",
+      "rank/age-scaled post-fight availability cooldown",
+      "weekly recovery/availability countdown that blocks matchmaking"
     ],
     "extension_targets": [
-      "explicit injuries and recovery",
       "weight-class movement",
       "mandatory challengers/eliminators",
       "promoter/manager influence",
@@ -218,12 +258,13 @@
       "replace 0x00195564 compatibility policy with rank/title/promoter/health/weight-class matchmaking",
       "AI/non-player championship scheduling policy",
       "mandatory challengers/eliminators and vacancy succession",
-      "AI title-challenge/title-defense scheduling policy"
+      "AI title-challenge/title-defense scheduling policy",
+      "explicit medical injuries layered over the proven generic availability cooldown"
     ],
     "next_static_step": [
-      "Standard title-defense timing is now recovered: one calendar year, with ladder entry 1 as the defense/succession challenger.",
-      "Bound whether any separate eliminator/rotating mandatory-challenger subsystem exists in the remaining contract/template dispatch space.",
-      "Then move to injury/recovery and weight-class movement."
+      "The stock recovery boundary is now mapped: progression+0x13 is a generic post-fight matchmaking cooldown, not a proven discrete injury flag.",
+      "Search remaining career-result/profile fields for any separate persistent medical/injury state; if none is title/career-linked, treat explicit injuries as a Career Mode 2.0 extension.",
+      "Then resolve weight-class movement and title-vacation behavior."
     ]
   },
   "match_descriptor": {
