@@ -142,6 +142,7 @@ def main() -> None:
         "special_contract_scheduler": disasm_range(raw, elf, 0x001A4F50, 0x001A55A0, 420),
         "weight_change_fine_print": disasm_range(raw, elf, 0x00203020, 0x002030C8, 64),
         "weight_change_predicate": disasm_range(raw, elf, 0x001A3560, 0x001A36A0, 96),
+        "contract_type_resolver": disasm_range(raw, elf, 0x001A2C98, 0x001A2D34, 80),
     }
 
     print("CAREER_WEIGHT_PROBE_BEGIN")
