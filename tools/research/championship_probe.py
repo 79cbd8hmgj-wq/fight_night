@@ -665,6 +665,26 @@ def main() -> None:
                 "context": disasm_range(raw, elf, max(start, addr - 0x34), min(end, addr + 0x44)),
             })
 
+    # Compact whole-executable read inventory for the same offsets. This is a
+    # candidate-reader scan only: unrelated structures can share these small
+    # offsets, so semantic names still require base-object/dataflow evidence.
+    profile_title_counter_global_readers = []
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        for addr, word in words_for_section(raw, sec):
+            op = word >> 26
+            imm = word & 0xFFFF
+            if imm not in {0x66, 0x68, 0x6A} or op not in {0x21, 0x25}:  # LH/LHU reads only
+                continue
+            start, _end = function_bounds(raw, elf, addr)
+            profile_title_counter_global_readers.append({
+                "address": f"0x{addr:08X}",
+                "offset": f"0x{imm:02X}",
+                "opcode": {0x21: "lh", 0x25: "lhu"}[op],
+                "function_start": f"0x{start:08X}",
+            })
+
     eligibility_cases = []
     for index in range(27):
         type_id = index + 1
@@ -679,32 +699,8 @@ def main() -> None:
 
 
     # Find title-counter mutations tied specifically to the progression-record getter
-    # 0x001928F0.  This avoids confusing profile/stack bytes at the same small
+    # 0x001928F0. This avoids confusing profile/stack bytes at the same small
     # offsets (+0x15..+0x18) with progression-record title statistics.
-    profile_title_counter_accesses = []
-    for sec in elf.sections:
-        if sec.kind != "executable" or sec.size < 4:
-            continue
-        for addr, word in words_for_section(raw, sec):
-            if not (0x00190000 <= addr < 0x00210000):
-                continue
-            op = word >> 26
-            imm = word & 0xFFFF
-            if imm not in {0x66, 0x68, 0x6A} or op not in {0x21, 0x25, 0x29}:
-                continue
-            start, end = function_bounds(raw, elf, addr)
-            profile_title_counter_accesses.append({
-                "address": f"0x{addr:08X}",
-                "offset": f"0x{imm:02X}",
-                "opcode": {0x21: "lh", 0x25: "lhu", 0x29: "sh"}[op],
-                "function_start": f"0x{start:08X}",
-                "context": disasm_range(
-                    raw, elf,
-                    max(start, addr - 0x30),
-                    min(end, addr + 0x44),
-                ),
-            })
-
     progression_title_counter_sequences = []
     for sec in elf.sections:
         if sec.kind != "executable" or sec.size < 4:
@@ -832,10 +828,10 @@ def main() -> None:
         "shared_result_callers": shared_result_callers,
         "transfer_enable_writes": transfer_enable_writes,
         "profile_title_counter_accesses": profile_title_counter_accesses,
+        "profile_title_counter_global_readers": profile_title_counter_global_readers,
         "eligibility_cases": eligibility_cases,
         "title_stat_writes": title_stat_writes,
         "title_stat_pointer_adjusts": title_stat_pointer_adjusts,
-        "profile_title_counter_accesses": profile_title_counter_accesses,
         "progression_title_counter_sequences": progression_title_counter_sequences,
         "progression_cooldown_sequences": progression_cooldown_sequences,
         "semantic_string_hits": semantic_string_hits,
