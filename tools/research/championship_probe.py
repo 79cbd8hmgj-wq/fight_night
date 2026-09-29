@@ -284,7 +284,7 @@ def main() -> None:
         off = elf.vaddr_to_offset(address)
         if off is None:
             return None
-        end = raw.find(b"\\0", off, min(len(raw), off + 256))
+        end = raw.find(b"\0", off, min(len(raw), off + 256))
         if end < 0:
             return None
         try:
@@ -309,6 +309,50 @@ def main() -> None:
         f"0x{address:08X}": read_c_string(address)
         for address in named_string_addresses
     }
+
+    # Contract-type -> award-label switch used by individual contract info.
+    award_jump_table = []
+    for index in range(20):
+        address = 0x0050E498 + index * 4
+        off = elf.vaddr_to_offset(address)
+        target = struct.unpack_from("<I", raw, off)[0] if off is not None else 0
+        award_jump_table.append({
+            "contract_type": index + 3,
+            "jump_target": f"0x{target:08X}",
+        })
+
+    contract_label_addresses = [
+        0x0050DF38, 0x0050DF48, 0x0050DF58, 0x0050DF68, 0x0050DF78,
+        0x0050DF88, 0x0050DF98, 0x0050DFA8, 0x0050DFB8, 0x0050DFC8,
+        0x0050DFD8, 0x0050DFE8, 0x0050DFF8, 0x0050E008, 0x0050E018,
+        0x0050E028, 0x0050E038, 0x0050E048, 0x0050E058, 0x0050E068,
+        0x0050E078, 0x0050E088, 0x0050E098, 0x0050E0A8, 0x0050E0B8,
+        0x0050E0C8, 0x0050E0D8,
+    ]
+    contract_label_strings = {
+        f"0x{address:08X}": read_c_string(address)
+        for address in contract_label_addresses
+    }
+
+    # Title stat byte writers in the career-system address range.
+    title_stat_writes = []
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        for addr, word in words_for_section(raw, sec):
+            if not (0x00190000 <= addr < 0x001B0000):
+                continue
+            op = word >> 26
+            imm = word & 0xFFFF
+            if op != 0x28 or imm not in {0x15, 0x16, 0x17, 0x18}:
+                continue
+            start, end = function_bounds(raw, elf, addr)
+            title_stat_writes.append({
+                "address": f"0x{addr:08X}",
+                "field_offset": f"0x{imm:02X}",
+                "function_start": f"0x{start:08X}",
+                "context": disasm_range(raw, elf, max(start, addr - 0x40), min(end, addr + 0x50)),
+            })
 
     contract_cases = []
     for index in range(20):
