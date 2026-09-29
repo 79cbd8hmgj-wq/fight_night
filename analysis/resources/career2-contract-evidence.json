@@ -171,7 +171,7 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "Offer generation and eligibility are now bounded. Next: map how the candidate pools used by 0x0020002C are built, especially Go Pro/Retire insertion, then trace training/staff persistence and ranking/rival/event tables for the living-division layer."
+    "next_static_step": "The raw 50-record fights.fnc table is now decoded. Next: prove the title/eliminator contract type(s) by tracing type-specific eligibility/detail branches into current-belt-holder/title state, then connect the proven type's +0x36 subtype to AssignCareerMatch."
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -286,7 +286,9 @@
       "It allocates/copies entries using a 0x44-byte stride.",
       "0x001A2FA0 bounds contract IDs against 0x0055D534 and indexes 0x0055D530 by id*0x44 before copying the template into the live contract wrapper."
     ],
-    "note": "The live contract wrapper contains additional derived fields before/around the copied template. '0x44-byte contract record' should therefore be read as the base fights.fnc template size, not the total live wrapper size."
+    "note": "The live contract wrapper contains additional derived fields before/around the copied template. '0x44-byte contract record' should therefore be read as the base fights.fnc template size, not the total live wrapper size.",
+    "decoded_table": "FITE header + 50 x 68-byte records = 3408 bytes",
+    "raw_table_status": "Decoded and structurally verified from the tracked contract/contracts.viv sample."
   },
   "offer_eligibility": {
     "function": "0x001A3FBC",
@@ -416,5 +418,65 @@
       "A living-division/world simulation can be inserted around this boundary so the wider boxing world advances after player fights rather than only changing the player record."
     ],
     "next_static_step": "Trace 0x0019AAAC and 0x00194724 to recover the original rank/progression update formulas, then determine how the candidate-pool descriptors used by 0x001A319C are populated from fights.fnc."
+  },
+  "fights_fnc_decoded_template_table": {
+    "confidence": "CONFIRMED resource framing/count/stride; semantic labels remain limited to fields already proven by executable dataflow",
+    "source": "contract/contracts.viv!fights.fnc",
+    "compression": "EA RefPack 0x10FB",
+    "compressed_size_bytes": 1027,
+    "decoded_size_bytes": 3408,
+    "header": {
+      "magic": "FITE",
+      "record_count": 50,
+      "header_size_bytes": 8
+    },
+    "record_table": {
+      "record_size_bytes": 68,
+      "proof": "3408 decoded bytes = 8-byte FITE header + 50 * 68-byte templates, matching loader 0x001A3D48 and selector 0x001A2FA0's 0x44-byte stride."
+    },
+    "template_to_live_offset_relationship": {
+      "relationship": "For code-proven copied fields, template_offset = live_selected_record_offset - 0x10.",
+      "corroboration": [
+        "Live +0x20 scheduling-weeks field maps to template +0x10; decoded templates contain small whole-week values such as 1,2,4,5,6,10,12,15,16,18,20,24 and 34.",
+        "Live +0x18/+0x1C rank-range bounds map to template +0x08/+0x0C; decoded values use rank-like ranges plus -1 sentinels exactly as the eligibility code expects.",
+        "Live +0x30 packed eligibility flags map to template +0x20.",
+        "Live +0x34 signed contract type maps to template +0x24 low 16 bits."
+      ],
+      "boundary": "The live wrapper also contains derived/adjacent state beyond the 68 copied bytes; this mapping should not be extrapolated to fields outside the copied template without code evidence."
+    },
+    "special_type_crosscheck": {
+      "go_pro": {
+        "contract_type": 23,
+        "decoded_template_index": 1,
+        "template_offset_0x24": "0x00000017",
+        "significance": "Directly matches the statically recovered Go Pro type 23."
+      },
+      "retire": {
+        "contract_type": 27,
+        "decoded_template_index": 2,
+        "template_offset_0x24": "0x0004001B",
+        "significance": "Low 16 bits directly match the statically recovered Retire type 27; upper 16 bits are a separate adjacent/packed value and are not named here."
+      },
+      "conditional_type_25": {
+        "contract_type": 25,
+        "decoded_template_indices": [
+          3,
+          22,
+          37,
+          38,
+          39
+        ],
+        "significance": "Confirms type 25 is represented in the raw template table, consistent with 0x001A2C98's conditional type-27 remap target; the type-25 public meaning remains unresolved."
+      }
+    },
+    "championship_relevance": {
+      "finding": "The complete fight-template table is now directly decoded, so title/eliminator scheduling can be solved against actual contract records rather than inferred only from code.",
+      "not_yet_named": "No contract type is promoted to 'title fight' or 'eliminator' from numeric patterns alone.",
+      "next_static_step": [
+        "Trace the type-specific branches in 0x001A3FBC / contract detail formatting and identify which decoded type IDs consume belt/title state.",
+        "Cross-reference those branches with aCurrentBeltHolders and trophy ownership fields.",
+        "Once a title-bearing type is proven, follow its live record +0x36 match subtype through 0x001FF4AC -> 0x00194518 -> packed progression record+0x24."
+      ]
+    }
   }
 }
