@@ -1,22 +1,16 @@
-"""Overhaul Alpha 1 -- Core Boxer + Fight Systems.
+"""Fight Night Round 3 PSP overhaul host-side models.
 
-This package is the first implementation tranche of the planned Fight Night
-Round 3 PSP overhaul. It is split into two kinds of module, and every
-module's own docstring says which it is:
+The package began with Alpha 1 core boxer/fight systems and now also contains
+the first Career Mode 2.0 implementation slice.
 
-- **RE-grounded reference modules** (``fight_session``, ``fight_stats``)
-  record only what static disassembly of ``BOOT.BIN`` has actually proven
-  this pass -- addresses, offsets, call shapes, and one fully reconstructed
-  formula (punch accuracy). Nothing in these modules is inferred from
-  strings or UI labels alone.
-- **New overhaul rule-engine modules** (``boxer_model``, ``stamina``,
-  ``damage``, ``ai``, ``judging``, ``rules``) are this milestone's own new,
-  tunable, data-driven gameplay logic -- the planned overhaul's Alpha 1
-  behavior. They are NOT yet wired into ``BOOT.BIN`` via any byte patch:
-  no safe, evidence-backed patch site was established for the underlying
-  original stamina/damage/AI/judging *formulas* this pass (only their
-  proven *data shapes* and a handful of real accessor functions were).
-  See ``docs/overhaul/alpha1/README.md`` for the full replacement-boundary
-  map and exactly what remains blocked before any of this can be stitched
-  into a patched executable.
+- RE-grounded reference modules such as fight_session and fight_stats record
+  only behavior and storage boundaries supported by static evidence.
+- Alpha 1 rule-engine modules such as boxer_model, stamina, damage, ai,
+  judging and rules are mod-owned tunable gameplay logic.
+- career2_amateur is the first Career Mode 2.0 domain model. It uses proven
+  retail age/phase/physical destinations while keeping new per-rating
+  potential and learning-rate data mod-owned for the C2EX extension.
+
+No module in this package should silently assign semantics to unresolved
+retail fields. PSP-side patch/hook work remains evidence-gated.
 """
