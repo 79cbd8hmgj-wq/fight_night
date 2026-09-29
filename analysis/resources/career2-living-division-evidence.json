@@ -210,8 +210,8 @@
       "mandatory challengers/eliminators and vacancy succession"
     ],
     "next_static_step": [
-      "Finish championship result semantics around 0x0019CC20-0x0019CFF8 and helper calls 0x001A0E58/0x001A0E70/0x001A1280.",
-      "Once title-contract roles are proven, connect the correct contract subtype(s) to AssignCareerMatch and AI living-world scheduling.",
+      "Enumerate all progression-record title-stat writers (+0x15..+0x18) and finish naming title-bearing contract types 3,13-15,18-20.",
+      "Connect the proven title contract types to AssignCareerMatch and AI living-world scheduling.",
       "Then move to mandatory challengers/eliminators, explicit injury/recovery semantics, and weight-class movement."
     ]
   },
@@ -667,7 +667,7 @@
     }
   },
   "championship_contract_dispatch": {
-    "confidence": "CONFIRMED numeric dispatch and counter-field bindings; exact localized public labels for types 13-22 are not all recovered",
+    "confidence": "CONFIRMED numeric dispatch, championship-transfer participation and profile state-byte transitions; exact localized public names for types 13-22 remain partially unresolved",
     "current_contract_type_field": "profile+0x80",
     "championship_or_award_gate": {
       "function": "0x001971A0",
@@ -697,57 +697,46 @@
       ],
       "note": "Types outside the switch range also return false."
     },
-    "title_counter_dispatch": {
-      "13": {
-        "state_byte": "+0x1E",
-        "counter_field": "+0x18",
-        "known_counter_meaning": "title belts forfeited"
+    "championship_transfer_contracts": {
+      "function": "0x0019CFF8 result-processing region -> 0x00196DC4",
+      "confirmed_types": [
+        3,
+        13,
+        14,
+        15,
+        18,
+        19,
+        20
+      ],
+      "excluded_special_award_types": [
+        16,
+        17,
+        21,
+        22
+      ],
+      "evidence": "Both championship-transfer branches around 0x0019CC74-0x0019CD6C call 0x00196DC4 for gated type 3 and types 13-15/18-20, while 16-17/21-22 take non-transfer paths.",
+      "boundary": "This proves title-transfer participation, not the human-facing label or challenger/defender role of each numeric type."
+    },
+    "profile_award_state_dispatch": {
+      "note": "The +0x1C..+0x20 bytes below are profile state/unlock bytes, not the progression-record title-stat counters.",
+      "13/18": "profile+0x1E state path",
+      "14/19": "profile+0x1D state path",
+      "15/20": "profile+0x1C state path",
+      "16/21": "profile+0x1F state path",
+      "17/22": "profile+0x20 state path"
+    },
+    "player_title_counters": {
+      "progression_record_fields": {
+        "+0x15": "title belts won",
+        "+0x16": "title belts lost",
+        "+0x17": "title belts defended",
+        "+0x18": "title belts forfeited"
       },
-      "14": {
-        "state_byte": "+0x1D",
-        "counter_field": "+0x17",
-        "known_counter_meaning": "title belts defended"
-      },
-      "15": {
-        "state_byte": "+0x1C",
-        "counter_field": "+0x16",
-        "known_counter_meaning": "title belts lost"
-      },
-      "16": {
-        "state_byte": "+0x1F",
-        "counter_field": "+0x19",
-        "known_counter_meaning": "unresolved special award counter"
-      },
-      "17": {
-        "state_byte": "+0x20",
-        "counter_field": "+0x1A",
-        "known_counter_meaning": "unresolved special award counter"
-      },
-      "18": {
-        "state_byte": "+0x1E",
-        "counter_field": "+0x18",
-        "known_counter_meaning": "title belts forfeited"
-      },
-      "19": {
-        "state_byte": "+0x1D",
-        "counter_field": "+0x17",
-        "known_counter_meaning": "title belts defended"
-      },
-      "20": {
-        "state_byte": "+0x1C",
-        "counter_field": "+0x16",
-        "known_counter_meaning": "title belts lost"
-      },
-      "21": {
-        "state_byte": "+0x1F",
-        "counter_field": "+0x19",
-        "known_counter_meaning": "unresolved special award counter"
-      },
-      "22": {
-        "state_byte": "+0x20",
-        "counter_field": "+0x1A",
-        "known_counter_meaning": "unresolved special award counter"
-      }
+      "observed_writers": [
+        "0x00196DC4 increments +0x15 for the incoming champion and +0x16 for an outgoing champion.",
+        "Shared post-fight contract branches for title-bearing types reach player progression record+0x17 increments under defense-result conditions."
+      ],
+      "pending": "Direct writers of +0x18 forfeited are being enumerated separately; do not equate profile+0x18 state writes with the progression-record forfeiture counter."
     },
     "frontend_label_evidence": {
       "16/21": "individual-contract UI references INFO_Awards_16",
@@ -755,15 +744,15 @@
       "boundary": "Do not assign public names to 13-15/18-20 from nearby INFO_Awards_* strings alone."
     },
     "scheduling_groups": {
-      "15/20": "special scheduler path 0x001A5180; branch is restricted to division index 0 in the observed eligibility path",
-      "13/18": "special scheduler path 0x001A5260; observed path targets division index 1",
-      "14/19": "special scheduler path 0x001A5348; observed path targets division index 2",
+      "15/20": "special scheduler path 0x001A5180; supplies division index 0 through 0x0019527C in the observed path",
+      "13/18": "special scheduler path 0x001A5260; supplies division index 1 through 0x0019527C in the observed path",
+      "14/19": "special scheduler path 0x001A5348; supplies division index 2 through 0x0019527C in the observed path",
       "16/17/21/22": "special scheduler path 0x001A546C and direct AssignCareerMatch integration"
     },
     "next_static_step": [
-      "Finish the post-fight contract-type conditions around 0x0019CC20-0x0019CFF8 to separate title transfer, defense, loss and forfeiture triggers.",
-      "Trace 0x001A0E58/0x001A0E70/0x001A1280 to identify the state/counter transition helpers used by contract types 13-22.",
-      "Then determine whether types 13-15/18-20 represent challenger/defender/forfeit variants or another title-contract partition before assigning names."
+      "Enumerate every progression-record writer for +0x15/+0x16/+0x17/+0x18 to separate title win/loss/defense/forfeit transitions from profile award-state bytes.",
+      "Finish semantic naming of contract types 3,13-15,18-20 using their eligibility/scheduler/result behavior rather than nearby localization-key proximity.",
+      "Then connect the proven title contract types to AI living-world scheduling/mandatory-challenger policy."
     ]
   }
 }
