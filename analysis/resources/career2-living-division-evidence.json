@@ -233,9 +233,9 @@
       "true body-weight gain/cut mechanics synchronized with persistent boxer+0x6C"
     ],
     "next_static_step": [
-      "Trace the bounded callers of 0x00196DC4 to prove the result/contract conditions that trigger a championship transfer.",
-      "Identify the title-fight match/contract subtype carried through AssignCareerMatch and the packed +0x24 descriptor.",
-      "Map defense/loss/forfeit counter writes, then move to mandatory challengers/eliminators."
+      "Resolve 0x001971A0's jump-table truth set and map the accepted profile+0x80 values to contract/fight labels.",
+      "Separate transfer, successful defense, title loss and forfeiture bookkeeping.",
+      "Then map title-fight scheduling subtype into AssignCareerMatch and the packed +0x24 descriptor."
     ]
   },
   "match_descriptor": {
@@ -949,6 +949,42 @@
       "Retail's compatibility baseline is a fixed three-class window centered on the player's starting class.",
       "Expanding Career Mode 2.0 beyond adjacent classes requires extending/remapping the three-slot persistence model, not merely changing one division byte.",
       "Current boxer weight at persistent boxer+0x6C can still drive a richer natural/walking-weight model independently of the stock active-slot selector."
+    ]
+  },
+  "championship_result_path": {
+    "confidence": "CONFIRMED post-fight championship transfer callsites; exact contract-type labels still unresolved",
+    "transfer_callee": "0x00196DC4",
+    "post_fight_region": "0x0019CB00-0x0019CDA0",
+    "confirmed_calls": [
+      {
+        "call_site": "0x0019CCB0",
+        "division_source": "profile+0x2A",
+        "new_champion_source": "s2 (fight-result-selected progression index)",
+        "gate": "0x001971A0 must return nonzero on this path; additional profile+0x80 range checks apply before the call"
+      },
+      {
+        "call_site": "0x0019CD4C",
+        "division_source": "profile+0x2A",
+        "new_champion_source": "s2",
+        "gate": "same result/title gate family as 0x0019CCB0"
+      },
+      {
+        "call_site": "0x0019CD68",
+        "division_source": "profile+0x2A",
+        "new_champion_source": "s2",
+        "gate": "alternate result branch within the same post-fight title-transfer region"
+      }
+    ],
+    "observed_preconditions": [
+      "The post-fight logic reads the current champion from profile+0x50+division*2 before deciding whether a transfer is required.",
+      "It compares the current champion against a fight-result-selected progression index.",
+      "It calls 0x001971A0 as a boolean gate before transfer on relevant branches.",
+      "It also branches on profile+0x80 through bounded numeric ranges before calling 0x00196DC4."
+    ],
+    "unresolved": [
+      "Which public contract/fight labels correspond to the accepted profile+0x80 values.",
+      "Which of the three post-fight branches are specifically win, defense, loss or forfeiture.",
+      "Exact semantics of the per-boxer title counters touched by 0x00196DC4."
     ]
   }
 }
