@@ -26,14 +26,16 @@
       "professional_or_other_division_paths": 50
     },
     "confidence": "CONFIRMED three persistent career rank-class slots mapped onto six absolute weight classes, table dimensions and record access",
-    "correction": "profile+0x2A is the active career rank-class slot (0..2), not a direct six-weight-class index. profile+0x2B mirrors/shadows the slot. profile+0x2D..+0x2F map those three persistent slots to one of six absolute retail weight classes.",
+    "correction": "profile+0x2A is the working career rank-class slot (0..2), not a direct six-weight-class index. profile+0x2B is the committed/player-slot shadow: explicit player slot switches synchronize both fields, while background initialization/world processing can temporarily change only +0x2A. profile+0x2D..+0x2F map the three persistent slots to the six absolute retail weight classes.",
     "evidence": [
       "0x0019527C stores the requested slot to profile+0x2A and +0x2B, then calls 0x001929C4 before switching on its returned value 0..5 for INFO_Division_1 through INFO_Division_6.",
       "0x001929C4 returns profile[0x2D + slot], directly proving the three slot-to-absolute-class mapping bytes.",
       "0x0019CFF8 initializes exactly three title/rank-class slots and 0x0019DFE8 bootstraps slot 0, slot 1 and slot 2.",
-      "The three 0xC8-byte ranking ladders are rooted at profile+0x2E8, +0x3B0 and +0x478."
+      "The three 0xC8-byte ranking ladders are rooted at profile+0x2E8, +0x3B0 and +0x478.",
+      "A provenance-filtered whole-executable writer inventory found direct career-profile writes to +0x2B only in the explicit slot setter (0x001952C0), matchmaking resynchronization (+0x2B = +0x2A at 0x001955C0), and career initialization (+0x2B = 0 at 0x0019D5A0).",
+      "During career initialization, +0x2B remains 0 while +0x2A is deliberately cycled 1 -> 2 -> 0 at 0x0019D5C8/0x0019D5F8/0x0019D618 to process all three slot ladders.",
+      "The title-expiry/world-update routine 0x0019DFE8 likewise writes working +0x2A for individual slot processing without corresponding +0x2B writes."
     ],
-    "active_rank_class_slot_field": "profile+0x2A",
     "rank_class_shadow_field": "profile+0x2B",
     "career_slot_to_absolute_weight_class": {
       "fields": [
@@ -45,7 +47,9 @@
       "persistent_slot_count": 3,
       "absolute_weight_class_count": 6,
       "confidence": "CONFIRMED"
-    }
+    },
+    "working_rank_class_slot_field": "profile+0x2A",
+    "committed_player_slot_shadow_field": "profile+0x2B"
   },
   "annual_aging": {
     "function": "0x00195810",
@@ -986,10 +990,10 @@
     },
     "active_slot_switching": {
       "function": "0x0019527C",
-      "proposed_name": "SetActiveCareerWeightClassSlot",
+      "proposed_name": "SetCommittedCareerWeightClassSlot",
       "active_fields": [
-        "profile+0x2A",
-        "profile+0x2B"
+        "profile+0x2A working slot",
+        "profile+0x2B committed/player-slot shadow"
       ],
       "slot_to_class_getter": "0x001929C4(career,slot) -> profile[0x2D+slot]",
       "scheduler": "0x001A4F50",
@@ -998,9 +1002,23 @@
         "At 0x001A5198 it switches to slot 0 only when the current slot is not 0.",
         "At 0x001A527C it switches to slot 1 only when the current slot is not 1.",
         "At 0x001A5364 it switches to slot 2 only when the current slot is not 2.",
-        "After a switch the scheduler resolves the target slot ladder opponent and schedules through 0x00194518."
+        "After a switch the scheduler resolves the target slot ladder opponent and schedules through 0x00194518.",
+        "The setter is the only proven normal path that writes the requested slot to both +0x2A and +0x2B; background career processing writes only +0x2A.",
+        "0x00195564 copies +0x2A into +0x2B before normal population matchmaking, explicitly resynchronizing the working slot with the committed/player slot."
       ],
-      "contract_marker": "When a slot change occurs, the selected/live contract byte +0x02 is set to 1 before 0x0019527C; exact public meaning remains unresolved."
+      "contract_marker": "When a slot change occurs, the selected/live contract byte +0x02 is set to 1 before 0x0019527C; exact public meaning remains unresolved.",
+      "working_vs_shadow_boundary": {
+        "confidence": "CONFIRMED from provenance-filtered direct career-profile writer inventory",
+        "working_slot": "profile+0x2A",
+        "committed_player_slot_shadow": "profile+0x2B",
+        "synchronized_use": "Explicit player-facing slot changes through 0x0019527C write the same requested slot to both fields.",
+        "background_use": [
+          "Career initialization pins +0x2B to slot 0 while cycling +0x2A through slots 1, 2, then 0 to initialize/process each ladder.",
+          "The title-expiry/world-update path 0x0019DFE8 selects individual slots through +0x2A without changing +0x2B."
+        ],
+        "matchmaking_resync": "0x00195564 copies +0x2A to +0x2B before normal population matchmaking.",
+        "implication": "A +0x2A/+0x2B mismatch marks off-committed-slot/background slot processing, not an ordinary synchronized player slot state."
+      }
     },
     "persistence_boundary": {
       "bounded_scan": "Direct SB writes to profile+0x2D/+0x2E/+0x2F in career/front-end code were found only in the initialization region above; later code reads these mappings.",
@@ -1014,7 +1032,7 @@
     ]
   },
   "championship_result_path": {
-    "confidence": "CONFIRMED player-becomes-holder/player-displaced title-transfer branches plus a separate active-slot/shadow-mismatch transfer path; exact public result-method labels and profile counter names remain unresolved",
+    "confidence": "CONFIRMED player-becomes-holder/player-displaced title-transfer branches plus a background/off-committed-slot transfer path; exact public result-method labels and profile counter names remain unresolved",
     "transfer_callee": "0x00196DC4",
     "post_fight_region": "0x0019CB00-0x0019CDA0",
     "confirmed_calls": [
@@ -1037,8 +1055,8 @@
         "call_site": "0x0019CD68",
         "title_slot_source": "profile+0x2A",
         "new_champion_source": "s2",
-        "proven_role": "active-slot/shadow-mismatch transfer branch",
-        "gate": "profile+0x2A differs from profile+0x2B, so the shared handler's s4 synchronization flag is zero; this path bypasses the normal player-identity and 0x001971A0 contract-family checks and transfers the active title slot directly to s2"
+        "proven_role": "background/off-committed-slot transfer branch",
+        "gate": "profile+0x2A working slot differs from profile+0x2B committed/player-slot shadow, so the shared handler's s4 synchronization flag is zero; this bypasses the normal player-identity and 0x001971A0 contract-family checks and transfers the working title slot directly to s2"
       }
     ],
     "observed_preconditions": [
@@ -1047,12 +1065,12 @@
       "The player progression-record index is read directly from profile+0x4E for the player-identity checks.",
       "The synchronized player-becomes-holder branch requires s2 == profile+0x4E while the current title holder at profile+0x50+slot*2 equals s7.",
       "The synchronized player-displaced branch requires the current holder s7 == profile+0x4E while s2 is the other participant.",
-      "The slot-mismatch branch s4==0 bypasses those player-identity checks and the normal contract-family helper before calling 0x00196DC4."
+      "The s4==0 branch is now bounded as off-committed-slot/background processing: +0x2A is the working slot and +0x2B is the committed/player-slot shadow; the branch bypasses player-specific contract checks before calling 0x00196DC4."
     ],
     "participant_roles": {
       "s2": "Original a1 participant (stack+0x368) and the normalized result owner. If the working descriptor is loss-class, 0x001A24C4 reciprocates it before progression stats are applied to s2; every championship transfer in this region installs s2 as the new holder.",
       "s7": "Original a2 participant (stack+0x36A). The title-result path requires the current slot champion to equal s7 before any ordinary championship transfer is considered.",
-      "s4": "Reloaded from stack+0x37C, which is written from (profile+0x2A == profile+0x2B). It is a same-active-slot state flag, not a boxer identity.",
+      "s4": "Reloaded from stack+0x37C, written from (profile+0x2A working slot == profile+0x2B committed/player-slot shadow). It is a slot-synchronization flag, not a boxer identity.",
       "career_player": "profile+0x4E progression-record index",
       "confidence": "CONFIRMED from 0x0019AAAC argument capture, 0x0019AB24-0x0019AB38 slot-state setup, 0x0019C610-0x0019C7C0 result normalization/stat writes, and 0x0019CC20-0x0019CD68 transfer control flow"
     },
@@ -1083,20 +1101,19 @@
         "effect": "TransferCareerTitleSlot(active slot, s2), transferring the persistent title from the career player to the opposing winner; profile+0x6A is then cleared.",
         "special_type_boundary": "Types 16, 17, 21 and 22 do not transfer the persistent career-title slot here."
       },
-      "non_player_or_slot_transition_transfer": {
+      "background_or_non_player_title_transfer": {
         "call_site": "0x0019CD68",
         "conditions": [
-          "current champion for active slot == s7",
+          "current champion for working slot == s7",
           "result is not draw",
-          "either profile+0x2A != profile+0x2B or the career player is neither s2 nor s7"
+          "either profile+0x2A working slot != profile+0x2B committed/player-slot shadow or the career player is neither s2 nor s7"
         ],
-        "effect": "TransferCareerTitleSlot(active slot, s2) without the player-specific contract-family gate.",
-        "boundary": "The profile+0x2A != profile+0x2B side is proven as a distinct active-slot-state path; its higher-level public weight-change wording remains intentionally conservative."
+        "effect": "TransferCareerTitleSlot(working slot, s2) without the player-specific contract-family gate.",
+        "boundary": "The +0x2A != +0x2B side is proven background/off-committed-slot processing from the direct writer inventory. The separate case where neither participant is the career player remains a non-player title result."
       }
     },
     "unresolved": [
       "Resolve the semantics of profile+0x66, profile+0x68 and profile+0x6A through proven generic-accessor/serialization callers or runtime evidence; direct UI/report access has been ruled out.",
-      "Resolve why profile+0x2A and profile+0x2B diverge so the s4==0 / 0x0019CD68 title-transfer path can be given a precise career-rule name.",
       "Resolve special award/belt result bookkeeping differences for contract types 16/17/21/22.",
       "Distinguish the exact public result-method labels within code pairs 2/3 versus 4/5/6 and their reciprocal 7..11 values if needed."
     ],
@@ -1206,6 +1223,14 @@
         "result": "All five proven direct reads are inside the already-mapped post-fight title-result path. No independent direct UI/report reader of profile+0x66/+0x68/+0x6A was found.",
         "caveat": "Generic accessor/serialization paths may receive an already-resolved profile pointer indirectly; those require separate caller/dataflow proof before assigning names."
       }
+    },
+    "slot_synchronization_model": {
+      "confidence": "CONFIRMED",
+      "working_slot": "profile+0x2A",
+      "committed_player_slot_shadow": "profile+0x2B",
+      "equality": "Normal synchronized player-facing slot state.",
+      "mismatch": "Background/off-committed-slot processing, proven during career initialization and title-expiry/world updates.",
+      "direct_writer_boundary": "Proven +0x2B career-profile writes are limited to explicit synchronized slot switching, matchmaking resynchronization from +0x2A, and initialization to slot 0; background multi-slot processing changes +0x2A alone."
     }
   }
 }
