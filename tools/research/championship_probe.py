@@ -271,6 +271,8 @@ def main() -> None:
         "ranking_belt_region": disasm_range(raw, elf, 0x001E2B70, 0x001E2D20),
         "career_stats_title_region": disasm_range(raw, elf, 0x001E2580, 0x001E2888),
         "trophy_title_region": disasm_range(raw, elf, 0x001FE400, 0x001FE850),
+        "forfeit_title_tail_a": disasm_range(raw, elf, 0x0019E4D0, 0x0019E630),
+        "forfeit_title_tail_b": disasm_range(raw, elf, 0x0019E620, 0x0019E790),
         "division_mapping_helper": disasm_range(raw, elf, 0x0019527C, 0x00195340),
         "career_slot_to_weight_class": disasm_range(raw, elf, 0x001929C4, 0x00192A40),
         "title_record_getter": disasm_range(raw, elf, 0x00192930, 0x001929C4),
