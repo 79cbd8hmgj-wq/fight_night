@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import struct
+import zlib
 
 import pytest
 
@@ -231,7 +232,7 @@ def test_v2_bad_entry_size_is_rejected_after_crc_is_recomputed() -> None:
     block = bytearray(encode_c2ex(_data()))
     payload = bytearray(block[C2EX_HEADER_SIZE:])
     struct.pack_into("<H", payload, C2EX_V1_PAYLOAD_SIZE + 2, 15)
-    checksum = __import__("zlib").crc32(payload) & 0xFFFFFFFF
+    checksum = zlib.crc32(payload) & 0xFFFFFFFF
     struct.pack_into("<I", block, 12, checksum)
     block[C2EX_HEADER_SIZE:] = payload
 
@@ -243,7 +244,7 @@ def test_v2_count_length_mismatch_is_rejected_after_crc_is_recomputed() -> None:
     block = bytearray(encode_c2ex(_data()))
     payload = bytearray(block[C2EX_HEADER_SIZE:])
     struct.pack_into("<H", payload, C2EX_V1_PAYLOAD_SIZE, 1)
-    checksum = __import__("zlib").crc32(payload) & 0xFFFFFFFF
+    checksum = zlib.crc32(payload) & 0xFFFFFFFF
     struct.pack_into("<I", block, 12, checksum)
     block[C2EX_HEADER_SIZE:] = payload
 
