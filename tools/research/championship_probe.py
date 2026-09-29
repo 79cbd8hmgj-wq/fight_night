@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import struct
 
-from pspdisasm import disassemble_file
+import rabbitizer
 from pspdisasm.elf32 import parse_elf32
 
 TARGETS = [
@@ -34,94 +35,147 @@ def offset_to_vaddr(elf, offset: int) -> int | None:
             return sec.addr + (offset - sec.offset)
     return None
 
-def function_for_address(result, address: int):
-    for fn in result.functions:
-        if fn.address <= address < fn.address + fn.size:
-            return fn
-    return None
+def sign16(value: int) -> int:
+    return value - 0x10000 if value & 0x8000 else value
+
+def words_for_section(raw: bytes, section):
+    end = section.offset + section.size - (section.size % 4)
+    for off in range(section.offset, end, 4):
+        yield section.addr + (off - section.offset), struct.unpack_from("<I", raw, off)[0]
+
+def references_to_address(raw: bytes, elf, target: int) -> list[int]:
+    refs: set[int] = set()
+    low = target & 0xFFFF
+    hi_ori = (target >> 16) & 0xFFFF
+    hi_addiu = ((target + 0x8000) >> 16) & 0xFFFF
+
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 8:
+            continue
+        words = list(words_for_section(raw, sec))
+        for i, (addr, word) in enumerate(words):
+            op = word >> 26
+            if op != 0x0F:  # LUI
+                continue
+            rt = (word >> 16) & 0x1F
+            imm = word & 0xFFFF
+            if imm not in {hi_ori, hi_addiu}:
+                continue
+            for j in range(i + 1, min(i + 13, len(words))):
+                addr2, word2 = words[j]
+                op2 = word2 >> 26
+                rs2 = (word2 >> 21) & 0x1F
+                rt2 = (word2 >> 16) & 0x1F
+                imm2 = word2 & 0xFFFF
+                if rs2 != rt or rt2 != rt:
+                    continue
+                if op2 == 0x0D and imm == hi_ori and imm2 == low:  # ORI
+                    refs.add(addr2)
+                elif op2 == 0x09 and imm == hi_addiu and imm2 == low:  # ADDIU
+                    refs.add(addr2)
+    return sorted(refs)
+
+def vaddr_word(raw: bytes, elf, address: int) -> int | None:
+    off = elf.vaddr_to_offset(address)
+    if off is None or off + 4 > len(raw):
+        return None
+    return struct.unpack_from("<I", raw, off)[0]
+
+def is_stack_prologue(word: int) -> bool:
+    op = word >> 26
+    rs = (word >> 21) & 0x1F
+    rt = (word >> 16) & 0x1F
+    imm = sign16(word & 0xFFFF)
+    return op == 0x09 and rs == 29 and rt == 29 and imm < 0
+
+def function_bounds(raw: bytes, elf, address: int) -> tuple[int, int]:
+    start = address & ~3
+    for candidate in range(start, max(-4, start - 0x1000), -4):
+        word = vaddr_word(raw, elf, candidate)
+        if word is not None and is_stack_prologue(word):
+            start = candidate
+            break
+
+    end = min(start + 0x2000, address + 0x1800)
+    cursor = max(address, start)
+    while cursor < end:
+        word = vaddr_word(raw, elf, cursor)
+        if word == 0x03E00008:  # jr $ra
+            return start, cursor + 8
+        cursor += 4
+    return start, min(end, start + 0x800)
+
+def disasm_range(raw: bytes, elf, start: int, end: int) -> list[str]:
+    rows = []
+    for addr in range(start, end, 4):
+        word = vaddr_word(raw, elf, addr)
+        if word is None:
+            break
+        ins = rabbitizer.Instruction(word, category=rabbitizer.InstrCategory.R4000ALLEGREX)
+        ins.vram = addr
+        rows.append(f"0x{addr:08X}: {word:08X}  {ins.disassemble()}")
+        if len(rows) >= 320:
+            rows.append("...TRUNCATED...")
+            break
+    return rows
+
+def pointer_locations(raw: bytes, elf, target: int) -> list[int]:
+    needle = struct.pack("<I", target)
+    out = []
+    start = 0
+    while True:
+        off = raw.find(needle, start)
+        if off < 0:
+            break
+        va = offset_to_vaddr(elf, off)
+        if va is not None:
+            out.append(va)
+        start = off + 1
+    return out[:64]
 
 def main() -> None:
     path = Path("BOOT.BIN")
     raw = path.read_bytes()
     elf = parse_elf32(raw)
-    result = disassemble_file(path)
 
-    refs_by_target: dict[int, list] = {}
-    for ref in result.references:
-        refs_by_target.setdefault(ref.target_address, []).append(ref)
-
-    target_rows = []
-    functions = {}
+    rows = []
+    all_xrefs: set[int] = set()
     for target in TARGETS:
         needle = target.encode("ascii") + b"\0"
-        offsets = []
-        start = 0
+        locs = []
+        pos = 0
         while True:
-            off = raw.find(needle, start)
+            off = raw.find(needle, pos)
             if off < 0:
                 break
-            offsets.append(off)
-            start = off + 1
-
-        locations = []
-        for off in offsets:
             va = offset_to_vaddr(elf, off)
-            refs = refs_by_target.get(va or -1, [])
-            ref_rows = []
-            for ref in refs:
-                fn = function_for_address(result, ref.source_address)
-                if fn is not None:
-                    functions[fn.address] = fn
-                ref_rows.append({
-                    "source": f"0x{ref.source_address:08X}",
-                    "kind": ref.kind,
-                    "source_function": ref.source_function,
-                    "containing_function": (
-                        f"{fn.name}@0x{fn.address:08X}" if fn is not None else None
-                    ),
-                })
-            locations.append({
+            direct = references_to_address(raw, elf, va) if va is not None else []
+            for x in direct:
+                all_xrefs.add(x)
+            locs.append({
                 "file_offset": f"0x{off:X}",
                 "vaddr": f"0x{va:08X}" if va is not None else None,
-                "references": ref_rows,
+                "direct_code_xrefs": [f"0x{x:08X}" for x in direct],
+                "pointer_locations": [f"0x{x:08X}" for x in pointer_locations(raw, elf, va)] if va is not None else [],
             })
-        target_rows.append({"target": target, "locations": locations})
+            pos = off + 1
+        rows.append({"target": target, "locations": locs})
 
-    fn_rows = []
-    for address, fn in sorted(functions.items()):
-        callers = [
-            {
-                "source": f"0x{r.source_address:08X}",
-                "source_function": r.source_function,
+    functions = {}
+    for xref in sorted(all_xrefs):
+        start, end = function_bounds(raw, elf, xref)
+        key = (start, end)
+        if key not in functions:
+            functions[key] = {
+                "start": f"0x{start:08X}",
+                "end": f"0x{end:08X}",
+                "xrefs": [],
+                "assembly": disasm_range(raw, elf, start, end),
             }
-            for r in result.references
-            if r.kind == "call" and r.target_address == address
-        ]
-        outgoing = [
-            {
-                "source": f"0x{r.source_address:08X}",
-                "target": f"0x{r.target_address:08X}",
-                "kind": r.kind,
-                "target_function": (
-                    function_for_address(result, r.target_address).name
-                    if function_for_address(result, r.target_address) is not None
-                    else None
-                ),
-            }
-            for r in result.references
-            if fn.address <= r.source_address < fn.address + fn.size
-        ]
-        fn_rows.append({
-            "name": fn.name,
-            "address": f"0x{fn.address:08X}",
-            "size": fn.size,
-            "callers": callers,
-            "outgoing": outgoing,
-            "assembly": fn.assembly.splitlines()[:300],
-        })
+        functions[key]["xrefs"].append(f"0x{xref:08X}")
 
     print("CHAMPIONSHIP_PROBE_BEGIN")
-    print(json.dumps({"targets": target_rows, "functions": fn_rows}, indent=2))
+    print(json.dumps({"targets": rows, "functions": list(functions.values())}, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
 if __name__ == "__main__":
