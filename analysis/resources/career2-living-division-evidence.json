@@ -1043,9 +1043,53 @@
       "It calls 0x001971A0 as a boolean gate before transfer on relevant branches.",
       "It also branches on profile+0x80 through bounded numeric ranges before calling 0x00196DC4."
     ],
+    "participant_roles": {
+      "s2": "Original a1 participant (stack+0x368) and the normalized result owner. If the working descriptor is loss-class, 0x001A24C4 reciprocates it before progression stats are applied to s2; every championship transfer in this region installs s2 as the new holder.",
+      "s7": "Original a2 participant (stack+0x36A). The title-result path requires the current slot champion to equal s7 before any ordinary championship transfer is considered.",
+      "s4": "Reloaded from stack+0x37C, which is written from (profile+0x2A == profile+0x2B). It is a same-active-slot state flag, not a boxer identity.",
+      "career_player": "profile+0x4E progression-record index",
+      "confidence": "CONFIRMED from 0x0019AAAC argument capture, 0x0019AB24-0x0019AB38 slot-state setup, 0x0019C610-0x0019C7C0 result normalization/stat writes, and 0x0019CC20-0x0019CD68 transfer control flow"
+    },
+    "transfer_cases": {
+      "player_wins_persistent_title": {
+        "call_site": "0x0019CCB0",
+        "conditions": [
+          "current champion for active slot == s7",
+          "result is not draw",
+          "profile+0x2A == profile+0x2B",
+          "career player profile+0x4E == s2",
+          "0x001971A0 title-family gate is true",
+          "contract type is one of 3, 13, 14, 15, 18, 19, 20"
+        ],
+        "effect": "TransferCareerTitleSlot(active slot, s2), making the career player the new persistent slot champion.",
+        "special_type_boundary": "Types 16, 17, 21 and 22 pass the broad title-family gate but do not call the persistent slot-transfer helper on this branch; they follow special award/belt bookkeeping instead."
+      },
+      "player_loses_persistent_title": {
+        "call_site": "0x0019CD4C",
+        "conditions": [
+          "current champion for active slot == s7",
+          "result is not draw",
+          "profile+0x2A == profile+0x2B",
+          "career player profile+0x4E == s7",
+          "0x001971A0 title-family gate is true",
+          "contract type is one of 3, 13, 14, 15, 18, 19, 20"
+        ],
+        "effect": "TransferCareerTitleSlot(active slot, s2), transferring the persistent title from the career player to the opposing winner; profile+0x6A is then cleared.",
+        "special_type_boundary": "Types 16, 17, 21 and 22 do not transfer the persistent career-title slot here."
+      },
+      "non_player_or_slot_transition_transfer": {
+        "call_site": "0x0019CD68",
+        "conditions": [
+          "current champion for active slot == s7",
+          "result is not draw",
+          "either profile+0x2A != profile+0x2B or the career player is neither s2 nor s7"
+        ],
+        "effect": "TransferCareerTitleSlot(active slot, s2) without the player-specific contract-family gate.",
+        "boundary": "The profile+0x2A != profile+0x2B side is proven as a distinct active-slot-state path; its higher-level public weight-change wording remains intentionally conservative."
+      }
+    },
     "unresolved": [
-      "Trace the setup/normalization of s2, s7 and s4 immediately before 0x0019CC20 so each 0x00196DC4 title-transfer branch can be labeled by fighter role without inference.",
-      "Resolve the s4==0 title-transfer path separately from the two player-identity branches.",
+      "Resolve exact semantics of profile+0x66, profile+0x68 and profile+0x6A across title acquisition, defense streak/state and special award/belt paths.",
       "Resolve special award/belt result bookkeeping differences for contract types 16/17/21/22.",
       "Distinguish the exact public result-method labels within code pairs 2/3 versus 4/5/6 and their reciprocal 7..11 values if needed."
     ],
@@ -1090,7 +1134,7 @@
       "transfer": "0x00196DC4 changes the slot holder; it increments incoming champion progression record+0x15 (belts won) and displaced holder record+0x16 (belts lost).",
       "successful_standard_defense": "The paired defense result branches for contract types 20/18/19 increment player progression record+0x17 (belts defended) without requiring a holder transfer.",
       "expiry_forfeiture": "0x0019DFE8 is a separate one-calendar-year expiry path; it transfers the slot to ladder entry 1 and increments the player's progression record+0x18 (belts forfeited).",
-      "confidence": "CONFIRMED mechanism-level separation; exact labels for each nearby post-fight result-state branch remain to be assigned."
+      "confidence": "CONFIRMED transfer/defense/forfeiture separation and player-win/player-loss/non-player transfer roles; profile-level +0x66/+0x68/+0x6A counter names remain unresolved."
     },
     "match_subtypes": {
       "type 3": 4,
