@@ -11,6 +11,7 @@ from championship_probe import (
     offset_to_vaddr,
     pointer_locations,
     references_to_address,
+    vaddr_word,
 )
 
 TARGETS = (
@@ -78,10 +79,36 @@ def main() -> None:
                 ),
             })
 
+    career_stats_calls = []
+    stats_start = 0x001E2084
+    stats_end = 0x001E28C4
+    interesting_targets = {
+        0x001928F0: "progression_record_getter",
+        0x00192930: "title_record_getter",
+        0x00192B28: "ladder_slot_lookup",
+        0x00196628: "ranking_score_recompute",
+    }
+    for addr in range(stats_start, stats_end, 4):
+        word = vaddr_word(raw, elf, addr)
+        if word is None or word >> 26 != 0x03:
+            continue
+        dest = ((addr + 4) & 0xF0000000) | ((word & 0x03FFFFFF) << 2)
+        if dest not in interesting_targets:
+            continue
+        career_stats_calls.append({
+            "callsite": f"0x{addr:08X}",
+            "target": f"0x{dest:08X}",
+            "role": interesting_targets[dest],
+            "context": disasm_range(
+                raw, elf, max(stats_start, addr - 0x38), min(stats_end, addr + 0x70)
+            ),
+        })
+
     print("CAREER_FORM_PROBE_BEGIN")
     print(json.dumps({
         "targets": results,
         "function_contexts": function_contexts,
+        "career_stats_progression_calls": career_stats_calls,
     }, indent=2))
     print("CAREER_FORM_PROBE_END")
 
