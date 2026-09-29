@@ -153,18 +153,28 @@
       "staff template tables with cost, duration/focus/expertise data",
       "bank/affordability checks",
       "career event gating based on trainer-contract state",
-      "transient intensity/focus handoff into training gameplay"
+      "transient intensity/focus handoff into training gameplay",
+      "trainer percent-cut field",
+      "trainer signing-fee field",
+      "trainer rank-availability band",
+      "trainer contract-length-in-weeks field",
+      "trainer expertise and rating-focus metadata",
+      "shared signing-date / expiration-date / weeks-remaining lifecycle",
+      "automatic staff contract expiration"
     ],
     "extension_plan": [
       "Reuse trainer slot as the base coach/gym relationship while extending persistent data for relationship, specialty, learning rate and camp effects.",
       "Keep intensity/focus as per-activity choices, but move weekly camp planning above this transient handoff.",
       "Make the minigame optional by allowing Career 2.0 to compute an activity result and feed the same downstream training-result/progression path when the user skips gameplay.",
-      "Extend contract-person framework for manager/promoter relationships rather than creating an unrelated staff storage system."
+      "Extend contract-person framework for manager/promoter relationships rather than creating an unrelated staff storage system.",
+      "Use the existing timed-contract framework for longer-term coach/manager/promoter agreements.",
+      "Extend xdbtrain-driven expertise/focus into learning-rate, development specialty and camp-quality modifiers.",
+      "Reuse staff expiry notifications and weekly date arithmetic for contract renewal/relationship decisions."
     ],
     "next_static_step": [
-      "Trace trainer/staff contract duration or expiry only if needed for gyms/coaches.",
-      "Primary RE effort moves to Amateur Career age, potential, physical growth and turn-pro development.",
-      "Do not decode xdbtrain.adf or minigame activity logic unless explicitly reopened."
+      "Map the remaining trainer/xdbtrain fields only when needed for specific coach/camp mechanics; the key Career 2.0 fields are now bounded.",
+      "Move to save serialization/capacity so potential, growth, age-history, relationships and richer living-world state have a safe persistent extension point.",
+      "Then map physical-growth/age progression hooks for Amateur Career."
     ]
   },
   "training_result_application": {
@@ -326,5 +336,127 @@
       "training result copyback to profile+0x256C"
     ],
     "resume_only_if": "A later Career Mode 2.0 feature specifically requires an original training-minigame implementation detail."
+  },
+  "trainer_template_layout": {
+    "confidence": "CONFIRMED for fields below through named UI/dataflow and eligibility/date arithmetic",
+    "record_size_bytes": 24,
+    "fields": {
+      "+0x00": {
+        "meaning": "percent cut",
+        "confidence": "CONFIRMED",
+        "evidence": "GetContractPersonInfo reads trainer live-record+0x00, formats it numerically, and emits strPercentCut."
+      },
+      "+0x04": {
+        "meaning": "signing fee",
+        "confidence": "CONFIRMED",
+        "evidence": "Trainer list provider reads live-record+0x04 and formats it through the same money formatter used for astrSigningFee/strSigningFee output."
+      },
+      "+0x08": {
+        "meaning": "worse/larger zero-based career-rank eligibility bound",
+        "confidence": "CONFIRMED rank-band role; descriptive orientation follows zero-is-best rank convention"
+      },
+      "+0x0C": {
+        "meaning": "better/smaller zero-based career-rank eligibility bound",
+        "confidence": "CONFIRMED rank-band role; descriptive orientation follows zero-is-best rank convention"
+      },
+      "+0x10": {
+        "meaning": "contract length in weeks",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "Trainer vtable +0x48 is 0x001B9528, which returns live-record+0x10.",
+          "Generic contract expiration helper 0x0019FA3C invokes vtable+0x48, multiplies the result by 7, and adds that many days to the signing date.",
+          "Generic weeks-remaining helper 0x0019FAC4 derives the UI's INFO_Weeks/strWeeksRemaining value from that expiration date."
+        ]
+      },
+      "+0x14": {
+        "meaning": "xdbtrain row ID",
+        "confidence": "CONFIRMED",
+        "evidence": "GetContractPersonInfo passes live-record+0x14 to xdbtrain row wrapper 0x001B9B78 before reading focus/expertise fields."
+      }
+    },
+    "rank_eligibility": {
+      "function": "0x001B9490",
+      "behavior": "Tests the current zero-based rank against template +0x08/+0x0C, treating -1 as an unset bound.",
+      "confidence": "CONFIRMED"
+    }
+  },
+  "xdbtrain_trainer_fields": {
+    "confidence": "CONFIRMED for field 5 expertise and field 6 focus; remaining xdbtrain columns stay unresolved",
+    "row_wrapper": "0x001B9B78",
+    "generic_field_accessor": "0x001ACD40",
+    "fields": {
+      "5": {
+        "meaning": "trainer expertise level, zero-based",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "GetContractPersonInfo reads xdbtrain field 5.",
+          "It increments the signed value by one and formats localization key INFO_Expertise_%d."
+        ]
+      },
+      "6": {
+        "meaning": "rating focus enum",
+        "confidence": "CONFIRMED",
+        "mapping": {
+          "0": "ST_Power",
+          "1": "ST_Balanced",
+          "2": "ST_Speed",
+          "other": "ST_Unknown"
+        },
+        "evidence": "GetContractPersonInfo branches directly on xdbtrain field 6 and emits strRatingFocus from these named localization keys."
+      }
+    }
+  },
+  "staff_contract_calendar": {
+    "confidence": "CONFIRMED",
+    "generic_contract_state": {
+      "start_date_storage": "embedded contract-state helper +0x00",
+      "selected_id_or_state_fields": "+0x04/+0x08/+0x0C participate in shared contract state; exact labels are not all promoted",
+      "sign_or_install_function": "0x0019FC10",
+      "expiration_date_helper": "0x0019FA3C",
+      "weeks_remaining_helper": "0x0019FAC4",
+      "expire_state_helper": "0x0019FBD8"
+    },
+    "signing_date": {
+      "function": "0x0019FC10",
+      "behavior": "Copies current persistent profile date +0x9C into the contract's embedded state before invoking the slot-specific selection method and marking the generic contract state active.",
+      "confidence": "CONFIRMED"
+    },
+    "expiration_date": {
+      "function": "0x0019FA3C",
+      "formula": "expiration_date = signing_date + (slot_vtable_+0x48_value * 7 days)",
+      "trainer_value_source": "trainer vtable+0x48 -> 0x001B9528 -> trainer record+0x10",
+      "confidence": "CONFIRMED"
+    },
+    "weeks_remaining": {
+      "function": "0x0019FAC4",
+      "behavior": "For an active timed contract, compares computed expiration date against current profile date and converts the date difference to whole weeks; this is the value rendered by INFO_Weeks/strWeeksRemaining.",
+      "confidence": "CONFIRMED"
+    },
+    "expiry_processor": {
+      "function": "0x00193048",
+      "proposed_name": "ProcessStaffContractExpiry",
+      "confidence": "CONFIRMED staff-expiry behavior; proposed name is descriptive",
+      "slots_checked": [
+        {
+          "offset": "career+0x134",
+          "role": "cutman contract"
+        },
+        {
+          "offset": "career+0xE8",
+          "role": "trainer contract"
+        }
+      ],
+      "behavior": [
+        "Checks each staff slot's generic active-state object.",
+        "Calls 0x0019FAC4 to compute weeks remaining.",
+        "When the contract reaches zero/nonpositive remaining weeks, calls 0x0019FBD8 to transition the generic contract state to expired/state 3.",
+        "Builds staff-contract popup/notification paths around the expiry or remaining-weeks state."
+      ],
+      "known_callers": [
+        "0x001B7130 inside the large post-fight career update path 0x001B6A40",
+        "0x001EA124 in a separate career/front-end transition path"
+      ],
+      "implication": "Trainer and cutman contracts already have calendar-based duration and expiry. Career Mode 2.0 can extend the same lifecycle for coaches/managers/promoters rather than inventing a separate contract timer."
+    }
   }
 }
