@@ -1,42 +1,104 @@
 {
-  "schema_version": 1,
-  "source_artifact": {
-    "name": "ULES00270 debug/review BOOT.BIN",
-    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
-    "address_domain": "ELF virtual"
+  "schema_version": 2,
+  "purpose": "Career Mode 2.0 retirement transition and legacy-input evidence",
+  "source_artifacts": {
+    "retail": {
+      "name": "ULUS10066-v1.00 BOOT.BIN",
+      "sha256": "906f0c019ede4cd5d845272dfffe8291e45ce3da948c8e0607a61138854086f9",
+      "address_domain": "ELF virtual",
+      "verification": "Exact tracked retail BOOT.BIN analyzed in Python CI by tools/research/career_retirement_probe.py"
+    },
+    "debug_review_cross_build": {
+      "name": "ULES00270 debug/review BOOT.BIN",
+      "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+      "address_domain": "ELF virtual",
+      "prior_source": "analysis/resources/career2-amateur-professional-evidence.json",
+      "status": "INDEPENDENTLY_CROSSCHECKED_AGAINST_RETAIL"
+    }
   },
   "retirement_flag": {
     "field": "career profile +0x00",
     "meaning": "retired flag",
     "confidence": "CONFIRMED",
-    "readers": [
-      "Career Central 0x001D235C emits iRetired from profile+0x00.",
-      "GetNextEventState 0x001CFE54 tests profile+0x00; nonzero forces next-event code 4 and clears career+0x18C0."
+    "retail_readers": [
+      "Career Central retail xref 0x001D2C78 reads profile+0x00 at 0x001D2C70 and emits iRetired.",
+      "GetNextEventState tests profile+0x00; nonzero forces next-event code 4."
     ],
     "initialization": {
       "function": "0x0019CFF8",
       "store_site": "0x0019D208",
-      "behavior": "new-career initialization clears profile+0x00 to 0",
-      "confidence": "CONFIRMED"
+      "behavior": "new-career/profile initialization clears profile+0x00 to 0",
+      "confidence": "CONFIRMED",
+      "boundary": "This is an initialization clear alongside money/rank/state initialization, not evidence of a retail comeback/unretire transition."
     }
   },
-  "voluntary_retirement_transition": {
-    "handler": "0x001A3B5C",
+  "retail_direct_writer_inventory": {
+    "method": "Bounded exact-retail register/dataflow scan for direct byte stores to profile+0x00 after tracking the proven profile pointer loaded from career+0x3C.",
+    "strong_direct_writer_count": 3,
+    "writers": [
+      {
+        "function": "0x0019CFF8",
+        "store": "0x0019D208",
+        "value": 0,
+        "role": "career/profile initialization clear",
+        "confidence": "CONFIRMED"
+      },
+      {
+        "function": "0x001A38C4",
+        "store": "0x001A39E8",
+        "value": 1,
+        "role": "type-27 contract state/apply retirement path",
+        "confidence": "CONFIRMED"
+      },
+      {
+        "function": "0x001A3B5C",
+        "store": "0x001A3C60",
+        "value": 1,
+        "role": "type-27 retirement commit/finalization path",
+        "confidence": "CONFIRMED"
+      }
+    ],
+    "conclusion": "Retail contains one initialization clear and two idempotent set-to-1 writes on the type-27 retirement contract lifecycle. The bounded scan found no distinct direct comeback/unretire writer."
+  },
+  "retirement_state_apply": {
+    "handler": "0x001A38C4",
+    "dispatch_pointer": "0x00581A18",
+    "direct_jal_callers": [],
     "confidence": "CONFIRMED",
-    "dispatch": {
-      "storage": "function pointer at 0x00581A20",
-      "direct_jal_callers": [],
-      "implication": "handler is reached indirectly through an object/vtable-style dispatch rather than a direct JAL in the executable"
+    "contract_type_dispatch": {
+      "type_field": "live contract record +0x34 (s16)",
+      "accepted_range": "3..27",
+      "table": "0x005089A0",
+      "type_27_entry": "0x00508A00",
+      "type_27_target": "0x001A3978"
     },
+    "state_write": {
+      "site": "0x001A39E8",
+      "value": 1,
+      "destination": "profile+0x00",
+      "evidence": [
+        "0x001A3938 materializes constant 1 in $s0.",
+        "0x001A3944 reads the signed live-record contract type from +0x34.",
+        "The exact type-27 table entry resolves to 0x001A3978.",
+        "The type-27 path reaches 0x001A39E0..0x001A39E8, which reloads the profile pointer and stores $s0 to profile+0x00."
+      ]
+    },
+    "crosscheck": "The same state/apply function separately routes type 23 through 0x001A39F4 to the proven Go Pro transition, establishing this as a special-contract state boundary."
+  },
+  "voluntary_retirement_commit": {
+    "handler": "0x001A3B5C",
+    "dispatch_pointer": "0x00581A20",
+    "direct_jal_callers": [],
+    "confidence": "CONFIRMED",
     "contract_gate": {
       "contract_type_field": "selected/live contract record +0x34 (s16)",
       "required_value": 27,
       "evidence": [
-        "0x001A3B8C loads selected contract record pointer from object+0x1C.",
-        "0x001A3B90 loads s16 type from record+0x34.",
-        "0x001A3B94 loads literal 0x1B (27).",
-        "0x001A3B98 branches into the retirement path only when type == 27.",
-        "0x001A3BF8 reloads record+0x34 and the 0x001A3BFC branch skips the retirement write when type != 27."
+        "0x001A3B8C loads the selected contract record pointer from object+0x1C.",
+        "0x001A3B90 loads signed type from record+0x34.",
+        "0x001A3B94 materializes literal 0x1B (27).",
+        "0x001A3B98 enters the retirement-specific branch for type 27.",
+        "0x001A3BF8 reloads record+0x34 and 0x001A3BFC skips the retired-flag write for non-27 contracts."
       ]
     },
     "state_write": {
@@ -56,25 +118,49 @@
       "Clears fight-session/career halfword +0x19A2.",
       "Sets selected contract record+0x04 to -1 after the retirement-specific branch."
     ],
-    "conclusion": "Retail contract type 27 is not merely a UI label: its indirect acceptance/finalization handler performs the persistent retired-state write."
+    "conclusion": "Retail contract type 27 is not merely a UI label: its indirect state/apply and commit/finalization methods both persist profile+0x00 = 1."
   },
-  "contract_type_27_surfaces": {
+  "contract_type_27_pipeline": {
     "resolver": "0x001A2C98",
-    "contract_list_jump_entry": "0x0050E224 -> 0x001FF6A4",
-    "contract_list_region": "0x001FF4C8",
-    "scheduler_jump_entry": "0x00508CC4 -> 0x001A5430",
-    "scheduler_region": "0x001A4F50",
-    "scheduler_behavior": "type 27 takes the special scheduler path calling 0x001A0E70 with argument 2",
-    "caveat": "The resolver can conditionally remap raw type 27 to type 25 through a still-unnamed predicate; that predicate remains unresolved."
-  },
-  "other_profile_zero_writers": {
-    "0x001A38C4": {
-      "store_site": "0x001A39E8",
-      "value": 1,
-      "dispatch_pointer": "0x00581A18",
-      "status": "PROVEN writer but exact semantic path not yet named",
-      "warning": "Do not collapse this path into voluntary type-27 retirement without resolving its internal contract-type jump-table case."
-    }
+    "ui": {
+      "dispatch_table": "0x0050E1C0",
+      "entry": "0x0050E224",
+      "target": "0x001FF6A4",
+      "ui_key": "iRetireContractID",
+      "ui_key_xref": "0x001FF714"
+    },
+    "eligibility": {
+      "function": "0x001A3FBC",
+      "dispatch_table": "0x00508A08",
+      "entry": "0x00508A70",
+      "target": "0x001A4064",
+      "behavior": "Type 27 converges on the shared phase/rank/money/record eligibility gates rather than a separate retirement-only evaluator."
+    },
+    "state_apply": {
+      "function": "0x001A38C4",
+      "dispatch_table": "0x005089A0",
+      "entry": "0x00508A00",
+      "target": "0x001A3978",
+      "retired_flag_store": "0x001A39E8"
+    },
+    "commit": {
+      "function": "0x001A3B5C",
+      "retired_flag_store": "0x001A3C60"
+    },
+    "fight_scheduler": {
+      "function": "0x001A4F50",
+      "dispatch_table": "0x00508C60",
+      "entry": "0x00508CC4",
+      "target": "0x001A5430",
+      "behavior": "Type 27 enters cleanup/return and does not create a normal scheduled fight."
+    },
+    "post_fight_result": {
+      "dispatch_table": "0x00508478",
+      "entry": "0x005084DC",
+      "value": "0x00000000",
+      "behavior": "No type-27 post-fight result handler is present in this table, consistent with retirement being a non-fight contract."
+    },
+    "resolver_caveat": "0x001A2C98 can conditionally remap raw type 27 to type 25 through a still-unnamed predicate; that predicate remains unresolved."
   },
   "legacy_inputs_already_mapped": {
     "age": "career age path / profile+0x41 mirror and progression+0x09",
@@ -87,20 +173,27 @@
     "title_wins": "progression record+0x15",
     "title_losses": "progression record+0x16",
     "title_defenses": "progression record+0x17",
-    "title_forfeitures": "progression record+0x18"
+    "title_forfeitures": "progression record+0x18",
+    "status": "READY_AS_EVIDENCE_INPUTS; NOT A FINAL LEGACY FORMULA"
   },
+  "career2_implementation_implications": [
+    "Player-driven retirement can reuse the proven type-27 contract lifecycle and persistent profile+0x00 flag instead of inventing a second retirement state.",
+    "The retirement contract is non-fight: the type-27 scheduler case returns without creating a standard scheduled bout.",
+    "Career Mode 2.0 can keep retirement one-way until a comeback policy is deliberately designed; the only exact retail zero write found is initialization.",
+    "The final legacy formula remains a Career Mode 2.0 policy layer above the proven retail evidence inputs."
+  ],
   "unresolved_for_final_legacy_policy": [
     "opposition-quality history at fight time",
     "durable multi-division accomplishment history beyond current three-slot state",
     "career-longevity start/end basis",
     "technical-performance aggregation",
     "health/career-wear input",
-    "comeback/unretire transition semantics",
+    "comeback policy",
     "final Career Mode 2.0 legacy-score weights"
   ],
-  "next_static_step": [
-    "Resolve the 0x001A38C4 internal contract-type jump-table case that also writes profile+0x00=1 and distinguish it from the explicit type-27 retirement handler.",
-    "Map 25-byte career-history entries far enough to recover opponent identity/result/date/class data suitable for opposition-quality and longevity scoring.",
-    "Identify the stock career-end/forced-retirement eligibility condition separately from the voluntary type-27 write."
+  "next_step": [
+    "Stop re-tracing the already-proven type-27 retirement writer path.",
+    "Map durable opposition-quality, division-history and career-longevity inputs needed by the current-version legacy system.",
+    "After those inputs are bounded, define the Career Mode 2.0 legacy scoring policy as mod-owned logic."
   ]
 }
