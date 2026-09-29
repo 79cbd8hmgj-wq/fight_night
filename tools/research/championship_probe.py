@@ -229,7 +229,7 @@ def main() -> None:
                 "context": disasm_range(raw, elf, max(start, addr - 0x28), min(end, addr + 0x38)),
             })
 
-    manual_targets = [0x00194518, 0x00195564, 0x001A2C98, 0x001A3FBC, 0x001A4F50, 0x00196DC4, 0x001948C0, 0x0019BB68, 0x0019CFF8, 0x001FF120, 0x001FF1B4, 0x00202904, 0x002029A4, 0x00202A84, 0x00202EF4]
+    manual_targets = [0x00194518, 0x00195564, 0x001A2C98, 0x001A3FBC, 0x001A4F50, 0x00196DC4, 0x001948C0, 0x0019AAAC, 0x0019BB68, 0x0019CFF8, 0x001FF120, 0x001FF1B4, 0x00202904, 0x002029A4, 0x00202A84, 0x00202EF4]
     manual_functions = []
     for target in manual_targets:
         start, end = function_bounds(raw, elf, target)
@@ -278,6 +278,8 @@ def main() -> None:
         "match_descriptor_reciprocal": disasm_range(raw, elf, 0x001A24C4, 0x001A25A0),
         "population_matchmaking_scheduler": disasm_range(raw, elf, 0x00195564, 0x00195810),
         "special_contract_scheduler": disasm_range(raw, elf, 0x001A4F50, 0x001A5594),
+        "shared_result_entry": disasm_range(raw, elf, 0x0019AAAC, 0x0019AD40),
+        "shared_result_title_dispatch": disasm_range(raw, elf, 0x0019AD40, 0x0019B2C0),
         "shared_progression_title_counters_a": disasm_range(raw, elf, 0x0019B2C0, 0x0019B390),
         "shared_progression_title_counters_b": disasm_range(raw, elf, 0x0019B460, 0x0019B530),
         "shared_progression_title_counters_c": disasm_range(raw, elf, 0x0019B600, 0x0019B6D0),
