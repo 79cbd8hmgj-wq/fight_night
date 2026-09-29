@@ -134,12 +134,16 @@ def main() -> None:
 
     # Functions already proven to participate in the population availability path.
     focused = {
+        "cooldown_value_helper": disasm_range(raw, elf, 0x00192410, 0x001928F0, 360),
         "weekly_countdown_decay": disasm_range(raw, elf, 0x00194320, 0x001943C0),
         "population_matchmaking": disasm_range(raw, elf, 0x00195564, 0x00195810),
         "due_population_fights": disasm_range(raw, elf, 0x0019E790, 0x0019EFD0),
         "population_replacement": disasm_range(raw, elf, 0x0019EFD0, 0x0019F530),
         "shared_result_tail": disasm_range(raw, elf, 0x0019AAAC, 0x0019BB68, 500),
         "post_fight_career": disasm_range(raw, elf, 0x0019CFF8, 0x0019DFE8, 500),
+        "player_result_cooldown_a": disasm_range(raw, elf, 0x0019C6E0, 0x0019C820, 180),
+        "player_result_cooldown_b": disasm_range(raw, elf, 0x0019CE40, 0x0019CF60, 180),
+        "ai_result_cooldown": disasm_range(raw, elf, 0x0019ECB0, 0x0019EF50, 260),
     }
 
     targets = [0x00194320]
