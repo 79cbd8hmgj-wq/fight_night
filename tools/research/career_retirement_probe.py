@@ -238,6 +238,50 @@ def strict_profile_zero_writers(raw: bytes, elf) -> list[dict]:
                 current_start = addr + 8
     return rows
 
+
+def jal_callers(raw: bytes, elf, target: int) -> list[dict]:
+    callers = []
+    for sec in elf.sections:
+        if sec.kind != "executable":
+            continue
+        for addr, word in words_for_section(raw, sec):
+            if (word >> 26) != 0x03:
+                continue
+            dest = ((addr + 4) & 0xF0000000) | ((word & 0x03FFFFFF) << 2)
+            if dest != target:
+                continue
+            start, end = function_bounds(raw, elf, addr)
+            callers.append(
+                {
+                    "call_site": f"0x{addr:08X}",
+                    "caller_start": f"0x{start:08X}",
+                    "context": disasm_range(
+                        raw,
+                        elf,
+                        max(start, addr - 0x50),
+                        min(end, addr + 0x70),
+                        90,
+                    ),
+                }
+            )
+    return callers
+
+
+def pointer_locations(raw: bytes, elf, target: int) -> list[str]:
+    needle = struct.pack("<I", target)
+    rows = []
+    pos = 0
+    while True:
+        off = raw.find(needle, pos)
+        if off < 0:
+            break
+        va = offset_to_vaddr(elf, off)
+        if va is not None:
+            rows.append(f"0x{va:08X}")
+        pos = off + 1
+    return rows[:64]
+
+
 def main() -> None:
     raw = Path("BOOT.BIN").read_bytes()
     elf = parse_elf32(raw)
@@ -379,6 +423,17 @@ def main() -> None:
             ),
         }
 
+    retirement_writer_targets = {}
+    for target in (0x001A38C4, 0x001A3B5C):
+        start, end = function_bounds(raw, elf, target)
+        retirement_writer_targets[f"0x{target:08X}"] = {
+            "function_start": f"0x{start:08X}",
+            "function_end": f"0x{end:08X}",
+            "pointer_locations": pointer_locations(raw, elf, target),
+            "jal_callers": jal_callers(raw, elf, target),
+            "assembly": disasm_range(raw, elf, start, end, 220),
+        }
+
     focused = {}
     for address in (
         0x001CFE54,
@@ -400,6 +455,7 @@ def main() -> None:
             {
                 "string_xrefs": string_xrefs,
                 "type27_dispatches": type27_dispatches,
+                "retirement_writer_targets": retirement_writer_targets,
                 "strict_profile_zero_writers": strict_profile_zero_writers(raw, elf),
                 "profile_direct_writers": profile_direct_writers,
                 "zero_byte_store_candidates": zero_byte_stores[:80],
