@@ -162,7 +162,9 @@
       "Go Pro transition",
       "retirement transition",
       "player championship contract generation",
-      "slot-specific title scheduling with persistent subtype-8 match descriptors"
+      "slot-specific title scheduling with persistent subtype-8 match descriptors",
+      "three paired player championship challenge/defense contract families",
+      "slot-specific title defenses using persistent subtype-9 match descriptors"
     ],
     "not_yet_proven": [
       "rematch-clause storage",
@@ -173,7 +175,7 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "Regular AI matchmaking is now proven subtype 0 only, while title types 15/13/14 schedule player-facing subtype 8. Next trace their eligibility prechecks and adjacent contract families to recover challenger/eliminator policy, then add an AI title-scheduling hook."
+    "next_static_step": "Standard player championship challenges (types 15/13/14, subtype 8) and defenses (types 20/18/19, subtype 9) are now paired and bounded. Next inspect the remaining contract families for any true mandatory-challenger/eliminator semantics; if none are evidenced, treat mandatory challengers and AI title scheduling as Career Mode 2.0 extensions, then move to explicit injury/recovery and weight-class movement."
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -548,9 +550,9 @@
       "implication": "Do not claim subtype 8 alone causes a belt transfer. The shared result path also checks current-holder identity and career/result-state gates before calling the proven title-transfer writer 0x00196DC4."
     },
     "unresolved": [
-      "Whether retail AI-vs-AI matchmaking ever creates subtype-8 championship bouts without a player contract.",
-      "The exact localization text behind every division-dependent INFO_Awards key.",
-      "Mandatory challenger/eliminator contract type(s), if represented separately from the championship family."
+      "Whether any stock path outside the regular AI matcher schedules AI-vs-AI subtype-8/9 championship bouts.",
+      "The exact localized public wording behind the division-specific INFO_Awards keys and special INFO_Awards_16/FP_Everlast_Belt cases.",
+      "Whether a distinct mandatory-challenger/eliminator contract family exists elsewhere in the 50-template table."
     ],
     "ai_equivalent": {
       "confidence": "CONFIRMED absence from the regular AI matcher; no separate AI title scheduler found among direct AssignCareerMatch callers",
@@ -558,6 +560,110 @@
       "special_scheduler": "0x001A4F50 uses profile+0x4E as fighter A and live-contract +0x36 as subtype, so its subtype-8 title paths are player-facing.",
       "accepted_contract": "0x001FF490 also uses profile+0x4E as fighter A and selected opponent profile+0x166.",
       "implication": "AI-vs-AI championship scheduling is an overhaul feature rather than an already recovered stock policy."
+    },
+    "defense_contracts": [
+      {
+        "contract_type": 20,
+        "decoded_template_index": 5,
+        "career_slot": 0,
+        "slot_state_gate": "profile+0x1C",
+        "paired_challenge_contract_type": 15,
+        "scheduling_weeks": 4,
+        "rank_bounds": "zero-based rank 0 only",
+        "packed_type_word": "0x00090014",
+        "match_subtype": 9,
+        "confidence": "CONFIRMED standard title-defense contract for career slot 0"
+      },
+      {
+        "contract_type": 18,
+        "decoded_template_index": 7,
+        "career_slot": 1,
+        "slot_state_gate": "profile+0x1E",
+        "paired_challenge_contract_type": 13,
+        "scheduling_weeks": 4,
+        "rank_bounds": "zero-based rank 0 only",
+        "packed_type_word": "0x00090012",
+        "match_subtype": 9,
+        "confidence": "CONFIRMED standard title-defense contract for career slot 1"
+      },
+      {
+        "contract_type": 19,
+        "decoded_template_index": 9,
+        "career_slot": 2,
+        "slot_state_gate": "profile+0x1D",
+        "paired_challenge_contract_type": 14,
+        "scheduling_weeks": 4,
+        "rank_bounds": "zero-based rank 0 only",
+        "packed_type_word": "0x00090013",
+        "match_subtype": 9,
+        "confidence": "CONFIRMED standard title-defense contract for career slot 2"
+      }
+    ],
+    "challenge_defense_pairing": {
+      "confidence": "CONFIRMED for the three standard career-slot championships",
+      "pairs": [
+        {
+          "career_slot": 0,
+          "challenge_type": 15,
+          "challenge_subtype": 8,
+          "defense_type": 20,
+          "defense_subtype": 9
+        },
+        {
+          "career_slot": 1,
+          "challenge_type": 13,
+          "challenge_subtype": 8,
+          "defense_type": 18,
+          "defense_subtype": 9
+        },
+        {
+          "career_slot": 2,
+          "challenge_type": 14,
+          "challenge_subtype": 8,
+          "defense_type": 19,
+          "defense_subtype": 9
+        }
+      ],
+      "evidence": [
+        "Each pair shares the same persistent slot title-state byte: slot 0 profile+0x1C, slot 1 profile+0x1E, slot 2 profile+0x1D.",
+        "Challenge templates 15/13/14 are top-five-rank contracts with 16-20 week scheduling and subtype 8; paired defense templates 20/18/19 require rank 0, schedule four weeks out and use subtype 9.",
+        "The shared post-fight dispatch has paired branches for these contract types and the defense side reaches progression-record +0x17 increment paths, which GetMyCareerStatsInfo exposes as aiTitleBeltsDefended."
+      ],
+      "result_semantics_boundary": "Subtype 9 is proven for these standard title-defense templates. Belt retention/transfer still depends on the shared result-state and current-holder checks; subtype alone is not the transfer predicate."
+    },
+    "special_award_belt_contracts": {
+      "confidence": "CONFIRMED separate award/belt family; exact public semantics remain unresolved",
+      "contracts": [
+        {
+          "contract_type": 16,
+          "decoded_template_index": 30,
+          "match_subtype": 8,
+          "formatter_evidence": "INFO_Awards_16",
+          "state_byte": "profile+0x1F"
+        },
+        {
+          "contract_type": 21,
+          "decoded_template_index": 31,
+          "match_subtype": 9,
+          "formatter_evidence": "INFO_Awards_16",
+          "state_byte": "profile+0x1F"
+        },
+        {
+          "contract_type": 17,
+          "decoded_template_index": 29,
+          "match_subtype": 9,
+          "formatter_evidence": "FP_Everlast_Belt",
+          "state_byte": "profile+0x20"
+        },
+        {
+          "contract_type": 22,
+          "decoded_template_index": 20,
+          "match_subtype": 8,
+          "formatter_evidence": "FP_Everlast_Belt",
+          "state_byte": "profile+0x20"
+        }
+      ],
+      "boundary": "These contracts mutate award/belt state and some branches increment title-win/defense-related progression counters, but they are not promoted to mandatory-challenger or eliminator contracts without stronger semantic evidence."
     }
   }
 }
