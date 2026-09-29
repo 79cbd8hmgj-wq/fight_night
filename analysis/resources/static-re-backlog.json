@@ -243,7 +243,7 @@
       "subsystem": "Stamina",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the exact stamina cost/regeneration formula, its caps, and rating inputs?",
-      "remaining_static_work": "Direct iStamina string xrefs are ruled out as in-fight stamina owners: both strings are rating-presentation keys in SelectBoxer/CreateRatings UI. Continue from 0x00041450 and DRONE_ATTACKING 0x0005B58C, tracing action callees and per-tick owner fields for actual energy/stamina reads/writes.",
+      "remaining_static_work": "Debug ULES00270 now exposes the original energy/stamina machinery: 0x00078794/0x00078C88/0x00078D1C compute attack costs via 0x0007A330, apply modifier ID 1 ('dec E cost for attacks'), and spend the adjusted amount through 0x00079E80; 0x00079DF4 is the matching add/recovery helper on physical-state+0x08; 0x0007C75C applies movement cost (ID 0), current E regen (ID 4) and current H regen (ID 5). Next: transfer-match these functions to ULUS10066 and finish naming the companion current/max E fields so a retail hook boundary can be verified.",
       "affected_features": [
         "combat",
         "divisions",
@@ -251,10 +251,17 @@
       ],
       "sources": {
         "functions": [
-          "0x00041450",
-          "0x0005B58C"
+          "0x00078794",
+          "0x00078C88",
+          "0x00078D1C",
+          "0x0007A330",
+          "0x00079E80",
+          "0x00079DF4",
+          "0x0007C75C",
+          "0x00091E04"
         ],
         "evidence": [
+          "analysis/resources/debug-combat-modifiers.json",
           "analysis/resources/debug-fight-state-machine.json"
         ]
       }
@@ -265,16 +272,21 @@
       "subsystem": "Stamina",
       "status": "STATICALLY_SOLVABLE",
       "question": "Is there a round-boundary stamina recovery mechanism, and is it distinct from in-round regeneration?",
-      "remaining_static_work": "Outer fight/round lifecycle remains open, but the per-fighter update boundary is now 0x00041450. After locating its owning fight-loop caller, inspect round-transition neighbors for a distinct stamina restoration write and compare it with any in-tick recovery path.",
+      "remaining_static_work": "Between-round recovery is now directly bounded in the debug build: fight reset -> 0x0009BB94 -> 0x0007854C, which uses modifier ID 16 'inc between round max E regen rate' and ID 5 health regen. The in-round path is separately bounded at 0x0007C75C using ID 4 'inc current E regen rate'. Next: resolve lifecycle state labels around 0x000801F8/0x0008000C and transfer-match both routines to retail.",
       "affected_features": [
         "combat",
         "career-health"
       ],
       "sources": {
         "functions": [
-          "0x00041450"
+          "0x0007854C",
+          "0x0007C75C",
+          "0x0009BB94",
+          "0x000801F8",
+          "0x0008000C"
         ],
         "evidence": [
+          "analysis/resources/debug-combat-modifiers.json",
           "analysis/resources/debug-fight-state-machine.json"
         ]
       }
@@ -285,7 +297,7 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the health/vitality field structure, hit-resolution formula, and stun/dazed state machine?",
-      "remaining_static_work": "Trace DRONE_ATTACKING 0x0005B58C forward into punch/hit effects and DRONE_KNOCKDOWN_ATTACK 0x00061E08 around knockdown transitions, then correlate with T_001F2E00's authoritative knockdown reads. The recovered fighter controller gives a bounded combat-state path instead of a whole-binary search.",
+      "remaining_static_work": "Debug ULES00270 now exposes a concrete central damage path. 0x0007EB7C computes damage from a base 0x0007958C result and applies body/head reduction IDs 8/9, all-attack ID 20, punch-type IDs 21-24, lead/rear IDs 25/26 and rolling-power ID 27. The clean-punch caller at 0x00078A88 additionally applies ID 6 and forwards damage to 0x0007A198, which subtracts from clamped physical-state channels. Next: name those health/stun channels and trace 0x0007A198/0x0007A5D8 into knockdown state transitions, then transfer-match the formula to retail.",
       "affected_features": [
         "combat",
         "divisions",
@@ -293,11 +305,17 @@
       ],
       "sources": {
         "functions": [
-          "0x0005B58C",
-          "0x00061E08",
-          "T_001F2E00"
+          "0x0007EB7C",
+          "0x0007958C",
+          "0x00078A88",
+          "0x00078C38",
+          "0x0007A198",
+          "0x0007A5D8",
+          "0x0007E914",
+          "0x00091E04"
         ],
         "evidence": [
+          "analysis/resources/debug-combat-modifiers.json",
           "analysis/resources/debug-fight-state-machine.json"
         ]
       }
@@ -308,21 +326,21 @@
       "subsystem": "Damage",
       "status": "STATICALLY_SOLVABLE",
       "question": "What triggers the KO/TKO decision path, and is the referee's stoppage decision statically traceable?",
-      "remaining_static_work": "The prior astrTKOTime xref lead is ruled out as the KO/TKO decision owner: astrTKOTime belongs to GetCareerHistoryInfo/list output. Continue from DRONE_KNOCKDOWN_ATTACK 0x00061E08, 3-knockdown-rule consumers T_002027F4/T_00205458, and fight result/state transitions.",
+      "remaining_static_work": "The generic damage formula and physical-state application path are now bounded. Trace the post-application helper 0x0007A5D8, current-health/stun thresholds, DRONE_KNOCKDOWN_ATTACK 0x00061E08, and the already-known 3-knockdown-rule paths to recover the exact KO/TKO/stoppage decision boundary.",
       "affected_features": [
         "combat",
         "career-health"
       ],
       "sources": {
         "functions": [
+          "0x0007A198",
+          "0x0007A5D8",
           "0x00061E08",
           "T_002027F4",
           "T_00205458"
         ],
-        "strings": [
-          "astrTKOTime"
-        ],
         "evidence": [
+          "analysis/resources/debug-combat-modifiers.json",
           "analysis/resources/debug-fight-state-machine.json"
         ]
       }
@@ -454,7 +472,7 @@
       "subsystem": "AI",
       "status": "STATICALLY_SOLVABLE",
       "question": "What is the AI decision-update loop and action-selection logic?",
-      "remaining_static_work": "Debug ULES00270 corrects the old attack-power lead: 0x00093C5C constructs the 0xD4-byte AI modifier object stored at high-level boxer +0x2BC, and 0x00091D24 is its destructor/free path. The real modifier consumers are the small access/scaling helpers 0x00091E04 and 0x00091E58. Trace their combat-region callers (especially 0x00079D50, 0x0007D284, 0x0007ECE0, 0x0007F034/0x0007F1B4, and 0x00082620) and correlate index arguments with the six named ai/mods categories to recover the decision/update logic.",
+      "remaining_static_work": "Prior 0x00093C5C/0x00091D24 'attack power consumer' lead is corrected: those are the AI modifier-object constructor/destructor. The 52-entry modifier array at high-level boxer+0x2BC is now decoded, including offense/energy/damage gameplay modifiers and evaluator 0x00091E04. Continue from state-transition/action-selection consumers and modifier readers, not from the constructor/destructor.",
       "affected_features": [
         "combat"
       ],
@@ -462,18 +480,13 @@
         "functions": [
           "0x00093C5C",
           "0x00091D24",
+          "0x00091DF4",
           "0x00091E04",
-          "0x00091E58",
-          "0x00079D50",
-          "0x0007D284",
-          "0x0007ECE0",
-          "0x0007F034",
-          "0x0007F1B4",
-          "0x00082620"
+          "0x00091E58"
         ],
         "evidence": [
-          "analysis/resources/debug-fight-state-machine.json",
-          "docs/decomp/packages/fight-state-machine/README.md"
+          "analysis/resources/debug-combat-modifiers.json",
+          "analysis/resources/debug-fight-state-machine.json"
         ]
       }
     },
