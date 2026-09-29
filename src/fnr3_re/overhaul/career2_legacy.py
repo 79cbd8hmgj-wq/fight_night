@@ -12,10 +12,10 @@ scoring policy can be changed without destroying the underlying career record.
 
 from __future__ import annotations
 
+import struct
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import IntFlag
-import struct
 from types import MappingProxyType
 
 from fnr3_re.overhaul.career2_history import CareerHistoryResult
