@@ -245,6 +245,12 @@ def main() -> None:
             "assembly": disasm_range(raw, elf, start, end),
         })
 
+    focused_ranges = {
+        "champion_transfer_tail": disasm_range(raw, elf, 0x00196F58, 0x00197018),
+        "result_title_transfer_region": disasm_range(raw, elf, 0x0019CB00, 0x0019CDA0),
+        "division_mapping_helper": disasm_range(raw, elf, 0x0019527C, 0x00195340),
+    }
+
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
         "targets": rows,
@@ -252,6 +258,7 @@ def main() -> None:
         "champion_halfword_writes": champion_writes,
         "title_state_byte_writes": title_state_writes,
         "manual_functions": manual_functions,
+        "focused_ranges": focused_ranges,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
