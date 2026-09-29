@@ -213,11 +213,12 @@
       "rank/age-scaled post-fight availability cooldown",
       "weekly recovery/availability countdown that blocks matchmaking",
       "persistent post-fight availability/recovery cooldown",
-      "rank/age-shaped recovery duration shared by player and AI fight results"
+      "rank/age-shaped recovery duration shared by player and AI fight results",
+      "fixed three-slot career weight-class window centered on the boxer base class",
+      "logical switching between base, one-lower and one-higher weight classes"
     ],
     "extension_targets": [
       "persistent injury diagnoses/severity beyond the stock recovery cooldown",
-      "weight-class movement",
       "mandatory challengers/eliminators",
       "promoter/manager influence",
       "form/reputation",
@@ -228,12 +229,13 @@
       "AI/non-player championship scheduling policy",
       "mandatory challengers/eliminators and vacancy succession",
       "AI title-challenge/title-defense scheduling policy",
-      "explicit medical injuries layered over the proven generic availability cooldown"
+      "explicit medical injuries layered over the proven generic availability cooldown",
+      "true body-weight gain/cut mechanics synchronized with persistent boxer+0x6C"
     ],
     "next_static_step": [
-      "Post-fight availability is now recovered: progression record+0x13 is a shared weekly recovery cooldown computed by 0x00192410 from rank, career-age delta and a post-fight random/base budget.",
-      "Bound whether any separate persistent injury diagnosis/severity state exists outside +0x13; do not conflate in-fight cut/injury probability strings with career injury persistence.",
-      "Then recover weight-class movement policy and the three-slot-to-six-weight-class transition rules."
+      "Weight-class movement is now structurally recovered: stock career uses a fixed three-slot window {base class, one lower, one higher} and switches the active logical slot without changing persistent boxer weight.",
+      "Bound which contract/result transitions choose slot 1 versus slot 2 and whether any stock gate restricts moving down/up based on titles, rank or career state.",
+      "Separately bound whether any persistent injury diagnosis/severity state exists beyond the recovered post-fight availability cooldown."
     ]
   },
   "match_descriptor": {
@@ -956,5 +958,45 @@
       "Therefore the value directly controls how many weekly world advances a boxer remains unavailable for ordinary matchmaking after a bout."
     ],
     "injury_boundary": "This is stock recovery/rest availability, not yet evidence of a persistent injury/medical-condition model. A richer injury system remains a Career Mode 2.0 extension target."
+  },
+  "career_weight_class_window": {
+    "confidence": "CONFIRMED three-slot career weight-class window and logical slot switching",
+    "initialization": {
+      "function": "0x0019CFF8",
+      "evidence": [
+        "0x0019D3CC calls 0x0018600C on the career boxer and stores the returned absolute class at profile+0x2D.",
+        "If that class is below 5, profile+0x2F is initialized to class+1; when class==5 it receives sentinel 7.",
+        "If that class is above 0, profile+0x2E is initialized to class-1; when class==0 it receives sentinel 7."
+      ],
+      "slot_layout": {
+        "slot 0 / profile+0x2D": "boxer's classified base/current absolute weight class",
+        "slot 1 / profile+0x2E": "one absolute class lower, or sentinel 7 at the lower boundary",
+        "slot 2 / profile+0x2F": "one absolute class higher, or sentinel 7 at the upper boundary"
+      },
+      "valid_absolute_classes": "0..5",
+      "boundary_sentinel": 7
+    },
+    "slot_getter": {
+      "function": "0x001929C4",
+      "behavior": "Returns profile[0x2D + slot]."
+    },
+    "active_slot_switch": {
+      "function": "0x0019527C",
+      "behavior": [
+        "Receives a logical career slot and copies it to profile+0x2A and profile+0x2B.",
+        "Uses 0x001929C4 to resolve that slot to an absolute weight class for presentation/session state.",
+        "Does not rewrite profile+0x2D..+0x2F or persistent boxer weight +0x6C."
+      ],
+      "direct_caller_boundary": "The recovered direct callers are in 0x001A4F50, which invokes 0x0019527C with slot 0, 1 or 2 while processing special/live contract scheduling."
+    },
+    "write_inventory_boundary": {
+      "finding": "In the bounded career-code scan 0x00190000..0x00210000, all direct SB writes to profile+0x2D/+0x2E/+0x2F occur in the 0x0019CFF8 initialization path.",
+      "implication": "Stock career class movement is represented by switching among a fixed three-slot window around the boxer's classified base division, rather than continuously rewriting the slot-to-class mapping."
+    },
+    "physical_weight_boundary": {
+      "field": "persistent boxer+0x6C",
+      "finding": "The actual numeric weight field is mapped and mutable in boxer/create-physique code, but the recovered career slot-switch function does not modify it.",
+      "implication": "A Career Mode 2.0 system that models genuine gaining/cutting body weight must explicitly coordinate +0x6C with slot/class state; the stock career transition path alone is a logical division switch."
+    }
   }
 }
