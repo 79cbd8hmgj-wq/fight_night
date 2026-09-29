@@ -148,16 +148,14 @@
       ]
     },
     {
-      "priority": 6,
+      "priority": 99,
       "id": "training-calendar",
-      "goal": "Make training activities optional camp-quality choices rather than mandatory stat-grind gates.",
+      "goal": "Keep persistent coach/staff and calendar hooks available, but do not spend RE time on training minigames.",
       "desired_features": [
-        "camp length",
-        "training activity selection",
-        "coach effects",
-        "optional minigames",
-        "fatigue/injury tradeoffs",
-        "weekly planning"
+        "coach/gym relationships",
+        "camp duration",
+        "weekly planning",
+        "fatigue/injury tradeoffs"
       ],
       "proven_retail_anchors": [
         "xdbtrain.adf",
@@ -166,11 +164,11 @@
         "main-menu trainer hire state machine"
       ],
       "next_static_work": [
-        "Decode xdbtrain.adf completely.",
-        "Trace training result writes into career/boxer state.",
-        "Separate training-selection state from minigame execution state.",
-        "Find the progression gate that currently requires/advances training."
-      ]
+        "Skip xdbtrain/minigame internals.",
+        "Retain only trainer-contract persistence, contract duration/expiry, and any weekly calendar fields that affect Career Mode 2.0.",
+        "Return to training implementation only if a later Career 2.0 feature requires an existing downstream rating-write boundary."
+      ],
+      "status": "PARKED_BY_USER"
     },
     {
       "priority": 7,
@@ -216,17 +214,16 @@
     }
   ],
   "immediate_sequence": [
-    "1. Contract/fight-offer data model and commit path",
-    "2. Career Central state object and state-machine fields",
-    "3. Training/staff persistent state",
-    "4. Professional/Amateur class persistence and transition",
-    "5. Rankings/rivals/events tables for living division",
-    "6. Save capacity and serializer extension points",
-    "7. Retirement/legacy end-state replacement"
+    "1. Amateur age/potential/physical-growth storage and progression",
+    "2. Promoter/manager/staff persistence excluding minigame internals",
+    "3. Title/award ownership for the living division",
+    "4. Save capacity and serializer extension points",
+    "5. Retirement/legacy scoring sources"
   ],
   "parked_work": [
     "deeper AEMS/audio internals",
     "additional combat formula RE beyond Career 2.0 needs",
-    "debugger-based telemetry"
+    "debugger-based telemetry",
+    "training minigame internals / xdbtrain activity decoding"
   ]
 }
