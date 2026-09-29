@@ -9,6 +9,7 @@ from championship_probe import (
     disasm_range,
     function_bounds,
     offset_to_vaddr,
+    pointer_locations,
     references_to_address,
     vaddr_word,
     words_for_section,
@@ -66,6 +67,20 @@ def main() -> None:
             if off < 0:
                 break
             va = offset_to_vaddr(elf, off)
+            pointers = pointer_locations(raw, elf, va) if va is not None else []
+            table_candidates = []
+            for pointer in pointers:
+                # If the pointer occupies slot 12 or 13 of the 52-entry name table,
+                # both injury strings should infer the same table base.
+                injury_id = 12 if needle.startswith(b"dec ") else 13
+                base = pointer - injury_id * 4
+                table_candidates.append({
+                    "pointer_location": f"0x{pointer:08X}",
+                    "inferred_name_table_base": f"0x{base:08X}",
+                    "table_base_code_xrefs": [
+                        f"0x{x:08X}" for x in references_to_address(raw, elf, base)
+                    ],
+                })
             string_hits.append({
                 "string": needle.decode("ascii"),
                 "file_offset": f"0x{off:X}",
@@ -74,6 +89,7 @@ def main() -> None:
                     [f"0x{x:08X}" for x in references_to_address(raw, elf, va)]
                     if va is not None else []
                 ),
+                "pointer_table_candidates": table_candidates,
             })
             pos = off + 1
 
