@@ -219,7 +219,7 @@ def main() -> None:
         for addr, word in words_for_section(raw, sec):
             op = word >> 26
             imm = word & 0xFFFF
-            if op != 0x28 or not (0x1B <= imm <= 0x40):  # SB
+            if op != 0x28 or not (0x15 <= imm <= 0x41):  # SB
                 continue
             start, end = function_bounds(raw, elf, addr)
             title_state_writes.append({
@@ -267,6 +267,11 @@ def main() -> None:
         "career_slot_to_weight_class": disasm_range(raw, elf, 0x001929C4, 0x00192A40),
         "title_record_getter": disasm_range(raw, elf, 0x00192930, 0x001929C4),
         "title_gate_helper": disasm_range(raw, elf, 0x001971A0, 0x00197280),
+        "shared_progression_title_counters_a": disasm_range(raw, elf, 0x0019B2C0, 0x0019B390),
+        "shared_progression_title_counters_b": disasm_range(raw, elf, 0x0019B460, 0x0019B530),
+        "shared_progression_title_counters_c": disasm_range(raw, elf, 0x0019B600, 0x0019B6D0),
+        "shared_progression_title_counters_d": disasm_range(raw, elf, 0x0019B7D0, 0x0019B8A0),
+        "shared_progression_title_counters_e": disasm_range(raw, elf, 0x0019B9B0, 0x0019BA80),
     }
 
     def read_c_string(address: int) -> str | None:
