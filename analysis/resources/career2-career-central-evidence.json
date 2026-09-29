@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "career_central_provider": {
+    "function": "0x001D235C",
+    "proposed_binding": "GetCareerCentralInfo",
+    "confidence": "CONFIRMED by direct production of Career Central UI keys; exact native registration pointer indirection is not re-symbolized",
+    "high_level_career_object": {
+      "derivation": "0x001AFB10(fight_session, -1) + 0x3D88",
+      "profile_pointer_field": "+0x3C"
+    },
+    "outputs": [
+      "strBoxerName",
+      "strWeightClass",
+      "strWinLossRecord",
+      "strRank",
+      "strMoney",
+      "strRivalName",
+      "strCROBoxer",
+      "strDate",
+      "iRetired"
+    ]
+  },
+  "persistent_profile_fields": {
+    "+0x00": {
+      "meaning": "retired flag",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "0x001D2BB8 loads profile+0x00 and emits boolean UI key iRetired.",
+        "GetNextEventState path 0x001CFF18 tests the same byte; when nonzero it forces next-event code 4 and clears career+0x18C0."
+      ]
+    },
+    "+0x4E": {
+      "meaning": "current career-boxer/progression-record selector",
+      "confidence": "PROBABLE semantic label; CONFIRMED usage",
+      "evidence": [
+        "Passed to 0x001928F0 throughout Career Central/GetNextEventState to retrieve the current boxer progression/record object.",
+        "The returned object supplies displayed record/rank and trainer-contract-related state."
+      ]
+    },
+    "+0x9C": {
+      "meaning": "packed career date",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "Career Central passes profile+0x9C through the date object/formatter chain 0x001A0E58 -> 0x001A0F98 -> 0x001A0E70 and emits strDate.",
+        "Contract confirmation copies the same field before adding contract_weeks * 7 days through 0x001A1280."
+      ]
+    },
+    "+0xA0": {
+      "meaning": "career money/bank balance",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "0x001D28CC loads profile+0xA0, formats it with 0x002072C8, and emits strMoney.",
+        "Controlled Career runtime captures independently showed strMoney changing from $0 to $288 after the first fight."
+      ]
+    },
+    "+0x121": {
+      "meaning": "career progression/ranking-state byte",
+      "confidence": "CONFIRMED as shared progression/rank-state input; exact enum labels unresolved",
+      "evidence": [
+        "GetCareerMode (0x001CFDBC) emits iCareerMode=0 when profile+0x121 is 0 or 1, and iCareerMode=1 when it is greater than 1.",
+        "Career Central emits M_Unranked when profile+0x121 is 0 or 1; values greater than 1 use the current boxer record's rank byte.",
+        "GetNextEventState also branches on this byte."
+      ],
+      "warning": "Do not equate this directly with Amateur/Professional without further evidence."
+    },
+    "+0x19C": {
+      "meaning": "rival identity/name storage region",
+      "confidence": "PROBABLE field family; CONFIRMED Career Central string construction",
+      "evidence": [
+        "When the rival sentinel is not -1, Career Central formats strRivalName from string data beginning around profile+0x19C (+0x02/+0x22 subfields)."
+      ]
+    }
+  },
+  "current_boxer_record": {
+    "getter": "0x001928F0(career_object, profile+0x4E)",
+    "confidence": "CONFIRMED data source; field labels partly inferred from displayed output",
+    "fields": {
+      "+0x04": {
+        "meaning": "zero-based displayed rank",
+        "confidence": "CONFIRMED",
+        "evidence": "Career Central loads byte +0x04, adds 1, formats decimal text, and emits strRank whenever profile+0x121 > 1."
+      },
+      "+0x05": {
+        "meaning": "wins",
+        "confidence": "PROBABLE",
+        "evidence": "First of four bytes formatted into strWinLossRecord; controlled runtime changed record from 0-0-0,0 KO to 1-0-0,1 KO."
+      },
+      "+0x06": {
+        "meaning": "losses",
+        "confidence": "PROBABLE"
+      },
+      "+0x07": {
+        "meaning": "draws",
+        "confidence": "PROBABLE"
+      },
+      "+0x08": {
+        "meaning": "knockouts",
+        "confidence": "PROBABLE"
+      },
+      "+0x28": {
+        "meaning": "trainer/staff-contract-related state",
+        "confidence": "CONFIRMED as GetNextEventState input; exact storage type/enum unresolved",
+        "evidence": [
+          "0x001CFE98 loads record+0x28 and converts nonzero to a boolean used in the iTrainerContractSigned decision path."
+        ]
+      }
+    }
+  },
+  "career_mode_provider": {
+    "function": "0x001CFDBC",
+    "proposed_binding": "GetCareerMode",
+    "confidence": "CONFIRMED output keys",
+    "outputs": {
+      "iCareerMode": "0 when profile+0x121 is 0 or 1; 1 when profile+0x121 > 1",
+      "iCareerGameMode": "32-bit global at 0x0055F448"
+    },
+    "note": "iCareerMode is a UI-facing binary mode derived from the progression/rank-state byte. It is not yet evidence of the Amateur/Professional phase field."
+  },
+  "next_event_provider": {
+    "function": "0x001CFE54",
+    "proposed_binding": "GetNextEventState",
+    "confidence": "CONFIRMED output keys and branching; exact enum labels for event codes 0..3 unresolved",
+    "outputs": [
+      "iTrainerContractSigned",
+      "iNextEvent"
+    ],
+    "next_event_codes": {
+      "4": "forced whenever persistent profile+0x00 retired flag is nonzero",
+      "observed_range": "0..4",
+      "0..3": "selected from current-boxer record+0x28 plus profile bytes +0x02/+0x03/+0x27/+0x121 and additional career-state predicates"
+    },
+    "trainer_contract_logic": [
+      "Begins from current boxer record+0x28 nonzero state.",
+      "Applies additional career/profile gates rather than exposing record+0x28 raw.",
+      "Emits iTrainerContractSigned as a boolean.",
+      "This confirms trainer-contract availability/state participates in the same live career state used by Career Central."
+    ]
+  },
+  "career2_implications": [
+    "Retirement is already a persistent first-class career flag and a first-class next-event state override.",
+    "Money and career date have direct stable fields suitable for Career 2.0 economy/calendar extensions.",
+    "Rank/record are stored in a current-boxer progression record selected by the persistent profile.",
+    "Trainer-contract state already participates in the core career event-selection path.",
+    "The existing profile+0x121 progression byte is important but must not be mislabeled as the Amateur/Professional phase until the history iClass field is traced."
+  ],
+  "next_static_step": [
+    "Trace the special Go Pro (type 23) and Retire (type 27) contract acceptance paths into persistent profile writes.",
+    "Trace 0x0019443C / 0x00194518 / 0x00195564 from generic contract acceptance to identify scheduled-fight and career-state fields.",
+    "Trace Professional/Amateur iClass from Career History back to the persistent source rather than assuming profile+0x121 is that field."
+  ]
+}
