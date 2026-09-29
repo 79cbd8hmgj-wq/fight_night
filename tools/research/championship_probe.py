@@ -402,7 +402,8 @@ def main() -> None:
         for address in contract_label_addresses
     }
 
-    # Title stat byte writers in the career-system address range.
+    # Title-stat byte writers in the career-system address range. These are
+    # kept separate from profile award-state bytes (+0x1C..+0x20).
     title_stat_writes = []
     for sec in elf.sections:
         if sec.kind != "executable" or sec.size < 4:
