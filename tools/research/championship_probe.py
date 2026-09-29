@@ -307,7 +307,6 @@ def main() -> None:
         "title_state_byte_writes": title_state_writes,
         "manual_functions": manual_functions,
         "focused_ranges": focused_ranges,
-        "named_strings": named_strings,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
