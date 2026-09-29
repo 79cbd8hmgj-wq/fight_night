@@ -582,6 +582,65 @@
         "Contains multiple downstream combat-result/state and presentation/event calls."
       ],
       "implication": "0x000754B8 is now a higher-priority route to the knockdown/KO transition than the damage-history accumulator."
+    },
+    "flash_ko_evaluator": {
+      "function": "0x0007D09C",
+      "proposed_name": "EvaluateFlashKOChance",
+      "confidence": "CONFIRMED role; proposed name is not an original symbol",
+      "direct_modifier_uses": [
+        {
+          "id": 45,
+          "name": "inc chance flash KO",
+          "role": "attacker/offensive contribution"
+        },
+        {
+          "id": 46,
+          "name": "dec chance to be flash KOd",
+          "role": "defender/resistance contribution"
+        }
+      ],
+      "evidence": [
+        "The routine reads modifier ID 46 from one combatant and modifier ID 45 from the opposing combatant.",
+        "It combines those values with physical-state+0x348 and the supplied attack/classification argument.",
+        "It performs a random 0..99 check against the computed probability and returns a boolean result.",
+        "0x000754B8 calls it immediately before the severe physical reset path."
+      ],
+      "hit_resolution_use": {
+        "caller": "0x000754B8",
+        "call_site": "0x00075778",
+        "success_path": "0x00075798 -> 0x00079254(physical_state, attack_id)",
+        "implication": "A successful flash-KO probability check directly triggers the severe physical-state reset."
+      }
+    },
+    "severe_physical_reset": {
+      "function": "0x00079254",
+      "confidence": "CONFIRMED behavior; exact knockdown/KO public label remains unresolved",
+      "only_direct_caller": "0x00075798 inside 0x000754B8",
+      "trigger": "successful 0x0007D09C flash-KO evaluation",
+      "behavior": [
+        "Calls 0x00079430 and 0x00079A5C before core physical-state mutation.",
+        "Moves current physical_state+0x00 into cumulative physical_state+0x2E8.",
+        "Sets physical_state+0x00 to 0.",
+        "Sets physical_state+0x08 (energy resource) to 0.",
+        "Reduces physical_state+0x04 by 5.0 and applies a lower clamp."
+      ],
+      "boundary": "This is proven as a severe physical reset downstream of flash-KO success. It is not yet proven to be the final KO-vs-knockdown decision."
+    },
+    "hit_resolution_interface": {
+      "per_boxer_dispatcher": "0x00074370",
+      "core_hit_resolver": "0x000754B8",
+      "confidence": "CONFIRMED",
+      "direct_caller_relationship": {
+        "0x00074370": "only direct JAL caller is 0x00022078 inside 0x00021F60",
+        "0x000754B8": "called four times from 0x00074370 at 0x00074538, 0x00074A44, 0x00074D68 and 0x00074F9C"
+      },
+      "observations": [
+        "0x00074370 receives boxer+0x28C from the two-boxer combat subsystem tick.",
+        "0x00074370 checks high-level/current boxer state including state value 5 and dispatches several contact/attack cases.",
+        "The four 0x000754B8 calls pass a binary mode argument 0/1 depending on the case.",
+        "The same dispatcher also invokes high-level attack/action dispatcher 0x000A2D78 around these cases."
+      ],
+      "implication": "The damage and flash-KO machinery is now bounded beneath one per-boxer contact dispatcher instead of being isolated formula functions."
     }
   },
   "overhaul_implications": {
