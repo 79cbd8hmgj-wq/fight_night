@@ -177,10 +177,10 @@
     }
   },
   "career2_next_static_steps": [
-    "Map save serialization and available extension capacity before adding potential, learning-rate and growth-projection fields.",
+    "Potential/learning-rate storage: map the serializer/profile layout far enough to identify a versioned extension point rather than assuming zero padding is free.",
+    "Trace the created-boxer/profile initialization path to find existing random/generated development traits that may already serve as hidden potential inputs.",
     "Find independent consumers of persistent boxer+0x6A before assigning Reach.",
-    "Map Create Build/body-shape fields only as far as needed for muscle-capacity and adolescent physique growth.",
-    "Use the confirmed age (+0x09 progression record), height (+0x70 persistent boxer) and weight (+0x6C persistent boxer) as the foundation for the amateur physical-growth model."
+    "Use age (+0x09 progression record), height (+0x70), weight (+0x6C), ratings (+0x7A..+0x8A) and physique basis (+0xB0..+0xB8) as the confirmed physical-development state."
   ],
   "mutable_weight": {
     "persistent_boxer_field": "+0x6C",
@@ -220,5 +220,83 @@
       "persistent +0x70": "derived from XDB field 0x0B through 0x00185374 in base-row conversion, but directly used as current height by Create Physique"
     },
     "important_note": "Create Physique height changes synchronize +0x6A and +0x70 to the selected inch value. This is not enough to call +0x6A 'Reach'; the mixed identity/physical neighborhood demonstrates why semantic naming must come from an independent consumer."
+  },
+  "create_build_physique_basis": {
+    "confidence": "CONFIRMED persistence/dataflow; individual coefficient semantics remain unresolved",
+    "native_interface": {
+      "registration_region": "0x001E6BE4",
+      "functions": [
+        "GetCreateBuildInfo",
+        "SetCreateBuildToggle",
+        "SetCreateBuildInfo"
+      ],
+      "get_provider": "0x001E6C78",
+      "toggle_handler": "0x001E6CD8",
+      "commit_handler": "0x001E6D0C"
+    },
+    "build_toggle": {
+      "input_key": "iBuildType",
+      "transient_global": "0x0055F928",
+      "behavior": [
+        "0x001E6CD8 reads iBuildType from the UI and stores it to 0x0055F928.",
+        "The registered SetCreateBuildInfo implementation at 0x001E6D0C is literally jr $ra; nop.",
+        "Therefore the UI build choice is not persisted as a standalone build-type integer by this native interface."
+      ]
+    },
+    "consumer": {
+      "function": "0x001C90C4",
+      "confidence": "CONFIRMED consumer of the transient build selector and persistent boxer-shape path",
+      "only_direct_build_global_read": "0x001C99C0 loads 0x0055F928",
+      "caller": "0x001BE11C",
+      "behavior": [
+        "Loads the current boxer and reshapes it into a mutable working boxer through 0x00185114 / 0x0018A110.",
+        "Uses the transient iBuildType selector to constrain/choose body-shape editing behavior.",
+        "Manipulates bounded signed body-shape values.",
+        "Calls 0x001C5C4C to convert the editor axes into the persistent five-coefficient physique basis.",
+        "Copies/synchronizes the mutated working boxer through 0x0018ADCC."
+      ]
+    },
+    "persistent_fields": {
+      "base": "persistent boxer",
+      "coefficients": [
+        {
+          "offset": "+0xB0",
+          "source_xdb_field": "0x2C"
+        },
+        {
+          "offset": "+0xB2",
+          "source_xdb_field": "0x2D"
+        },
+        {
+          "offset": "+0xB4",
+          "source_xdb_field": "0x2E"
+        },
+        {
+          "offset": "+0xB6",
+          "source_xdb_field": "0x2F"
+        },
+        {
+          "offset": "+0xB8",
+          "source_xdb_field": "0x70"
+        }
+      ],
+      "width": "signed 16-bit each",
+      "source_mapper": "0x0018A110",
+      "conversion_helper": "0x001C5C4C",
+      "conversion_behavior": [
+        "Clears all five coefficients before rebuilding the basis.",
+        "Takes two signed editor-axis values and decomposes them across the five coefficient slots.",
+        "Uses values centered around 50 and bounded editor ranges, producing a normalized morph basis rather than a single categorical body type."
+      ]
+    },
+    "interpretation_boundary": {
+      "confirmed": "These five values are persistent boxer physique/build morph coefficients controlled by the Create Build editor.",
+      "not_confirmed": [
+        "which coefficient means muscle, fat, width, chest, torso, or another body dimension",
+        "whether any one coefficient can be treated as muscle capacity",
+        "whether iBuildType labels represent body categories or editor-axis modes"
+      ]
+    },
+    "career2_implication": "Amateur physical development can evolve the existing five-coefficient physique basis alongside confirmed age, height and weight. A separate hidden 'muscle capacity' ceiling may govern how those coefficients are allowed to develop, but it should not be stored by repurposing one coefficient until that coefficient's original meaning is independently proven."
   }
 }
