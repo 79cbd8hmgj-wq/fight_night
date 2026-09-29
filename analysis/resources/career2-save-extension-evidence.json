@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "purpose": "Career Mode 2.0 save-capacity and extension-boundary evidence",
+  "retail_envelope": {
+    "revision": "ULUS10066-v1.00",
+    "source": "analysis/save/save-payload-lifetime.json",
+    "envelope_size": "0x755C",
+    "body_offset": "0x2C",
+    "body_capacity": "0x7530",
+    "body_capacity_bytes": 30000,
+    "unused_tail_behavior": "save provider zero-fills the complete 0x7530 body before copying the active body; load destination is likewise cleared before the active body is committed",
+    "confidence": "CONFIRMED by existing retail save-system package"
+  },
+  "debug_serializer_cross_build": {
+    "source_artifact": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "serializer": "0x003452C4",
+    "retail_corresponding_serializer": "0x0034526C",
+    "function_size_bytes": 352,
+    "confidence": "CONFIRMED debug behavior; PROBABLE transfer to retail fixed-chunk layout",
+    "cross_build_evidence": [
+      "The debug serializer begins at 0x003452C4 and ends at 0x00345424, exactly 0x160/352 bytes.",
+      "The existing retail evidence guards body serializer 0x0034526C with region size 352 bytes.",
+      "Both are invoked with the identical 0x7530 body-capacity constant and sit in the same save-controller role."
+    ]
+  },
+  "original_body_layout": {
+    "confidence": "CONFIRMED in debug build; PROBABLE transferred layout for retail until exact retail bytes are inspected",
+    "career_player_chunk": {
+      "offset": "0x0000",
+      "size": "0x3D6C",
+      "size_bytes": 15724,
+      "constructor": "0x001AB9AC -> 0x001A1638(object, object+0x18, 0x3D6C)",
+      "serializer_source": "active player/career object returned by 0x001AFB10"
+    },
+    "fight_session_chunk": {
+      "offset": "0x3D6C",
+      "size": "0x1908",
+      "size_bytes": 6408,
+      "constructor": "0x001AF768 -> 0x001A1638(session, session+0x18, 0x1908)",
+      "serializer_source": "fight-session singleton 0x001B3EA8"
+    },
+    "original_active_body_size": "0x5674",
+    "original_active_body_size_bytes": 22132,
+    "arithmetic": "0x3D6C + 0x1908 = 0x5674",
+    "serializer_behavior": [
+      "0x003452C4 clears the caller-provided capacity.",
+      "It wraps the career/player object's {size,pointer} pair and copies that chunk first.",
+      "It wraps the fight-session singleton's {size,pointer} pair and copies that chunk immediately after the first.",
+      "It returns the sum of the two chunk sizes."
+    ]
+  },
+  "spare_capacity": {
+    "start_offset": "0x5674",
+    "capacity_end": "0x7530",
+    "size": "0x1EBC",
+    "size_bytes": 7868,
+    "arithmetic": "0x7530 - 0x5674 = 0x1EBC",
+    "status": "AVAILABLE_ONLY_WITH_LOAD/SAVE_EXTENSION HOOK",
+    "warning": "The zero tail is capacity, not an automatically parsed stock field region."
+  },
+  "debug_load_parser": {
+    "setup_function": "0x00344FB0",
+    "parser": "0x00345038",
+    "confidence": "CONFIRMED",
+    "behavior": [
+      "The load setup clears the 0x7530 destination buffer before registration.",
+      "0x00345038 hardcodes 0x3D6C and 0x1908.",
+      "It wraps body[0x3D6C : 0x3D6C+0x1908] and feeds it into the fight-session object's deserialize/member path.",
+      "It wraps body[0 : 0x3D6C] and feeds it into the active career/player object's deserialize/member path.",
+      "It returns 0x3D6C + 0x1908.",
+      "No stock parse step consumes body bytes at or after 0x5674."
+    ],
+    "migration_consequence": "An unmodified loader silently ignores a Career 2.0 extension in the tail. The overhaul must add a tail parser after the two stock chunks are restored."
+  },
+  "proposed_extension": {
+    "offset": "0x5674",
+    "maximum_total_bytes": 7868,
+    "recommended_header": {
+      "magic": "C2EX",
+      "version": "u16",
+      "flags": "u16",
+      "payload_length": "u16 or u32",
+      "checksum_or_crc": "recommended for extension-local validation"
+    },
+    "compatibility_policy": [
+      "Old retail saves: tail is zero because stock save clears unused capacity; missing C2EX magic means initialize Career 2.0 fields from legacy defaults/migration rules.",
+      "Career 2.0 saves: append C2EX after the original 0x5674 bytes and increase the active-body length accordingly.",
+      "Modified loader: restore the two stock chunks exactly as before, then conditionally parse C2EX if magic/version/length are valid.",
+      "Never repurpose bytes inside the two original fixed chunks merely because a field is not currently understood."
+    ],
+    "practical_payload_budget": "Approximately 7.8 KB before extension header/checksum overhead.",
+    "suitable_new_data": [
+      "per-rating potential/ceiling data",
+      "learning-rate/style-development state",
+      "physical-growth projection and independently stored reach if needed",
+      "amateur tournament/ranking/title state beyond the stock history ring",
+      "coach/gym/manager/promoter relationship state",
+      "injury/condition/accumulated-damage history",
+      "expanded title/legacy/reputation data",
+      "additional living-division metadata not already present in stock progression records"
+    ]
+  },
+  "implementation_implication": {
+    "minimum_patch_boundaries": [
+      "save: extend the active body from stock 0x5674 by appending the versioned Career 2.0 block",
+      "load: after stock two-chunk restore, detect and deserialize the Career 2.0 block",
+      "new-career/legacy-load migration: initialize extension defaults when C2EX is absent"
+    ],
+    "key_result": "Career Mode 2.0 does NOT require enlarging DATA.BIN or changing the PSP savedata utility capacity for a first implementation. The proven envelope already has enough spare body capacity for a substantial extension block."
+  },
+  "next_static_step": [
+    "Map title/award/record-book ownership for retirement legacy and living-division championships.",
+    "Define a compact Career 2.0 extension schema that fits within 0x1EBC while preserving room for future versions.",
+    "Only after schema design, transfer-match the exact retail save/load parser instructions needed for guarded patch entries."
+  ]
+}
