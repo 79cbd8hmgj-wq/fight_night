@@ -278,6 +278,8 @@ def main() -> None:
         "shared_progression_title_counters_c": disasm_range(raw, elf, 0x0019B600, 0x0019B6D0),
         "shared_progression_title_counters_d": disasm_range(raw, elf, 0x0019B7D0, 0x0019B8A0),
         "shared_progression_title_counters_e": disasm_range(raw, elf, 0x0019B9B0, 0x0019BA80),
+        "contract_eligibility_head": disasm_range(raw, elf, 0x001A3FBC, 0x001A44BC),
+        "contract_eligibility_tail": disasm_range(raw, elf, 0x001A44BC, 0x001A49BC),
     }
 
     def read_c_string(address: int) -> str | None:
