@@ -197,7 +197,11 @@
       "regular AI matchmaking uses only subtype-0 non-title assignments",
       "paired player title-challenge and title-defense contracts for all three career championship slots",
       "persistent subtype-9 title-defense scheduling",
-      "post-fight title-defense accounting through progression record+0x17"
+      "post-fight title-defense accounting through progression record+0x17",
+      "three career-slot championship ownership model mapped onto six absolute weight classes",
+      "separate professional title-challenge contracts (13/14/15, subtype 8)",
+      "separate professional title-defense contracts (18/19/20, subtype 9)",
+      "confirmed title-defense statistic increments on progression record+0x17"
     ],
     "extension_targets": [
       "explicit injuries and recovery",
@@ -210,11 +214,12 @@
       "surface record+0x24/+0x28 match assignments as upcoming-fight cards",
       "replace 0x00195564 compatibility policy with rank/title/promoter/health/weight-class matchmaking",
       "AI/non-player championship scheduling policy",
-      "mandatory challengers/eliminators and vacancy succession"
+      "mandatory challengers/eliminators and vacancy succession",
+      "AI title-challenge/title-defense scheduling policy"
     ],
     "next_static_step": [
-      "Search the remaining contract families for a true mandatory-challenger/eliminator role; do not relabel the special INFO_Awards_16 or FP_Everlast_Belt contracts without direct evidence.",
-      "If absent, implement AI title scheduling/mandatory challengers as Career Mode 2.0 policy using the recovered current-holder fields, rankings, AssignCareerMatch and TransferDivisionChampionship.",
+      "Mandatory challenger/eliminator: trace opponent selection and eligibility for challenge types 13/14/15 and defense types 18/19/20.",
+      "Forfeiture: locate the true progression-record+0x18 writer without confusing profile state bytes.",
       "Then move to explicit injury/recovery semantics and weight-class movement."
     ]
   },
@@ -605,37 +610,47 @@
     "boundary": "This is a bounded executable conclusion from the complete direct caller inventory of AssignCareerMatch. It does not claim that no unrelated code can ever mutate title-holder state outside the recovered scheduling/result paths."
   },
   "championship_ownership": {
-    "confidence": "CONFIRMED persistent current/previous champion slots, transfer helper, and player title counters; exact public names for every contract type remain partially unresolved",
+    "confidence": "CONFIRMED three persistent current/previous career-slot champions, transfer helper, and player title counters",
     "current_champion_slots": {
       "base": "profile+0x50",
-      "count": 6,
+      "count": 3,
       "stride_bytes": 2,
+      "fields": [
+        "profile+0x50",
+        "profile+0x52",
+        "profile+0x54"
+      ],
       "value": "s16 progression-record index",
-      "formula": "current_champion[division] = *(s16 *)(profile + 0x50 + division*2)",
-      "ui_proof": "GetRankingInformation compares each ranked boxer index against profile+0x50+division*2 before writing aCurrentBeltHolders."
+      "formula": "current_champion[slot] = *(s16 *)(profile + 0x50 + slot*2), slot 0..2",
+      "absolute_weight_class_mapping": "profile+0x2D..+0x2F maps the three career slots onto six retail weight classes",
+      "ui_proof": "GetRankingInformation compares each ranked boxer index against profile+0x50+slot*2 before writing aCurrentBeltHolders."
     },
     "previous_champion_slots": {
       "base": "profile+0x56",
-      "count": 6,
+      "count": 3,
       "stride_bytes": 2,
+      "fields": [
+        "profile+0x56",
+        "profile+0x58",
+        "profile+0x5A"
+      ],
       "value": "s16 progression-record index",
-      "formula": "previous_champion[division] = *(s16 *)(profile + 0x56 + division*2)"
+      "formula": "previous_champion[slot] = *(s16 *)(profile + 0x56 + slot*2), slot 0..2"
     },
     "transfer_helper": {
       "function": "0x00196DC4",
-      "proposed_name": "TransferDivisionChampionship",
+      "proposed_name": "TransferCareerTitleSlot",
       "arguments": {
         "a0": "career object",
-        "a1": "division index",
+        "a1": "career title/rank-class slot 0..2",
         "a2": "new champion progression-record index"
       },
       "behavior": [
-        "Copies current champion profile+0x50+division*2 into previous champion profile+0x56+division*2.",
-        "Writes the new champion progression index to profile+0x50+division*2.",
-        "When the new champion is the player in the player's current division, sets profile+0x21+division to 1.",
-        "When the outgoing champion is the player and profile+0x21+division is 1, changes that byte to 2.",
-        "Increments the new champion progression record's title-wins counter at +0x15.",
-        "When an outgoing champion exists, increments that progression record's title-losses counter at +0x16."
+        "Copies current_champion[slot] into previous_champion[slot].",
+        "Writes the new champion progression index into current_champion[slot].",
+        "Updates the slot's player title-state byte when the incoming or outgoing champion is the current player.",
+        "Gets the incoming champion progression record and increments record+0x15 (title belts won).",
+        "When an outgoing champion exists, gets that progression record and increments record+0x16 (title belts lost)."
       ],
       "callers_observed": [
         "0x001984F0",
@@ -656,62 +671,42 @@
         "+0x17": "title belts defended",
         "+0x18": "title belts forfeited"
       },
-      "confidence": "CONFIRMED by direct binding to aiTitleBeltsWon/Defended/Lost/Forfeited"
-    },
-    "player_division_title_state": {
-      "base": "profile+0x21",
-      "stride_bytes": 1,
-      "count": 6,
-      "observed_states": {
-        "1": "player is/has just become the current champion for that division in transfer logic",
-        "2": "written when the player is replaced as champion after state 1"
+      "confirmed_dynamic_writers": {
+        "+0x15": [
+          "0x00196FB4..0x00196FC0 in TransferCareerTitleSlot increments the incoming champion's counter",
+          "additional special-award result branches also increment +0x15 after resolving the current player record"
+        ],
+        "+0x16": [
+          "0x00196FE4..0x00196FF0 in TransferCareerTitleSlot increments the displaced champion's counter"
+        ],
+        "+0x17": [
+          "0x0019B324..0x0019B33C increments current-player record+0x17",
+          "0x0019B4C4..0x0019B4DC increments current-player record+0x17",
+          "0x0019B664..0x0019B67C increments current-player record+0x17",
+          "0x0019B83C..0x0019B854 increments current-player record+0x17",
+          "0x0019BA14..0x0019BA28 increments current-player record+0x17"
+        ],
+        "+0x18": [
+          "No dynamic progression-record increment is yet proven. Direct profile+0x18 state writes in 0x0019AAAC are not the forfeiture counter."
+        ]
       },
-      "boundary": "Other values and every UI meaning for this per-division state byte remain unresolved."
+      "confidence": "CONFIRMED field meanings and win/loss/defense updates; forfeiture writer remains unresolved"
     },
-    "title_defense_accounting": {
-      "confidence": "CONFIRMED for the three standard player championship slots",
-      "progression_counter": "progression record+0x17 = title belts defended",
-      "contract_pairs": [
-        {
-          "career_slot": 0,
-          "challenge_type": 15,
-          "defense_type": 20,
-          "challenge_subtype": 8,
-          "defense_subtype": 9,
-          "state_byte": "profile+0x1C"
-        },
-        {
-          "career_slot": 1,
-          "challenge_type": 13,
-          "defense_type": 18,
-          "challenge_subtype": 8,
-          "defense_subtype": 9,
-          "state_byte": "profile+0x1E"
-        },
-        {
-          "career_slot": 2,
-          "challenge_type": 14,
-          "defense_type": 19,
-          "challenge_subtype": 8,
-          "defense_subtype": 9,
-          "state_byte": "profile+0x1D"
-        }
+    "player_title_state": {
+      "fields": [
+        "profile+0x1B",
+        "profile+0x1C",
+        "profile+0x1D",
+        "profile+0x1E",
+        "profile+0x1F",
+        "profile+0x20",
+        "profile+0x21.."
       ],
-      "result_path_evidence": [
-        "The shared result dispatcher 0x0019AAAC separates the paired contract types through its championship/title-state jump tables.",
-        "Defense-side branches ultimately fetch the current player progression record through 0x001928F0 and increment byte +0x17.",
-        "GetMyCareerStatsInfo independently binds progression +0x17 to aiTitleBeltsDefended, closing the result-to-stat semantic chain."
-      ],
-      "scheduling_evidence": [
-        "The paired defense templates are rank-0-only, four-week contracts with subtype 9.",
-        "Their challenge counterparts are top-five-rank contracts with subtype 8 and longer 16-20 week scheduling windows.",
-        "Accepted contracts feed live-record +0x36 into 0x00194518 AssignCareerMatch, so subtype 9 persists in record+0x24 bits 8..15 for scheduled defenses."
-      ],
-      "stock_ai_boundary": "0x00195564 regular AI matchmaking still emits subtype 0 only. No stock AI-vs-AI title-defense scheduler has been recovered, so living-world AI title scheduling remains an overhaul extension."
+      "warning": "These profile state/award bytes are separate from progression-record title statistics +0x15..+0x18. Do not infer a title-stat increment from a same-numbered profile offset."
     }
   },
   "championship_contract_dispatch": {
-    "confidence": "CONFIRMED numeric dispatch, championship-transfer participation and profile state-byte transitions; exact localized public names for types 13-22 remain partially unresolved",
+    "confidence": "CONFIRMED challenge/defense contract families for the three persistent career title slots; special award-belt types remain separate",
     "current_contract_type_field": "profile+0x80",
     "championship_or_award_gate": {
       "function": "0x001971A0",
@@ -741,62 +736,104 @@
       ],
       "note": "Types outside the switch range also return false."
     },
-    "championship_transfer_contracts": {
-      "function": "0x0019CFF8 result-processing region -> 0x00196DC4",
-      "confirmed_types": [
-        3,
-        13,
-        14,
-        15,
-        18,
-        19,
-        20
-      ],
-      "excluded_special_award_types": [
+    "initial_amateur_championship": {
+      "contract_type": 3,
+      "template_index": 0,
+      "career_side": "initial/amateur side (template phase bit selects profile+0x121 == 0)",
+      "scheduling_weeks": 12,
+      "match_subtype": 4,
+      "title_transfer": true,
+      "interpretation": "CONFIRMED initial/amateur championship-transfer contract; exact localized public wording remains unresolved"
+    },
+    "professional_title_challenges": [
+      {
+        "contract_type": 15,
+        "career_slot": 0,
+        "template_index": 4,
+        "rank_bounds": "0..4",
+        "scheduling_weeks": 18,
+        "match_subtype": 8,
+        "state_field": "profile+0x1C"
+      },
+      {
+        "contract_type": 13,
+        "career_slot": 1,
+        "template_index": 6,
+        "rank_bounds": "0..4",
+        "scheduling_weeks": 20,
+        "match_subtype": 8,
+        "state_field": "profile+0x1E"
+      },
+      {
+        "contract_type": 14,
+        "career_slot": 2,
+        "template_index": 8,
+        "rank_bounds": "0..4",
+        "scheduling_weeks": 16,
+        "match_subtype": 8,
+        "state_field": "profile+0x1D"
+      }
+    ],
+    "professional_title_defenses": [
+      {
+        "contract_type": 20,
+        "career_slot": 0,
+        "template_index": 5,
+        "rank_bounds": "0..0",
+        "scheduling_weeks": 4,
+        "match_subtype": 9,
+        "state_field": "profile+0x1C",
+        "defense_counter_increment": "0x0019B324..0x0019B33C -> player progression record+0x17"
+      },
+      {
+        "contract_type": 18,
+        "career_slot": 1,
+        "template_index": 7,
+        "rank_bounds": "0..0",
+        "scheduling_weeks": 4,
+        "match_subtype": 9,
+        "state_field": "profile+0x1E",
+        "defense_counter_increment": "0x0019B4C4..0x0019B4DC -> player progression record+0x17"
+      },
+      {
+        "contract_type": 19,
+        "career_slot": 2,
+        "template_index": 9,
+        "rank_bounds": "0..0",
+        "scheduling_weeks": 4,
+        "match_subtype": 9,
+        "state_field": "profile+0x1D",
+        "defense_counter_increment": "0x0019B664..0x0019B67C -> player progression record+0x17"
+      }
+    ],
+    "challenge_defense_proof": [
+      "Types 13/14/15 are slot-specific, require top-five rank 0..4, schedule subtype 8, and participate in championship transfer.",
+      "Types 18/19/20 pair with the same three slots, require rank 0, schedule four weeks out with subtype 9, and their post-fight branches increment progression-record+0x17 (aiTitleBeltsDefended).",
+      "The paired type layout therefore distinguishes title-challenge/acquisition contracts from title-defense contracts without relying on localization-string guesses."
+    ],
+    "special_award_belt_types": {
+      "types": [
         16,
         17,
         21,
         22
       ],
-      "evidence": "Both championship-transfer branches around 0x0019CC74-0x0019CD6C call 0x00196DC4 for gated type 3 and types 13-15/18-20, while 16-17/21-22 take non-transfer paths.",
-      "boundary": "This proves title-transfer participation, not the human-facing label or challenger/defender role of each numeric type."
+      "evidence": [
+        "These types pass the broad championship/award gate but are excluded from the normal persistent champion-transfer set.",
+        "Individual-contract UI references include INFO_Awards_16 and FP_Everlast_Belt.",
+        "Their result branches can update title-style counters, so they are retained as special award/belt contracts rather than promoted to division-championship ownership."
+      ]
     },
-    "profile_award_state_dispatch": {
-      "note": "The +0x1C..+0x20 bytes below are profile state/unlock bytes, not the progression-record title-stat counters.",
-      "13/18": "profile+0x1E state path",
-      "14/19": "profile+0x1D state path",
-      "15/20": "profile+0x1C state path",
-      "16/21": "profile+0x1F state path",
-      "17/22": "profile+0x20 state path"
-    },
-    "player_title_counters": {
-      "progression_record_fields": {
-        "+0x15": "title belts won",
-        "+0x16": "title belts lost",
-        "+0x17": "title belts defended",
-        "+0x18": "title belts forfeited"
-      },
-      "observed_writers": [
-        "0x00196DC4 increments +0x15 for the incoming champion and +0x16 for an outgoing champion.",
-        "Shared post-fight contract branches for title-bearing types reach player progression record+0x17 increments under defense-result conditions."
-      ],
-      "pending": "Direct writers of +0x18 forfeited are being enumerated separately; do not equate profile+0x18 state writes with the progression-record forfeiture counter."
-    },
-    "frontend_label_evidence": {
-      "16/21": "individual-contract UI references INFO_Awards_16",
-      "17/22": "individual-contract UI references FP_Everlast_Belt",
-      "boundary": "Do not assign public names to 13-15/18-20 from nearby INFO_Awards_* strings alone."
-    },
-    "scheduling_groups": {
-      "15/20": "special scheduler path 0x001A5180; supplies division index 0 through 0x0019527C in the observed path",
-      "13/18": "special scheduler path 0x001A5260; supplies division index 1 through 0x0019527C in the observed path",
-      "14/19": "special scheduler path 0x001A5348; supplies division index 2 through 0x0019527C in the observed path",
-      "16/17/21/22": "special scheduler path 0x001A546C and direct AssignCareerMatch integration"
-    },
+    "ai_scheduling_boundary": "Regular AI matchmaking 0x00195564 emits subtype 0 only. No stock AI-vs-AI subtype-8 challenge or subtype-9 defense scheduler has been found among direct AssignCareerMatch callers.",
+    "unresolved": [
+      "Dynamic writer for progression record+0x18 (aiTitleBeltsForfeited).",
+      "Mandatory-challenger/eliminator contract or policy, if any.",
+      "Exact localized public wording for the numeric challenge/defense types."
+    ],
     "next_static_step": [
-      "Enumerate every progression-record writer for +0x15/+0x16/+0x17/+0x18 to separate title win/loss/defense/forfeit transitions from profile award-state bytes.",
-      "Finish semantic naming of contract types 3,13-15,18-20 using their eligibility/scheduler/result behavior rather than nearby localization-key proximity.",
-      "Then connect the proven title contract types to AI living-world scheduling/mandatory-challenger policy."
+      "Trace the eligibility and opponent-selection policy around challenge types 13/14/15 and defense types 18/19/20 for mandatory-challenger/eliminator behavior.",
+      "Search all progression-record access paths for the +0x18 forfeiture counter writer.",
+      "Then move to explicit injury/recovery and weight-class movement."
     ]
   }
 }
