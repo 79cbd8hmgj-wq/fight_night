@@ -131,21 +131,193 @@
       "career-phase progression and Amateur->Pro carryover",
       "persistent boxer ratings",
       "generated-boxer archetype/style seed",
-      "six-division world simulation and AI population aging"
+      "six-division world simulation and AI population aging",
+      "persistent numeric weight at boxer+0x6C",
+      "persistent displayed height in inches at boxer+0x70",
+      "paired stature/weight representations used by created/generated boxer paths"
     ],
     "not_yet_found": [
       "explicit per-rating potential ceiling",
       "technical learning-rate field",
       "physical-growth projection field",
       "persistent height-growth schedule",
-      "persistent reach-growth schedule"
+      "persistent reach-growth schedule",
+      "independently proven reach/wingspan field"
     ],
     "design_consequence": "Career Mode 2.0 should plan to add potential/learning-rate/growth data unless subsequent static evidence identifies an existing field. Existing archetype bytes must not be silently repurposed as potential without proving their unused value range and all consumers."
   },
   "next_static_step": [
-    "Map the persistent player's weight/height/reach fields and their UI/accessor consumers.",
-    "Trace weight-class reassignment after boxer-data changes to identify a safe physical-growth/weight-class transition boundary.",
-    "Identify unused/reserved save capacity appropriate for new potential, learning-rate and growth-projection data.",
-    "Trace title/award and legacy sources after the physical-growth storage map is bounded."
-  ]
+    "Move to save capacity/serializer extension points for new potential, learning-rate, growth-projection and possibly reach fields.",
+    "Determine whether the existing career save body has safe unused capacity and which serializer boundary can version an extended Career Mode 2.0 payload.",
+    "After save layout, map title/award/record-book sources for legacy and living-division championships."
+  ],
+  "persistent_physique": {
+    "confidence": "CONFIRMED for hometown/alias, numeric weight, displayed height, paired-field synchronization and source-field mappings noted below; second stature/weight field semantics remain unresolved",
+    "persistent_boxer_base": "profile+0x256C",
+    "identity_fields": {
+      "+0x66": {
+        "meaning": "hometown key/reference",
+        "source": "xdbboxr field 0x06",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "The base-roster import routine around 0x0018A110 copies XDB field 0x06 to persistent boxer+0x66.",
+          "The create-boxer setter reads iHomeTownID and writes the same persistent field.",
+          "This matches the independently proven xdbboxr field 0x06 -> xdbhmtwn hometown reference."
+        ]
+      },
+      "+0x68": {
+        "meaning": "alias/nickname key/reference",
+        "source": "xdbboxr field 0x07",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "The base-roster import routine copies XDB field 0x07 to persistent boxer+0x68.",
+          "The create-boxer setter reads iNickNameID into the same field.",
+          "This matches the independently proven xdbboxr field 0x07 -> xdbalias reference."
+        ]
+      }
+    },
+    "physical_fields": {
+      "+0x6A": {
+        "meaning": "secondary stature representation",
+        "confidence": "CONFIRMED stature-linked behavior; exact semantic name unresolved",
+        "source": "raw xdbboxr field 0x08 on base-roster import",
+        "evidence": [
+          "Created/generated boxer initialization synchronizes +0x6A with +0x70.",
+          "Height changes in the create-physique path write the selected inch value to both +0x6A and +0x70.",
+          "No independent consumer has yet proven +0x6A to mean reach or wingspan."
+        ]
+      },
+      "+0x6C": {
+        "meaning": "numeric boxer weight",
+        "confidence": "CONFIRMED",
+        "source": "xdbboxr field 0x09",
+        "evidence": [
+          "The base-roster import routine copies xdbboxr field 0x09 to persistent boxer+0x6C.",
+          "xdbboxr field 0x09 is independently proven as the numeric weight used by the six-division classifier.",
+          "Create-boxer weight-class changes write the selected class's weight threshold into +0x6C."
+        ],
+        "division_thresholds_lbs": {
+          "Featherweight": 126,
+          "Lightweight": 135,
+          "Welterweight": 147,
+          "Middleweight": 168,
+          "Light Heavyweight": 190,
+          "Heavyweight": 280
+        }
+      },
+      "+0x6E": {
+        "meaning": "physical/biographical field imported from xdbboxr field 0x0A",
+        "confidence": "CONFIRMED mapping; semantic meaning unresolved"
+      },
+      "+0x70": {
+        "meaning": "displayed boxer height in inches",
+        "confidence": "CONFIRMED",
+        "source": "transformed xdbboxr field 0x0B through 0x00185374 for base-roster import",
+        "evidence": [
+          "GetCreatePhysiqueInfo compares persistent boxer+0x70 directly to enumerated inch values when producing iHeightIndex/astrHeight.",
+          "The create-physique height setter writes the selected inch value to +0x70.",
+          "Created/generated boxer initialization synchronizes +0x70 with +0x6A."
+        ],
+        "allowed_ranges_by_division_inches": {
+          "Heavyweight": [
+            70,
+            80
+          ],
+          "Light Heavyweight": [
+            67,
+            76
+          ],
+          "Middleweight": [
+            66,
+            75
+          ],
+          "Welterweight": [
+            65,
+            73
+          ],
+          "Lightweight": [
+            64,
+            71
+          ],
+          "Featherweight": [
+            63,
+            70
+          ]
+        }
+      },
+      "+0x72": {
+        "meaning": "secondary weight-linked representation",
+        "confidence": "CONFIRMED weight-linked behavior; exact semantic name unresolved",
+        "source": "xdbboxr field 0x0C on base-roster import",
+        "evidence": [
+          "Created/generated boxer initialization synchronizes +0x72 with +0x6C.",
+          "Create-boxer weight-class reset writes the class weight threshold to both +0x6C and +0x72.",
+          "An independent predicate reads signed boxer+0x72 and tests whether it is positive."
+        ]
+      },
+      "+0x74": {
+        "meaning": "physical/biographical field imported from xdbboxr field 0x0D",
+        "confidence": "CONFIRMED mapping; note that career population age is separately extracted from XDB field 0x0D through dedicated accessors"
+      },
+      "+0x76": {
+        "meaning": "physical/biographical field imported from xdbboxr field 0x0E",
+        "confidence": "CONFIRMED mapping; semantic meaning unresolved"
+      },
+      "+0x78": {
+        "meaning": "physical/biographical/dirty-state-adjacent field imported from xdbboxr field 0x0F",
+        "confidence": "CONFIRMED import mapping; semantic meaning unresolved"
+      }
+    },
+    "base_roster_import": {
+      "function_region": "0x0018A110",
+      "confidence": "CONFIRMED",
+      "mapping": {
+        "xdb 0x06": "boxer+0x66",
+        "xdb 0x07": "boxer+0x68",
+        "xdb 0x08": "boxer+0x6A",
+        "xdb 0x09": "boxer+0x6C",
+        "xdb 0x0A": "boxer+0x6E",
+        "xdb 0x0B": "0x00185374 transform -> boxer+0x70",
+        "xdb 0x0C": "boxer+0x72",
+        "xdb 0x0D": "boxer+0x74",
+        "xdb 0x0E": "boxer+0x76",
+        "xdb 0x0F": "boxer+0x78"
+      },
+      "independent_cross_check": "The comparison/synchronization routine around 0x00189180 checks the same XDB-to-persistent-boxer mapping."
+    },
+    "generic_accessors": {
+      "getter": "0x0018B590",
+      "setter": "0x0018B97C",
+      "confidence": "CONFIRMED selector-to-offset mapping",
+      "selectors": {
+        "1": "+0x66",
+        "2": "+0x68",
+        "3": "+0x6A",
+        "4": "+0x6C",
+        "5": "+0x6E",
+        "6": "+0x70",
+        "7": "+0x72",
+        "8": "+0x74",
+        "9": "+0x76",
+        "10": "+0x78",
+        "11": "+0x7A",
+        "12": "+0x7C"
+      }
+    },
+    "reach_status": {
+      "status": "NOT_FOUND",
+      "evidence": [
+        "No independent persistent field has been proven as reach/wingspan.",
+        "The create-physique UI directly exposes height through +0x70 but no equivalent reach/wingspan UI label has been located.",
+        "+0x6A must not be renamed reach solely because it is paired with +0x70."
+      ],
+      "career2_consequence": "If Career Mode 2.0 requires independently changing reach during adolescent growth, plan for new persistent reach storage unless a later consumer proves an existing field."
+    },
+    "growth_hook_candidates": {
+      "height": "persistent boxer+0x70, with +0x6A kept synchronized until their distinction is proven",
+      "weight": "persistent boxer+0x6C, with +0x72 kept synchronized until their distinction is proven",
+      "age": "profile+0x41 and current progression record+0x09",
+      "note": "These are data/storage boundaries, not yet executable retail patch sites."
+    }
+  }
 }
