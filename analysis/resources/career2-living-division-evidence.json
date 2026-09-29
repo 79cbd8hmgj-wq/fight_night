@@ -164,7 +164,10 @@
       "AI fight result generation",
       "persistent AI records",
       "rank-context progression",
-      "population replacement/maintenance"
+      "population replacement/maintenance",
+      "persistent reciprocal upcoming-fight assignments",
+      "AI matchup generation for unscheduled population records",
+      "matchmaking retry/rotation state"
     ],
     "extension_targets": [
       "title ownership and title-fight scheduling",
@@ -174,12 +177,123 @@
       "promoter/manager influence",
       "form/reputation",
       "comeback from retirement",
-      "visible upcoming-fight schedule and historical title movement"
+      "visible upcoming-fight schedule and historical title movement",
+      "surface record+0x24/+0x28 match assignments as upcoming-fight cards",
+      "replace 0x00195564 compatibility policy with rank/title/promoter/health/weight-class matchmaking"
     ],
     "next_static_step": [
-      "Trace the scheduling functions that populate progression record+0x24/+0x28 for non-player boxers.",
-      "Decode population-maintenance routine 0x0019EFD0 far enough to separate retirement replacement from normal roster activation.",
-      "Map title/award state used by 0x0019AAAC and weekly simulation so title movement can be surfaced to Career 2.0."
+      "Identify the population ordering table used by 0x00195564 and determine whether it is explicitly weight-class/ranking ordered.",
+      "Decode the 8-bit match subtype and two 4-bit result/state codes stored in the packed descriptor.",
+      "Trace title/award state through 0x0019AAAC and related progression functions so scheduled AI bouts can move championships.",
+      "Then move to training/staff persistence, which is the next major Career Mode 2.0 subsystem."
     ]
+  },
+  "match_descriptor": {
+    "record_fields": {
+      "+0x28": {
+        "meaning": "packed scheduled-match date",
+        "confidence": "CONFIRMED",
+        "evidence": [
+          "0x00194518 writes the supplied packed date into fighter progression record+0x28.",
+          "0x0019E790 constructs a date object from record+0x28 and compares it against the current world date before processing the bout.",
+          "0x0019E790 requires the stored date word to be nonzero before treating the record as a scheduled fight."
+        ]
+      },
+      "+0x24": {
+        "meaning": "overloaded match descriptor / unscheduled matchmaking seed",
+        "confidence": "CONFIRMED dual-use behavior",
+        "scheduled_use": "When +0x28 is nonzero, this word is decoded as the packed matchup/result descriptor.",
+        "unscheduled_use": "When +0x28 is zero, 0x00195564 uses the low byte as a rotating opponent-search seed and increments the word when it fails to find a matchup."
+      }
+    },
+    "packer": {
+      "function": "0x001A1DCC",
+      "confidence": "CONFIRMED",
+      "layout": {
+        "bits 16-30": "15-bit opponent progression-record index",
+        "bits 8-15": "8-bit match/fight subtype supplied by the scheduler/contract path; exact public label unresolved",
+        "bits 4-7": "4-bit result/state code",
+        "bits 0-3": "4-bit secondary result/state code",
+        "bit 31": "not set by the packer"
+      },
+      "formula": "packed = ((opponent_index & 0x7FFF) << 16) | ((subtype & 0xFF) << 8) | ((code_a & 0xF) << 4) | (code_b & 0xF)"
+    },
+    "opponent_index_proof": {
+      "consumer": "0x0019E790",
+      "extraction_site": "0x0019E858-0x0019E874",
+      "behavior": "Extracts (packed >> 16) & 0x7FFF and immediately uses it as the other population-record index.",
+      "confidence": "CONFIRMED"
+    },
+    "post_fight_metadata": {
+      "consumer": "0x0019E790",
+      "extraction_site": "0x0019EA94-0x0019EAC8",
+      "behavior": "Extracts bits 8-15, 4-7 and 0-3 and passes them into shared progression/result routine 0x0019AAAC together with the two fighter indices.",
+      "confidence": "CONFIRMED structure; semantic labels for the three compact fields remain unresolved"
+    },
+    "reciprocal_descriptor": {
+      "function": "0x001A24C4",
+      "confidence": "CONFIRMED reciprocal/perspective conversion role",
+      "behavior": [
+        "Replaces the packed opponent index with the other fighter's progression index.",
+        "Preserves the 8-bit subtype and low 4-bit code.",
+        "Transforms the 4-bit result/state code through a small mapping table before repacking.",
+        "0x00194518 uses this helper when writing the reciprocal schedule descriptor to the second fighter."
+      ]
+    }
+  },
+  "match_assignment": {
+    "function": "0x00194518",
+    "proposed_name": "AssignCareerMatch",
+    "confidence": "CONFIRMED scheduling role; proposed name is descriptive",
+    "arguments": {
+      "a0": "career object",
+      "a1": "fighter A progression index",
+      "a2": "fighter B progression index",
+      "a3": "8-bit match/fight subtype source",
+      "t0 / fifth arg": "packed scheduled-match date"
+    },
+    "behavior": [
+      "Writes the scheduled date to fighter A record+0x28.",
+      "Builds fighter A's packed descriptor with fighter B as the opponent and stores it at record+0x24.",
+      "For normal two-population-record matchups, writes the same date to fighter B and creates the reciprocal descriptor through 0x001A24C4.",
+      "Contains special handling when one side is the current player or when specific career/fight mode conditions are active.",
+      "Calls 0x001943C0 after the assignment to mark/refresh career state."
+    ],
+    "callers": [
+      "0x00195564 population matchmaking refresh",
+      "0x001FF4AC accepted player-contract scheduling",
+      "0x001A5248/0x001A532C/0x001A5414/0x001A54AC/0x001A54FC/0x001A5548 contract/special-career scheduling paths"
+    ],
+    "player_contract_example": {
+      "call_site": "0x001FF4AC",
+      "fighter_a": "current player progression index from profile+0x4E",
+      "fighter_b": "selected opponent index from profile+0x166",
+      "subtype": "signed 16-bit contract/live-record field +0x36, truncated by packer to 8 bits",
+      "date": "future contract date previously computed by adding contract weeks * 7 to profile+0x9C"
+    }
+  },
+  "population_matchmaking_refresh": {
+    "function": "0x00195564",
+    "proposed_name": "RefreshPopulationMatchups",
+    "confidence": "CONFIRMED matchmaking behavior; proposed name is descriptive",
+    "correction": "Earlier checkpoint described this as a weekly-only scheduler. It is a general matchmaking refresh with multiple callers. A career time-advance loop at 0x00194D98 calls it before each 0x00195430 weekly world tick, but other contract/career transitions call it directly as well.",
+    "behavior": [
+      "Copies the current packed career date into local date objects.",
+      "Iterates a phase/pool-dependent population ordering table, with 20 entries on the initial/amateur side and up to 50 on the nonzero/post-initial side in the default path.",
+      "Skips the player's current progression index.",
+      "Rejects population records whose +0x13 periodic/cooldown field is nonzero.",
+      "Rejects population records that already have a nonzero scheduled date at +0x28.",
+      "Uses unscheduled record+0x24 as a rotating search seed to vary where opponent scanning begins.",
+      "Scans candidate opponents while skipping the player, cooldown-busy records and already-scheduled records.",
+      "Applies additional compatibility/proximity logic through 0x00193EF4 and the population-order position before accepting a pair.",
+      "Calls 0x00194518 to create the reciprocal match assignment when a compatible pair is found.",
+      "If no opponent is found, increments the unscheduled +0x24 search seed."
+    ],
+    "time_advance_integration": {
+      "caller_region": "0x00194D98",
+      "flow": "RefreshPopulationMatchups -> AdvanceCareerWorldOneWeek (0x00195430) -> compare world date to target -> repeat",
+      "significance": "Long calendar advances repeatedly refresh unscheduled matchups before advancing/simulating the next week."
+    },
+    "implication": "The retail game already has a reusable AI matchmaking API plus persistent upcoming-match storage. Career Mode 2.0 can replace the compatibility policy and surface these scheduled descriptors in an 'Upcoming Fights' UI instead of creating scheduling infrastructure from scratch."
   }
 }
