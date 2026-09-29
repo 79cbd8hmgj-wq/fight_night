@@ -95,6 +95,7 @@ def main() -> None:
 
     modifier_callers = []
     career_direct_calls = []
+    modifier_calls_by_function: dict[tuple[int, int], list[dict[str, str]]] = {}
     for sec in elf.sections:
         if sec.kind != "executable" or sec.size < 4:
             continue
@@ -102,25 +103,77 @@ def main() -> None:
             target = jal_target(addr, word)
             if target not in MODIFIER_FUNCTIONS.values():
                 continue
-            loads = immediate_loads_before(raw, elf, addr)
-            if not loads:
-                continue
             start, end = function_bounds(raw, elf, addr)
-            entry = {
+            callee = next(name for name, value in MODIFIER_FUNCTIONS.items() if value == target)
+            modifier_calls_by_function.setdefault((start, end), []).append({
                 "callsite": f"0x{addr:08X}",
-                "callee": next(name for name, value in MODIFIER_FUNCTIONS.items() if value == target),
-                "function_start": f"0x{start:08X}",
-                "injury_id_loads": loads,
-                "context": disasm_range(raw, elf, max(start, addr - 0x30), min(end, addr + 0x20)),
-            }
-            modifier_callers.append(entry)
+                "callee": callee,
+            })
+            loads = immediate_loads_before(raw, elf, addr)
+            if loads:
+                entry = {
+                    "callsite": f"0x{addr:08X}",
+                    "callee": callee,
+                    "function_start": f"0x{start:08X}",
+                    "injury_id_loads": loads,
+                    "context": disasm_range(raw, elf, max(start, addr - 0x30), min(end, addr + 0x20)),
+                }
+                modifier_callers.append(entry)
             if 0x00190000 <= addr < 0x001B0000:
-                career_direct_calls.append(entry)
+                career_direct_calls.append({
+                    "callsite": f"0x{addr:08X}",
+                    "callee": callee,
+                    "function_start": f"0x{start:08X}",
+                })
+
+    modifier_candidate_functions = []
+    for (start, end), calls in sorted(modifier_calls_by_function.items()):
+        immediate_ids = []
+        for addr in range(start, end, 4):
+            word = vaddr_word(raw, elf, addr)
+            if word is None:
+                continue
+            op = word >> 26
+            rs = (word >> 21) & 0x1F
+            rt = (word >> 16) & 0x1F
+            imm = word & 0xFFFF
+            if rs == 0 and op in {0x0D, 0x09} and imm in INJURY_IDS:
+                immediate_ids.append({
+                    "address": f"0x{addr:08X}",
+                    "register": rt,
+                    "value": imm,
+                })
+        if not immediate_ids:
+            continue
+        lo = min(
+            [int(row["address"], 16) for row in immediate_ids]
+            + [int(row["callsite"], 16) for row in calls]
+        )
+        hi = max(
+            [int(row["address"], 16) for row in immediate_ids]
+            + [int(row["callsite"], 16) for row in calls]
+        )
+        modifier_candidate_functions.append({
+            "function_start": f"0x{start:08X}",
+            "function_end": f"0x{end:08X}",
+            "modifier_calls": calls,
+            "injury_id_immediates": immediate_ids,
+            "focused_assembly": disasm_range(
+                raw, elf, max(start, lo - 0x40), min(end, hi + 0x50)
+            ),
+        })
+
+    modifier_function_bodies = {
+        name: disasm_range(raw, elf, address, address + 0x90)
+        for name, address in MODIFIER_FUNCTIONS.items()
+    }
 
     print("CAREER_INJURY_PROBE_BEGIN")
     print(json.dumps({
         "injury_strings": string_hits,
         "injury_modifier_callers": modifier_callers,
+        "modifier_candidate_functions": modifier_candidate_functions,
+        "modifier_function_bodies": modifier_function_bodies,
         "career_region_direct_injury_modifier_calls": career_direct_calls,
         "known_career_recovery_field": {
             "field": "progression record+0x13",
