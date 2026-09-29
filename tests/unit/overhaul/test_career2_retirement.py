@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pytest
 
 from fnr3_re.overhaul.career2_living_divisions import (
@@ -97,7 +99,7 @@ def test_knockouts_cannot_exceed_wins() -> None:
         ),
     ],
 )
-def test_retail_byte_counters_are_range_checked(factory, message: str) -> None:
+def test_retail_byte_counters_are_range_checked(\n    factory: Callable[[], object],\n    message: str,\n) -> None:
     with pytest.raises(RetirementLegacyError, match=message):
         factory()
 
@@ -149,14 +151,14 @@ def test_unranked_snapshot_does_not_invent_a_rank() -> None:
 
 
 def test_snapshot_validates_age_money_and_rank_storage() -> None:
-    kwargs = {
-        "money": 0,
-        "current_rank": 1,
-        "record": _record(),
-        "championships": _titles(),
-    }
     with pytest.raises(RetirementLegacyError, match="age"):
-        LegacyEvidenceSnapshot(age=256, **kwargs)
+        LegacyEvidenceSnapshot(
+            age=256,
+            money=0,
+            current_rank=1,
+            record=_record(),
+            championships=_titles(),
+        )
 
     with pytest.raises(RetirementLegacyError, match="money"):
         LegacyEvidenceSnapshot(
