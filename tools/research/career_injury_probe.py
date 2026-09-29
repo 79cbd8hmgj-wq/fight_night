@@ -54,6 +54,24 @@ def immediate_loads_before(raw: bytes, elf, callsite: int, lookback: int = 12) -
             })
     return rows
 
+def immediate_modifier_id(raw: bytes, elf, callsite: int) -> dict[str, int | str] | None:
+    # Allegrex executes the instruction at callsite+4 as the JAL delay slot,
+    # and this codebase commonly loads a1 there.
+    for addr in (callsite + 4, callsite - 4, callsite - 8, callsite - 12):
+        word = vaddr_word(raw, elf, addr)
+        if word is None:
+            continue
+        op = word >> 26
+        rs = (word >> 21) & 0x1F
+        rt = (word >> 16) & 0x1F
+        imm = word & 0xFFFF
+        if rs == 0 and rt == 5 and op in {0x0D, 0x09}:
+            return {
+                "address": f"0x{addr:08X}",
+                "modifier_id": imm,
+            }
+    return None
+
 
 def main() -> None:
     raw = Path("BOOT.BIN").read_bytes()
@@ -95,6 +113,7 @@ def main() -> None:
 
     modifier_callers = []
     career_direct_calls = []
+    modifier_call_id_inventory = []
     modifier_calls_by_function: dict[tuple[int, int], list[dict[str, str]]] = {}
     for sec in elf.sections:
         if sec.kind != "executable" or sec.size < 4:
@@ -105,6 +124,13 @@ def main() -> None:
                 continue
             start, end = function_bounds(raw, elf, addr)
             callee = next(name for name, value in MODIFIER_FUNCTIONS.items() if value == target)
+            modifier_id = immediate_modifier_id(raw, elf, addr)
+            modifier_call_id_inventory.append({
+                "callsite": f"0x{addr:08X}",
+                "callee": callee,
+                "function_start": f"0x{start:08X}",
+                "modifier_id": modifier_id,
+            })
             modifier_calls_by_function.setdefault((start, end), []).append({
                 "callsite": f"0x{addr:08X}",
                 "callee": callee,
@@ -192,7 +218,21 @@ def main() -> None:
     print("CAREER_INJURY_PROBE_BEGIN")
     print(json.dumps({
         "injury_strings": string_hits,
-        "injury_modifier_callers": modifier_callers,
+        "injury_modifier_callers": [
+            {
+                **row,
+                "context": disasm_range(
+                    raw,
+                    elf,
+                    max(0, int(row["callsite"], 16) - 0x20),
+                    int(row["callsite"], 16) + 0x28,
+                ),
+            }
+            for row in modifier_call_id_inventory
+            if row["modifier_id"] is not None
+            and row["modifier_id"]["modifier_id"] in INJURY_IDS
+        ],
+        "modifier_call_id_inventory": modifier_call_id_inventory,
         "modifier_candidate_functions": modifier_candidate_functions,
         "modifier_function_bodies": modifier_function_bodies,
         "career_region_direct_injury_modifier_calls": career_direct_calls,
