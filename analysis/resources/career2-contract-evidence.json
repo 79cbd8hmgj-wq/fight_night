@@ -177,7 +177,7 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "Retail title defenses already select ladder slot 1 as the player's challenger. Next determine whether any contract/result path enforces a mandatory-defense deadline or creates eliminators; absent such evidence, implement those as Career Mode 2.0 policy extensions. In parallel, resolve progression-record+0x18 title-forfeiture writes, then move to explicit injury/recovery and weight-class movement."
+    "next_static_step": "The stock mandatory-defense baseline is now bounded: defense contracts select ladder entry 1, and expired player titles forfeit to ladder entry 1. Normalize 0x001A1280 to recover the exact deadline interval and scan remaining contract/string evidence for a distinct eliminator system; if none appears, treat eliminators and AI title scheduling as Career Mode 2.0 extensions before moving to injury/recovery and weight-class movement."
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -699,10 +699,22 @@
         "interpretation": "The standard title-defense contracts schedule the player against ladder slot 1, i.e. the highest challenger position beneath slot 0 in the sorted ladder."
       },
       "mandatory_challenger_boundary": {
-        "supported": "Retail already hardwires the standard player title-defense opponent to ladder slot 1.",
-        "not_yet_supported": "No deadline, sanctioning rule, refusal penalty, rotating mandatory order, eliminator bracket, or AI-vs-AI mandatory-title scheduler has been proven.",
+        "supported": "Retail hardwires standard player title defenses to ladder entry 1 and enforces per-slot title-expiry deadlines; an expired player-held title is transferred to ladder entry 1 and counted as a forfeiture.",
+        "not_yet_supported": "No rotating mandatory order, separate eliminator bracket, sanctioning-body layer, explicit refusal penalty distinct from expiry, or AI-vs-AI mandatory-title scheduler has been proven.",
         "career2_implication": "Career Mode 2.0 can preserve the proven champion-vs-top-challenger baseline while adding explicit mandatory-challenger timing, eliminators, vacancies and AI title scheduling."
       }
+    },
+    "mandatory_defense_baseline": {
+      "confidence": "CONFIRMED simple stock baseline; no separate eliminator system yet proven",
+      "defense_opponent": "Standard defense types 20/18/19 select ranking-ladder entry 1 through live contract+0x2C = 1 in 0x001A4F50.",
+      "expiry_enforcement": "0x0019DFE8 checks per-slot title deadlines and, on expiry, transfers the championship to the same ladder-entry-1 position while incrementing the player's forfeiture counter.",
+      "standard_slot_deadlines": {
+        "slot0": "profile+0x128",
+        "slot1": "profile+0x130",
+        "slot2": "profile+0x12C"
+      },
+      "implication": "Retail's standard player-title policy is champion vs the immediate top challenger, with a deadline-backed forfeiture path. More elaborate mandatory rotations/eliminators are not required to explain the recovered stock behavior.",
+      "boundary": "The exact deadline duration is pending normalization of date helper 0x001A1280. No distinct eliminator bracket, sanctioning rotation, refusal penalty, or AI-vs-AI title scheduler has yet been proven."
     }
   }
 }
