@@ -19,7 +19,11 @@ from fnr3_re.overhaul.career2_retirement import (
     PROFILE_MONEY_OFFSET,
     PROFILE_RETIRED_OFFSET,
     RETAIL_LEGACY_FIELD_OFFSETS,
+    RETIRE_CONTRACT_TYPE,
     RETIRED_NEXT_EVENT_CODE,
+    RETIREMENT_HANDLER_POINTER_VADDR,
+    RETIREMENT_HANDLER_VADDR,
+    RETIREMENT_WRITE_VADDR,
     CareerRecordSummary,
     ChampionshipRecordSummary,
     LegacyEvidenceSnapshot,
@@ -196,3 +200,10 @@ def test_legacy_field_map_uses_recovered_retail_offsets() -> None:
         "title_defenses": PROGRESSION_TITLE_DEFENSES_OFFSET,
         "title_forfeitures": PROGRESSION_TITLE_FORFEITURES_OFFSET,
     }
+
+
+def test_retirement_transition_evidence_constants_are_locked() -> None:
+    assert RETIRE_CONTRACT_TYPE == 27
+    assert RETIREMENT_HANDLER_VADDR == 0x001A3B5C
+    assert RETIREMENT_WRITE_VADDR == 0x001A3C60
+    assert RETIREMENT_HANDLER_POINTER_VADDR == 0x00581A20
