@@ -134,7 +134,8 @@ def main() -> None:
 
     # Functions already proven to participate in the population availability path.
     focused = {
-        "cooldown_value_helper": disasm_range(raw, elf, 0x00192410, 0x001928F0, 360),
+        "cooldown_value_helper": disasm_range(raw, elf, 0x00192410, 0x00192580, 160),
+        "cooldown_consumer_helper": disasm_range(raw, elf, 0x001929D4, 0x00192A80, 96),
         "weekly_countdown_decay": disasm_range(raw, elf, 0x00194320, 0x001943C0),
         "population_matchmaking": disasm_range(raw, elf, 0x00195564, 0x00195810),
         "due_population_fights": disasm_range(raw, elf, 0x0019E790, 0x0019EFD0),
