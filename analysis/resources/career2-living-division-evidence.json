@@ -1095,8 +1095,8 @@
       }
     },
     "unresolved": [
-      "Resolve the public/UI/save semantics of profile+0x66, profile+0x68 and profile+0x6A from independent readers rather than naming them from mutation behavior alone.",
-      "Resolve why and when profile+0x2A and profile+0x2B diverge so the s4==0 / 0x0019CD68 title-transfer path can be given a precise career-rule name.",
+      "Resolve the public/UI/save semantics of profile+0x66, profile+0x68 and profile+0x6A from independent readers; the canonical career-stats title UI has now been ruled out.",
+      "Resolve why profile+0x2A and profile+0x2B diverge so the s4==0 / 0x0019CD68 title-transfer path can be given a precise career-rule name.",
       "Resolve special award/belt result bookkeeping differences for contract types 16/17/21/22.",
       "Distinguish the exact public result-method labels within code pairs 2/3 versus 4/5/6 and their reciprocal 7..11 values if needed."
     ],
@@ -1185,6 +1185,12 @@
         "behavior": "initialized/reset to zero; incremented alongside profile+0x68 on that current-holder path; reset to zero immediately after the synchronized standard-title player-displaced transfer at 0x0019CD4C",
         "exact_public_name": "unresolved",
         "bounded_inference": "its increment-while-holder/reset-on-displacement behavior is consistent with a current-reign/streak quantity, but that label is not yet proven"
+      },
+      "ui_boundary": {
+        "confidence": "CONFIRMED negative identification",
+        "canonical_title_history_ui": "GetMyCareerStatsInfo/career-stats rendering at 0x001E26F4-0x001E2808 reads progression-record +0x15/+0x16/+0x17/+0x18 for belts won/lost/defended/forfeited.",
+        "exclusion": "The recovered career-stats title region does not read profile+0x66, profile+0x68, or profile+0x6A. Those profile-level halfwords are therefore not the canonical aiTitleBeltsWon/aiTitleBeltsLost/aiTitleBeltsDefended/aiTitleBeltsForfeited values.",
+        "implication": "Keep +0x66/+0x68/+0x6A as separate career-level title state/counters until an independent reader proves their public meaning."
       }
     }
   }
