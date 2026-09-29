@@ -171,6 +171,104 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "Trace the selection/confirm handlers and the contract-object setters called from 0x001FFE1C and neighboring code to recover exactly which career-state fields are committed when a contract is accepted."
+    "next_static_step": "The select/confirm boundary is now recovered. Next: map the Career Central live career-profile fields (+0x80 state, +0x9C date, money, rank, retirement, trainer/staff state) and then trace the Go Pro/Retire special contract confirmation paths through the same scheduler."
+  },
+  "selection_and_confirmation": {
+    "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
+    "selection_handler": {
+      "function": "0x001FF210",
+      "native_binding": "OnSelectFightContract",
+      "binding_confidence": "CONFIRMED by direct read of UI input key iContractID",
+      "input_key": "iContractID",
+      "selected_id_destination": "0x000193840(career_object, slot=0, contract_id)",
+      "followup": "0x001FFE1C(contract_id)",
+      "evidence": [
+        "0x001FF244 loads string 0x0050DB00 = 'iContractID' into the UI-value reader 0x000D241C.",
+        "The decoded integer is passed as a2 to 0x000193840 with a1=0.",
+        "0x000193840 selects the embedded object at career+0x60 for slot 0 and invokes its member-function entry +0x28.",
+        "The career+0x60 object's +0x28 method is 0x001A2FA0, which copies the selected contract record into the live object.",
+        "The handler then calls 0x001FFE1C with the same selected contract ID."
+      ],
+      "implication": "The original game already has a clean 'select offer -> load live selected-contract object' boundary that can be replaced by a generated Career 2.0 offer list without changing the downstream contract-detail/scheduling machinery."
+    },
+    "confirmation_handler": {
+      "function": "0x001FF3A0",
+      "native_binding": "OnSelectFightContractConfirm",
+      "binding_confidence": "CONFIRMED by direct read of UI input key iYes",
+      "input_key": "iYes",
+      "reject_or_cancel_path": "If iYes is false, or no valid selected opponent/contract state is present, 0x00019FBF4 resets the contract/career selection state.",
+      "accept_path": [
+        "Reads the live selected contract embedded at career+0x60.",
+        "Invokes contract member-function entry +0x48, which resolves to 0x001A2D34 and returns selected_record+0x20.",
+        "Multiplies that value by 7.",
+        "Copies the current packed career date from career-profile +0x9C into a temporary date object and calls 0x001A1280 with the 7x value as a day offset.",
+        "Writes literal career state/event code 25 to career-profile +0x80.",
+        "Calls 0x0019443C, 0x00194518 and 0x00195564 to update downstream career/schedule state.",
+        "Finalizes/releases the temporary date object."
+      ],
+      "scheduled_date": {
+        "base_field": "career-profile +0x9C",
+        "contract_value": "selected contract record +0x20 via 0x001A2D34",
+        "conversion": "days = contract_value * 7",
+        "date_math": "0x001A1280",
+        "confidence": "CONFIRMED whole-week scheduling arithmetic; the original field name is unknown"
+      },
+      "persistent_transition": {
+        "field": "career-profile +0x80",
+        "accepted_contract_value": 25,
+        "confidence": "CONFIRMED write; semantic label is a career state/event code but its enum name remains unresolved"
+      },
+      "implication": "Career 2.0 negotiation can remain upstream of this boundary: once an offer is accepted, the original scheduling/date machinery can potentially be reused with an extended/generated contract record."
+    }
+  },
+  "contract_record": {
+    "confidence": "CONFIRMED size/type/timeline fields; other offsets remain partially unresolved",
+    "size_bytes": 68,
+    "selected_record_loader": "0x001A2FA0",
+    "global_record_table_pointer": "0x0056D530",
+    "selected_count_global": "0x0056D534",
+    "live_record_storage": "contract_object+0x1C points to owned record storage beginning at object+0x10",
+    "evidence": [
+      "0x001A2FA0 computes record_address = global_table + contract_id * 68 (id*64 + id*4).",
+      "It copies exactly eight 8-byte chunks plus one final 4-byte word = 68 bytes into the live contract record.",
+      "It marks selection validity through 0x0019F978 after the copy."
+    ],
+    "fields": {
+      "+0x20": {
+        "observed_role": "whole-week scheduling offset used when an accepted contract creates the future fight date",
+        "getter": "0x001A2D34",
+        "confirmation_use": "value * 7 days -> 0x001A1280 date arithmetic",
+        "confidence": "CONFIRMED arithmetic role; exact original field name unknown"
+      },
+      "+0x30": {
+        "observed_role": "packed flags consumed throughout detail/fine-print code",
+        "confidence": "CONFIRMED packed field; individual bits still being decoded"
+      },
+      "+0x34": {
+        "observed_role": "signed contract type",
+        "getter_or_resolver": "0x001A2C98",
+        "confidence": "CONFIRMED"
+      },
+      "+0x44": {
+        "observed_role": "packed fine-print/rules bitfield read by 0x001A5594",
+        "confidence": "CONFIRMED"
+      }
+    }
+  },
+  "live_contract_object": {
+    "confidence": "CONFIRMED",
+    "career_slot0_offset": "+0x60",
+    "vtable": "0x005819B4",
+    "methods": {
+      "+0x28": "0x001A2FA0 - select/copy contract by ID",
+      "+0x38": "0x001A2C80 - returns live record +0x14",
+      "+0x40": "0x001A2C8C - returns live record +0x10",
+      "+0x48": "0x001A2D34 - returns live record +0x20 scheduling value",
+      "+0x50": "0x001A2C10 - contract/current-state comparison predicate",
+      "+0x58": "0x001A4F50",
+      "+0x60": "0x001A38C4",
+      "+0x68": "0x001A3B5C"
+    },
+    "note": "Only method roles proven by direct dataflow are semantically named; the remaining methods stay address-only."
   }
 }
