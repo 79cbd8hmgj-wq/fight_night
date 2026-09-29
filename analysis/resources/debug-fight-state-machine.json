@@ -374,11 +374,12 @@
     "states": {
       "1": {
         "handler": "0x0007FEDC",
-        "role": "round/fight reset/setup",
-        "confidence": "PROBABLE",
+        "role": "initial fight/round setup",
+        "confidence": "CONFIRMED setup/reset role; exact original name unknown",
         "evidence": [
-          "Under its state conditions it invokes two-fighter reset 0x000802B8.",
-          "That reset reaches per-boxer 0x0009BB94 -> physical recovery 0x0007854C, which applies the named between-round max-energy recovery modifier."
+          "Waits on initial manager/session conditions, then calls two-fighter reset 0x000802B8.",
+          "0x000802B8 reaches per-boxer 0x0009BB94 -> physical recovery 0x0007854C.",
+          "Transitions directly to active lifecycle state 2."
         ]
       },
       "2": {
@@ -413,38 +414,57 @@
       },
       "4": {
         "handler": "0x0007FC84",
-        "role": "timer/reset/recovery phase",
-        "confidence": "STRUCTURALLY_BOUNDED semantics unresolved",
+        "role": "between-round / round-end timer",
+        "confidence": "CONFIRMED structural role; exact original name unknown",
         "evidence": [
-          "Uses owner+0x1C/+0x18 countdown/timer fields.",
-          "Calls 0x0007FA98 and 0x00082CF4.",
-          "Loops boxer state through 0x0009BF40.",
-          "Can transition to state 7 or state 5."
+          "Runs owner+0x1C then owner+0x18 countdown phases while updating both boxers.",
+          "After timers expire, compares fight progress/current round against the scheduled round limit.",
+          "If the bout can continue and no separate stop condition is set, transitions to state 5.",
+          "If scheduled rounds are exhausted or a stop condition is active, transitions to state 7."
         ]
       },
       "5": {
         "handler": "0x0007FFA8",
-        "role": "unresolved lifecycle state",
-        "confidence": "UNRESOLVED",
-        "note": "Entering state 5 through 0x0008000C calls 0x0009BCAC on both boxers."
+        "role": "next-round reset/start",
+        "confidence": "CONFIRMED structural role; exact original name unknown",
+        "evidence": [
+          "On state entry 0x0008000C calls 0x0009BCAC on both boxers.",
+          "Handler calls 0x000802B8 with the next-round value derived from fight state.",
+          "Immediately transitions to active state 2."
+        ]
       },
       "6": {
         "handler": "0x000827B8",
-        "role": "knockdown/countdown candidate",
-        "confidence": "PROBABLE; detailed decode in progress",
+        "role": "knockdown sequence / count controller",
+        "confidence": "CONFIRMED structural role; exact original name unknown",
         "evidence": [
-          "Uses lifecycle owner+0x10 as a countdown.",
-          "Sets owner+0x3C when countdown reaches a threshold.",
-          "Consults fight-session option bits and fight stat ID 0x0F.",
-          "Can transition back to lifecycle state 2."
-        ]
+          "Selects the boxer satisfying 0x0009CF68 (high-level boxer state in {7,8,9}); if neither boxer qualifies it returns to state 2.",
+          "Uses owner+0x10 as a countdown. State 2 initializes this counter to global 0x00567B00 * 4; the debug image stores 30 at 0x00567B00, producing 120 ticks.",
+          "When the decremented counter reaches 2, calls 0x0009B45C(boxer,2), which directly stores 2 at high-level boxer+0x230.",
+          "When the count expires it sets owner+0x3C and runs knockdown presentation/state work.",
+          "The three-knockdown-rule branch reads fight-session +0x15C bit 5, then queries generic fight stat ID 0x0F for the downed boxer in per-round/subcontext form.",
+          "If that per-round 0x0F value is >=3, it performs the stoppage/result branch and transitions to terminal state 7.",
+          "Otherwise it continues knockdown/recovery presentation and later clears owner+0x3C / manages owner+0x3D."
+        ],
+        "three_knockdown_enforcement": {
+          "option_storage": "fight-session +0x15C bit 5",
+          "stat_accessor": "0x000BA748",
+          "stat_id": "0x0F",
+          "query_shape": "subcontext=1, round/index=-1 (latest/current round)",
+          "threshold": 3,
+          "terminal_transition": "state 7",
+          "confidence": "CONFIRMED by stat writer + lifecycle consumer correlation"
+        }
       },
       "7": {
         "handler": "0x0007FEC0",
-        "role": "terminal/idle/result-pending candidate",
-        "confidence": "UNRESOLVED",
+        "role": "terminal fight-end state",
+        "confidence": "CONFIRMED structural role; exact original name unknown",
         "evidence": [
-          "Small handler that calls 0x0007FA98."
+          "State 4 transitions here when scheduled rounds are exhausted or a separate bout-stop condition is active.",
+          "State 6 transitions here when the enabled three-knockdown rule reaches its >=3 threshold.",
+          "State 2 can transition here on an external fight-ending condition.",
+          "Handler performs only shared fight-state update/maintenance through 0x0007FA98 and does not transition back to active state."
         ]
       }
     },
@@ -465,6 +485,31 @@
       ],
       "result": "duration stored at owner+0x14 then lifecycle state 3"
     },
-    "next_static_step": "Fully decode state 6 0x000827B8 through its count/recovery/result branches, then use its transition targets to distinguish knockdown count, recovery, and fight-end states."
+    "next_static_step": "Fully decode state 6 0x000827B8 through its count/recovery/result branches, then use its transition targets to distinguish knockdown count, recovery, and fight-end states.",
+    "state_graph": [
+      "1 initial setup -> 2 active fight",
+      "2 active fight -> 3 timed KO moment",
+      "3 KO moment -> 2 active fight",
+      "2 active fight -> 4 round-end/between-round",
+      "4 -> 5 next-round reset when bout continues",
+      "5 -> 2 active fight",
+      "2 active fight -> 6 knockdown sequence",
+      "6 -> 2 when knockdown sequence resolves and bout continues",
+      "6 -> 7 on three-knockdown-rule stoppage or other terminal condition",
+      "4 -> 7 when rounds/bout terminate",
+      "2 -> 7 on external terminal condition"
+    ],
+    "stat_0x0f_proof": {
+      "recorder": "0x000BAB38",
+      "confidence": "CONFIRMED",
+      "evidence": [
+        "0x000BAB38 receives a knockdown event/stat object whose +0x04 and +0x08 fields identify the two boxer slots.",
+        "It increments stat ID 0x0F for object+0x08 and stat ID 0x0E for object+0x04 in the same operation.",
+        "Stat ID 0x0E is independently proven as the knockdowns-scored value displayed by GetFightTotalsInfo.",
+        "Therefore object+0x04 is the scorer and object+0x08 is the boxer knocked down; stat 0x0F is the corresponding knockdowns-suffered counter.",
+        "State 6 queries stat 0x0F for the selected downed boxer in per-round form and stops the fight at >=3 when the knockdown-rule option is enabled."
+      ],
+      "semantic": "knockdowns suffered / downed count; per-round form is used for three-knockdown-rule enforcement"
+    }
   }
 }
