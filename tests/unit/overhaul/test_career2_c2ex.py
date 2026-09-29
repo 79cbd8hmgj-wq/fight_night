@@ -14,9 +14,9 @@ from fnr3_re.overhaul.career2_amateur import (
 from fnr3_re.overhaul.career2_c2ex import (
     C2EX_HEADER_SIZE,
     C2EX_MAGIC,
-    C2EX_VERSION,
     C2EX_V1_PAYLOAD_SIZE,
     C2EX_V1_TOTAL_SIZE,
+    C2EX_VERSION,
     C2EXAmateurDevelopment,
     C2EXError,
     append_c2ex,
