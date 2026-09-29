@@ -16,8 +16,8 @@ from fnr3_re.overhaul.career2_living_divisions import (
 from fnr3_re.overhaul.career2_retirement import (
     PROFILE_MONEY_OFFSET,
     PROFILE_RETIRED_OFFSET,
-    RETIRED_NEXT_EVENT_CODE,
     RETAIL_LEGACY_FIELD_OFFSETS,
+    RETIRED_NEXT_EVENT_CODE,
     CareerRecordSummary,
     ChampionshipRecordSummary,
     LegacyEvidenceSnapshot,
