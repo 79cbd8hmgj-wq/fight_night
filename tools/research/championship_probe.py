@@ -332,7 +332,7 @@ def main() -> None:
         0x0050E078, 0x0050E088, 0x0050E098, 0x0050E0A8, 0x0050E0B8,
         0x0050E0C8, 0x0050E0D8,
     ]
-    contract_label_strings = {
+    contract_label_address_strings = {
         f"0x{address:08X}": read_c_string(address)
         for address in contract_label_addresses
     }
@@ -359,8 +359,11 @@ def main() -> None:
 
     def scan_string_region(start_vaddr: int, end_vaddr: int) -> list[dict[str, str]]:
         rows = []
-        start_off = start_vaddr + 0x100
-        end_off = min(len(raw), end_vaddr + 0x100)
+        start_off = elf.vaddr_to_offset(start_vaddr)
+        end_off = elf.vaddr_to_offset(end_vaddr)
+        if start_off is None or end_off is None:
+            return rows
+        end_off = min(len(raw), end_off)
         off = start_off
         while off < end_off:
             while off < end_off and not (0x20 <= raw[off] <= 0x7E):
@@ -377,7 +380,7 @@ def main() -> None:
                     value = ""
                 if value:
                     rows.append({
-                        "vaddr": f"0x{begin - 0x100:08X}",
+                        "vaddr": f"0x{(start_vaddr + (begin - start_off)):08X}",
                         "value": value,
                     })
             off += 1
@@ -440,6 +443,7 @@ def main() -> None:
         "manual_functions": manual_functions,
         "focused_ranges": focused_ranges,
         "named_strings": named_strings,
+        "contract_label_address_strings": contract_label_address_strings,
         "contract_label_strings": contract_label_strings,
         "contract_detail_strings": contract_detail_strings,
         "contract_cases": contract_cases,
