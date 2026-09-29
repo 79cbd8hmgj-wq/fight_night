@@ -530,7 +530,7 @@ def main() -> None:
         })
 
 
-    # Find title-counter mutations tied specifically to progression-record getter
+    # Find title-counter mutations tied specifically to the progression-record getter
     # 0x001928F0.  This avoids confusing profile/stack bytes at the same small
     # offsets (+0x15..+0x18) with progression-record title statistics.
     progression_title_counter_sequences = []
