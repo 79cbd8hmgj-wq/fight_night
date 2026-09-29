@@ -208,12 +208,50 @@
       "Preserve trainer slot as the base coach/trainer contract.",
       "Generalize the existing contract-person framework for manager/promoter contracts rather than inventing a totally separate UI pattern.",
       "Use the existing date/term/economy machinery for longer camps and staff relationships.",
-      "Separate optional training activity quality from trainer contract quality in the next RE pass."
+      "Separate optional training activity quality from trainer contract quality in the next RE pass.",
+      "Treat promoter fight terms and persistent promoter/manager relationships as separate layers: retail proves the former, while the latter is an overhaul extension."
     ],
     "next_static_step": [
       "Trace xdbtrain.adf and the training-result writer that mutates persistent boxer attributes.",
       "Identify the progression gate that currently requires training before the next fight.",
       "Map save serializer coverage for career+0xE8 and career+0x134 so new staff-contract fields can be sized safely."
+    ]
+  },
+  "promoter_manager_boundary": {
+    "confidence": "CONFIRMED bounded static architecture boundary",
+    "persistent_staff_roles": {
+      "selector": "global 0x00023950",
+      "recovered_roles": {
+        "0": "trainer",
+        "nonzero": "cutman"
+      },
+      "embedded_slots": {
+        "career+0xE8": "trainer contract",
+        "career+0x134": "cutman contract"
+      },
+      "conclusion": "No third persistent manager/promoter person-contract slot is present in the recovered generic staff selector/installer mapping."
+    },
+    "promoter_fight_contract_terms": {
+      "source": "career fight-contract fine-print provider",
+      "confirmed_ui_keys": [
+        "INFO_Promoter_Selects",
+        "INFO_Promoter_Cut"
+      ],
+      "related_contract_fields": [
+        "strPurseCut",
+        "INFO_Your_Cut"
+      ],
+      "interpretation": "Retail supports promoter-facing control/cut terms as properties of individual fight contracts.",
+      "boundary": "These fine-print terms do not prove a persistent named promoter relationship, promoter roster, promoter contract slot, or manager relationship field."
+    },
+    "manager_boundary": {
+      "evidence": "career2-contract-evidence explicitly leaves 'manager relationship field' in not-yet-proven state.",
+      "result": "No persistent manager relationship field is currently evidenced in the bounded retail career/staff structures."
+    },
+    "career2_extension_path": [
+      "Reuse the proven contract-person UI and InstallCareerContract/date/economy machinery for new manager/promoter relationships.",
+      "Keep fight-level promoter control/cut as separate offer terms even if a persistent promoter relationship is added.",
+      "Do not alias trainer/cutman slots or existing fine-print flags into manager/promoter state without new evidence."
     ]
   }
 }
