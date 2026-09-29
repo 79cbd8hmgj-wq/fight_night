@@ -262,6 +262,7 @@ def main() -> None:
         "contract_eligibility_full": disasm_range(raw, elf, 0x001A3FBC, 0x001A4F50),
         "special_contract_scheduler_full": disasm_range(raw, elf, 0x001A4F50, 0x001A5594),
         "champion_transfer_full": disasm_range(raw, elf, 0x00196DC4, 0x00197018),
+        "post_fight_result_setup": disasm_range(raw, elf, 0x0019C300, 0x0019C620),
         "result_title_transfer_region": disasm_range(raw, elf, 0x0019CB00, 0x0019CDA0),
         "result_title_transfer_full": disasm_range(raw, elf, 0x0019CC20, 0x0019CFF8),
         "title_state_helper_1A0E58": disasm_range(raw, elf, 0x001A0E58, 0x001A0E70),
