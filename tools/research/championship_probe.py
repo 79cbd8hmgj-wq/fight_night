@@ -593,6 +593,74 @@ def main() -> None:
                 })
         result_predicate_callers[f"0x{target:08X}"] = callers
 
+    # Trace the entry contract of the shared post-fight result handler.
+    shared_result_callers = []
+    shared_result_target = 0x0019AAAC
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        for addr, word in words_for_section(raw, sec):
+            if (word >> 26) != 0x03:
+                continue
+            dest = ((addr + 4) & 0xF0000000) | ((word & 0x03FFFFFF) << 2)
+            if dest != shared_result_target:
+                continue
+            caller_start, caller_end = function_bounds(raw, elf, addr)
+            shared_result_callers.append({
+                "call_site": f"0x{addr:08X}",
+                "caller_start": f"0x{caller_start:08X}",
+                "context": disasm_range(
+                    raw, elf,
+                    max(caller_start, addr - 0x80),
+                    min(caller_end, addr + 0x40),
+                ),
+            })
+
+    # The championship-transfer enable flag is a stack-local owned by the
+    # shared result handler. Record every direct write so its exact lifetime
+    # and disabling cases can be reconstructed.
+    transfer_enable_writes = []
+    shared_start, shared_end = function_bounds(raw, elf, shared_result_target)
+    for addr in range(shared_start, shared_end, 4):
+        word = vaddr_word(raw, elf, addr)
+        if word is None:
+            continue
+        op = word >> 26
+        rs = (word >> 21) & 0x1F
+        imm = word & 0xFFFF
+        if op == 0x28 and rs == 29 and imm == 0x0378:  # SB *, 0x378(sp)
+            transfer_enable_writes.append({
+                "address": f"0x{addr:08X}",
+                "context": disasm_range(
+                    raw, elf,
+                    max(shared_start, addr - 0x58),
+                    min(shared_end, addr + 0x48),
+                ),
+            })
+
+    # Inventory direct halfword accesses to the three profile-level title
+    # counters. The contexts are intentionally bounded so we can distinguish
+    # post-fight writers from UI/save/report readers before assigning names.
+    profile_title_counter_accesses = []
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        for addr, word in words_for_section(raw, sec):
+            if not (0x00190000 <= addr < 0x00210000):
+                continue
+            op = word >> 26
+            imm = word & 0xFFFF
+            if imm not in {0x66, 0x68, 0x6A} or op not in {0x21, 0x25, 0x29}:  # LH/LHU/SH
+                continue
+            start, end = function_bounds(raw, elf, addr)
+            profile_title_counter_accesses.append({
+                "address": f"0x{addr:08X}",
+                "offset": f"0x{imm:02X}",
+                "opcode": op,
+                "function_start": f"0x{start:08X}",
+                "context": disasm_range(raw, elf, max(start, addr - 0x34), min(end, addr + 0x44)),
+            })
+
     eligibility_cases = []
     for index in range(27):
         type_id = index + 1
@@ -729,6 +797,9 @@ def main() -> None:
         "secondary_gate_table": secondary_gate_table,
         "result_reciprocal_jump_table": result_reciprocal_jump_table,
         "result_predicate_callers": result_predicate_callers,
+        "shared_result_callers": shared_result_callers,
+        "transfer_enable_writes": transfer_enable_writes,
+        "profile_title_counter_accesses": profile_title_counter_accesses,
         "eligibility_cases": eligibility_cases,
         "title_stat_writes": title_stat_writes,
         "title_stat_pointer_adjusts": title_stat_pointer_adjusts,
