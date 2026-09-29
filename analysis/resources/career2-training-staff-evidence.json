@@ -177,9 +177,7 @@
       "Reuse staff expiry notifications and weekly date arithmetic for contract renewal/relationship decisions."
     ],
     "next_static_step": [
-      "Age/physical development: map player age and created-boxer height/reach/weight fields and identify a safe yearly growth boundary.",
-      "Potential/learning rate: identify unused/reserved persistent boxer/profile storage near the existing created-boxer development fields before adding new save data.",
-      "Later return to trainer outcome scaling only when implementing coach-specific development formulas."
+      "DEFERRED: trainer/cutman work resumes in the next version only."
     ]
   },
   "training_result_application": {
@@ -557,5 +555,9 @@
       "Trainer state 3 clears persistent boxer+0xA2 and invalidates the trainer selection."
     ],
     "implication": "Trainer contracts are already integrated with the same calendar used by fight scheduling. Career Mode 2.0 can schedule camps and coaching relationships in weeks without inventing a second time system."
+  },
+  "current_version_scope": {
+    "status": "DEFERRED_TO_NEXT_VERSION_BY_USER",
+    "instruction": "No additional trainer/cutman implementation or RE for the current Career Mode 2.0 version. Existing evidence remains available for the next version."
   }
 }
