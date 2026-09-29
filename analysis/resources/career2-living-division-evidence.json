@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "weekly_world_advance": {
+    "function": "0x00195430",
+    "proposed_name": "AdvanceCareerWorldOneWeek",
+    "confidence": "CONFIRMED seven-day world-advance behavior; proposed name is descriptive",
+    "behavior": [
+      "Copies persistent profile date from profile+0x9C.",
+      "Constructs a seven-day interval and adds it to the copied date.",
+      "When profile+0x121 is nonzero, calls 0x00194320, 0x0019E790 and 0x00195DC0 before committing the new date.",
+      "Writes the advanced packed date back to profile+0x9C.",
+      "Calls 0x0019472C/0x001943C0 housekeeping after the update."
+    ],
+    "implication": "The retail career already has a weekly world-tick boundary suitable for Career Mode 2.0 calendar/world simulation."
+  },
+  "population_model": {
+    "record_getter": "0x001928F0(career,index)",
+    "default_population_sizes": {
+      "amateur_side": 20,
+      "post_initial_or_professional_side": 50
+    },
+    "dynamic_count_field": "profile+0x2A",
+    "current_player_index": "profile+0x4E",
+    "confidence": "CONFIRMED loop bounds/record access; exact meaning of every profile count field remains unresolved",
+    "evidence": [
+      "Multiple weekly population routines use profile+0x2A when nonzero.",
+      "When it is zero they fall back to 20 records on phase 0 and 50 records when profile+0x121 is nonzero.",
+      "All records are accessed through the same 0x001928F0 index getter used by Career Central for the player's current progression record."
+    ]
+  },
+  "annual_aging": {
+    "function": "0x00195810",
+    "proposed_name": "AdvancePopulationAges",
+    "confidence": "CONFIRMED annual increment behavior; proposed name is descriptive",
+    "age_field": "progression record+0x09",
+    "birthday_or_month_source": "progression record+0x1C",
+    "behavior": [
+      "Loops the non-player population, skipping the player's current progression record.",
+      "Builds a calendar date from record+0x1C modulo 12 plus the current calendar year.",
+      "Tests whether that anniversary/birthday boundary falls between the previous and newly advanced dates.",
+      "When crossed, increments progression record+0x09 by one."
+    ],
+    "implication": "The retail living world already ages AI boxer records as the weekly calendar crosses their annual date."
+  },
+  "retirement_or_inactivation": {
+    "function": "0x00195990",
+    "proposed_name": "EvaluatePopulationRetirement",
+    "confidence": "CONFIRMED that it evaluates age/record/performance and marks population records inactive; retirement is the strongest semantic interpretation",
+    "active_flag": "progression record+0x00 (0 active; function can write 1 to remove/inactivate)",
+    "inputs": [
+      "record+0x09 age-like field",
+      "record+0x11 baseline/starting-age-like field",
+      "record+0x05/+0x06/+0x07 wins/losses/draws",
+      "record+0x04 rank",
+      "career-length/performance helper 0x00193EF4",
+      "RNG"
+    ],
+    "hard_or_observed_conditions": [
+      "Requires more than seven completed fights before most checks.",
+      "Immediately marks the record inactive when record+0x09 reaches at least 45.",
+      "Can mark inactive after at least 21 losses.",
+      "Uses win percentage, age/career-span-like values and a random check for additional inactivation decisions."
+    ],
+    "exclusions": [
+      "skips the player's current record",
+      "skips at least two other protected/special boxer indices drawn from profile state"
+    ],
+    "implication": "AI boxer retirement/turnover already exists and can be expanded with health, accumulated damage, titles, form and comeback logic rather than invented from zero."
+  },
+  "due_fight_simulation": {
+    "function": "0x0019E790",
+    "proposed_name": "SimulateDuePopulationFights",
+    "confidence": "CONFIRMED scheduled non-player fight/result simulation; proposed name is descriptive",
+    "caller": "0x001954B8 inside weekly world advance 0x00195430",
+    "scheduling_fields": {
+      "+0x28": "packed scheduled date/time object used to determine whether a population record is due",
+      "+0x24": "packed opponent/match assignment data cleared after the bout",
+      "confidence": "CONFIRMED scheduling use; exact bit layout of +0x24 remains unresolved"
+    },
+    "result_fields": {
+      "+0x05": "wins (CONFIRMED by Career Central format and simulated winner increment)",
+      "+0x06": "losses (CONFIRMED by Career Central format and simulated loser increment)",
+      "+0x07": "draws (CONFIRMED by Career Central format and simulated draw increment)",
+      "+0x08": "KOs (CONFIRMED by Career Central format and stoppage-result increment)",
+      "+0x04": "zero-based rank, read repeatedly by simulation/progression logic"
+    },
+    "behavior": [
+      "Loops the career population and selects records whose scheduled date has become due.",
+      "Decodes the scheduled opponent/match assignment.",
+      "Separates player-involved/special cases from non-player matchups.",
+      "Uses fighter rank/performance state and RNG to choose outcomes for simulated non-player bouts.",
+      "Updates wins, losses, draws and KO-related counters.",
+      "Calls 0x00192E38 with the two fighters' ranks and career phase to derive a rank-gap-dependent progression magnitude.",
+      "Calls the shared 0x0019AAAC progression/result routine—the same routine used by the real player post-fight path.",
+      "Clears scheduled fight fields +0x24/+0x28 after processing."
+    ],
+    "significance": "Retail FNR3 already simulates scheduled AI-vs-AI career fights and feeds them through the same wider progression machinery used after player fights."
+  },
+  "rank_gap_progression": {
+    "function": "0x00192E38",
+    "proposed_name": "GetRankProgressionMagnitude",
+    "confidence": "CONFIRMED rank-pair/phase-dependent magnitude behavior; proposed name is descriptive",
+    "inputs": [
+      "fighter A zero-based rank",
+      "fighter B zero-based rank",
+      "career phase boolean"
+    ],
+    "behavior": [
+      "On the initial/amateur side returns a fixed magnitude of 4.",
+      "On the post-initial/professional side varies the magnitude by rank bands/gaps, returning values including 4, 6, 8, 10 and 12.",
+      "Called from the AI bout simulator before subsequent record/progression updates."
+    ],
+    "implication": "The original living world already adjusts progression according to opponent/ranking context rather than only incrementing a static ladder."
+  },
+  "weekly_countdown_decay": {
+    "function": "0x00194320",
+    "confidence": "CONFIRMED periodic field decrement; semantic label unresolved",
+    "field": "progression record+0x13",
+    "behavior": "Once per weekly world tick, decrements nonzero record+0x13 for every population entry.",
+    "warning": "Do not name +0x13 as injury/rest/hype without additional evidence."
+  },
+  "population_maintenance": {
+    "orchestrator": "0x00195DC0",
+    "subroutines": [
+      "0x00195810",
+      "0x00195990",
+      "0x0019EFD0"
+    ],
+    "confidence": "CONFIRMED weekly population maintenance role; detailed replacement semantics partially unresolved",
+    "evidence": [
+      "Called immediately after due-fight simulation during the weekly world advance.",
+      "Runs age advancement first, then retirement/inactivation evaluation, then 0x0019EFD0 population maintenance/replacement.",
+      "Further event/calendar housekeeping follows for specific calendar states."
+    ],
+    "replacement_candidate": "0x0019EFD0",
+    "replacement_evidence": [
+      "Scans roster/career boxer sources and progression records.",
+      "Initializes inactive/new progression records, including active flag, rank, counters, schedule fields and several generated/randomized values.",
+      "Avoids duplicate boxer identities and the player slot.",
+      "Runs once each weekly world-maintenance cycle."
+    ],
+    "interpretation": "0x0019EFD0 appears to replenish or initialize career-population entries as slots become available; exact original method name and every source-table rule remain unresolved."
+  },
+  "no_op_correction": {
+    "function": "0x00194724",
+    "behavior": "literal no-op: jr $ra; nop",
+    "callers": [
+      "0x00021318",
+      "0x001B7058"
+    ],
+    "consequence": "Do not treat 0x00194724 as a ranking/progression updater. Its second caller is outside the career post-fight path, so it is not currently promoted as a Career-specific extension hook."
+  },
+  "career2_relevance": {
+    "already_present": [
+      "weekly calendar advancement",
+      "AI boxer aging",
+      "AI boxer retirement/inactivation",
+      "AI-vs-AI scheduled bouts",
+      "AI fight result generation",
+      "persistent AI records",
+      "rank-context progression",
+      "population replacement/maintenance"
+    ],
+    "extension_targets": [
+      "title ownership and title-fight scheduling",
+      "explicit injuries and recovery",
+      "weight-class movement",
+      "mandatory challengers/eliminators",
+      "promoter/manager influence",
+      "form/reputation",
+      "comeback from retirement",
+      "visible upcoming-fight schedule and historical title movement"
+    ],
+    "next_static_step": [
+      "Trace the scheduling functions that populate progression record+0x24/+0x28 for non-player boxers.",
+      "Decode population-maintenance routine 0x0019EFD0 far enough to separate retirement replacement from normal roster activation.",
+      "Map title/award state used by 0x0019AAAC and weekly simulation so title movement can be surfaced to Career 2.0."
+    ]
+  }
+}
