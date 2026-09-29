@@ -531,11 +531,34 @@
       "GetTrophyCaseInfo": "BOOT.BIN string @ 0x50D798",
       "GetTrophyInfo": "BOOT.BIN string @ 0x50D7AC"
     },
-    "boundary": "Current/previous holder storage, title transfer, won/lost/defended/forfeited progression counters, and the three standard player challenge/defense contract pairs are mapped. Remaining uncertainty is concentrated in special award/belt contract semantics and whether any separate stock mandatory-challenger/eliminator policy exists.",
+    "boundary": "Current/previous holder storage, title transfer, won/lost/defended/forfeited progression counters, the three standard player challenge/defense pairs, and the two special award/belt acquisition-defense families are mapped. The complete title-aware contract/scheduler surface also yields a bounded negative result for any separate stock eliminator/rotating-mandatory subsystem.",
+    "mandatory_challenger_eliminator_boundary": {
+      "confidence": "BOUNDED NEGATIVE RESULT, reconciled from career2-contract-evidence.json",
+      "scope": [
+        "all 50 decoded fights.fnc templates",
+        "contract types 1..27 dispatched by 0x001A3FBC / GetIndividualContractInfo",
+        "0x001971A0 championship/award gate",
+        "all direct 0x00194518 AssignCareerMatch callers",
+        "tracked executable/resource strings"
+      ],
+      "stock_policy": [
+        "Standard title-defense types 20/18/19 select ranking-ladder entry 1 through live contract+0x2C = 1.",
+        "The per-slot title deadline is exactly one calendar year.",
+        "0x0019DFE8 transfers an expired player-held title to the same ladder-entry-1 challenger and increments progression record+0x18 belts forfeited.",
+        "Normal AI-vs-AI matchmaking emits subtype 0 rather than the subtype-8/9 title challenge/defense assignments."
+      ],
+      "not_evidenced": [
+        "rotating mandatory challenger order",
+        "separate eliminator bracket or title-aware eliminator contract family",
+        "sanctioning-body layer",
+        "explicit refusal penalty distinct from deadline expiry",
+        "AI-vs-AI mandatory-title scheduler"
+      ],
+      "career2_boundary": "Treat richer mandatory challengers, eliminators, vacancies, refusal consequences, and AI title scheduling as Career Mode 2.0 extensions layered on the proven champion-vs-top-challenger baseline."
+    },
     "next_static_step": [
-      "Inspect non-standard contract families for explicit mandatory-challenger/eliminator semantics.",
-      "If no separate stock policy is evidenced, define AI championship scheduling and mandatory-challenger succession as Career Mode 2.0 extensions on top of AssignCareerMatch and TransferDivisionChampionship.",
-      "Then continue into explicit injury/recovery semantics and weight-class movement."
+      "Bound whether any separate AI/non-player championship scheduler exists outside the normal subtype-0 population matcher.",
+      "If no such path exists among the complete AssignCareerMatch caller set, lock AI title-challenge/title-defense scheduling as a Career Mode 2.0 extension."
     ]
   },
   "championship_state": {
