@@ -548,6 +548,7 @@ def main() -> None:
         "title_gate_table": title_gate_table,
         "secondary_gate_table": secondary_gate_table,
         "eligibility_cases": eligibility_cases,
+        "title_stat_writes": title_stat_writes,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
