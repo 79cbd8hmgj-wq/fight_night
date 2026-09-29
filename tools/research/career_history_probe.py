@@ -43,6 +43,60 @@ def vaddr_word(raw: bytes, elf, address: int) -> int | None:
     return struct.unpack_from("<I", raw, off)[0]
 
 
+def read_c_string(raw: bytes, elf, address: int) -> str | None:
+    off = elf.vaddr_to_offset(address)
+    if off is None:
+        fallback = address + 0x100
+        off = fallback if 0 <= fallback < len(raw) else None
+    if off is None:
+        return None
+    end = raw.find(b"\0", off, min(len(raw), off + 256))
+    if end < 0:
+        return None
+    try:
+        value = raw[off:end].decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    if not value or any(ord(ch) < 0x20 and ch != "\t" for ch in value):
+        return None
+    return value
+
+
+def local_string_refs(raw: bytes, elf, start: int, end: int) -> list[dict[str, str]]:
+    refs: dict[int, str] = {}
+    words = []
+    for addr in range(start, end, 4):
+        word = vaddr_word(raw, elf, addr)
+        if word is not None:
+            words.append((addr, word))
+    for i, (_, word) in enumerate(words):
+        if (word >> 26) != 0x0F:
+            continue
+        rt = (word >> 16) & 0x1F
+        hi = word & 0xFFFF
+        for _, word2 in words[i + 1 : i + 7]:
+            op2 = word2 >> 26
+            rs2 = (word2 >> 21) & 0x1F
+            rt2 = (word2 >> 16) & 0x1F
+            if rs2 != rt or rt2 != rt:
+                continue
+            imm = word2 & 0xFFFF
+            target = None
+            if op2 == 0x09:
+                target = ((hi << 16) + sign16(imm)) & 0xFFFFFFFF
+            elif op2 == 0x0D:
+                target = ((hi << 16) | imm) & 0xFFFFFFFF
+            if target is None:
+                continue
+            value = read_c_string(raw, elf, target)
+            if value is not None:
+                refs[target] = value
+    return [
+        {"address": f"0x{address:08X}", "value": value}
+        for address, value in sorted(refs.items())
+    ]
+
+
 def offset_to_vaddr(elf, offset: int) -> int | None:
     for ph in elf.program_headers:
         if ph.type == 1 and ph.offset <= offset < ph.offset + ph.filesz:
