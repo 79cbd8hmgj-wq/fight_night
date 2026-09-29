@@ -675,6 +675,47 @@ def main() -> None:
     # Compact whole-executable read inventory for the same offsets. This is a
     # candidate-reader scan only: unrelated structures can share these small
     # offsets, so semantic names still require base-object/dataflow evidence.
+    # Direct career-profile provenance scan: require the base register used by
+    # LH/LHU +0x66/+0x68/+0x6A to come from a nearby LW base, 0x3C(career).
+    # This filters the many unrelated structs that reuse the same small offsets.
+    profile_title_counter_direct_profile_readers = []
+    register_writing_i_ops = {
+        0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+        0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x30, 0x31,
+    }
+    for sec in elf.sections:
+        if sec.kind != "executable" or sec.size < 4:
+            continue
+        words = list(words_for_section(raw, sec))
+        for i, (addr, word) in enumerate(words):
+            op = word >> 26
+            imm = word & 0xFFFF
+            base_reg = (word >> 21) & 0x1F
+            if imm not in {0x66, 0x68, 0x6A} or op not in {0x21, 0x25}:
+                continue
+            for j in range(i - 1, max(-1, i - 13), -1):
+                prev_addr, prev = words[j]
+                prev_op = prev >> 26
+                prev_rt = (prev >> 16) & 0x1F
+                if prev_op == 0:
+                    prev_rd = (prev >> 11) & 0x1F
+                    if prev_rd == base_reg:
+                        break
+                    continue
+                if prev_op not in register_writing_i_ops or prev_rt != base_reg:
+                    continue
+                if prev_op == 0x23 and (prev & 0xFFFF) == 0x003C:
+                    start, _end = function_bounds(raw, elf, addr)
+                    profile_title_counter_direct_profile_readers.append({
+                        "read_address": f"0x{addr:08X}",
+                        "offset": f"0x{imm:02X}",
+                        "profile_load_address": f"0x{prev_addr:08X}",
+                        "career_reg": (prev >> 21) & 0x1F,
+                        "profile_reg": base_reg,
+                        "function_start": f"0x{start:08X}",
+                    })
+                break
+
     profile_title_counter_global_readers = []
     for sec in elf.sections:
         if sec.kind != "executable" or sec.size < 4:
@@ -836,6 +877,7 @@ def main() -> None:
         "transfer_enable_writes": transfer_enable_writes,
         "profile_title_counter_accesses": profile_title_counter_accesses,
         "profile_title_counter_global_readers": profile_title_counter_global_readers,
+        "profile_title_counter_direct_profile_readers": profile_title_counter_direct_profile_readers,
         "eligibility_cases": eligibility_cases,
         "title_stat_writes": title_stat_writes,
         "title_stat_pointer_adjusts": title_stat_pointer_adjusts,
