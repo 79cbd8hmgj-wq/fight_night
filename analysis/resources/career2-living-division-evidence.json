@@ -133,49 +133,15 @@
   },
   "weekly_countdown_decay": {
     "function": "0x00194320",
-    "proposed_name": "DecayPopulationAvailabilityCooldown",
-    "confidence": "CONFIRMED matchmaking-availability cooldown in weekly units; proposed name is descriptive",
+    "confidence": "CONFIRMED weekly post-fight availability/recovery countdown",
     "field": "progression record+0x13",
-    "unit": "weekly world ticks",
     "behavior": [
-      "Once per weekly world tick, decrements nonzero record+0x13 for each population entry in the active population range.",
-      "0x00195564 rejects both prospective fighters when record+0x13 is nonzero, independently of the scheduled-date field +0x28.",
-      "Player-result paths and 0x0019E790 AI-result simulation write new post-fight values to +0x13.",
-      "Population initialization/replacement also seeds +0x13 with a small nonzero delay so a newly introduced boxer is not immediately matchmade."
+      "Once per weekly world tick, decrements nonzero record+0x13 for every population entry.",
+      "0x00195564 rejects records with nonzero +0x13 from both sides of normal AI matchmaking.",
+      "Player and AI post-fight paths write freshly computed values to +0x13 immediately after clearing the completed fight assignment.",
+      "Population initialization/replacement also initializes this field."
     ],
-    "post_fight_value_helper": {
-      "function": "0x00192410",
-      "proposed_name": "ComputePostFightAvailabilityWeeks",
-      "confidence": "CONFIRMED role from all observed callers and consumers; proposed name is descriptive",
-      "inputs": [
-        "career object",
-        "boxer progression-record index",
-        "unsigned base interval supplied by result logic"
-      ],
-      "boxer_inputs": [
-        "record+0x04 zero-based rank",
-        "record+0x09 current age-like field",
-        "record+0x11 baseline/starting-age-like field"
-      ],
-      "behavior": [
-        "Scales the supplied base interval through rank and age/career-span terms.",
-        "Returns a rounded-up u8 interval.",
-        "The result is stored directly to progression record+0x13 by both player and AI result paths."
-      ],
-      "result_write_sites": [
-        "0x0019C75C -> store at 0x0019C774",
-        "0x0019CEC4 -> store at 0x0019CEE0",
-        "0x0019ED34 -> store at 0x0019ED50",
-        "0x0019ED94 -> store at 0x0019EDAC",
-        "0x0019EF08 -> store at 0x0019EF20"
-      ]
-    },
-    "semantic_boundary": [
-      "This field is now proven as a persistent between-fight availability/matchmaking cooldown, not an unidentified generic counter.",
-      "It is not sufficient evidence for a discrete medical injury state: the same field is assigned after ordinary simulated/player fight outcomes and on population initialization.",
-      "Executable strings 'dec chance for injury' and 'inc opp chance for injury' occur in the in-fight AI/modifier string region, not in the recovered career-persistence path."
-    ],
-    "career2_implication": "Reuse +0x13 as the stock rest/availability cooldown. A richer Career Mode 2.0 injury system should be modeled separately (or layered onto availability) unless another persistent medical field is recovered."
+    "semantic_boundary": "The field is confirmed as a post-fight availability/cooldown counter. Static evidence does not show a persistent injury type, body-region diagnosis or medical severity encoded in +0x13 itself."
   },
   "population_maintenance": {
     "orchestrator": "0x00195DC0",
@@ -245,9 +211,12 @@
       "automatic title forfeiture with progression +0x18 accounting",
       "forfeiture succession to ladder entry 1/top challenger",
       "rank/age-scaled post-fight availability cooldown",
-      "weekly recovery/availability countdown that blocks matchmaking"
+      "weekly recovery/availability countdown that blocks matchmaking",
+      "persistent post-fight availability/recovery cooldown",
+      "rank/age-shaped recovery duration shared by player and AI fight results"
     ],
     "extension_targets": [
+      "persistent injury diagnoses/severity beyond the stock recovery cooldown",
       "weight-class movement",
       "mandatory challengers/eliminators",
       "promoter/manager influence",
@@ -262,9 +231,9 @@
       "explicit medical injuries layered over the proven generic availability cooldown"
     ],
     "next_static_step": [
-      "The stock recovery boundary is now mapped: progression+0x13 is a generic post-fight matchmaking cooldown, not a proven discrete injury flag.",
-      "Search remaining career-result/profile fields for any separate persistent medical/injury state; if none is title/career-linked, treat explicit injuries as a Career Mode 2.0 extension.",
-      "Then resolve weight-class movement and title-vacation behavior."
+      "Post-fight availability is now recovered: progression record+0x13 is a shared weekly recovery cooldown computed by 0x00192410 from rank, career-age delta and a post-fight random/base budget.",
+      "Bound whether any separate persistent injury diagnosis/severity state exists outside +0x13; do not conflate in-fight cut/injury probability strings with career injury persistence.",
+      "Then recover weight-class movement policy and the three-slot-to-six-weight-class transition rules."
     ]
   },
   "match_descriptor": {
@@ -958,5 +927,34 @@
       "result": "the standard title/award deadline is created exactly one calendar year after the source career date",
       "confidence": "CONFIRMED from the repeated 0x0019AAAC title-family deadline creation calls"
     }
+  },
+  "post_fight_availability_cooldown": {
+    "function": "0x00192410",
+    "proposed_name": "ComputePostFightAvailabilityCooldown",
+    "confidence": "CONFIRMED cooldown calculation/storage role; proposed name is descriptive",
+    "output": "u8 value stored to progression record+0x13",
+    "inputs": [
+      "career object",
+      "boxer progression-record index",
+      "u8 post-fight random/base budget supplied by the caller"
+    ],
+    "formula_structure": [
+      "Reads zero-based rank from progression record+0x04.",
+      "Reads age/current-year-like value from +0x09 and baseline/starting-age-like value from +0x11.",
+      "Clamps their difference to -5..+5 and applies a cosine-shaped career-age factor.",
+      "Combines that factor with a rank-derived multiplier and a +2 floor term.",
+      "Returns ceil(base_budget / derived_factor)."
+    ],
+    "caller_evidence": [
+      "Player post-fight paths generate a random base in 20..39 or 20..79 before calling 0x00192410 and storing the result to +0x13.",
+      "The AI-vs-AI simulator uses the same helper and the same 20-based random ranges before writing +0x13.",
+      "The exact branch-to-result-label mapping of the 20..39 versus 20..79 ranges is not yet named."
+    ],
+    "availability_effect": [
+      "Normal AI matchmaking skips any boxer whose +0x13 is nonzero.",
+      "The weekly world tick decrements the counter toward zero.",
+      "Therefore the value directly controls how many weekly world advances a boxer remains unavailable for ordinary matchmaking after a bout."
+    ],
+    "injury_boundary": "This is stock recovery/rest availability, not yet evidence of a persistent injury/medical-condition model. A richer injury system remains a Career Mode 2.0 extension target."
   }
 }
