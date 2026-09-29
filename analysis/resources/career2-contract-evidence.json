@@ -177,7 +177,13 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "Championship policy is now bounded: challenge contracts target ladder slot 0, defense contracts target ladder entry 1, the defense deadline is one calendar year, and no separate eliminator family appears in the complete title-aware contract/scheduler surface. Proceed to injury/recovery semantics, then weight-class movement."
+    "next_static_step": "Continue current-version fight-offer/contract implementation without adding persistent manager/promoter relationship mechanics.",
+    "current_version_exclusions": [
+      "persistent manager relationship field",
+      "persistent promoter relationship/influence system",
+      "trainer/cutman expansion",
+      "recovery/injury expansion"
+    ]
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -765,5 +771,11 @@
     ],
     "conclusion": "Retail FNR3's recoverable standard policy is a fixed champion-vs-top-challenger defense model with a one-calendar-year expiry/forfeiture backstop. A separate rotating mandatory-challenger/eliminator subsystem is not evidenced in the bounded contract/scheduler space and should be treated as a Career Mode 2.0 extension unless new evidence appears.",
     "caution": "This is an absence result within the fully enumerated contract/title scheduling surfaces above, not a claim that the entire executable contains no unrelated concept that could later be repurposed."
+  },
+  "current_version_scope": {
+    "status": "LOCKED_BY_USER",
+    "fight_contracts": "IN_SCOPE",
+    "promoter_manager_relationship_mechanics": "DEFERRED_TO_NEXT_VERSION",
+    "instruction": "Continue fight-offer/contract work only where it does not require persistent manager/promoter systems."
   }
 }
