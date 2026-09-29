@@ -194,7 +194,10 @@
       "three persistent career rank-class ladders mapped onto six absolute weight classes",
       "persistent three-slot current and previous championship holders",
       "shared fight-result championship transfer with won/lost/defended/forfeited accounting",
-      "regular AI matchmaking uses only subtype-0 non-title assignments"
+      "regular AI matchmaking uses only subtype-0 non-title assignments",
+      "paired player title-challenge and title-defense contracts for all three career championship slots",
+      "persistent subtype-9 title-defense scheduling",
+      "post-fight title-defense accounting through progression record+0x17"
     ],
     "extension_targets": [
       "explicit injuries and recovery",
@@ -210,9 +213,9 @@
       "mandatory challengers/eliminators and vacancy succession"
     ],
     "next_static_step": [
-      "Enumerate all progression-record title-stat writers (+0x15..+0x18) and finish naming title-bearing contract types 3,13-15,18-20.",
-      "Connect the proven title contract types to AssignCareerMatch and AI living-world scheduling.",
-      "Then move to mandatory challengers/eliminators, explicit injury/recovery semantics, and weight-class movement."
+      "Search the remaining contract families for a true mandatory-challenger/eliminator role; do not relabel the special INFO_Awards_16 or FP_Everlast_Belt contracts without direct evidence.",
+      "If absent, implement AI title scheduling/mandatory challengers as Career Mode 2.0 policy using the recovered current-holder fields, rankings, AssignCareerMatch and TransferDivisionChampionship.",
+      "Then move to explicit injury/recovery semantics and weight-class movement."
     ]
   },
   "match_descriptor": {
@@ -458,11 +461,11 @@
       "GetTrophyCaseInfo": "BOOT.BIN string @ 0x50D798",
       "GetTrophyInfo": "BOOT.BIN string @ 0x50D7AC"
     },
-    "boundary": "Current/previous holder banks, transfer writes and player won/lost/defended/forfeited counters are now mapped. Remaining uncertainty is concentrated in non-player title scheduling and some trophy-case per-belt defense-history details.",
+    "boundary": "Current/previous holder storage, title transfer, won/lost/defended/forfeited progression counters, and the three standard player challenge/defense contract pairs are mapped. Remaining uncertainty is concentrated in special award/belt contract semantics and whether any separate stock mandatory-challenger/eliminator policy exists.",
     "next_static_step": [
-      "Use the recovered slot-bound title-contract formatter cases to finish player title-fight scheduling semantics.",
-      "Determine whether and how AI/non-player champions receive dedicated championship match assignments.",
-      "Then move to mandatory challengers/eliminators and explicit injury/recovery semantics."
+      "Inspect non-standard contract families for explicit mandatory-challenger/eliminator semantics.",
+      "If no separate stock policy is evidenced, define AI championship scheduling and mandatory-challenger succession as Career Mode 2.0 extensions on top of AssignCareerMatch and TransferDivisionChampionship.",
+      "Then continue into explicit injury/recovery semantics and weight-class movement."
     ]
   },
   "championship_state": {
@@ -664,6 +667,47 @@
         "2": "written when the player is replaced as champion after state 1"
       },
       "boundary": "Other values and every UI meaning for this per-division state byte remain unresolved."
+    },
+    "title_defense_accounting": {
+      "confidence": "CONFIRMED for the three standard player championship slots",
+      "progression_counter": "progression record+0x17 = title belts defended",
+      "contract_pairs": [
+        {
+          "career_slot": 0,
+          "challenge_type": 15,
+          "defense_type": 20,
+          "challenge_subtype": 8,
+          "defense_subtype": 9,
+          "state_byte": "profile+0x1C"
+        },
+        {
+          "career_slot": 1,
+          "challenge_type": 13,
+          "defense_type": 18,
+          "challenge_subtype": 8,
+          "defense_subtype": 9,
+          "state_byte": "profile+0x1E"
+        },
+        {
+          "career_slot": 2,
+          "challenge_type": 14,
+          "defense_type": 19,
+          "challenge_subtype": 8,
+          "defense_subtype": 9,
+          "state_byte": "profile+0x1D"
+        }
+      ],
+      "result_path_evidence": [
+        "The shared result dispatcher 0x0019AAAC separates the paired contract types through its championship/title-state jump tables.",
+        "Defense-side branches ultimately fetch the current player progression record through 0x001928F0 and increment byte +0x17.",
+        "GetMyCareerStatsInfo independently binds progression +0x17 to aiTitleBeltsDefended, closing the result-to-stat semantic chain."
+      ],
+      "scheduling_evidence": [
+        "The paired defense templates are rank-0-only, four-week contracts with subtype 9.",
+        "Their challenge counterparts are top-five-rank contracts with subtype 8 and longer 16-20 week scheduling windows.",
+        "Accepted contracts feed live-record +0x36 into 0x00194518 AssignCareerMatch, so subtype 9 persists in record+0x24 bits 8..15 for scheduled defenses."
+      ],
+      "stock_ai_boundary": "0x00195564 regular AI matchmaking still emits subtype 0 only. No stock AI-vs-AI title-defense scheduler has been recovered, so living-world AI title scheduling remains an overhaul extension."
     }
   },
   "championship_contract_dispatch": {
