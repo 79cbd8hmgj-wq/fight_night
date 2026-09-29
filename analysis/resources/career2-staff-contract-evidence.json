@@ -212,9 +212,7 @@
       "Treat promoter fight terms and persistent promoter/manager relationships as separate layers: retail proves the former, while the latter is an overhaul extension."
     ],
     "next_static_step": [
-      "Trace xdbtrain.adf and the training-result writer that mutates persistent boxer attributes.",
-      "Identify the progression gate that currently requires training before the next fight.",
-      "Map save serializer coverage for career+0xE8 and career+0x134 so new staff-contract fields can be sized safely."
+      "DEFERRED: no additional staff/manager/promoter work in the current Career Mode 2.0 version."
     ]
   },
   "promoter_manager_boundary": {
@@ -253,5 +251,13 @@
       "Keep fight-level promoter control/cut as separate offer terms even if a persistent promoter relationship is added.",
       "Do not alias trainer/cutman slots or existing fine-print flags into manager/promoter state without new evidence."
     ]
+  },
+  "current_version_scope": {
+    "status": "DEFERRED_TO_NEXT_VERSION_BY_USER",
+    "systems": [
+      "trainer/cutman expansion",
+      "manager/promoter relationships"
+    ],
+    "instruction": "Preserve recovered retail evidence only. Do not continue RE or implementation on these systems during the current Career Mode 2.0 version."
   }
 }
