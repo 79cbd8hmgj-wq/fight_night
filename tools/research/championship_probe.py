@@ -340,6 +340,17 @@ def main() -> None:
             "case_assembly": disasm_range(raw, elf, target, min(target + 0xA0, 0x0019BB68)) if target is not None else [],
         })
 
+    # Contract-type -> title-state/counter dispatch after the shared result prelude.
+    title_counter_jump_table = []
+    for index in range(20):
+        address = 0x005084E0 + index * 4
+        target = vaddr_word(raw, elf, address)
+        title_counter_jump_table.append({
+            "contract_type": index + 3,
+            "jump_target": f"0x{target:08X}" if target is not None else None,
+            "case_assembly": disasm_range(raw, elf, target, min(target + 0xC0, 0x0019BB68)) if target is not None else [],
+        })
+
     # Contract-type -> eligibility precheck switch in 0x001A3FBC.
     eligibility_jump_table = []
     for index in range(27):
@@ -522,6 +533,7 @@ def main() -> None:
         "focused_ranges": focused_ranges,
         "named_strings": named_strings,
         "result_contract_jump_table": result_contract_jump_table,
+        "title_counter_jump_table": title_counter_jump_table,
         "eligibility_jump_table": eligibility_jump_table,
         "scheduler_jump_table": scheduler_jump_table,
         "contract_label_address_strings": contract_label_address_strings,
