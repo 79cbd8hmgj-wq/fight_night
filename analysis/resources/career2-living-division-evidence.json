@@ -233,9 +233,9 @@
       "true body-weight gain/cut mechanics synchronized with persistent boxer+0x6C"
     ],
     "next_static_step": [
-      "Map the 0x001A4F50 contract-type jump cases to target slot 0/1/2 and the INFO_Weightclass_Change fine-print flag.",
-      "Check for title/rank/career-state gates on switching into slot 1 versus slot 2.",
-      "Separately close the search for a persistent injury diagnosis/severity field beyond progression+0x13."
+      "Trace the bounded callers of 0x00196DC4 to prove the result/contract conditions that trigger a championship transfer.",
+      "Identify the title-fight match/contract subtype carried through AssignCareerMatch and the packed +0x24 descriptor.",
+      "Map defense/loss/forfeit counter writes, then move to mandatory challengers/eliminators."
     ]
   },
   "match_descriptor": {
@@ -625,149 +625,46 @@
     "boundary": "This is a bounded executable conclusion from the complete direct caller inventory of AssignCareerMatch. It does not claim that no unrelated code can ever mutate title-holder state outside the recovered scheduling/result paths."
   },
   "championship_ownership": {
-    "confidence": "CONFIRMED three persistent current/previous career-slot champions, transfer helper, and player title counters",
+    "confidence": "CONFIRMED persistent per-division champion ownership and transfer behavior",
     "current_champion_slots": {
       "base": "profile+0x50",
-      "count": 3,
       "stride_bytes": 2,
-      "fields": [
-        "profile+0x50",
-        "profile+0x52",
-        "profile+0x54"
-      ],
+      "count": 6,
       "value": "s16 progression-record index",
-      "formula": "current_champion[slot] = *(s16 *)(profile + 0x50 + slot*2), slot 0..2",
-      "absolute_weight_class_mapping": "profile+0x2D..+0x2F maps the three career slots onto six retail weight classes",
-      "ui_proof": "GetRankingInformation compares each ranked boxer index against profile+0x50+slot*2 before writing aCurrentBeltHolders."
+      "evidence": [
+        "GetRankingInformation compares each ranked boxer progression index against profile+0x50+division*2 to mark the current belt holder.",
+        "0x00196DC4 reads profile+0x50+division*2 as the existing champion and replaces it with the supplied boxer index."
+      ]
     },
     "previous_champion_slots": {
       "base": "profile+0x56",
-      "count": 3,
       "stride_bytes": 2,
-      "fields": [
-        "profile+0x56",
-        "profile+0x58",
-        "profile+0x5A"
-      ],
-      "value": "s16 progression-record index",
-      "formula": "previous_champion[slot] = *(s16 *)(profile + 0x56 + slot*2), slot 0..2"
+      "count": 6,
+      "value": "s16 previous champion progression-record index",
+      "evidence": [
+        "0x00196DC4 copies the old profile+0x50+division*2 champion value into profile+0x56+division*2 before installing the new champion."
+      ]
     },
-    "transfer_helper": {
+    "transfer_function": {
       "function": "0x00196DC4",
-      "proposed_name": "TransferCareerTitleSlot",
+      "proposed_name": "TransferDivisionChampionship",
       "arguments": {
         "a0": "career object",
-        "a1": "career title/rank-class slot 0..2",
+        "a1": "division index",
         "a2": "new champion progression-record index"
       },
       "behavior": [
-        "Copies current_champion[slot] into previous_champion[slot].",
-        "Writes the new champion progression index into current_champion[slot].",
-        "Updates the slot's player title-state byte when the incoming or outgoing champion is the current player.",
-        "Gets the incoming champion progression record and increments record+0x15 (title belts won).",
-        "When an outgoing champion exists, gets that progression record and increments record+0x16 (title belts lost)."
+        "Computes division*2.",
+        "Copies current champion slot (+0x50) to previous champion slot (+0x56).",
+        "Writes the supplied boxer progression index to the current champion slot (+0x50).",
+        "Updates per-division title-history/state at profile+0x21+division.",
+        "Updates title-history counters for the new and former champion through 0x00192930 record access."
       ],
-      "callers_observed": [
-        "0x001984F0",
-        "0x00198A08",
-        "0x0019CCB0",
-        "0x0019CD4C",
-        "0x0019CD68",
-        "0x0019E0D4",
-        "0x0019E27C",
-        "0x0019E428"
-      ]
+      "boundary": "Exact public meanings of every profile+0x21+division state value and every per-boxer title-history byte remain unresolved."
     },
-    "player_title_statistics": {
-      "source": "GetMyCareerStatsInfo / T_001E2084",
-      "progression_record_fields": {
-        "+0x15": "title belts won",
-        "+0x16": "title belts lost",
-        "+0x17": "title belts defended",
-        "+0x18": "title belts forfeited"
-      },
-      "confirmed_dynamic_writers": {
-        "+0x15": [
-          "0x00196FB4..0x00196FC0 in TransferCareerTitleSlot increments the incoming champion's counter",
-          "additional special-award result branches also increment +0x15 after resolving the current player record"
-        ],
-        "+0x16": [
-          "0x00196FE4..0x00196FF0 in TransferCareerTitleSlot increments the displaced champion's counter"
-        ],
-        "+0x17": [
-          "0x0019B324..0x0019B33C increments current-player record+0x17",
-          "0x0019B4C4..0x0019B4DC increments current-player record+0x17",
-          "0x0019B664..0x0019B67C increments current-player record+0x17",
-          "0x0019B83C..0x0019B854 increments current-player record+0x17",
-          "0x0019BA14..0x0019BA28 increments current-player record+0x17"
-        ],
-        "+0x18": [
-          "0x0019E1B4..0x0019E1C8 increments the current-player progression record+0x18 after standard slot-0 title forfeiture processing.",
-          "0x0019E360..0x0019E374 increments progression record+0x18 after standard slot-1 title forfeiture processing.",
-          "0x0019E508..0x0019E51C increments progression record+0x18 after standard slot-2 title forfeiture processing.",
-          "Additional special-award/belt branches at 0x0019E628..0x0019E63C and 0x0019E748..0x0019E75C also increment +0x18."
-        ]
-      },
-      "confidence": "CONFIRMED field meanings and dynamic won/lost/defended/forfeited updates"
-    },
-    "player_title_state": {
-      "fields": [
-        "profile+0x1B",
-        "profile+0x1C",
-        "profile+0x1D",
-        "profile+0x1E",
-        "profile+0x1F",
-        "profile+0x20",
-        "profile+0x21.."
-      ],
-      "warning": "These profile state/award bytes are separate from progression-record title statistics +0x15..+0x18. Do not infer a title-stat increment from a same-numbered profile offset."
-    },
-    "title_forfeiture_policy": {
-      "function": "0x0019DFE8",
-      "proposed_name": "ProcessExpiredCareerTitles",
-      "confidence": "CONFIRMED standard three-slot title-expiry/forfeiture behavior and exact one-calendar-year deadline",
-      "caller": {
-        "call_site": "0x001B70F0",
-        "context": "post-fight career flow 0x001B6A40, after the player's scheduled match fields +0x28/+0x24 are cleared and before matchmaking/world/calendar refresh"
-      },
-      "standard_slots": [
-        {
-          "career_slot": 0,
-          "state_byte": "profile+0x1C",
-          "deadline_date": "profile+0x128",
-          "successor_ladder_entry": "profile+0x2EE",
-          "successor_interpretation": "slot-0 ladder entry 1 (the position immediately below ladder slot 0)"
-        },
-        {
-          "career_slot": 1,
-          "state_byte": "profile+0x1E",
-          "deadline_date": "profile+0x130",
-          "successor_ladder_entry": "profile+0x3B6",
-          "successor_interpretation": "slot-1 ladder entry 1"
-        },
-        {
-          "career_slot": 2,
-          "state_byte": "profile+0x1D",
-          "deadline_date": "profile+0x12C",
-          "successor_ladder_entry": "profile+0x47E",
-          "successor_interpretation": "slot-2 ladder entry 1"
-        }
-      ],
-      "behavior": [
-        "For each standard title slot, compares the current career date against a stored per-slot deadline.",
-        "When the deadline is no longer in the future and the corresponding player title-state is active, changes that state from 1 to 2.",
-        "Reads the boxer progression index from ladder entry 1 for that slot and calls 0x00196DC4 TransferCareerTitleSlot with that boxer as the new champion.",
-        "Resynchronizes the affected ladder/ranks and records presentation/history state.",
-        "Increments the current player's progression-record +0x18 counter, independently confirmed by GetMyCareerStatsInfo as aiTitleBeltsForfeited."
-      ],
-      "significance": [
-        "Retail FNR3 contains an actual one-year title-defense expiry/forfeiture mechanism rather than only voluntary title-defense contracts.",
-        "The built-in vacancy/succession rule promotes ladder entry 1 when a standard player-held title expires.",
-        "Defense contracts 20/18/19 also select ladder entry 1, establishing champion-versus-top-challenger as the stock defense policy."
-      ],
-      "boundary": "The one-year deadline and top-challenger succession are confirmed. No separate rotating mandatory-challenger or eliminator subsystem has yet been proven.",
-      "defense_deadline_interval": "1 calendar year",
-      "deadline_construction": "0x0019AAAC copies profile+0x9C career date and calls 0x001A1280 with months=0, days=0, years=1, hours=0, minutes=0 before storing the per-title deadline."
+    "ranking_ui_confirmation": {
+      "function_region": "0x001E2B70-0x001E2D18",
+      "behavior": "Ranking UI obtains the active six-division ladder and marks a ranked boxer as champion when its progression index equals profile+0x50+division*2."
     }
   },
   "championship_contract_dispatch": {
