@@ -162,10 +162,9 @@
       "Extend contract-person framework for manager/promoter relationships rather than creating an unrelated staff storage system."
     ],
     "next_static_step": [
-      "Decode xdbtrain.adf enough to identify original activity/focus/reward metadata.",
-      "Trace trainer contract duration/expiry and determine how trainer focus/expertise influences training outcomes.",
-      "Map save serialization of profile+0x256C and the staff slots so new potential/growth/camp fields can be placed safely.",
-      "Then target age/potential/physical-growth extension points for Amateur Career."
+      "Trace trainer/staff contract duration or expiry only if needed for gyms/coaches.",
+      "Primary RE effort moves to Amateur Career age, potential, physical growth and turn-pro development.",
+      "Do not decode xdbtrain.adf or minigame activity logic unless explicitly reopened."
     ]
   },
   "training_result_application": {
@@ -314,5 +313,18 @@
       ],
       "key_point": "The minigame is not itself the persistence mechanism. Persistence happens at the boxer-data mutation/copyback boundary, so Career Mode 2.0 can make the minigame optional without inventing a separate ratings save path."
     }
+  },
+  "scope_decision": {
+    "status": "PARKED_BY_USER",
+    "decision": "Do not spend further static RE time on training minigame internals or xdbtrain.adf activity decoding.",
+    "retained_useful_findings": [
+      "persistent trainer contract slot career+0xE8",
+      "persistent cutman contract slot career+0x134",
+      "staff affordability/signing flow",
+      "trainer.fnc 24-byte templates",
+      "persistent boxer rating writer 0x0018DCA0",
+      "training result copyback to profile+0x256C"
+    ],
+    "resume_only_if": "A later Career Mode 2.0 feature specifically requires an original training-minigame implementation detail."
   }
 }
