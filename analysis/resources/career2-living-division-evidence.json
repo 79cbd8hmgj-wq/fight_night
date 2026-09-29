@@ -1095,7 +1095,7 @@
       }
     },
     "unresolved": [
-      "Resolve the public/UI/save semantics of profile+0x66, profile+0x68 and profile+0x6A from independent readers; the canonical career-stats title UI has now been ruled out.",
+      "Resolve the semantics of profile+0x66, profile+0x68 and profile+0x6A through proven generic-accessor/serialization callers or runtime evidence; direct UI/report access has been ruled out.",
       "Resolve why profile+0x2A and profile+0x2B diverge so the s4==0 / 0x0019CD68 title-transfer path can be given a precise career-rule name.",
       "Resolve special award/belt result bookkeeping differences for contract types 16/17/21/22.",
       "Distinguish the exact public result-method labels within code pairs 2/3 versus 4/5/6 and their reciprocal 7..11 values if needed."
@@ -1191,6 +1191,20 @@
         "canonical_title_history_ui": "GetMyCareerStatsInfo/career-stats rendering at 0x001E26F4-0x001E2808 reads progression-record +0x15/+0x16/+0x17/+0x18 for belts won/lost/defended/forfeited.",
         "exclusion": "The recovered career-stats title region does not read profile+0x66, profile+0x68, or profile+0x6A. Those profile-level halfwords are therefore not the canonical aiTitleBeltsWon/aiTitleBeltsLost/aiTitleBeltsDefended/aiTitleBeltsForfeited values.",
         "implication": "Keep +0x66/+0x68/+0x6A as separate career-level title state/counters until an independent reader proves their public meaning."
+      },
+      "direct_reader_boundary": {
+        "confidence": "CONFIRMED for direct career+0x3C provenance",
+        "whole_executable_offset_scan": "31 raw LH/LHU hits at +0x66/+0x68/+0x6A appeared across multiple structures; several are demonstrably unrelated and therefore cannot be used as semantic evidence by offset alone.",
+        "proven_direct_profile_reads": [
+          "0x0019C850 -> profile+0x68",
+          "0x0019C860 -> profile+0x6A",
+          "0x0019CCA0 -> profile+0x66",
+          "0x0019CCBC -> profile+0x66",
+          "0x0019CCDC -> profile+0x66"
+        ],
+        "provenance_rule": "Each proven read uses a base register whose nearest defining load is LW profile, 0x3C(career).",
+        "result": "All five proven direct reads are inside the already-mapped post-fight title-result path. No independent direct UI/report reader of profile+0x66/+0x68/+0x6A was found.",
+        "caveat": "Generic accessor/serialization paths may receive an already-resolved profile pointer indirectly; those require separate caller/dataflow proof before assigning names."
       }
     }
   }
