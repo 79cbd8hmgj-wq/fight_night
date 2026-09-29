@@ -175,7 +175,11 @@
       "automatic rank synchronization from sorted ladder order",
       "current belt-holder presentation in the division ranking UI",
       "separate title wins/defenses/losses/forfeitures statistics",
-      "trophy/award owner and defense-count presentation"
+      "trophy/award owner and defense-count presentation",
+      "persistent current title-holder identity consumed by rankings",
+      "post-fight title transfer and title win/loss accounting",
+      "persistent title-defense counters consumed by trophy UI",
+      "player title won/lost/defended/forfeited career statistics"
     ],
     "extension_targets": [
       "title ownership and title-fight scheduling",
@@ -190,9 +194,9 @@
       "replace 0x00195564 compatibility policy with rank/title/promoter/health/weight-class matchmaking"
     ],
     "next_static_step": [
-      "Championship ownership: trace GetRankingInformation -> aCurrentBeltHolders and the trophy/career-stat providers to persistent owner/defense fields.",
-      "Championship scheduling: connect those ownership fields to post-fight title transfer and the existing contract/match subtype path into 0x00194518.",
-      "After title ownership/scheduling, move to explicit injury/recovery semantics, weight-class movement and mandatory-challenger/eliminator policy."
+      "Championship scheduling: bind the title-related contract type/subtype IDs to the proven title-state gates, then connect the accepted contract subtype through 0x001FF4AC -> 0x00194518.",
+      "Resolve the exact semantics/domain of the +0x50/+0x56 title-holder banks and any remaining defense-count slot beyond profile+0x40.",
+      "After title scheduling is closed, move to mandatory challengers/eliminators, explicit injury/recovery semantics and weight-class movement."
     ]
   },
   "match_descriptor": {
@@ -437,5 +441,92 @@
       "Trace GetTrophyCaseInfo/GetTrophyInfo and GetMyCareerStatsInfo back to persistent title/award fields.",
       "Then connect the resulting ownership fields to the post-fight path and to the contract/match subtype passed into AssignCareerMatch."
     ]
+  },
+  "championship_state": {
+    "confidence": "CONFIRMED current-holder lookup, title-transfer writer, player title counters and title-defense counter updates; exact public names for several title slots remain unresolved",
+    "current_holder_lookup": {
+      "ranking_handler": "0x001E29A0",
+      "proof_region": "0x001E2CE0-0x001E2D14",
+      "storage": "profile + 0x50 + 2*profile[0x2A]",
+      "value": "s16 boxer/progression index for the title holder used by the current division ranking screen",
+      "ui_output": "aCurrentBeltHolders",
+      "behavior": [
+        "The handler reads the current division from profile+0x2A.",
+        "It indexes the current division ladder, gets each ranked boxer index, and compares that boxer index against the halfword at profile+0x50+2*division.",
+        "The equality result is written through the aCurrentBeltHolders UI field, proving this halfword is the title-holder identity consulted by the rankings screen."
+      ]
+    },
+    "transfer_writer": {
+      "function": "0x00196DC4",
+      "proposed_name": "TransferCareerTitleSlot",
+      "confidence": "CONFIRMED title-transfer/accounting role; proposed name is descriptive",
+      "core_writes": [
+        "old_holder = *(s16 *)(profile + 0x50 + 2*slot)",
+        "*(s16 *)(profile + 0x56 + 2*slot) = old_holder",
+        "*(s16 *)(profile + 0x50 + 2*slot) = new_holder"
+      ],
+      "accounting": [
+        "Uses 0x00192930 to reach the new holder's slot-specific career record and increments record+0x15.",
+        "When the displaced holder is valid, reaches that holder's corresponding record and increments record+0x16."
+      ],
+      "observed_callers": [
+        "0x00197DAC path @ 0x001984F0",
+        "0x00198574 path @ 0x00198A08",
+        "post-result path @ 0x0019CCB0/0x0019CD4C/0x0019CD68",
+        "career transition/simulation path 0x0019DFE8 @ 0x0019E0D4/0x0019E27C/0x0019E428"
+      ],
+      "boundary": "The +0x50 and +0x56 banks are definitely title-holder/history-related halfword banks. The exact public name of the +0x56 bank and the full domain of the slot argument are not yet asserted because the observed helper arithmetic overlaps if naively treated as two independent six-entry arrays."
+    },
+    "player_title_counters": {
+      "provider": "GetMyCareerStatsInfo handler T_001E2084",
+      "source_record": "current player record returned by 0x001928F0",
+      "fields": {
+        "+0x15": "title belts won",
+        "+0x16": "title belts lost",
+        "+0x17": "title belts defended",
+        "+0x18": "title belts forfeited"
+      },
+      "ui_keys": {
+        "+0x15": "aiTitleBeltsWon",
+        "+0x16": "aiTitleBeltsLost",
+        "+0x17": "aiTitleBeltsDefended",
+        "+0x18": "aiTitleBeltsForfeited"
+      },
+      "confidence": "CONFIRMED by direct GetMyCareerStatsInfo dataflow"
+    },
+    "defense_tracking": {
+      "shared_result_function": "0x0019AAAC",
+      "confidence": "CONFIRMED defense-count updates",
+      "behavior": [
+        "Multiple title-result branches increment one of profile bytes +0x3C, +0x3D, +0x3E, +0x3F or +0x40.",
+        "The same branches increment current-player record+0x17, the GetMyCareerStatsInfo title-defense counter.",
+        "The trophy/view-award provider reads these profile bytes when formatting strTimesDefended, independently corroborating their title-defense-count role."
+      ],
+      "observed_profile_counters": [
+        "profile+0x3C",
+        "profile+0x3D",
+        "profile+0x3E",
+        "profile+0x3F",
+        "profile+0x40"
+      ],
+      "boundary": "A sixth defense-counter byte has not yet been proven; do not extrapolate profile+0x41 as a title-defense count from adjacency alone."
+    },
+    "trophy_case_crosscheck": {
+      "function": "0x001FE1E4",
+      "behavior": [
+        "Uses strTrophyOwner and strTimesDefended.",
+        "Reads title-holder halfwords from the +0x50/+0x56 title-state area.",
+        "Reads profile bytes in the +0x3C..+0x40 range for defense-count presentation.",
+        "Resolves holder boxer names through the same career boxer/weight-class helpers used by rankings and career stats."
+      ],
+      "significance": "The rankings screen, fight-result logic, player stats and trophy case now converge on the same persistent title state rather than four unrelated UI-only counters."
+    },
+    "post_fight_connection": {
+      "result_region": "0x0019CB00-0x0019CDA0",
+      "gate_helper": "0x001971A0",
+      "transfer_calls": "0x00196DC4",
+      "finding": "The normal player post-fight path conditionally invokes the title-transfer writer after checking current title-holder identity, career state/type ranges and a title-gate helper. This closes the persistent fight-result -> title-state update edge.",
+      "boundary": "The career-state/type values that select title fights are still numeric and are not yet assigned public contract names."
+    }
   }
 }
