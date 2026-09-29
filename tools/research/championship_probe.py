@@ -299,6 +299,17 @@ def main() -> None:
         for address in named_string_addresses
     }
 
+    contract_cases = []
+    for index in range(20):
+        type_id = index + 3
+        target = vaddr_word(raw, elf, 0x0050E498 + index * 4)
+        if target is None:
+            continue
+        contract_cases.append({
+            "type_id": type_id,
+            "target": f"0x{target:08X}",
+            "assembly": disasm_range(raw, elf, target, target + 0x90),
+        })
     print("CHAMPIONSHIP_PROBE_BEGIN")
     print(json.dumps({
         "targets": rows,
@@ -307,6 +318,7 @@ def main() -> None:
         "title_state_byte_writes": title_state_writes,
         "manual_functions": manual_functions,
         "focused_ranges": focused_ranges,
+        "contract_cases": contract_cases,
     }, indent=2))
     print("CHAMPIONSHIP_PROBE_END")
 
