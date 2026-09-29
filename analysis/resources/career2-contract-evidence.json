@@ -160,7 +160,9 @@
       "round count and round length",
       "special rules",
       "Go Pro transition",
-      "retirement transition"
+      "retirement transition",
+      "player championship contract generation",
+      "slot-specific title scheduling with persistent subtype-8 match descriptors"
     ],
     "not_yet_proven": [
       "rematch-clause storage",
@@ -171,7 +173,7 @@
       "multi-fight term length semantics",
       "negotiation mutation/validation rules"
     ],
-    "next_static_step": "The raw 50-record fights.fnc table is now decoded. Next: prove the title/eliminator contract type(s) by tracing type-specific eligibility/detail branches into current-belt-holder/title state, then connect the proven type's +0x36 subtype to AssignCareerMatch."
+    "next_static_step": "Player title scheduling is now bounded: types 15/13/14 map to career slots 0/1/2 and all schedule subtype 8 through AssignCareerMatch. Next determine whether AI/non-player champions receive dedicated subtype-8 assignments, then trace mandatory challenger/eliminator policy."
   },
   "selection_and_confirmation": {
     "confidence": "CONFIRMED call/dataflow; proposed semantic names are descriptive, not original symbols",
@@ -417,7 +419,7 @@
       "This function is a natural Career Mode 2.0 world-advance boundary because it already applies fight consequences, advances career state/date and selects the next offer.",
       "A living-division/world simulation can be inserted around this boundary so the wider boxing world advances after player fights rather than only changing the player record."
     ],
-    "next_static_step": "Trace 0x0019AAAC and 0x00194724 to recover the original rank/progression update formulas, then determine how the candidate-pool descriptors used by 0x001A319C are populated from fights.fnc."
+    "next_static_step": "Title ownership and player title-contract scheduling are now bounded. Next trace AI/non-player championship assignment policy and mandatory challenger/eliminator generation before moving to injury/recovery semantics."
   },
   "fights_fnc_decoded_template_table": {
     "confidence": "CONFIRMED resource framing/count/stride; semantic labels remain limited to fields already proven by executable dataflow",
@@ -470,13 +472,85 @@
       }
     },
     "championship_relevance": {
-      "finding": "The complete fight-template table is now directly decoded, so title/eliminator scheduling can be solved against actual contract records rather than inferred only from code.",
-      "not_yet_named": "No contract type is promoted to 'title fight' or 'eliminator' from numeric patterns alone.",
-      "next_static_step": [
-        "Trace the type-specific branches in 0x001A3FBC / contract detail formatting and identify which decoded type IDs consume belt/title state.",
-        "Cross-reference those branches with aCurrentBeltHolders and trophy ownership fields.",
-        "Once a title-bearing type is proven, follow its live record +0x36 match subtype through 0x001FF4AC -> 0x00194518 -> packed progression record+0x24."
-      ]
+      "finding": "Types 15, 13 and 14 are now bounded as the three slot-specific championship/award contract templates, for career slots 0, 1 and 2 respectively.",
+      "shared_match_subtype": 8,
+      "proof": [
+        "Each type's GetIndividualContractInfo branch consumes the corresponding slot's title-state byte and maps that slot to one of six absolute weight classes for an INFO_Awards label.",
+        "The three templates all use top-five rank bounds and all encode upper-halfword 8 at template+0x24, which becomes live contract +0x36 and is passed to AssignCareerMatch."
+      ],
+      "boundary": "This establishes the player-facing championship-contract family and scheduled-match subtype. It does not yet prove AI title matchmaking or a separate eliminator type."
     }
+  },
+  "title_contract_family": {
+    "confidence": "CONFIRMED slot-bound championship/award contract family; exact localized public wording of each case is not yet recovered",
+    "individual_contract_provider": {
+      "region": "0x002027F4..0x002035A4",
+      "native_binding": "GetIndividualContractInfo",
+      "binding_evidence": "The native registration for GetIndividualContractInfo points into this provider family; the provider loads the selected contract through 0x001A2FA0, resolves its type through 0x001A2C98, and dispatches by type."
+    },
+    "persistent_career_model": {
+      "career_slot_count": 3,
+      "absolute_weight_class_count": 6,
+      "slot_to_class_getter": "0x001929C4(career,slot) -> profile[0x2D + slot]"
+    },
+    "contracts": [
+      {
+        "contract_type": 15,
+        "decoded_template_index": 4,
+        "career_slot": 0,
+        "slot_state_gate": "profile+0x1C",
+        "formatter_case": "0x00202AD4",
+        "scheduling_weeks": 18,
+        "rank_bounds": "zero-based rank 0..4",
+        "packed_type_word": "0x0008000F",
+        "match_subtype": 8
+      },
+      {
+        "contract_type": 13,
+        "decoded_template_index": 6,
+        "career_slot": 1,
+        "slot_state_gate": "profile+0x1E",
+        "formatter_case": "0x00202BC4",
+        "scheduling_weeks": 20,
+        "rank_bounds": "zero-based rank 0..4",
+        "packed_type_word": "0x0008000D",
+        "match_subtype": 8
+      },
+      {
+        "contract_type": 14,
+        "decoded_template_index": 8,
+        "career_slot": 2,
+        "slot_state_gate": "profile+0x1D",
+        "formatter_case": "0x002029E4",
+        "scheduling_weeks": 16,
+        "rank_bounds": "zero-based rank 0..4",
+        "packed_type_word": "0x0008000E",
+        "match_subtype": 8
+      }
+    ],
+    "evidence": [
+      "Types 15, 13 and 14 each enter a distinct GetIndividualContractInfo case tied to one of the three persistent career slots.",
+      "Each case reads the slot's title-state byte, calls 0x001929C4 for that slot and selects a division-dependent INFO_Awards localization key from the six absolute weight classes.",
+      "The same title-state bytes are consumed by 0x0019DFE8 when championship holders are initialized, tying these formatter cases to championship state rather than generic fight formatting.",
+      "All three decoded fights.fnc templates restrict the player to the top five ranks (0..4), consistent with championship eligibility.",
+      "All three raw template type words have upper halfword 8; because template+0x26 copies to live-record+0x36, accepted contract scheduling passes match subtype 8 into 0x00194518."
+    ],
+    "accepted_contract_schedule": {
+      "source_field": "live selected contract +0x36",
+      "source_value_for_all_three_title_contracts": 8,
+      "call_site": "0x001FF4AC",
+      "scheduler": "0x00194518 AssignCareerMatch",
+      "persistent_descriptor": "progression record+0x24 bits 8..15 = subtype 8",
+      "date": "profile date + contract weeks*7, stored to progression record+0x28"
+    },
+    "result_pipeline_boundary": {
+      "note": "Subtype 8 is now proven for the three player championship-contract templates. The nearby result predicates 0x001A2400/0x001A2430/0x001A2460 primarily inspect the descriptor's 4-bit result/state code, not the 8-bit subtype.",
+      "implication": "Do not claim subtype 8 alone causes a belt transfer. The shared result path also checks current-holder identity and career/result-state gates before calling the proven title-transfer writer 0x00196DC4."
+    },
+    "unresolved": [
+      "Whether retail AI-vs-AI matchmaking ever creates subtype-8 championship bouts without a player contract.",
+      "The exact localization text behind every division-dependent INFO_Awards key.",
+      "Mandatory challenger/eliminator contract type(s), if represented separately from the championship family."
+    ]
   }
 }
