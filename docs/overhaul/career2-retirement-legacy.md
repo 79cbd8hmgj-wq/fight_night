@@ -107,17 +107,52 @@ predicate is unnamed. That caveat does not weaken the direct type-27 writer
 proof; it only means not every raw type-27 record necessarily reaches the
 public Retire path unchanged.
 
+## Retail fight-history record — fully decoded
+
+The retail Career History screen uses two 20-entry rings: one Amateur and one
+Professional. Every entry is exactly 25 bytes:
+
+| Offset | Size | Meaning |
+|---|---:|---|
+| +0x00..+0x15 | 22 | opponent display-name string buffer |
+| +0x16 | 1 | fight-result code |
+| +0x17 | 1 | rounds lasted |
+| +0x18 | 1 | TKO/KO time second-count |
+
+The result code is now closed for every value produced by the retail history
+writer:
+
+- 0 = Win by KO (`$M_Win_KO`);
+- 1 = Win by Decision (`$M_Win_Decision`);
+- 2 = Loss by KO (`$M_Loss_KO`);
+- 3 = Loss by Decision (`$M_Loss_Decision`);
+- 4 = Draw (`$M_Draw`).
+
+`GetCareerHistoryInfo` uses entry +0x18 only when it is nonzero and sends it
+to formatter `0x00206E18`. That formatter divides the value by 60 and
+formats the quotient/remainder, proving that the stored byte is a whole-second
+time count rendered as minutes/seconds.
+
+This closes the display semantics of all 25 bytes. It also establishes an
+important Career Mode 2.0 limitation: the stock rings do **not** persist a
+stable opponent ID, opponent rank at the time of the fight, division, career
+date, or title stakes. They also retain only the most recent 20 amateur and 20
+professional bouts. The stock history therefore cannot support accurate
+full-career opposition-quality or multi-division legacy scoring by itself.
+
+Those richer facts need a separate mod-owned legacy fight ledger in C2EX,
+rather than repurposing bytes in the retail rings.
+
 ## Remaining priority-4 work
 
-The retirement state transition is resolved. The remaining work is the
-**legacy side**:
+The retirement transition and retail fight-history display format are now
+resolved. The remaining work is the **Career 2.0 legacy layer**:
 
-1. decode the 25-byte career-history entries far enough to retain opponent,
-   result, class/date and stakes information;
+1. define the compact C2EX legacy fight ledger for stable opponent identity,
+   opponent rank, division, career date and title stakes;
 2. identify the stock career-end/forced-retirement eligibility condition;
-3. define durable inputs for opposition quality, multi-division achievement
-   and longevity;
-4. then lock the Career Mode 2.0 legacy formula and any comeback policy.
+3. map career-longevity and division-history inputs;
+4. lock the current-version legacy scoring policy.
 
-The type-27 retirement writer path is closed and should not be re-traced unless
-new contradictory runtime evidence appears.
+The type-27 retirement writer and 25-byte stock fight-history record should not
+be re-traced unless contradictory runtime evidence appears.
