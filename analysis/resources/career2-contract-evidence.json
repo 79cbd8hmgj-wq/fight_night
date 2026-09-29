@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "source_artifact": {
+    "name": "ULES00270 debug/review BOOT.BIN",
+    "sha256": "8ff90a628346c67c929ff9f494a3806ef1bcfb41788db9330885348eda49f1b4",
+    "address_domain": "ELF virtual"
+  },
+  "native_interface": {
+    "registration_cluster": "0x001FF110",
+    "names": [
+      "GetFightContractInfo",
+      "GetIndividualContractInfo",
+      "OnSelectFightContract",
+      "OnSelectFightContractConfirm",
+      "GetFinePrintInfo",
+      "OnRivalFinalChallenge"
+    ],
+    "data_keys": [
+      "aContractID",
+      "astrContractGoals",
+      "astrContractRanks",
+      "astrContractOpponents",
+      "astrContractPurse",
+      "iContractID"
+    ],
+    "confidence": "CONFIRMED interface names/keys; exact one-to-one native-handler binding for each large implementation remains to be proven"
+  },
+  "special_career_contracts": {
+    "confidence": "CONFIRMED",
+    "contract_type_resolver": "0x001A2C98",
+    "evidence": [
+      "0x001A2C98 reads a signed 16-bit contract/type field at contract-object+0x1C -> record+0x34 and returns the type, with one conditional remap for type 27.",
+      "The large contract-list implementation switches on the resolved type using a 26-entry table for types 2..27."
+    ],
+    "jump_table": {
+      "vaddr": "0x0050E1C0",
+      "type_23_target": "0x001FF770",
+      "type_27_target": "0x001FF6C0"
+    },
+    "go_pro": {
+      "resolved_type": 23,
+      "case": "0x001FF770",
+      "ui_key": "iGoProContractID",
+      "output_site": "0x001FF7D8",
+      "behavior": "Copies the selected contract record's ID into the Go Pro contract-ID output."
+    },
+    "retire": {
+      "resolved_type": 27,
+      "case": "0x001FF6C0",
+      "ui_key": "iRetireContractID",
+      "output_site": "0x001FF728",
+      "behavior": "Copies the selected contract record's ID into the Retire contract-ID output.",
+      "caveat": "0x001A2C98 conditionally remaps raw type 27 to type 25 when a contract-object virtual predicate succeeds; the meaning of that predicate is not yet named."
+    },
+    "implication": "Turning professional and retirement are already represented as first-class special contract paths in the retail career system, making them strong extension/replacement points for Career Mode 2.0."
+  },
+  "career_contract_state": {
+    "provider_region": "0x0020002C",
+    "confidence": "CONFIRMED output keys; exact original function/native name still pending",
+    "keys": [
+      {
+        "name": "iCareerStage",
+        "xref": "0x002000C0"
+      },
+      {
+        "name": "iContractSigned",
+        "xref": "0x002001A4"
+      },
+      {
+        "name": "INFO_Earnings",
+        "xref": "0x00200260"
+      },
+      {
+        "name": "strEarnings",
+        "xref": "0x00200278"
+      },
+      {
+        "name": "INFO_Bank",
+        "xref": "0x00200270"
+      },
+      {
+        "name": "strAccount",
+        "xref": "0x00200278"
+      },
+      {
+        "name": "INFO_Your_Rank",
+        "xref": "0x00200288"
+      },
+      {
+        "name": "strRank",
+        "xref": "0x00200290"
+      },
+      {
+        "name": "INFO_Date",
+        "xref": "0x002002A4"
+      },
+      {
+        "name": "strDate",
+        "xref": "0x002002B0"
+      }
+    ],
+    "implication": "The existing contract/career screen already joins contract status with career stage, finances, rank and date, which is a natural UI/data boundary for dynamic offers and negotiation."
+  },
+  "contract_detail_fields": {
+    "provider_region": "0x00201BD0",
+    "confidence": "CONFIRMED UI field keys; exact record offsets are still being decoded",
+    "keys": [
+      "strPurseCut",
+      "strRankChange",
+      "strDivision",
+      "strVenue",
+      "strTimetoFight",
+      "INFO_Your_Cut",
+      "INFO_Rank_Change",
+      "INFO_Division",
+      "INFO_Venue",
+      "INFO_Weeks_till_fight",
+      "iUnderCardFight"
+    ],
+    "implication": "Several Career 2.0 offer attributes already exist in the original detail model: purse split, ranking effect, division, venue, time-to-fight and undercard status."
+  },
+  "fine_print": {
+    "provider_region": "0x00202810",
+    "confidence": "CONFIRMED fine-print key usage; likely GetFinePrintInfo implementation but exact native binding remains to be proven",
+    "fields": [
+      "INFO_Sponsor_Fight_Yes",
+      "INFO_Sponsor_Fight_No",
+      "INFO_Future_Contracts",
+      "INFO_Weightclass_Change_Yes",
+      "INFO_Weightclass_Change_No",
+      "INFO_Bonus",
+      "INFO_Required",
+      "INFO_Promoter_Selects",
+      "INFO_Promoter_Cut",
+      "INFO_15_Untimed",
+      "O_%d_Rounds",
+      "INFO_3_Minute_Rounds",
+      "INFO_2_Minute_Rounds2",
+      "INFO_No_Cutmen",
+      "INFO_Headgear",
+      "INFO_Stop_Fights2",
+      "INFO_A_Knockdown_Wins2",
+      "INFO_Win_With_Most2",
+      "INFO_Only_Ref",
+      "M_3_Knockdown_Rule"
+    ],
+    "implication": "The original contract model already carries a broad rules/obligations layer that can be repurposed for negotiation terms rather than treating a contract as only opponent+purse."
+  },
+  "career2_alignment": {
+    "directly_supported_or_extendable": [
+      "dynamic fight offer list",
+      "rank impact",
+      "purse and purse cut",
+      "venue",
+      "weeks/camp time to fight",
+      "weight-class change conditions",
+      "bonuses",
+      "future-contract commitments",
+      "promoter control/cut",
+      "round count and round length",
+      "special rules",
+      "Go Pro transition",
+      "retirement transition"
+    ],
+    "not_yet_proven": [
+      "rematch-clause storage",
+      "catchweight field",
+      "opponent-replacement protection",
+      "broadcast placement",
+      "manager relationship field",
+      "multi-fight term length semantics",
+      "negotiation mutation/validation rules"
+    ],
+    "next_static_step": "Trace the selection/confirm handlers and the contract-object setters called from 0x001FFE1C and neighboring code to recover exactly which career-state fields are committed when a contract is accepted."
+  }
+}
