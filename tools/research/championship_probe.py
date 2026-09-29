@@ -323,7 +323,7 @@ def main() -> None:
     # Contract-type -> eligibility precheck switch in 0x001A3FBC.
     eligibility_jump_table = []
     for index in range(27):
-        address = 0x00518A08 + index * 4
+        address = 0x00508A08 + index * 4
         target = vaddr_word(raw, elf, address)
         eligibility_jump_table.append({
             "contract_type": index + 1,
