@@ -241,11 +241,11 @@ def main() -> None:
             "assembly": disasm_range(raw, elf, start, end),
         }
 
-    eligibility_start, eligibility_end = function_bounds(
-        raw,
-        elf,
-        0x001A3FBC,
-    )
+    # The eligibility evaluator contains many early-return blocks reached from
+    # its type-dispatch jump table, so "first jr $ra" is not a valid function
+    # boundary here.  Keep this range explicit until the whole CFG is modeled.
+    eligibility_start = 0x001A3FBC
+    eligibility_end = 0x001A4520
     unresolved_field_windows = field_access_windows(
         raw,
         elf,
