@@ -226,6 +226,69 @@ def direct_jal_targets(
     return rows
 
 
+def decode_word_table(
+    raw: bytes,
+    elf,
+    *,
+    table_vaddr: int,
+    count: int,
+    first_index: int = 0,
+) -> list[dict[str, object]]:
+    """Decode an absolute-address word table used by a recovered jump dispatch."""
+
+    rows: list[dict[str, object]] = []
+    for offset in range(count):
+        entry_vaddr = table_vaddr + offset * 4
+        target = vaddr_word(raw, elf, entry_vaddr)
+        rows.append(
+            {
+                "index": first_index + offset,
+                "entry_vaddr": f"0x{entry_vaddr:08X}",
+                "target": None if target is None else f"0x{target:08X}",
+            }
+        )
+    return rows
+
+
+def disasm_dispatch_targets(
+    raw: bytes,
+    elf,
+    entries: list[dict[str, object]],
+    *,
+    instructions: int = 24,
+) -> list[dict[str, object]]:
+    """Emit a small window at each unique dispatch target."""
+
+    seen: set[int] = set()
+    rows: list[dict[str, object]] = []
+    for entry in entries:
+        target_text = entry["target"]
+        if not isinstance(target_text, str):
+            continue
+        target = int(target_text, 16)
+        if target in seen:
+            continue
+        seen.add(target)
+        rows.append(
+            {
+                "target": target_text,
+                "types": [
+                    item["index"]
+                    for item in entries
+                    if item["target"] == target_text
+                ],
+                "assembly": disasm_range(
+                    raw,
+                    elf,
+                    target,
+                    target + instructions * 4,
+                    instructions,
+                ),
+            }
+        )
+    return rows
+
+
 def main() -> None:
     raw = Path("BOOT.BIN").read_bytes()
     elf = parse_elf32(raw)
@@ -259,6 +322,22 @@ def main() -> None:
         elf,
         eligibility_start,
         eligibility_end,
+    )
+
+    # 0x001A403C subtracts one from contract type, bounds it to 27 entries,
+    # then indexes the absolute target table at 0x00508A08.
+    eligibility_type_dispatch = decode_word_table(
+        raw,
+        elf,
+        table_vaddr=0x00508A08,
+        count=27,
+        first_index=1,
+    )
+    eligibility_type_windows = disasm_dispatch_targets(
+        raw,
+        elf,
+        eligibility_type_dispatch,
+        instructions=28,
     )
 
     # Keep focused windows small enough to remain usable in CI logs while
@@ -302,6 +381,8 @@ def main() -> None:
                 "functions": functions,
                 "eligibility_unresolved_field_windows": unresolved_field_windows,
                 "eligibility_direct_calls": eligibility_calls,
+                "eligibility_type_dispatch": eligibility_type_dispatch,
+                "eligibility_type_windows": eligibility_type_windows,
                 "focused": focused,
             },
             indent=2,
