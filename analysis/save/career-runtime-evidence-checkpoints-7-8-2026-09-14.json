@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": [
+    "analysis/save/career-runtime-evidence-2026-09-14.json",
+    "analysis/save/career-runtime-evidence-checkpoint-6-2026-09-14.json"
+  ],
+  "checkpoint_7": {
+    "description": "Third controlled training session with a rival contract active/selected before the Blake Jacobs rematch.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_7.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "9e3ab70282f953951f74947e5b28c7858c13e61f10556d3f40e5ae4171f4c75e",
+      "ram_sha256": "6ea1674b8056efc2669dddffc2aeaba39741348ba1bf8d2a935345cf3fcae268",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "visible_career_state": {
+      "boxer": "Jacob Morgan",
+      "weight_class": "AMATEUR MIDDLEWEIGHT",
+      "date": "November 11, 2026",
+      "rank": "UNRANKED",
+      "record": "2-0-0",
+      "kos": 1,
+      "rival": "Blake Jacobs",
+      "bank": 720
+    },
+    "training_result": {
+      "power": 0,
+      "speed": 3,
+      "agility": 1,
+      "stamina": 0,
+      "chin": 1,
+      "body": 0,
+      "heart": 1,
+      "cuts": 0
+    },
+    "runtime_training_payloads": [
+      {
+        "address": "0x0939727D",
+        "value": "aStats=45\u007f31\u007f26\u007f35\u007f38\u007f32\u007f35\u007f39\u007f6&aStatsDelta=0\u007f3\u007f1\u007f0\u007f1\u007f0\u007f1\u007f0\u007f0"
+      },
+      {
+        "address": "0x093F5BDD",
+        "value": "aStats=45\u007f31\u007f26\u007f35\u007f38\u007f32\u007f35\u007f39\u007f6&aStatsDelta=0\u007f3\u007f1\u007f0\u007f1\u007f0\u007f1\u007f0\u007f0"
+      }
+    ],
+    "resolved_training_layout": [
+      {"address": "0x08D9AABA", "name": "power", "before": 45, "after": 45, "confidence": "confirmed"},
+      {"address": "0x08D9AABC", "name": "power_paired_or_mirror", "before": 45, "after": 45, "confidence": "confirmed_correlation_unresolved_semantics"},
+      {"address": "0x08D9AABE", "name": "speed", "before": 31, "after": 34, "delta": 3, "confidence": "confirmed"},
+      {"address": "0x08D9AAC0", "name": "agility", "before": 26, "after": 27, "delta": 1, "confidence": "confirmed"},
+      {"address": "0x08D9AAC2", "name": "stamina", "before": 35, "after": 35, "confidence": "confirmed"},
+      {"address": "0x08D9AAC4", "name": "chin", "before": 38, "after": 39, "delta": 1, "confidence": "confirmed"},
+      {"address": "0x08D9AAC6", "name": "heart", "before": 35, "after": 36, "delta": 1, "confidence": "confirmed"},
+      {"address": "0x08D9AAC8", "name": "cuts", "before": 39, "after": 39, "confidence": "confirmed"},
+      {"address": "0x08D9AACA", "name": "body", "before": 32, "after": 32, "confidence": "confirmed"}
+    ],
+    "training_payload_order": {
+      "aStats": ["power", "speed", "agility", "stamina", "chin", "body", "heart", "cuts", "overall_or_derived"],
+      "confidence": "confirmed_from_exact_visible_deltas_and_persistent_RAM"
+    },
+    "rival_contract": {
+      "event_type": "RIVAL FIGHT",
+      "opponent": "Blake Jacobs",
+      "total_purse": 5200,
+      "player_cut": 2600,
+      "player_cut_percent": 50,
+      "promoter_cut_percent": 5,
+      "venue": "65 LOWER FLUSHING",
+      "weeks_until_fight": 2,
+      "rounds": 4,
+      "minutes_per_round": 2,
+      "rank_change": "N/A",
+      "division": "MIDDLEWEIGHT",
+      "headgear_required": true,
+      "cut_stoppage_rule": true,
+      "three_knockdown_rule": true,
+      "bonus_objective": "WIN WITH AN ILLEGAL BLOW TO THE HEAD FOR $7,500",
+      "alternative_offers": [
+        {"opponent": "Genaro Perez", "purse": 750},
+        {"opponent": "Max Horton", "purse": 750}
+      ]
+    },
+    "runtime_contract_payloads": [
+      {
+        "address": "0x09397005",
+        "value": "strFightType=RIVAL FIGHT&strPurseCut=YOUR CUT OF PURSE: $2,600 (50%25)&strRankChange=RANK CHANGE: N/A&strDivision=DIVISION: MIDDLEWEIGHT&strVenue=VENUE: 65 LOWER FLUSHING&strTimetoFight=WEEKS UNTIL FIGHT: 2&iUnderCardFight=0"
+      },
+      {
+        "address": "0x093F800D",
+        "value": "strEventName=RIVAL FIGHT&strBoxerLeftFirstName=Jacob&strBoxerLeftLastName=Morgan&strBoxerRightFirstName=BLAKE&strBoxerRightLastName=JACOBS&strVenueName=VENUE: 65 LOWER FLUSHING&strRoundInfo=4,2 MINUTE ROUNDS&strCutPercentage=YOUR CUT OF THE PURSE: $2,600 (50%25)&strSideObjective=RANK CHANGE: N/A\\nBONUS: WIN WITH AN ILLEGAL BLOW\\r\\nTO THE HEAD FOR $7,500\\n&strRules=HEADGEAR REQUIRED\\nEXCESSIVE CUTS MAY STOP FIGHT\\n3 KNOCKDOWN RULE\\n"
+      }
+    ]
+  },
+  "checkpoint_8": {
+    "description": "Rival rematch completed; career progression and payout applied.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_8.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "94435db01e73cb6845762d4f76b3c708d665fb3d1521a71ae6ca57f42eb00822",
+      "ram_sha256": "5e4a6ad3e19614cb05945566d2ccbe83c4e5917274d530928c519a169f645089",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "visible_and_runtime_state": {
+      "boxer": "Jacob Morgan",
+      "weight_class": "AMATEUR MIDDLEWEIGHT",
+      "date": "December 2, 2026",
+      "rank": "UNRANKED",
+      "record": "3-0-0",
+      "kos": 2,
+      "rival": "Blake Jacobs",
+      "bank": 3190,
+      "runtime_ui_address": "0x09454084",
+      "runtime_ui_value": "strBoxerName=Jacob Morgan&strWeightClass=AMATEUR MIDDLEWEIGHT&strWinLossRecord=3-0-0, 2 KO&strRank=UNRANKED&strMoney=$$3,190&strRivalName=BLAKE JACOBS&strCROBoxer=strCareerBoxer&strCROBoxer=strCareerCentralBoxer&strDate=DECEMBER 2, 2026&iRetired=0"
+    },
+    "rival_result": {
+      "opponent": "Blake Jacobs",
+      "career_bookkeeping": "win_by_KO_or_TKO",
+      "evidence": "career wins 2 -> 3 and career KO count 1 -> 2",
+      "post_fight_narrative": "WILL THEY MEET AGAIN?",
+      "rival_persisted_after_rematch": true
+    },
+    "visible_payout": {
+      "total_purse": 5200,
+      "opponent_share": 2600,
+      "opponent_percentage": 50,
+      "player_share": 2600,
+      "player_percentage": 50,
+      "promoter_expense": 130,
+      "promoter_percent": 5,
+      "trainer_expense": 0,
+      "cutman_expense": 0,
+      "total_expenses": 130,
+      "net_pay": 2470
+    },
+    "confirmed_deltas": [
+      {"address": "0x08D98504", "name": "career_wins", "before": 2, "after": 3, "confidence": "confirmed"},
+      {"address": "0x08D98506", "name": "career_ko_count", "before": 1, "after": 2, "confidence": "confirmed"},
+      {"address": "0x08D98574", "name": "career_bank", "before": 720, "after": 3190, "delta": 2470, "confidence": "confirmed"},
+      {"address": "0x08D98568", "name": "money_related_candidate_a", "before": 720, "after": 3190, "delta": 2470, "confidence": "strong_candidate_unresolved_semantics"},
+      {"address": "0x08D98578", "name": "money_related_candidate_b", "before": 720, "after": 3190, "delta": 2470, "confidence": "strong_candidate_unresolved_semantics"},
+      {"address": "0x08D98614", "name": "active_contract_or_fight_pending_flag_candidate", "before": 1, "after": 0, "confidence": "strong_candidate"}
+    ],
+    "rival_state": {
+      "last_name_address": "0x08D98672",
+      "last_name": "JACOBS",
+      "first_name_address": "0x08D98692",
+      "first_name": "BLAKE",
+      "persisted": true
+    },
+    "new_rival_or_post_special_event_flag_candidates": [
+      {"address": "0x08D98628", "before": 0, "after": 1},
+      {"address": "0x08D9862A", "before": 0, "after": 1},
+      {"address": "0x08D9862E", "before": 0, "after": 1}
+    ],
+    "training_control": {
+      "range": "0x08D9AABA-0x08D9AACA",
+      "changed": false,
+      "meaning": "The mapped boxer attributes did not change during the rival-fight-only transition."
+    },
+    "calendar_observation": {
+      "checkpoint_7_date": "November 11, 2026",
+      "checkpoint_8_date": "December 2, 2026",
+      "elapsed_days": 21,
+      "contract_displayed_weeks_until_fight": 2,
+      "status": "unresolved",
+      "note": "The visible career date advanced three weeks while the contract displayed two weeks until fight. This is valuable for later calendar/scheduling RE but should not yet be interpreted as a bug or a proven formula."
+    }
+  },
+  "overhaul_relevance": [
+    "The complete visible training-stat order and persistent RAM layout are now mapped, so further routine training checkpoints have diminishing value unless tracing the writer or derived-overall formula.",
+    "The contract/event system can represent a distinct rival event type with custom purse, purse split, promoter cut, lead time, rules, side objective, and opponent identity. These are direct extension points for Career Mode 2.0.",
+    "Rival state persists after a rematch and triggers a dedicated post-fight newspaper/narrative event, showing that rivalry is a multi-event career subsystem rather than a one-fight label.",
+    "The rival rematch did not create a numeric ranking; Jacob remained UNRANKED at 3-0. The next high-value milestone is the transition to a numeric rank and/or amateur-to-pro progression, not an intentionally engineered loss.",
+    "Calendar advancement around contract signing, training, and fight resolution remains unresolved and should be captured at the next progression milestone."
+  ],
+  "next_capture_priority": [
+    "Do not spend savestates on routine fights or already-mapped training changes.",
+    "Capture the first transition from UNRANKED to a numeric rank.",
+    "Capture the amateur-to-pro transition and the offer/event that causes it.",
+    "Capture any rival-state change, retirement/removal, or second special rival event.",
+    "Capture contract offers when the event type, rank-change promise, number of rounds, sponsor status, weight-class change, or future-contract count differs materially from the current amateur template."
+  ]
+}

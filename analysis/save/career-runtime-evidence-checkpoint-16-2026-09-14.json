@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": [
+    "analysis/save/career-runtime-evidence-checkpoint-15-2026-09-14.json",
+    "analysis/save/career-pro-transition-offer-2026-09-14.json"
+  ],
+  "checkpoint": {
+    "id": 16,
+    "description": "First preserved professional-career checkpoint after completing the GO PRO transition sequence; saved during/after the Professional Division Package notification sequence.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_16.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "d7770a195e18f78bdf2be0c006e044fe6141c2b3afcec63ebcceef31577ee03a",
+      "ram_sha256": "43e00b8fc6a74f50623db8ab50e2a16d79afbd172b1977b8e7bc46f9a13acbd8",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "visible_and_runtime_state": {
+      "boxer": "Jacob Morgan",
+      "weight_class": "PRO MIDDLEWEIGHT",
+      "date": "MARCH 27, 2030",
+      "rank": 49,
+      "record": "0-0-0",
+      "kos": 0,
+      "rival": "Blake Jacobs",
+      "bank": 23353,
+      "runtime_ui_address": "0x0945447C",
+      "runtime_ui_value": "strBoxerName=Jacob Morgan&strWeightClass=PRO MIDDLEWEIGHT&strWinLossRecord=0-0-0, 0 KO&strRank=49&strMoney=$$23,353&strRivalName=BLAKE JACOBS&strCROBoxer=strCareerBoxer&strCROBoxer=strCareerCentralBoxer&strDate=MARCH 27, 2030&iRetired=0"
+    },
+    "professional_transition_screen": {
+      "visible_text": [
+        "CONGRATULATIONS!",
+        "YOU ARE NOW A PROFESSIONAL BOXER.",
+        "$10,000 PRO BONUS!",
+        "HIRE TRAINERS/CUTMEN",
+        "MOVE WEIGHT CLASSES",
+        "CUSTOMIZE ENTRANCES"
+      ],
+      "significance": "Retail explicitly presents going pro as a career-mode transition that unlocks additional management/customization systems and pays a $10,000 transition bonus."
+    },
+    "fight_store_unlock": {
+      "name": "PROFESSIONAL DIVISION PACKAGE",
+      "visible_text": "CONGRATULATIONS! YOU'VE UNLOCKED THE PROFESSIONAL DIVISION PACKAGE IN THE FIGHT STORE.",
+      "runtime_addresses": ["0x08D9C3C8", "0x08D9C53C", "0x09454C7A"]
+    }
+  },
+  "record_model_transition": [
+    {
+      "address": "0x08D98504",
+      "prior_name": "career_wins/current_visible_wins",
+      "before": 10,
+      "after": 0,
+      "confidence": "confirmed_current_visible_record_counter",
+      "evidence": "The field reset exactly when Career Central changed from amateur 10-0-0 to professional 0-0-0."
+    },
+    {
+      "address": "0x08D98506",
+      "prior_name": "career_ko_count/current_visible_ko_count",
+      "before": 9,
+      "after": 0,
+      "confidence": "confirmed_current_visible_record_counter",
+      "evidence": "The field reset exactly when the professional record became 0 KO."
+    },
+    {
+      "address": "0x08D98508",
+      "before": 10,
+      "after": 11,
+      "confidence": "strong_candidate_career_total_or_amateur_plus_transition_wins",
+      "evidence": "This counter had mirrored wins throughout the amateur career, increments again across the successful GO PRO transition, but does not reset when the newly displayed professional record resets to 0-0-0."
+    },
+    {
+      "address": "0x08D9850B",
+      "before": 9,
+      "after": 10,
+      "confidence": "strong_candidate_career_total_or_amateur_plus_transition_kos",
+      "evidence": "This counter similarly preserves/increments the pre-professional KO history while the visible professional KO counter resets to zero. The transition result is therefore consistent with a win booked as a KO/TKO in the pre-pro/overall record path."
+    }
+  ],
+  "money_model_transition": [
+    {
+      "address": "0x08D98574",
+      "name": "career_bank",
+      "before": 11795,
+      "after": 23353,
+      "delta": 11558,
+      "confidence": "confirmed"
+    },
+    {
+      "address": "0x08D98578",
+      "before": 15795,
+      "after": 27353,
+      "delta": 11558,
+      "confidence": "very_strong_candidate_accumulated_earnings",
+      "evidence": "This field ignored the prior $4,000 Fight Store spend, then increased by exactly the same $11,558 inflow as bank during the GO PRO transition. At checkpoint 16 it exceeds bank by exactly $4,000, the amount previously spent. This strongly matches accumulated earnings/inflow before expenditures; a future Sign Contract EARNINGS readout can confirm the exact UI binding."
+    },
+    {
+      "address": "0x08D9856C",
+      "before": 4000,
+      "after": 0,
+      "confidence": "strong_negative_evidence_against_lifetime_spending_total",
+      "evidence": "The purchase-sensitive field resets on professional transition, so it is not a lifetime store-spending total. A phase/career-stage purchase or expense accumulator is now more plausible."
+    }
+  ],
+  "transition_payout_arithmetic": {
+    "bank_delta": 11558,
+    "visible_pro_bonus": 10000,
+    "remainder_after_bonus": 1558,
+    "pre_transition_contract_player_cut": 1640,
+    "difference_from_player_cut": 82,
+    "difference_percent_of_player_cut": 5,
+    "interpretation": "The non-bonus portion of the bank increase is $1,558, exactly $1,640 less 5% ($82). This is strongly consistent with the same 5% promoter expense seen in prior amateur contracts."
+  },
+  "rank_and_progression_candidates": [
+    {
+      "address": "0x08D9851A",
+      "before": 7,
+      "after": 48,
+      "visible_rank": 49,
+      "confidence": "strong_rank_or_rank_index_candidate",
+      "evidence": "The post-transition value 48 is exactly one less than visible rank 49. Amateur values do not yet establish the sentinel/encoding, so zero-based-rank semantics are not named as confirmed until a professional rank change is observed."
+    },
+    {
+      "address": "0x08D98538",
+      "before": 50,
+      "after": 48,
+      "visible_rank": 49,
+      "confidence": "rank_correlated_candidate",
+      "evidence": "A second persistent byte also becomes 48 at the first professional checkpoint. The next visible rank movement should distinguish the two candidates."
+    },
+    {
+      "address": "0x08D985F5",
+      "before": 1,
+      "after": 2,
+      "confidence": "strong_candidate_progression_or_unlock_tier",
+      "evidence": "The field first changed 0->1 at the amateur-title/Amateur Championship Package milestone and now 1->2 exactly at the professional/Professional Division Package milestone. This strongly ties it to career progression/unlock tiering without yet proving exact semantics."
+    }
+  ],
+  "equipment_persistence": {
+    "range": "0x08D9AB60-0x08D9AB6A",
+    "changed_checkpoint_15_to_16": false,
+    "meaning": "The equipment-sensitive block created by the trunks/mouthguard/foul-protector purchase remains byte-for-byte unchanged across the professional transition, showing the equipped gear state persists into the pro career."
+  },
+  "training_confounds_checkpoint_15_to_16": {
+    "note": "Checkpoint 15 -> 16 is not a pure transition-only experiment because training/fight preparation occurred before the GO PRO fight. The base training block changed and those deltas must not be attributed to professional status itself.",
+    "deltas": [
+      {"address": "0x08D9AABA", "name": "power", "before": 56, "after": 58, "delta": 2},
+      {"address": "0x08D9AABC", "name": "power_correlated_pair", "before": 56, "after": 58, "delta": 2},
+      {"address": "0x08D9AAC2", "name": "stamina", "before": 43, "after": 44, "delta": 1},
+      {"address": "0x08D9AAC8", "name": "cuts", "before": 47, "after": 48, "delta": 1},
+      {"address": "0x08D9AACA", "name": "body", "before": 40, "after": 41, "delta": 1}
+    ]
+  },
+  "other_stage_flag_changes": [
+    {"address": "0x08D984FC", "before": 4, "after": 3, "confidence": "candidate"},
+    {"addresses": ["0x08D98628", "0x08D9862A", "0x08D9862E"], "before": 1, "after": 0, "confidence": "candidate_group"},
+    {"addresses": ["0x08D98630", "0x08D98632", "0x08D98636"], "before": 0, "after": 1, "confidence": "candidate_group"}
+  ],
+  "overhaul_implications": [
+    "Retail maintains a distinct professional record that resets to 0-0-0 when the player enters the professional division while separate counters preserve the completed amateur/transition history.",
+    "Professional status unlocks trainers/cutmen, weight-class movement, entrance customization, a $10,000 bonus, and a new Fight Store package in one explicit progression transition.",
+    "Purchased/equipped amateur gear survives the transition intact.",
+    "The money model cleanly separates spendable bank from an accumulated-earnings-like field once store purchases have occurred."
+  ],
+  "next_capture": [
+    "Open Sign Contract once in the professional career and screenshot the top EARNINGS/BANK line. If EARNINGS is $27,353 while BANK is $23,353, that directly confirms 0x08D98578 as the displayed accumulated-earnings value.",
+    "Capture the first normal professional contract before signing, especially opponent rank, promised rank change, purse split, promoter/trainer/cutman percentages, rounds, and any future-contract fields.",
+    "After the first professional fight, take one stable post-fight savestate. The first rank movement is the highest-value test for 0x08D9851A and 0x08D98538, and the first pro win will determine whether 0x08D98508/0x08D9850B are true whole-career totals or specifically amateur/transition totals.",
+    "Avoid spending or changing equipment before that first post-pro-fight checkpoint unless a purchase experiment is intentionally being run."
+  ]
+}

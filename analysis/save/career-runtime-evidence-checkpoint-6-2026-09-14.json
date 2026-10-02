@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": "analysis/save/career-runtime-evidence-2026-09-14.json",
+  "checkpoint": {
+    "id": 6,
+    "description": "Second amateur bout completed by decision and career progression applied.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_6.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "f142cfe8146017dab9229477b098a617f5da3e5be218d37fac7da5aed389cff3",
+      "ram_sha256": "e6a7c0bd1bb711aff3a72059f8c0f085d6ae376e6940985feabd619bfd332d44",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "visible_state": {
+      "boxer": "Jacob Morgan",
+      "weight_class": "AMATEUR MIDDLEWEIGHT",
+      "date": "November 11, 2026",
+      "rank": "UNRANKED",
+      "record": "2-0-0",
+      "kos": 1,
+      "rival": "Blake Jacobs",
+      "bank": 720
+    },
+    "fight_result": {
+      "opponent": "Lopez",
+      "outcome": "decision_win",
+      "player_knockdowns": 2,
+      "opponent_knockdowns": 0,
+      "judges": [
+        {"player": 39, "opponent": 35},
+        {"player": 39, "opponent": 35},
+        {"player": 40, "opponent": 34}
+      ]
+    },
+    "visible_payout": {
+      "total_purse": 750,
+      "opponent_share": 300,
+      "opponent_percentage": 40,
+      "player_share": 450,
+      "player_percentage": 60,
+      "promoter_expense": 18,
+      "trainer_expense": 0,
+      "cutman_expense": 0,
+      "total_expenses": 18,
+      "net_pay": 432
+    },
+    "visible_fight_totals": {
+      "player_total_punches_thrown": 277,
+      "player_total_punches_hit": 169,
+      "player_total_accuracy_percent": 57,
+      "opponent_total_punches_thrown": 186,
+      "opponent_total_punches_hit": 115,
+      "opponent_total_accuracy_percent": 61,
+      "player_knockdowns": 2,
+      "opponent_knockdowns": 0
+    },
+    "runtime_ui_string": {
+      "address": "0x09453DF4",
+      "value": "strBoxerName=Jacob Morgan&strWeightClass=AMATEUR MIDDLEWEIGHT&strWinLossRecord=2-0-0, 1 KO&strRank=UNRANKED&strMoney=$$720&strRivalName=BLAKE JACOBS&strCROBoxer=strCareerBoxer&strCROBoxer=strCareerCentralBoxer&strDate=NOVEMBER 11, 2026&iRetired=0"
+    }
+  },
+  "resolved_fields": [
+    {
+      "address": "0x08D98504",
+      "type": "u16",
+      "name": "career_wins",
+      "confidence": "confirmed",
+      "checkpoint_5": 1,
+      "checkpoint_6": 2,
+      "delta": 1,
+      "evidence": "Checkpoint 6 is a decision win: displayed wins increased from 1 to 2 while displayed KO count stayed at 1. This field alone changed 1 -> 2 among the prior wins/KO candidate pair."
+    },
+    {
+      "address": "0x08D98506",
+      "type": "u16",
+      "name": "career_ko_count",
+      "confidence": "confirmed",
+      "checkpoint_5": 1,
+      "checkpoint_6": 1,
+      "delta": 0,
+      "evidence": "Checkpoint 6 is a decision win: displayed KO count remained 1 while wins increased to 2. This field remained 1, resolving it as the KO-count field."
+    },
+    {
+      "address": "0x08D98574",
+      "type": "u32",
+      "name": "career_bank",
+      "confidence": "confirmed",
+      "checkpoint_5": 288,
+      "checkpoint_6": 720,
+      "delta": 432,
+      "evidence": "Matches the visible bank exactly and increased by the visible second-fight net pay of $432."
+    }
+  ],
+  "strengthened_candidates": [
+    {
+      "address": "0x08D98568",
+      "type": "u32",
+      "name": "money_related_candidate_a",
+      "checkpoint_5": 288,
+      "checkpoint_6": 720,
+      "delta": 432,
+      "confidence": "strong_candidate_unresolved_semantics",
+      "evidence": "Increased by exactly the second-fight net pay, like bank, but historical late-career data differs from the bank field."
+    },
+    {
+      "address": "0x08D98578",
+      "type": "u32",
+      "name": "money_related_candidate_b",
+      "checkpoint_5": 288,
+      "checkpoint_6": 720,
+      "delta": 432,
+      "confidence": "strong_candidate_unresolved_semantics",
+      "evidence": "Increased by exactly the second-fight net pay, but historical late-career data is much larger than bank, consistent with some accumulated-earnings-like quantity. Exact semantics remain unresolved."
+    }
+  ],
+  "other_runtime_observations": [
+    {
+      "address": "0x08D98672",
+      "type": "ascii",
+      "value": "JACOBS",
+      "meaning": "rival_last_name",
+      "confidence": "confirmed",
+      "note": "Rival remained Blake Jacobs after fighting Lopez, confirming that rival state persists independently of the most recent opponent."
+    },
+    {
+      "address": "0x08D98692",
+      "type": "ascii",
+      "value": "BLAKE",
+      "meaning": "rival_first_name",
+      "confidence": "confirmed"
+    },
+    {
+      "range": "0x08D9AABA-0x08D9AACA",
+      "meaning": "training_sensitive_player_attribute_block",
+      "confidence": "confirmed_region",
+      "note": "All previously observed training-sensitive fields were unchanged from checkpoint 5 to checkpoint 6, as expected for a fight-only transition after training."
+    }
+  ],
+  "persistent_career_byte_deltas_checkpoint_5_to_6": [
+    {"address": "0x08D984D6", "before_hex": "01", "after_hex": "00"},
+    {"address": "0x08D98504", "before_hex": "01", "after_hex": "02"},
+    {"address": "0x08D98508", "before_hex": "01", "after_hex": "02"},
+    {"address": "0x08D9854A", "before_hex": "9a41", "after_hex": "141e"},
+    {"address": "0x08D98568", "before_hex": "2001", "after_hex": "d002"},
+    {"address": "0x08D98571", "before_hex": "20", "after_hex": "58"},
+    {"address": "0x08D98574", "before_hex": "2001", "after_hex": "d002"},
+    {"address": "0x08D98578", "before_hex": "2001", "after_hex": "d002"},
+    {"address": "0x08D985E8", "before_hex": "150ebf0dd80b660bd5", "after_hex": "8c0c340cfd0aa90a09"},
+    {"address": "0x08D985F2", "before_hex": "770b", "after_hex": "bc0a"},
+    {"address": "0x08D98614", "before_hex": "01", "after_hex": "00"},
+    {"address": "0x08D98618", "before_hex": "3301", "after_hex": "4802"},
+    {"address": "0x08D9861C", "before_hex": "bf00", "after_hex": "5e01"}
+  ],
+  "next_experiments": [
+    "Prioritize overhaul-relevant progression and system transitions rather than forcing losses/draws: first numeric ranking, amateur-to-pro transition, materially new rival/story events, or materially different contract types.",
+    "A purchase or expense outside fight payout remains useful if encountered naturally because it can distinguish bank from the two additional money-related accumulators.",
+    "Routine training deltas no longer need dedicated savestates; the visible eight-stat layout has been resolved by later checkpoints."
+  ]
+}

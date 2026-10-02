@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": [
+    "analysis/save/career-runtime-evidence-checkpoint-14-2026-09-14.json",
+    "analysis/save/career-pro-transition-offer-2026-09-14.json"
+  ],
+  "checkpoint": {
+    "id": 15,
+    "description": "Post-Fight-Store purchase/equip checkpoint before taking the GO PRO transition fight.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_15.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "e1f959315370350f60ab740ead9ce674c39adafd6848378a91c9eb14f9da66ce",
+      "ram_sha256": "d7788b1d37c7a275bdb4d65ac31166657ae5cc30145851b7026a42c5acd95d66",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "user_reported_actions_since_checkpoint_14": [
+      "Purchased one pair of trunks.",
+      "Purchased one mouthguard.",
+      "Purchased one foul protector.",
+      "Equipped all three purchased items."
+    ],
+    "career_control_state": {
+      "status": "AMATEUR",
+      "weight_class": "MIDDLEWEIGHT",
+      "record": "10-0-0",
+      "kos": 9,
+      "rank": "UNRANKED",
+      "date": "MARCH 7, 2029",
+      "rival": "BLAKE JACOBS",
+      "note": "No fight/progression occurred between checkpoints 14 and 15; the controlled change is Fight Store purchasing/equipping."
+    }
+  },
+  "money_deltas_checkpoint_14_to_15": [
+    {
+      "address": "0x08D98574",
+      "name": "career_bank",
+      "before": 15795,
+      "after": 11795,
+      "delta": -4000,
+      "confidence": "confirmed",
+      "evidence": "The bank falls by exactly $4,000 after the three reported purchases. Fight Store runtime strings also render $11,795."
+    },
+    {
+      "address": "0x08D98578",
+      "before": 15795,
+      "after": 15795,
+      "delta": 0,
+      "confidence": "strong_candidate_accumulated_earnings",
+      "evidence": "This money field does not decrease when $4,000 is spent, cleanly separating it from bank. Combined with its prior fight-income accumulation, this is strong evidence for an earnings/cumulative-inflow quantity; exact UI-source identity still requires a post-purchase Sign Contract readout or static writer trace."
+    },
+    {
+      "address": "0x08D9856C",
+      "before": 0,
+      "after": 4000,
+      "delta": 4000,
+      "confidence": "strong_candidate_spending_or_purchase_total",
+      "evidence": "The field rises by exactly the amount the confirmed bank falls across a purchase-only checkpoint. Exact scope (career spending, store spending, current-phase spending, or another purchase accumulator) remains unresolved."
+    }
+  ],
+  "equipment_state_deltas_checkpoint_14_to_15": [
+    {"address": "0x08D9AB60", "before": 0, "after": 34},
+    {"address": "0x08D9AB62", "before": 7, "after": 28},
+    {"address": "0x08D9AB64", "before": 5, "after": 2},
+    {"address": "0x08D9AB66", "before": 5, "after": 6},
+    {"address": "0x08D9AB6A", "before": 2, "after": 1}
+  ],
+  "equipment_interpretation": {
+    "range": "0x08D9AB60-0x08D9AB6A",
+    "confidence": "confirmed_equipment_sensitive_region_exact_slots_unresolved",
+    "evidence": "This compact persistent region changes when trunks, mouthguard, and foul protector are purchased/equipped. Because all three equipment changes occurred in the same checkpoint, individual slot semantics are intentionally not assigned yet."
+  },
+  "base_training_stat_control": {
+    "range": "0x08D9AABA-0x08D9AACA",
+    "changed": false,
+    "values": {
+      "power": 56,
+      "power_correlated_pair": 56,
+      "speed": 39,
+      "agility": 27,
+      "stamina": 43,
+      "chin": 44,
+      "heart": 41,
+      "cuts": 47,
+      "body": 40
+    },
+    "implication": "Equipping the visible BODY +1 / CHIN +1 gear does not rewrite the already-mapped persistent base training-stat block. Gear bonuses therefore appear to be represented/applied separately from base trained ratings."
+  },
+  "overhaul_implications": [
+    "Retail already separates base boxer training ratings from equipment-derived stat modifiers, useful for preserving permanent progression and temporary/equipment bonuses independently in the overhaul.",
+    "Checkpoint 15 cleanly separates spendable bank from a second accumulated-money field and exposes a new purchase-sensitive money accumulator candidate.",
+    "The Fight Store has a compact persistent equipment-state region suitable for later one-item-at-a-time slot isolation if equipment customization becomes an implementation target."
+  ],
+  "next_capture_note": "Checkpoint 15 is the correct pre-GO-PRO baseline. Any later transition analysis must compare against checkpoint 15 rather than checkpoint 14 because the player deliberately purchased/equipped gear first."
+}

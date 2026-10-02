@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "extends": [
+    "analysis/save/career-runtime-evidence-2026-09-14.json",
+    "analysis/save/career-runtime-evidence-checkpoint-13-2026-09-14.json"
+  ],
+  "checkpoint": {
+    "id": 14,
+    "description": "Post-Amateur-Title-Fight checkpoint during the resulting Career Central notification sequence.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_14.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "d62c6fd78105e29b3b3058a7ff3ef4d9d2de1b461fee8f1b6275a9d61e8d4d37",
+      "ram_sha256": "16b2a1974bea4f9b8cf2f439e56e4f00c26a8f6ac6801fe54227d7cfe8dcaf98",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "visible_and_runtime_state": {
+      "boxer": "Jacob Morgan",
+      "weight_class": "AMATEUR MIDDLEWEIGHT",
+      "date": "March 7, 2029",
+      "rank": "UNRANKED",
+      "record": "10-0-0",
+      "kos": 9,
+      "rival": "Blake Jacobs",
+      "bank": 15795,
+      "runtime_ui_address": "0x09453DC0",
+      "runtime_ui_value": "strBoxerName=Jacob Morgan&strWeightClass=AMATEUR MIDDLEWEIGHT&strWinLossRecord=10-0-0, 9 KO&strRank=UNRANKED&strMoney=$$15,795&strRivalName=BLAKE JACOBS&strCROBoxer=strCareerBoxer&strCROBoxer=strCareerCentralBoxer&strDate=MARCH 7, 2029&iRetired=0"
+    },
+    "title_fight_result": {
+      "opponent": "Nathan Ferguson",
+      "pre_fight_event_type": "AMATEUR TITLE FIGHT",
+      "pre_fight_award": "AMATEUR BELT",
+      "career_bookkeeping": "win_by_KO_or_TKO",
+      "evidence": "career wins 9 -> 10 and career KO count 8 -> 9",
+      "pre_fight_player_share": 5500,
+      "pre_fight_promoter_cut_percent": 5,
+      "derived_expected_promoter_expense": 275,
+      "derived_expected_net_pay": 5225,
+      "bank_before": 10570,
+      "bank_after": 15795,
+      "observed_bank_delta": 5225,
+      "payout_consistency": "The bank increase exactly equals $5,500 minus a 5% promoter cut ($275), independently confirming the contract payout arithmetic."
+    },
+    "post_title_notifications": [
+      {
+        "type": "fight_store_unlock",
+        "visible_text": "CONGRATULATIONS! YOU'VE UNLOCKED THE AMATEUR CHAMPIONSHIP PACKAGE IN THE FIGHT STORE.",
+        "runtime_addresses": ["0x08D9C3C8", "0x08D9C53C", "0x0945472C"],
+        "significance": "First observed Amateur Championship Package unlock immediately after the Amateur Title Fight."
+      },
+      {
+        "type": "rival_progression",
+        "visible_text": "YOUR RIVAL HAS GONE PRO\n\nBLAKE JACOBS HAS JUST MADE IT TO THE PROFESSIONAL DIVISION.",
+        "runtime_address": "0x094531AC",
+        "significance": "Direct retail evidence that the rival can advance from amateur to professional independently of the player while remaining the named career rival."
+      }
+    ]
+  },
+  "confirmed_field_deltas_checkpoint_13_to_14": [
+    {"address": "0x08D98504", "name": "career_wins", "before": 9, "after": 10, "delta": 1, "confidence": "confirmed"},
+    {"address": "0x08D98506", "name": "career_ko_count", "before": 8, "after": 9, "delta": 1, "confidence": "confirmed"},
+    {"address": "0x08D98574", "name": "career_bank", "before": 10570, "after": 15795, "delta": 5225, "confidence": "confirmed"},
+    {"address": "0x08D98614", "name": "active_contract_or_fight_pending_flag_candidate", "before": 1, "after": 0, "confidence": "strong_candidate_reconfirmed", "evidence": "This repeats the same pre-fight 1 -> post-fight 0 transition previously observed around the rival rematch."}
+  ],
+  "money_field_followup": [
+    {
+      "address": "0x08D98568",
+      "type": "u32",
+      "before": 10570,
+      "after": 0,
+      "confidence": "strong_candidate_unresolved_semantics",
+      "evidence": "This field previously tracked bank through the controlled early career but resets to zero at the post-title checkpoint while bank remains $15,795. Because the visible date also crossed from 2028 to 2029, a current-year/current-cycle earnings interpretation becomes plausible but is not yet proven. The next Sign Contract screen can directly test whether its displayed EARNINGS value is now $0."
+    },
+    {
+      "address": "0x08D98578",
+      "type": "u32",
+      "before": 10570,
+      "after": 15795,
+      "confidence": "strong_candidate_unresolved_semantics",
+      "evidence": "Continues to accumulate fight net pay and still equals bank because no controlled purchase/spend has yet separated them. Historical late-career evidence where this field greatly exceeds bank remains consistent with cumulative earnings, but purchase evidence is still required before naming it."
+    }
+  ],
+  "title_or_progression_candidates_checkpoint_13_to_14": [
+    {
+      "address": "0x08D984EF",
+      "before": 0,
+      "after": 1,
+      "confidence": "candidate",
+      "evidence": "First observed 0 -> 1 transition across the title-fight checkpoint. Could be title/champion/progression-related or another coincident state; semantics intentionally unresolved."
+    },
+    {
+      "address": "0x08D9851A",
+      "before": 0,
+      "after": 7,
+      "confidence": "candidate",
+      "evidence": "New nonzero transition across the title-fight checkpoint; semantics unresolved."
+    },
+    {
+      "address": "0x08D985E4",
+      "before": 6,
+      "after": 22,
+      "confidence": "strong_candidate_unresolved_semantics",
+      "evidence": "Previously identified progression/event-counter candidate changes substantially again at the title-fight milestone, strengthening its relationship to career progression while not identifying the exact unit or meaning."
+    },
+    {
+      "address": "0x08D985F5",
+      "before": 0,
+      "after": 1,
+      "confidence": "candidate",
+      "evidence": "New boolean-like transition across the title-fight checkpoint; may be related to championship/rival progression or post-event state. Requires another controlled milestone or writer trace."
+    }
+  ],
+  "checkpoint_12_unlock_followup": [
+    {
+      "address": "0x08D98546",
+      "value": 1,
+      "interpretation": "The durable Amateur Package/progression candidate remains set through the Amateur Title Fight and Championship Package unlock.",
+      "confidence": "strong_candidate_unresolved_semantics"
+    },
+    {
+      "range": "0x08D985B2-0x08D985B4",
+      "value_hex": "000000",
+      "interpretation": "Remains cleared, further weakening any persistent-unlock interpretation for the checkpoint-12 ffff03 transition.",
+      "confidence": "strong_negative_evidence"
+    }
+  ],
+  "contract_lifecycle_observations": [
+    {
+      "range": "0x08D9AF98-0x08D9AFC4",
+      "observation": "The previously correlated title-contract values for weeks-until-fight, total purse, round count, and player percentage remain resident after the fight even though the active-contract candidate at 0x08D98614 clears.",
+      "implication": "These fields belong to retained contract/history data rather than proving that the contract is still active."
+    },
+    {
+      "address": "0x08D9AFD0",
+      "before": 2,
+      "after": 0,
+      "confidence": "candidate",
+      "implication": "The prior minutes-per-round correlation must remain tentative: this field clears after the fight while most contract values persist."
+    },
+    {
+      "address": "0x08D9AFD4",
+      "before": 1,
+      "after": 3,
+      "confidence": "candidate",
+      "implication": "Likely lifecycle/status-related, but exact semantics are unresolved."
+    }
+  ],
+  "training_control": {
+    "range": "0x08D9AABA-0x08D9AACA",
+    "changed": false,
+    "values": {
+      "power": 56,
+      "power_correlated_pair": 56,
+      "speed": 39,
+      "agility": 27,
+      "stamina": 43,
+      "chin": 44,
+      "heart": 41,
+      "cuts": 47,
+      "body": 40
+    },
+    "meaning": "The mapped persistent boxer training attributes did not change during the title-fight/progression transition."
+  },
+  "calendar_observation": {
+    "checkpoint_13_date": "June 7, 2028",
+    "checkpoint_14_date": "March 7, 2029",
+    "elapsed_days": 273,
+    "elapsed_weeks": 39,
+    "contract_displayed_weeks_until_fight": 12,
+    "status": "unresolved",
+    "note": "The visible career calendar advanced 39 weeks across a contract that displayed 12 weeks until fight. This is a strong reason not to model the displayed lead-time value as a direct real-calendar delta without recovering the career calendar/training advancement logic."
+  },
+  "overhaul_implications": [
+    "Winning the observed amateur title does not immediately convert the player to professional status in the captured state: Jacob remains AMATEUR MIDDLEWEIGHT and UNRANKED at 10-0-0, 9 KO.",
+    "The rival can independently transition to the professional division while remaining the player's named rival. That is direct retail precedent for independently simulated NPC career progression in the planned overhaul.",
+    "A separate Amateur Championship Package unlock exists in the Fight Store after the title-fight milestone, extending the already-proven retail milestone/unlock infrastructure.",
+    "The post-title checkpoint introduces several new persistent career-state candidates, but none should be called the champion flag until isolated by another title/progression transition or writer trace."
+  ],
+  "next_capture": [
+    "Dismiss the current notification sequence one message at a time and screenshot every additional popup before taking any training or contract action.",
+    "At the first stable Career Central screen, open Sign Contract and screenshot the top EARNINGS/BANK line. If EARNINGS displays $0, that strongly resolves 0x08D98568 as a current-year/current-cycle earnings field rather than bank.",
+    "Open the Fight Store and capture the Amateur Championship Package description, price, requirements, and effect.",
+    "If the Championship Package costs money and purchasing it is acceptable, checkpoint 14 is already a clean pre-purchase baseline: buy it and immediately create one post-purchase savestate before any other action. That experiment can separate bank from the cumulative-money candidate at 0x08D98578 and expose ownership/activation state.",
+    "Do not sign another contract or train until the notification queue and Fight Store/earnings evidence have been documented."
+  ]
+}

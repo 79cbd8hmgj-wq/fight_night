@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "capture_date": "2026-09-14",
+  "source_revision": {
+    "id": "ULUS10066-v1.00",
+    "build": "commercial_retail"
+  },
+  "checkpoint": {
+    "id": 10,
+    "description": "Mid-fight savestate captured immediately after a user-observed flash knockdown: the opponent went directly down without the usual visible stunned/wobble phase.",
+    "private_artifact": {
+      "filename": "ULUS10066_1.00_10.ppst",
+      "ppsspp_version": "v1.20.4",
+      "sha256": "85d29fa0763f3be6381f7a50025aaf736813521501926afb4d6eafe20c9c6ac7",
+      "ram_sha256": "ed0f4be11b3d00f4e09b8ae74c60321aaf6ad6b50433e7d0344649ba570a3ac8",
+      "policy": "Hashes only. Savestate and extracted RAM remain outside Git."
+    },
+    "observation": {
+      "event": "flash_knockdown",
+      "user_description": "knockdown without a stun phase",
+      "confidence": "observed_runtime_behavior_with_savestate",
+      "important_boundary": "The savestate proves the exact runtime snapshot exists, but without a matched ordinary stun-then-knockdown comparator it does not yet identify the internal branch condition, state field, damage threshold, animation selector, or responsible function."
+    }
+  },
+  "overhaul_relevance": {
+    "direct": true,
+    "reason": "The current Alpha 1 damage layer models knockdown as requiring an already-stunned state. Retail runtime behavior demonstrates at least one visible pathway where a boxer can be knocked down without first entering the normal visible stun/wobble phase. Therefore the overhaul should not hard-code 'visible stun must precede every knockdown' as a retail-derived invariant.",
+    "affected_area": "src/fnr3_re/overhaul/damage.py",
+    "implementation_status": "evidence_only_no_code_change_yet"
+  },
+  "runtime_context": {
+    "career_control_values": {
+      "wins": 4,
+      "kos": 3,
+      "bank": 3478
+    },
+    "player_training_attributes": {
+      "power": 48,
+      "power_correlated_pair": 48,
+      "speed": 35,
+      "agility": 27,
+      "stamina": 37,
+      "chin": 40,
+      "heart": 37,
+      "cuts": 41,
+      "body": 34
+    },
+    "note": "These persistent values are context/control only. They are not claimed to cause the flash knockdown."
+  },
+  "next_best_comparator": {
+    "capture": "An ordinary knockdown in the same retail build where the opponent visibly enters the normal stunned/wobble phase first.",
+    "priority": "high_if_encountered_naturally",
+    "reason": "A matched ordinary-knockdown snapshot gives a direct transient-state comparison against checkpoint 10 and may isolate branch/state differences in the fight-session or boxer runtime objects.",
+    "do_not_force": "Do not waste career progression or repeated savestates trying to manufacture it. Capture it opportunistically when it occurs."
+  }
+}

@@ -13,6 +13,11 @@ machine:
   exists at two separate BOOT.BIN sites, and a matching
   ``cpToggleKnockdownRule`` UI option exists (see
   ``fnr3_re.overhaul.rules.FightRules.three_knockdown_rule``).
+- **Retail runtime can produce a flash knockdown without the normal visible
+  stun/wobble phase**: checkpoint 10 (2026-09-14) preserves a mid-fight
+  savestate immediately after this behavior was observed. The exact retail
+  branch condition and state fields are not yet identified, so this module
+  must not claim that visible stun necessarily precedes every knockdown.
 - **Cut/swelling damage geometry is a proven, separate resource family**
   from ratings (``HT_Swelling`` string, ``face_cuts.off`` damage-morph
   geometry) but this pass explicitly declines to implement cosmetic damage
@@ -118,15 +123,14 @@ def apply_punch_damage(
     rules: FightRules,
     tunables: DamageTunables = DEFAULT_TUNABLES,
 ) -> PunchResult:
-    """Apply damage and evaluate knockdown/stoppage per the given rules.
+    """Apply this mod's provisional damage model.
 
-    A knockdown is triggered when accumulated damage since the last
-    knockdown check would drop health below the knockdown threshold
-    fraction of max health while the boxer is already stunned -- this
-    mirrors the real game's *documented existence* of a stun-then-knockdown
-    relationship (the 3-knockdown rule presupposes stun precedes
-    knockdown) without claiming to reproduce its exact undisassembled
-    formula.
+    Alpha 1 currently uses a simple stunned-then-threshold path for its own
+    provisional knockdown logic. That is a design choice, not a claim about
+    retail behavior: runtime checkpoint 10 shows that retail can also produce
+    a flash knockdown without the normal visible stun/wobble phase. A future
+    combat-RE pass should identify the retail direct-knockdown condition before
+    this mod attempts to mirror that distinction.
     """
 
     if raw_damage < 0:
